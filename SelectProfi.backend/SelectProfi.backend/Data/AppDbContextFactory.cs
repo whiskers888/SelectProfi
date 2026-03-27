@@ -26,7 +26,9 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
             throw new InvalidOperationException("ConnectionStrings:Postgres is not configured.");
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(
+            connectionString,
+            npgsqlOptions => npgsqlOptions.MigrationsAssembly("SelectProfi.backend"));
 
         return new AppDbContext(optionsBuilder.Options);
     }

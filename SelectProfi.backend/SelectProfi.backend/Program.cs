@@ -1,12 +1,24 @@
 using System.Diagnostics;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SelectProfi.backend.Application.Auth.Login;
+using SelectProfi.backend.Application.Auth.Refresh;
+using SelectProfi.backend.Application.Auth.Register;
+using SelectProfi.backend.Application.Profile.GetMyProfile;
+using SelectProfi.backend.Application.Profile.UpdateMyProfile;
 using SelectProfi.backend.Configuration;
 using SelectProfi.backend.HealthChecks;
+using SelectProfi.backend.Infrastructure.Auth.Login;
+using SelectProfi.backend.Infrastructure.Auth.Refresh;
+using SelectProfi.backend.Infrastructure.Auth.Register;
 using SelectProfi.backend.Infrastructure.Data;
+using SelectProfi.backend.Infrastructure.Profile.GetMyProfile;
+using SelectProfi.backend.Infrastructure.Profile.UpdateMyProfile;
 using SelectProfi.backend.Middlewares;
+using SelectProfi.backend.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,11 +61,39 @@ builder.Services.AddControllers()
     });
 builder.Services.AddOptions<PostgresOptions>()
     .Bind(builder.Configuration.GetSection(PostgresOptions.SectionName));
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.AddOptions<AuthFeatureFlagsOptions>()
+    .Bind(builder.Configuration.GetSection(AuthFeatureFlagsOptions.SectionName));
 builder.Services.AddScoped<IValidator<PostgresOptions>, PostgresOptionsValidator>();
+builder.Services.AddScoped<IPasswordHashingService, PasswordHashingService>();
+builder.Services.AddScoped<ITokenPairFactory, TokenPairFactory>();
+builder.Services.AddScoped<IPasswordHasher, RegisterPasswordHasherAdapter>();
+builder.Services.AddScoped<ITokenPairIssuer, RegisterTokenPairIssuerAdapter>();
+builder.Services.AddScoped<IRegisterUserPersistence, RegisterUserPersistence>();
+builder.Services.AddScoped<IRegisterUserUseCase, RegisterUserUseCase>();
+builder.Services.AddScoped<ILoginPasswordVerifier, LoginPasswordVerifierAdapter>();
+builder.Services.AddScoped<ILoginTokenPairIssuer, LoginTokenPairIssuerAdapter>();
+builder.Services.AddScoped<ILoginUserPersistence, LoginUserPersistence>();
+builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
+builder.Services.AddScoped<IRefreshTokenHasher, RefreshTokenHasherAdapter>();
+builder.Services.AddScoped<IRefreshTokenPairIssuer, RefreshTokenPairIssuerAdapter>();
+builder.Services.AddScoped<IRefreshAuthSessionPersistence, RefreshAuthSessionPersistence>();
+builder.Services.AddScoped<IRefreshAuthSessionUseCase, RefreshAuthSessionUseCase>();
+builder.Services.AddScoped<IProfileReadPersistence, ProfileReadPersistence>();
+builder.Services.AddScoped<IGetMyProfileUseCase, GetMyProfileUseCase>();
+builder.Services.AddScoped<IProfileWritePersistence, ProfileWritePersistence>();
+builder.Services.AddScoped<IUpdateMyProfileUseCase, UpdateMyProfileUseCase>();
+builder.Services
+    .AddAuthentication("Bearer")
+    .AddScheme<AuthenticationSchemeOptions, SimpleJwtAuthenticationHandler>("Bearer", _ => { });
+builder.Services.AddAuthorization();
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
     var postgresOptions = serviceProvider.GetRequiredService<IOptions<PostgresOptions>>().Value;
-    options.UseNpgsql(postgresOptions.Postgres);
+    options.UseNpgsql(
+        postgresOptions.Postgres,
+        npgsqlOptions => npgsqlOptions.MigrationsAssembly("SelectProfi.backend"));
 });
 builder.Services.AddHealthChecks()
     .AddCheck<PostgresDependencyHealthCheck>("postgres", tags: ["dependencies"])
@@ -79,6 +119,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
