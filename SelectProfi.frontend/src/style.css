@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 33% 98%;
+    --foreground: 225 31% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 225 31% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 31% 15%;
+    --primary: 214 72% 19%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 33% 94%;
+    --secondary-foreground: 214 50% 22%;
+    --muted: 214 33% 94%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 214 33% 94%;
+    --accent-foreground: 214 50% 22%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 26% 88%;
+    --input: 215 26% 88%;
+    --ring: 214 72% 34%;
+    --radius: 0.75rem;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f6f7fb;
+  color: #1c2030;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.page h2 {
+  margin: 0 0 8px;
+}
+
+.page p {
+  margin: 0;
+}
+
+.profile-page {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-details {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 16px;
+}
+
+.profile-details div {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-details dt {
+  font-size: 12px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.profile-details dd {
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #1e293b;
+}
