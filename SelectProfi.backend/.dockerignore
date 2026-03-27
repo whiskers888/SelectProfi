@@ -1,0 +1,9 @@
+.git
+.idea
+.codex
+**/bin
+**/obj
+**/.vs
+**/*.user
+**/*.suo
+README.md
