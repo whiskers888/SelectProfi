@@ -1,0 +1,42 @@
+# Build artifacts
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]og/
+**/[Ll]ogs/
+*.log
+
+# Test and coverage artifacts
+**/TestResults/
+**/coverage/
+**/coverage-*/
+*.coverage
+*.coveragexml
+coverage.cobertura.xml
+
+# .NET / Visual Studio
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# JetBrains Rider / IntelliJ
+.idea/
+*.sln.iml
+
+# Local tools and environment
+.codex/
+.env
+.env.*
+!.env.example
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
