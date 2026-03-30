@@ -4,18 +4,18 @@ using Xunit;
 
 namespace SelectProfi.backend.IntegrationTests;
 
-public sealed class RefreshAuthSessionUseCaseTests
+public sealed class RefreshAuthSessionCommandHandlerTests
 {
     [Fact]
-    public async Task ExecuteAsync_ReturnsInvalid_WhenRefreshTokenIsEmpty()
+    public async Task HandleAsync_ReturnsInvalid_WhenRefreshTokenIsEmpty()
     {
         var persistence = new FakeRefreshPersistence();
-        var useCase = new RefreshAuthSessionUseCase(
+        var handler = new RefreshAuthSessionCommandHandler(
             persistence,
             new FakeRefreshTokenHasher(),
             new FakeRefreshTokenPairIssuer());
 
-        var result = await useCase.ExecuteAsync(
+        var result = await handler.HandleAsync(
             new RefreshAuthSessionCommand { RefreshToken = string.Empty },
             CancellationToken.None);
 
@@ -23,15 +23,15 @@ public sealed class RefreshAuthSessionUseCaseTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsInvalid_WhenSessionNotFound()
+    public async Task HandleAsync_ReturnsInvalid_WhenSessionNotFound()
     {
         var persistence = new FakeRefreshPersistence();
-        var useCase = new RefreshAuthSessionUseCase(
+        var handler = new RefreshAuthSessionCommandHandler(
             persistence,
             new FakeRefreshTokenHasher(),
             new FakeRefreshTokenPairIssuer());
 
-        var result = await useCase.ExecuteAsync(
+        var result = await handler.HandleAsync(
             new RefreshAuthSessionCommand { RefreshToken = "raw-token" },
             CancellationToken.None);
 
@@ -39,19 +39,19 @@ public sealed class RefreshAuthSessionUseCaseTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsInvalid_WhenSessionRevoked()
+    public async Task HandleAsync_ReturnsInvalid_WhenSessionRevoked()
     {
         var persistence = new FakeRefreshPersistence();
         var session = BuildSession();
         session.RevokedAtUtc = DateTime.UtcNow;
         persistence.StoredSession = session;
 
-        var useCase = new RefreshAuthSessionUseCase(
+        var handler = new RefreshAuthSessionCommandHandler(
             persistence,
             new FakeRefreshTokenHasher(),
             new FakeRefreshTokenPairIssuer());
 
-        var result = await useCase.ExecuteAsync(
+        var result = await handler.HandleAsync(
             new RefreshAuthSessionCommand { RefreshToken = "raw-token" },
             CancellationToken.None);
 
@@ -59,19 +59,19 @@ public sealed class RefreshAuthSessionUseCaseTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsInvalid_WhenSessionExpired()
+    public async Task HandleAsync_ReturnsInvalid_WhenSessionExpired()
     {
         var persistence = new FakeRefreshPersistence();
         var session = BuildSession();
         session.ExpiresAtUtc = DateTime.UtcNow.AddSeconds(-1);
         persistence.StoredSession = session;
 
-        var useCase = new RefreshAuthSessionUseCase(
+        var handler = new RefreshAuthSessionCommandHandler(
             persistence,
             new FakeRefreshTokenHasher(),
             new FakeRefreshTokenPairIssuer());
 
-        var result = await useCase.ExecuteAsync(
+        var result = await handler.HandleAsync(
             new RefreshAuthSessionCommand { RefreshToken = "raw-token" },
             CancellationToken.None);
 
@@ -79,18 +79,18 @@ public sealed class RefreshAuthSessionUseCaseTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_RotatesSession_AndReturnsTokens_WhenSessionIsValid()
+    public async Task HandleAsync_RotatesSession_AndReturnsTokens_WhenSessionIsValid()
     {
         var persistence = new FakeRefreshPersistence();
         var session = BuildSession();
         persistence.StoredSession = session;
 
-        var useCase = new RefreshAuthSessionUseCase(
+        var handler = new RefreshAuthSessionCommandHandler(
             persistence,
             new FakeRefreshTokenHasher(),
             new FakeRefreshTokenPairIssuer());
 
-        var result = await useCase.ExecuteAsync(
+        var result = await handler.HandleAsync(
             new RefreshAuthSessionCommand { RefreshToken = "raw-token" },
             CancellationToken.None);
 

@@ -1,8 +1,11 @@
+using SelectProfi.backend.Application.Cqrs;
+
 namespace SelectProfi.backend.Application.Profile.GetMyProfile;
 
-public sealed class GetMyProfileUseCase(IProfileReadPersistence persistence) : IGetMyProfileUseCase
+public sealed class GetMyProfileQueryHandler(IProfileReadPersistence persistence)
+    : IQueryHandler<GetMyProfileQuery, GetMyProfileResult>
 {
-    public async Task<GetMyProfileResult> ExecuteAsync(GetMyProfileQuery query, CancellationToken cancellationToken)
+    public async Task<GetMyProfileResult> HandleAsync(GetMyProfileQuery query, CancellationToken cancellationToken)
     {
         var user = await persistence.FindByIdAsync(query.UserId, cancellationToken);
         if (user is null)

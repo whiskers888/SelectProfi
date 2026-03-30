@@ -6,9 +6,11 @@ using Microsoft.Extensions.Options;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
+using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Configuration;
 using SelectProfi.backend.Contracts.Auth;
 using SelectProfi.backend.Domain.Users;
+using SelectProfi.backend.Mappings;
 
 namespace SelectProfi.backend.Controllers;
 
@@ -16,9 +18,7 @@ namespace SelectProfi.backend.Controllers;
 [Route("api/auth")]
 public sealed class AuthController(
     IOptions<AuthFeatureFlagsOptions> authFeatureFlagsOptions,
-    IRegisterUserUseCase registerUserUseCase,
-    ILoginUserUseCase loginUserUseCase,
-    IRefreshAuthSessionUseCase refreshAuthSessionUseCase) : ControllerBase
+    ICommandDispatcher commandDispatcher) : ControllerBase
 {
     [HttpPost("register")]
     [Produces("application/json", "application/problem+json")]
@@ -30,27 +30,13 @@ public sealed class AuthController(
         CancellationToken cancellationToken)
     {
         var featureFlags = authFeatureFlagsOptions.Value;
-        var result = await registerUserUseCase.ExecuteAsync(
-            new RegisterUserCommand
-            {
-                Email = request.Email,
-                Phone = request.Phone,
-                Password = request.Password,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Role = MapRole(request.Role),
-                RequireEmailVerification = featureFlags.RequireEmailVerification,
-                RequirePhoneVerification = featureFlags.RequirePhoneVerification
-            },
+        var result = await commandDispatcher.DispatchAsync<RegisterUserCommand, RegisterUserResult>(
+            request.ToCommand(featureFlags),
             cancellationToken);
 
         return result.ErrorCode switch
         {
-            RegisterUserErrorCode.None => Ok(new RegisterUserResponse
-            {
-                AccessToken = result.AccessToken,
-                RefreshToken = result.RefreshToken
-            }),
+            RegisterUserErrorCode.None => Ok(result.ToResponse()),
             RegisterUserErrorCode.EmailAlreadyExists => Conflict(CreateConflictProblem(
                 "email_already_exists",
                 "Email is already registered.",
@@ -72,22 +58,14 @@ public sealed class AuthController(
         [FromBody] LoginUserRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await loginUserUseCase.ExecuteAsync(
-            new LoginUserCommand
-            {
-                Email = request.Email,
-                Password = request.Password
-            },
+        var result = await commandDispatcher.DispatchAsync<LoginUserCommand, LoginUserResult>(
+            request.ToCommand(),
             cancellationToken);
 
         if (result.ErrorCode == LoginUserErrorCode.InvalidCredentials)
             return Unauthorized(CreateUnauthorizedProblem("invalid_credentials", "Invalid email or password."));
 
-        return Ok(new LoginUserResponse
-        {
-            AccessToken = result.AccessToken,
-            RefreshToken = result.RefreshToken
-        });
+        return Ok(result.ToResponse());
     }
 
     [HttpPost("refresh")]
@@ -99,21 +77,14 @@ public sealed class AuthController(
         [FromBody] RefreshTokenRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await refreshAuthSessionUseCase.ExecuteAsync(
-            new RefreshAuthSessionCommand
-            {
-                RefreshToken = request.RefreshToken
-            },
+        var result = await commandDispatcher.DispatchAsync<RefreshAuthSessionCommand, RefreshAuthSessionResult>(
+            request.ToCommand(),
             cancellationToken);
 
         if (result.ErrorCode == RefreshAuthSessionErrorCode.InvalidRefreshToken)
             return Unauthorized(CreateUnauthorizedProblem("invalid_refresh_token", "Invalid refresh token."));
 
-        return Ok(new RefreshTokenResponse
-        {
-            AccessToken = result.AccessToken,
-            RefreshToken = result.RefreshToken
-        });
+        return Ok(result.ToResponse());
     }
 
     [Authorize]
@@ -152,17 +123,6 @@ public sealed class AuthController(
         {
             status = "ok"
         });
-    }
-
-    private static UserRole MapRole(RegisterUserRole role)
-    {
-        return role switch
-        {
-            RegisterUserRole.Applicant => UserRole.Applicant,
-            RegisterUserRole.Executor => UserRole.Executor,
-            RegisterUserRole.Customer => UserRole.Customer,
-            _ => throw new ArgumentOutOfRangeException(nameof(role), role, "Unsupported role.")
-        };
     }
 
     private ProblemDetails CreateConflictProblem(string code, string detail, string? field = null)

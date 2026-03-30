@@ -1,13 +1,14 @@
+using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Auth.Register;
 
-public sealed class RegisterUserUseCase(
+public sealed class RegisterUserCommandHandler(
     IRegisterUserPersistence persistence,
     IPasswordHasher passwordHasher,
-    ITokenPairIssuer tokenPairIssuer) : IRegisterUserUseCase
+    ITokenPairIssuer tokenPairIssuer) : ICommandHandler<RegisterUserCommand, RegisterUserResult>
 {
-    public async Task<RegisterUserResult> ExecuteAsync(RegisterUserCommand command, CancellationToken cancellationToken)
+    public async Task<RegisterUserResult> HandleAsync(RegisterUserCommand command, CancellationToken cancellationToken)
     {
         var normalizedEmail = NormalizeEmail(command.Email);
         var normalizedPhone = NormalizePhone(command.Phone);

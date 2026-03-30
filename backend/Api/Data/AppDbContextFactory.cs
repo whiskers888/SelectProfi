@@ -28,7 +28,7 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseNpgsql(
             connectionString,
-            npgsqlOptions => npgsqlOptions.MigrationsAssembly("Api"));
+            npgsqlOptions => npgsqlOptions.MigrationsAssembly("Infrastructure"));
 
         return new AppDbContext(optionsBuilder.Options);
     }

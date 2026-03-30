@@ -1,13 +1,14 @@
+using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Auth.Login;
 
-public sealed class LoginUserUseCase(
+public sealed class LoginUserCommandHandler(
     ILoginUserPersistence persistence,
     ILoginPasswordVerifier passwordVerifier,
-    ILoginTokenPairIssuer tokenPairIssuer) : ILoginUserUseCase
+    ILoginTokenPairIssuer tokenPairIssuer) : ICommandHandler<LoginUserCommand, LoginUserResult>
 {
-    public async Task<LoginUserResult> ExecuteAsync(LoginUserCommand command, CancellationToken cancellationToken)
+    public async Task<LoginUserResult> HandleAsync(LoginUserCommand command, CancellationToken cancellationToken)
     {
         var normalizedEmail = NormalizeEmail(command.Email);
         var user = await persistence.FindByNormalizedEmailAsync(normalizedEmail, cancellationToken);

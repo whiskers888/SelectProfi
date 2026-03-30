@@ -1,10 +1,12 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Profile.UpdateMyProfile;
 
-public sealed class UpdateMyProfileUseCase(IProfileWritePersistence persistence) : IUpdateMyProfileUseCase
+public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persistence)
+    : ICommandHandler<UpdateMyProfileCommand, UpdateMyProfileResult>
 {
     private const int ApplicantResumeTitleMaxLength = 200;
     private const int ApplicantPreviousCompanyNameMaxLength = 200;
@@ -36,7 +38,7 @@ public sealed class UpdateMyProfileUseCase(IProfileWritePersistence persistence)
     private static readonly Regex EgrnipRegex = new(@"^\d{15}$", RegexOptions.Compiled);
     private static readonly decimal MaxDesiredSalary = 9_999_999_999_999_999.99m;
 
-    public async Task<UpdateMyProfileResult> ExecuteAsync(UpdateMyProfileCommand command, CancellationToken cancellationToken)
+    public async Task<UpdateMyProfileResult> HandleAsync(UpdateMyProfileCommand command, CancellationToken cancellationToken)
     {
         var user = await persistence.FindByIdAsync(command.UserId, cancellationToken);
         if (user is null)

@@ -1,8 +1,9 @@
+using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Profile.UpdateMyProfile;
 
-public sealed class UpdateMyProfileCommand
+public sealed class UpdateMyProfileCommand : ICommand<UpdateMyProfileResult>
 {
     public Guid UserId { get; init; }
 

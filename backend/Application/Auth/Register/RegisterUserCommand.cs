@@ -1,8 +1,9 @@
+using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Auth.Register;
 
-public sealed class RegisterUserCommand
+public sealed class RegisterUserCommand : ICommand<RegisterUserResult>
 {
     public string Email { get; init; } = string.Empty;
 

@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace SelectProfi.backend.HealthChecks;

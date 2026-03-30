@@ -61,6 +61,16 @@ dotnet build .\backend.sln
 dotnet test .\backend.sln
 ```
 
+## Backend CQRS (текущий baseline)
+
+- Контроллеры вызывают application-логику через `ICommandDispatcher` / `IQueryDispatcher`.
+- `Command/Query` и их `Handler` размещаются в `backend/Application` по доменным папкам (`Auth`, `Profile` и т.д.).
+- Для нового сценария:
+  - создать `Command` или `Query` + `Result`;
+  - добавить `ICommandHandler<,>` или `IQueryHandler<,>`;
+  - зарегистрировать handler в `backend/Application/DependencyInjection.cs`;
+  - вызвать из контроллера через dispatcher.
+
 ## Запуск backend в Docker (вместе с инфраструктурой)
 
 ```powershell

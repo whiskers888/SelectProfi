@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using SelectProfi.backend.Configuration;
 
-namespace SelectProfi.backend.Security;
+namespace SelectProfi.backend.Authentication;
 
 public sealed class SimpleJwtAuthenticationHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,

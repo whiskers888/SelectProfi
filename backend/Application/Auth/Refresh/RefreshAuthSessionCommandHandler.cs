@@ -1,13 +1,14 @@
+using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Auth.Refresh;
 
-public sealed class RefreshAuthSessionUseCase(
+public sealed class RefreshAuthSessionCommandHandler(
     IRefreshAuthSessionPersistence persistence,
     IRefreshTokenHasher tokenHasher,
-    IRefreshTokenPairIssuer tokenPairIssuer) : IRefreshAuthSessionUseCase
+    IRefreshTokenPairIssuer tokenPairIssuer) : ICommandHandler<RefreshAuthSessionCommand, RefreshAuthSessionResult>
 {
-    public async Task<RefreshAuthSessionResult> ExecuteAsync(
+    public async Task<RefreshAuthSessionResult> HandleAsync(
         RefreshAuthSessionCommand command,
         CancellationToken cancellationToken)
     {
