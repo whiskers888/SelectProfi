@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\SelectProfi.backend\SelectProfi.backend.csproj"/>
+        <ProjectReference Include="..\Api\Api.csproj"/>
     </ItemGroup>
 
 </Project>

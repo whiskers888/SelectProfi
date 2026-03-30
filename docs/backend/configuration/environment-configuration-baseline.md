@@ -40,7 +40,7 @@
 ```powershell
 $env:ASPNETCORE_ENVIRONMENT = "Staging"
 $env:ConnectionStrings__Postgres = "Host=localhost;Port=5432;Database=selectprofi;Username=postgres;Password=postgres"
-dotnet run --no-launch-profile --project .\SelectProfi.backend\SelectProfi.backend.csproj --urls http://127.0.0.1:5191
+dotnet run --no-launch-profile --project .\backend\Api\Api.csproj --urls http://127.0.0.1:5191
 ```
 
 ```powershell
@@ -52,7 +52,7 @@ Invoke-WebRequest http://127.0.0.1:5191/health
 ```bash
 ASPNETCORE_ENVIRONMENT=Staging \
 ConnectionStrings__Postgres='Host=localhost;Port=5432;Database=selectprofi;Username=postgres;Password=postgres' \
-dotnet run --no-launch-profile --project ./SelectProfi.backend/SelectProfi.backend.csproj --urls http://127.0.0.1:5191
+dotnet run --no-launch-profile --project ./backend/Api/Api.csproj --urls http://127.0.0.1:5191
 ```
 
 ```bash
@@ -64,7 +64,7 @@ curl -i http://127.0.0.1:5191/health
 ```powershell
 $env:ASPNETCORE_ENVIRONMENT = "Production"
 $env:ConnectionStrings__Postgres = "Host=localhost;Port=5432;Database=selectprofi;Username=postgres;Password=postgres"
-dotnet run --no-launch-profile --project .\SelectProfi.backend\SelectProfi.backend.csproj --urls http://127.0.0.1:5192
+dotnet run --no-launch-profile --project .\backend\Api\Api.csproj --urls http://127.0.0.1:5192
 ```
 
 ```powershell
@@ -76,7 +76,7 @@ Invoke-WebRequest http://127.0.0.1:5192/health
 ```bash
 ASPNETCORE_ENVIRONMENT=Production \
 ConnectionStrings__Postgres='Host=localhost;Port=5432;Database=selectprofi;Username=postgres;Password=postgres' \
-dotnet run --no-launch-profile --project ./SelectProfi.backend/SelectProfi.backend.csproj --urls http://127.0.0.1:5192
+dotnet run --no-launch-profile --project ./backend/Api/Api.csproj --urls http://127.0.0.1:5192
 ```
 
 ```bash

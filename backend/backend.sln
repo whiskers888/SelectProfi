@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SelectProfi.backend", "SelectProfi.backend\SelectProfi.backend.csproj", "{8E79789C-2E78-4364-B8BD-AB711999FDF1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{8E79789C-2E78-4364-B8BD-AB711999FDF1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SelectProfi.backend.IntegrationTests", "SelectProfi.backend.IntegrationTests\SelectProfi.backend.IntegrationTests.csproj", "{D5D34006-4D46-4C0F-84D7-979B10A2FA2D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{D5D34006-4D46-4C0F-84D7-979B10A2FA2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SelectProfi.backend.Application", "SelectProfi.backend.Application\SelectProfi.backend.Application.csproj", "{724E2329-20CD-491A-B09B-25C48C5E73BD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{724E2329-20CD-491A-B09B-25C48C5E73BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SelectProfi.backend.Domain", "SelectProfi.backend.Domain\SelectProfi.backend.Domain.csproj", "{619FF8C8-B24A-426D-BE77-CBE35EECE028}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{619FF8C8-B24A-426D-BE77-CBE35EECE028}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SelectProfi.backend.Infrastructure", "SelectProfi.backend.Infrastructure\SelectProfi.backend.Infrastructure.csproj", "{71EDFC0D-EBB4-4E27-A906-875C2A30D4C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{71EDFC0D-EBB4-4E27-A906-875C2A30D4C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

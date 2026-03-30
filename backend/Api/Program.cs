@@ -93,7 +93,7 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
     var postgresOptions = serviceProvider.GetRequiredService<IOptions<PostgresOptions>>().Value;
     options.UseNpgsql(
         postgresOptions.Postgres,
-        npgsqlOptions => npgsqlOptions.MigrationsAssembly("SelectProfi.backend"));
+        npgsqlOptions => npgsqlOptions.MigrationsAssembly("Api"));
 });
 builder.Services.AddHealthChecks()
     .AddCheck<PostgresDependencyHealthCheck>("postgres", tags: ["dependencies"])

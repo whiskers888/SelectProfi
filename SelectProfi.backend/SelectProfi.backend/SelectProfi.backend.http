@@ -1,6 +1,0 @@
-@SelectProfi.backend_HostAddress = http://localhost:5268
-
-GET {{SelectProfi.backend_HostAddress}}/health
-Accept: application/json
-
-###

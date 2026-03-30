@@ -26,5 +26,5 @@
 
 ## Текущая автоматическая проверка
 
-- `SelectProfi.backend.IntegrationTests/HealthSmokeTests.cs`
+- `backend/IntegrationTests/HealthSmokeTests.cs`
 - Тест: `OpenApiDocument_ContainsHealthEndpoint`

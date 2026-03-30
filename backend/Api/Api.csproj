@@ -23,8 +23,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\SelectProfi.backend.Application\SelectProfi.backend.Application.csproj"/>
-        <ProjectReference Include="..\SelectProfi.backend.Infrastructure\SelectProfi.backend.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Application\Application.csproj"/>
+        <ProjectReference Include="..\Infrastructure\Infrastructure.csproj"/>
     </ItemGroup>
 
 </Project>
