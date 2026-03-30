@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pipeline</title>
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 240px;
+      background: white;
+      border-right: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .nav-item {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      background: #EFF6FF;
+      color: var(--primary);
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      height: 60px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    /* PIPELINE */
+
+    .pipeline {
+      display: flex;
+      gap: 16px;
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    .column {
+      width: 300px;
+      background: #F1F5F9;
+      border-radius: 12px;
+      padding: 12px;
+      flex-shrink: 0;
+    }
+
+    .column-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    /* CARD */
+
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: grab;
+    }
+
+    .card-title {
+      font-weight: 500;
+    }
+
+    .card-meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .empty {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 20px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="nav-item">Заказы</div>
+    <div class="nav-item">Кандидаты</div>
+    <div class="nav-item active">Отклики</div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="header">
+      <div>Pipeline откликов</div>
+      <div>👤 Иван</div>
+    </div>
+
+    <div class="pipeline">
+
+      <!-- NEW -->
+      <div class="column" data-status="new">
+        <div class="column-title">Новые</div>
+
+        <div class="card" draggable="true">
+          <div class="card-title">Frontend Developer</div>
+          <div class="card-meta">Яндекс</div>
+        </div>
+
+        <div class="card" draggable="true">
+          <div class="card-title">Backend Developer</div>
+          <div class="card-meta">Сбер</div>
+        </div>
+
+      </div>
+
+      <!-- IN PROGRESS -->
+      <div class="column" data-status="progress">
+        <div class="column-title">В работе</div>
+
+        <div class="empty">Нет откликов</div>
+
+      </div>
+
+      <!-- DONE -->
+      <div class="column" data-status="done">
+        <div class="column-title">Завершено</div>
+
+        <div class="empty">Нет откликов</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const cards = document.querySelectorAll(".card");
+  const columns = document.querySelectorAll(".column");
+
+  let dragged = null;
+
+  cards.forEach(card => {
+    card.addEventListener("dragstart", () => {
+      dragged = card;
+    });
+  });
+
+  columns.forEach(col => {
+    col.addEventListener("dragover", (e) => {
+      e.preventDefault();
+    });
+
+    col.addEventListener("drop", () => {
+      col.appendChild(dragged);
+
+      // убрать empty
+      const empty = col.querySelector(".empty");
+      if (empty) empty.remove();
+    });
+  });
+</script>
+
+</body>
+</html>

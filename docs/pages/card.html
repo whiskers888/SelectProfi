@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Card Component</title>
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+      --success: #16A34A;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 600px;
+    }
+
+    /* BASE CARD */
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.18s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      border-color: #CBD5E1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* HEADER */
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .company {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* BADGE */
+
+    .badge {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #DCFCE7;
+      color: #14532D;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* BODY */
+
+    .card-body {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .description {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    /* FOOTER */
+
+    .card-footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .salary {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      transition: 0.18s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+    }
+
+    .btn-ghost:hover {
+      background: #F1F5F9;
+    }
+
+    /* EMPTY STATE */
+
+    .empty {
+      padding: 40px;
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--text-secondary);
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <h2>Vacancy Cards</h2>
+
+  <div class="container">
+
+    <!-- CARD -->
+    <div class="card">
+
+      <div class="card-header">
+        <div>
+          <div class="title">Frontend Developer</div>
+          <div class="company">Яндекс • Москва</div>
+        </div>
+
+        <div class="badge">В работе</div>
+      </div>
+
+      <div class="card-body">
+        <div class="meta">
+          <span>💼 IT</span>
+          <span>📍 Удалёнка</span>
+          <span>⏱ 2 недели</span>
+        </div>
+
+        <div class="description">
+          Ищем frontend разработчика с опытом React и TypeScript.
+          Важно понимание архитектуры и опыт работы с API.
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="salary">150 000 ₽</div>
+
+        <div class="actions">
+          <button class="btn btn-ghost">Скрыть</button>
+          <button class="btn btn-primary">Откликнуться</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SECOND CARD -->
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="title">HR Manager</div>
+          <div class="company">Сбер • Санкт-Петербург</div>
+        </div>
+
+        <div class="badge">Новый</div>
+      </div>
+
+      <div class="card-body">
+        <div class="meta">
+          <span>💼 HR</span>
+          <span>📍 Офис</span>
+        </div>
+
+        <div class="description">
+          Нужен HR для закрытия IT вакансий. Опыт работы с подрядчиками приветствуется.
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="salary">120 000 ₽</div>
+
+        <div class="actions">
+          <button class="btn btn-ghost">Скрыть</button>
+          <button class="btn btn-primary">Откликнуться</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMPTY -->
+
+    <div class="empty">
+      Нет доступных вакансий  
+      <br />
+      Попробуйте изменить фильтры
+    </div>
+
+  </div>
+
+  <script>
+    // пример UX: клик по карточке
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'BUTTON') {
+          alert('Открыть вакансию');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

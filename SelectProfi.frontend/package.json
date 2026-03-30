@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "npm run tokens:build && vite",
+    "build": "npm run tokens:build && tsc && vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --check .",
@@ -13,6 +13,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "preview": "vite preview",
+    "tokens:build": "node ./scripts/generate-design-tokens.mjs",
     "api:generate": "rtk-query-codegen-openapi openapi-config.mjs"
   },
   "dependencies": {

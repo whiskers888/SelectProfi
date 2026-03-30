@@ -10,6 +10,7 @@ import {
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { FormFieldError, FormStatusMessage } from '@/components/ui/form-feedback'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -338,11 +339,20 @@ export function ProfilePage() {
     message: '',
   })
 
+  // @dvnull: Ветки loading/error/empty переведены на единый UX-шаблон состояний с явным retry.
   if (isLoading) {
     return (
       <section className="page profile-page">
-        <h2>Профиль</h2>
-        <p>Загрузка профиля...</p>
+        <Card className="max-w-3xl">
+          <CardHeader>
+            <CardTitle className="text-xl">Профиль</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p role="status" className="text-sm text-muted-foreground">
+              Загрузка профиля...
+            </p>
+          </CardContent>
+        </Card>
       </section>
     )
   }
@@ -350,8 +360,19 @@ export function ProfilePage() {
   if (isError) {
     return (
       <section className="page profile-page">
-        <h2>Профиль</h2>
-        <p role="alert">{getRequestErrorMessage(error)}</p>
+        <Card className="max-w-3xl">
+          <CardHeader>
+            <CardTitle className="text-xl">Профиль</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert variant="destructive" role="alert">
+              {getRequestErrorMessage(error)}
+            </Alert>
+            <Button type="button" variant="outline" onClick={() => void refetch()}>
+              Повторить
+            </Button>
+          </CardContent>
+        </Card>
       </section>
     )
   }
@@ -359,8 +380,17 @@ export function ProfilePage() {
   if (!data) {
     return (
       <section className="page profile-page">
-        <h2>Профиль</h2>
-        <p>Данные профиля отсутствуют.</p>
+        <Card className="max-w-3xl">
+          <CardHeader>
+            <CardTitle className="text-xl">Профиль</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert role="status">Данные профиля отсутствуют.</Alert>
+            <Button type="button" variant="outline" onClick={() => void refetch()}>
+              Повторить
+            </Button>
+          </CardContent>
+        </Card>
       </section>
     )
   }
@@ -608,15 +638,15 @@ export function ProfilePage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
+          {/* @dvnull: Статусы submit-форм приведены к единому form-feedback паттерну. */}
           {commonSubmitMessage.status !== 'idle' ? (
-            <Alert
-              role={commonSubmitMessage.status === 'error' ? 'alert' : 'status'}
-              variant={commonSubmitMessage.status === 'error' ? 'destructive' : 'success'}
-            >
-              {commonSubmitMessage.message}
-            </Alert>
+            <FormStatusMessage
+              message={commonSubmitMessage.message}
+              status={commonSubmitMessage.status === 'error' ? 'error' : 'success'}
+            />
           ) : null}
 
+          {/* @dvnull: Для валидируемых полей добавлены aria-связки input/select <-> error message. */}
           {isEditingCommon ? (
             <form noValidate onSubmit={handleCommonFormSubmit} className="grid gap-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -628,12 +658,14 @@ export function ProfilePage() {
                     onChange={(event) =>
                       setCommonFormValues((previous) => ({ ...previous, firstName: event.target.value }))
                     }
+                    aria-invalid={Boolean(commonFormErrors.firstName)}
+                    aria-describedby={
+                      commonFormErrors.firstName ? 'profile-common-firstName-error' : undefined
+                    }
                   />
-                  {commonFormErrors.firstName ? (
-                    <p role="alert" className="text-xs text-destructive">
-                      {commonFormErrors.firstName}
-                    </p>
-                  ) : null}
+                  <FormFieldError id="profile-common-firstName-error">
+                    {commonFormErrors.firstName}
+                  </FormFieldError>
                 </div>
 
                 <div className="space-y-2">
@@ -644,12 +676,12 @@ export function ProfilePage() {
                     onChange={(event) =>
                       setCommonFormValues((previous) => ({ ...previous, lastName: event.target.value }))
                     }
+                    aria-invalid={Boolean(commonFormErrors.lastName)}
+                    aria-describedby={commonFormErrors.lastName ? 'profile-common-lastName-error' : undefined}
                   />
-                  {commonFormErrors.lastName ? (
-                    <p role="alert" className="text-xs text-destructive">
-                      {commonFormErrors.lastName}
-                    </p>
-                  ) : null}
+                  <FormFieldError id="profile-common-lastName-error">
+                    {commonFormErrors.lastName}
+                  </FormFieldError>
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -661,12 +693,10 @@ export function ProfilePage() {
                     onChange={(event) =>
                       setCommonFormValues((previous) => ({ ...previous, phone: event.target.value }))
                     }
+                    aria-invalid={Boolean(commonFormErrors.phone)}
+                    aria-describedby={commonFormErrors.phone ? 'profile-common-phone-error' : undefined}
                   />
-                  {commonFormErrors.phone ? (
-                    <p role="alert" className="text-xs text-destructive">
-                      {commonFormErrors.phone}
-                    </p>
-                  ) : null}
+                  <FormFieldError id="profile-common-phone-error">{commonFormErrors.phone}</FormFieldError>
                 </div>
               </div>
 
@@ -708,12 +738,10 @@ export function ProfilePage() {
 
           <CardContent className="space-y-4">
             {roleSubmitMessage.status !== 'idle' ? (
-              <Alert
-                role={roleSubmitMessage.status === 'error' ? 'alert' : 'status'}
-                variant={roleSubmitMessage.status === 'error' ? 'destructive' : 'success'}
-              >
-                {roleSubmitMessage.message}
-              </Alert>
+              <FormStatusMessage
+                message={roleSubmitMessage.message}
+                status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
+              />
             ) : null}
 
             {isEditingRoleSpecific ? (
@@ -870,12 +898,14 @@ export function ProfilePage() {
                           desiredSalary: event.target.value,
                         }))
                       }
+                      aria-invalid={Boolean(applicantFormErrors.desiredSalary)}
+                      aria-describedby={
+                        applicantFormErrors.desiredSalary ? 'applicant-desiredSalary-error' : undefined
+                      }
                     />
-                    {applicantFormErrors.desiredSalary ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {applicantFormErrors.desiredSalary}
-                      </p>
-                    ) : null}
+                    <FormFieldError id="applicant-desiredSalary-error">
+                      {applicantFormErrors.desiredSalary}
+                    </FormFieldError>
                   </div>
                 </div>
 
@@ -918,12 +948,10 @@ export function ProfilePage() {
 
           <CardContent className="space-y-4">
             {roleSubmitMessage.status !== 'idle' ? (
-              <Alert
-                role={roleSubmitMessage.status === 'error' ? 'alert' : 'status'}
-                variant={roleSubmitMessage.status === 'error' ? 'destructive' : 'success'}
-              >
-                {roleSubmitMessage.message}
-              </Alert>
+              <FormStatusMessage
+                message={roleSubmitMessage.message}
+                status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
+              />
             ) : null}
 
             {isEditingRoleSpecific ? (
@@ -1030,12 +1058,10 @@ export function ProfilePage() {
 
           <CardContent className="space-y-4">
             {roleSubmitMessage.status !== 'idle' ? (
-              <Alert
-                role={roleSubmitMessage.status === 'error' ? 'alert' : 'status'}
-                variant={roleSubmitMessage.status === 'error' ? 'destructive' : 'success'}
-              >
-                {roleSubmitMessage.message}
-              </Alert>
+              <FormStatusMessage
+                message={roleSubmitMessage.message}
+                status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
+              />
             ) : null}
 
             {isEditingRoleSpecific ? (
@@ -1052,7 +1078,13 @@ export function ProfilePage() {
                         }))
                       }
                     >
-                      <SelectTrigger id="executor-employmentType">
+                      <SelectTrigger
+                        id="executor-employmentType"
+                        aria-invalid={Boolean(executorFormErrors.employmentType)}
+                        aria-describedby={
+                          executorFormErrors.employmentType ? 'executor-employmentType-error' : undefined
+                        }
+                      >
                         <SelectValue placeholder="Выберите формат" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1061,11 +1093,9 @@ export function ProfilePage() {
                         <SelectItem value="Ip">ИП</SelectItem>
                       </SelectContent>
                     </Select>
-                    {executorFormErrors.employmentType ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {executorFormErrors.employmentType}
-                      </p>
-                    ) : null}
+                    <FormFieldError id="executor-employmentType-error">
+                      {executorFormErrors.employmentType}
+                    </FormFieldError>
                   </div>
 
                   <div className="space-y-2">

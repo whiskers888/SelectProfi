@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dropdown Component</title>
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+
+    /* TRIGGER */
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-trigger {
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: white;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.18s;
+    }
+
+    .dropdown-trigger:hover {
+      background: #F1F5F9;
+    }
+
+    /* MENU */
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+      padding: 6px;
+      display: none;
+      z-index: 100;
+    }
+
+    .dropdown.open .dropdown-menu {
+      display: block;
+      animation: fadeIn 0.15s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ITEM */
+
+    .dropdown-item {
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.15s;
+    }
+
+    .dropdown-item:hover {
+      background: #F1F5F9;
+    }
+
+    .dropdown-item.active {
+      background: #EFF6FF;
+      color: var(--primary);
+    }
+
+    /* divider */
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 6px 0;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <h2>Dropdown</h2>
+
+  <div class="container">
+
+    <!-- FILTER DROPDOWN -->
+
+    <div class="dropdown" id="dropdown1">
+      <button class="dropdown-trigger">
+        Сортировка
+        ▼
+      </button>
+
+      <div class="dropdown-menu">
+        <div class="dropdown-item active">По дате</div>
+        <div class="dropdown-item">По зарплате</div>
+        <div class="dropdown-item">По откликам</div>
+      </div>
+    </div>
+
+    <!-- USER MENU -->
+
+    <div class="dropdown" id="dropdown2">
+      <button class="dropdown-trigger">
+        Профиль
+        ▼
+      </button>
+
+      <div class="dropdown-menu">
+        <div class="dropdown-item">Настройки</div>
+        <div class="dropdown-item">Мои заказы</div>
+        <div class="divider"></div>
+        <div class="dropdown-item">Выйти</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const dropdowns = document.querySelectorAll(".dropdown");
+
+    dropdowns.forEach(dropdown => {
+      const trigger = dropdown.querySelector(".dropdown-trigger");
+      const items = dropdown.querySelectorAll(".dropdown-item");
+
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+
+        // закрыть другие
+        dropdowns.forEach(d => d.classList.remove("open"));
+
+        dropdown.classList.toggle("open");
+      });
+
+      items.forEach(item => {
+        item.addEventListener("click", () => {
+          items.forEach(i => i.classList.remove("active"));
+          item.classList.add("active");
+
+          dropdown.classList.remove("open");
+          trigger.textContent = item.textContent + " ▼";
+        });
+      });
+    });
+
+    // click outside
+    document.addEventListener("click", () => {
+      dropdowns.forEach(d => d.classList.remove("open"));
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Layout (Header + Sidebar)</title>
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+    }
+
+    /* LAYOUT */
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 24px;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: 0.18s;
+    }
+
+    .nav-item:hover {
+      background: #F1F5F9;
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: #EFF6FF;
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+
+    .header {
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .search {
+      width: 300px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 0 10px;
+      font-size: 14px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user {
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.18s;
+    }
+
+    .user:hover {
+      background: #F1F5F9;
+    }
+
+    /* CONTENT */
+
+    .content {
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .placeholder {
+      background: white;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">SelectProfi</div>
+
+    <div class="nav">
+      <div class="nav-item active">Заказы</div>
+      <div class="nav-item">Кандидаты</div>
+      <div class="nav-item">Отклики</div>
+      <div class="nav-item">Сообщения</div>
+      <div class="nav-item">Аналитика</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- HEADER -->
+    <header class="header">
+
+      <input class="search" placeholder="Поиск..." />
+
+      <div class="header-right">
+        <div class="user">👤 Иван</div>
+      </div>
+
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <div class="page-title">Заказы</div>
+
+      <div class="placeholder">
+        Здесь будет список вакансий / заказов
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  // переключение активного пункта
+  const items = document.querySelectorAll('.nav-item');
+
+  items.forEach(item => {
+    item.addEventListener('click', () => {
+      items.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

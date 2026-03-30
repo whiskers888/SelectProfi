@@ -1,24 +1,57 @@
 import { useGetHealthQuery } from '../shared/api/generated/openapi'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
-type ApiStatus = 'loading' | 'error' | 'ok'
-
 export function DashboardPage() {
   const { isLoading, isError, refetch } = useGetHealthQuery()
-  const apiStatus: ApiStatus = isLoading ? 'loading' : isError ? 'error' : 'ok'
 
-  const statusLabel: Record<ApiStatus, string> = {
-    loading: 'Проверка API...',
-    error: 'Ошибка соединения',
-    ok: 'Сервис доступен',
+  // @dvnull: Ветки loading/error переведены на единый UX-шаблон состояний с явным retry.
+  if (isLoading) {
+    return (
+      <section className="page grid gap-4">
+        <Card className="max-w-2xl">
+          <CardHeader>
+            <CardTitle className="text-xl">Dashboard</CardTitle>
+            <CardDescription>Мониторинг состояния backend API</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p role="status" className="text-sm text-muted-foreground">
+              Проверка API...
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button type="button" variant="outline" disabled>
+              Обновить статус
+            </Button>
+          </CardFooter>
+        </Card>
+      </section>
+    )
   }
 
-  const statusClassName: Record<ApiStatus, string> = {
-    loading: 'bg-secondary text-secondary-foreground',
-    error: 'bg-destructive/10 text-destructive',
-    ok: 'bg-emerald-100 text-emerald-700',
+  if (isError) {
+    return (
+      <section className="page grid gap-4">
+        <Card className="max-w-2xl">
+          <CardHeader>
+            <CardTitle className="text-xl">Dashboard</CardTitle>
+            <CardDescription>Мониторинг состояния backend API</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="destructive" role="alert">
+              Ошибка соединения
+            </Alert>
+          </CardContent>
+          <CardFooter>
+            <Button type="button" variant="outline" onClick={() => void refetch()}>
+              Повторить
+            </Button>
+          </CardFooter>
+        </Card>
+      </section>
+    )
   }
 
   return (
@@ -34,15 +67,15 @@ export function DashboardPage() {
             <span
               className={cn(
                 'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium',
-                statusClassName[apiStatus],
+                'bg-success-muted text-success-foreground',
               )}
             >
-              {statusLabel[apiStatus]}
+              Сервис доступен
             </span>
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="button" variant="outline" onClick={() => void refetch()} disabled={isLoading}>
+          <Button type="button" variant="outline" onClick={() => void refetch()}>
             Обновить статус
           </Button>
         </CardFooter>

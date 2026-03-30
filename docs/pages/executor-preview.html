@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SelectProfi — Executor Preview</title>
+  <style>
+    :root{--primary:#0f766e;--primary-h:#0d5f59;--p-soft:#e6f7f5;--p-border:#bde9e3;--bg:#f4f8f6;--surface:#fff;--sub:#edf4f1;--border:#d7e5df;--text:#0f1f1b;--text2:#4e6660;--muted:#7f9690;--ok-bg:#dcfce7;--ok:#14532d;--warn-bg:#fef3c7;--warn:#7c4a0f;--info-bg:#e0f2fe;--info:#0c4a6e;--err-bg:#fee2e2;--err:#7f1d1d;--sh:0 1px 2px rgba(15,31,27,.05)}
+    *{box-sizing:border-box} html,body{margin:0;padding:0;font-family:"Manrope","Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
+    button,input,select{font:inherit} button{border:none;background:none;cursor:pointer}
+    .app{display:flex;min-height:100vh}.sidebar{width:260px;background:var(--surface);border-right:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:18px;transition:width .2s ease,padding .2s ease}
+    .brand{display:flex;gap:10px;align-items:center}.mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#158f85);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px}
+    .brand-copy{min-width:0}
+    .muted{color:var(--text2);font-size:12px}.role{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--sub)}.role-val{margin-top:8px;height:38px;border:1px solid var(--p-border);border-radius:10px;background:var(--p-soft);color:var(--primary);display:flex;justify-content:space-between;align-items:center;padding:0 10px;font-weight:700}
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--primary)} .nav{display:flex;flex-direction:column;gap:6px}.nav-btn{height:42px;border:1px solid transparent;border-radius:10px;padding:0 10px;display:flex;justify-content:space-between;align-items:center;color:var(--text2)}
+    .nav-btn:hover{background:var(--sub);color:var(--text)} .nav-btn.active{background:var(--p-soft);border-color:var(--p-border);color:var(--primary);font-weight:700}
+    .nav-left{display:flex;gap:8px;align-items:center}.nav-icon{font-size:15px;line-height:1;width:18px;display:inline-flex;justify-content:center}.nav-label{white-space:nowrap}.badge{min-width:22px;height:22px;border-radius:999px;background:var(--sub);padding:0 8px;display:grid;place-items:center;font-size:11px;font-weight:700}
+    .footer{margin-top:auto;border-top:1px solid var(--border);padding-top:12px}.mini{padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+    .main{flex:1;min-width:0;display:flex;flex-direction:column}.header{height:72px;background:rgba(255,255,255,.9);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:10}
+    .title{font-size:20px;font-weight:800}.subt{font-size:13px;color:var(--text2)} .hr{display:flex;align-items:center;gap:10px;position:relative}
+    .header-actions{display:flex;align-items:center;gap:10px}
+    .header-search{width:320px;max-width:100%}
+    .ctx-wrap{position:relative}
+    .h-tabs{display:inline-flex;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;gap:4px}
+    .h-tab{height:34px;min-width:34px;border-radius:8px;border:1px solid transparent;padding:0 10px;display:flex;gap:6px;align-items:center;justify-content:center;color:var(--text2);font-size:14px;font-weight:700}
+    .h-tab.active{background:var(--p-soft);border-color:var(--p-border);color:var(--primary)}
+    .profile-wrap{position:relative}
+    .chip{height:40px;border:1px solid var(--border);border-radius:999px;padding:0 8px 0 10px;background:var(--surface);display:flex;align-items:center;gap:10px;box-shadow:var(--sh)}
+    .profile-menu{position:absolute;top:48px;right:0;min-width:190px;padding:8px;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:0 12px 26px rgba(15,31,27,.16);z-index:22;opacity:0;transform:translateY(-6px);pointer-events:none;transition:all .18s ease}
+    .profile-menu.open{opacity:1;transform:translateY(0);pointer-events:auto}
+    .menu-btn{width:100%;height:34px;border-radius:8px;border:1px solid transparent;background:transparent;padding:0 10px;text-align:left;color:var(--text2);font-size:13px;font-weight:700}
+    .menu-btn:hover{background:var(--sub);color:var(--text)}
+    .side-btn{width:34px;height:34px;flex-shrink:0;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;color:var(--text2);margin-left:auto}
+    .side-btn:hover{background:var(--sub);color:var(--text)}
+    .ctx-pop{position:absolute;top:48px;left:0;width:340px;max-width:calc(100vw - 32px);padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:0 12px 26px rgba(15,31,27,.18);z-index:20;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .18s ease,transform .18s ease}
+    .ctx-pop.open{opacity:1;transform:translateY(0);pointer-events:auto}
+    .ctx-head{padding:4px 4px 10px}.ctx-title{font-size:14px;font-weight:800}.ctx-sub{font-size:12px;color:var(--text2);margin-top:4px}
+    .name{font-size:13px;font-weight:700}
+    .avatar{width:28px;height:28px;border-radius:999px;background:var(--p-soft);display:grid;place-items:center;color:var(--primary);font-weight:800;font-size:12px}
+    .content{padding:20px;display:flex;flex-direction:column;gap:14px}
+    .content.page-enter{animation:pageEnter .24s ease}
+    .input,.select{height:40px;border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:0 12px;color:var(--text)} .input{width:320px;max-width:100%}
+    .input::placeholder{color:var(--muted)} .input:focus,.select:focus{outline:none;border-color:var(--p-border);box-shadow:0 0 0 3px rgba(15,118,110,.16)}
+    .btn{height:40px;border-radius:10px;padding:0 14px;font-weight:700}
+    .btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)} .btn-s{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+    .btn:disabled,.tb:disabled{opacity:.45;cursor:not-allowed}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card{border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:14px;box-shadow:var(--sh)}
+    .v{font-size:28px;font-weight:800;line-height:1}.meta{font-size:12px;color:var(--text2)} .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+    .orders-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .orders-controls{display:flex;gap:8px;align-items:center}
+    .orders-layout{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:12px;align-items:stretch}
+    .orders-bulk{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--sub)}
+    .orders-bulk-left{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);font-weight:700}
+    .orders-bulk-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .order-row{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start}
+    .order-select-wrap{display:flex;justify-content:center}
+    .order-select{width:16px;height:16px;accent-color:var(--primary);margin-top:12px;cursor:pointer}
+    .orders-bulk .order-select{margin-top:0}
+    .orders-feed{min-height:240px}
+    .orders-feed.anim-out{animation:feedOut .22s ease forwards}
+    .orders-feed.anim-in{animation:feedIn .24s ease}
+    .state-rail{border:1px solid var(--border);border-radius:12px;background:var(--sub);padding:6px 4px;display:flex;flex-direction:column;gap:6px}
+    .state-btn{flex:1;min-height:98px;border-radius:10px;border:1px solid transparent;background:var(--surface);color:var(--text2);font-size:12px;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
+    .state-btn:hover{background:#f6fbf9;color:var(--text)}
+    .state-btn.active{background:var(--p-soft);border-color:var(--p-border);color:var(--primary)}
+    .executor-list{display:flex;flex-direction:column;gap:10px;min-height:240px}
+    .executor-item{width:100%;text-align:left;border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface);transition:.18s}
+    .executor-item:hover{border-color:var(--p-border);transform:translateY(-1px)}
+    .executor-title{font-size:14px;font-weight:800}
+    .executor-sub{font-size:12px;color:var(--text2);margin-top:4px}
+    .profile-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .profile-name{font-size:21px;font-weight:800}
+    .profile-role{font-size:13px;color:var(--text2);margin-top:4px}
+    .profile-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .info-block{border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface)}
+    .info-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}
+    .info-value{margin-top:6px;font-size:14px}
+    @keyframes feedOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-16px)}}
+    @keyframes feedIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pageEnter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .ph{padding:14px 14px 0}.pt{font-size:16px;font-weight:800}.ps{font-size:13px;color:var(--text2);margin-top:4px}.pb{padding:14px}.feed,.list{display:flex;flex-direction:column;gap:10px}
+    .item{width:100%;text-align:left;border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface)} .item:hover{border-color:var(--p-border);box-shadow:var(--sh)}
+    .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.h{font-size:15px;font-weight:700}.txt{font-size:13px;color:var(--text2);margin-top:4px}
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.tag{height:26px;border-radius:999px;padding:0 10px;display:grid;place-items:center;font-size:12px;font-weight:700}
+    .n{background:var(--sub);color:var(--text2);border:1px solid var(--border)} .ok{background:var(--ok-bg);color:var(--ok)} .w{background:var(--warn-bg);color:var(--warn)} .i{background:var(--info-bg);color:var(--info)} .e{background:var(--err-bg);color:var(--err)}
+    .hidden{display:none!important}.empty,.err{border:1px dashed var(--border);border-radius:12px;padding:24px 12px;background:var(--sub);color:var(--text2);text-align:center;font-size:13px}
+    .err{border-color:#f1b5b5;background:#fff4f4;color:var(--err)}
+    .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}.table{width:100%;border-collapse:collapse;min-width:700px}.table th{background:var(--sub);color:var(--text2);font-size:12px;font-weight:700;padding:11px;text-align:left;border-bottom:1px solid var(--border)}
+    .table td{padding:11px;border-bottom:1px solid var(--border);font-size:13px}.actions{display:flex;gap:6px;flex-wrap:wrap}.tb{height:30px;border-radius:8px;border:1px solid var(--border);padding:0 10px;background:var(--surface);font-size:12px;font-weight:700}
+    .check-actions{display:flex;flex-direction:column;gap:4px}
+    .check-action{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+    .check-box{width:14px;height:14px;accent-color:var(--primary);cursor:pointer}
+    .tb.p{background:var(--p-soft);border-color:var(--p-border);color:var(--primary)} .tb.d{background:#fff7f7;border-color:#f5c2c2;color:var(--err)}
+    .meetings-table .table{min-width:820px}.meet-cell{min-width:420px}
+    .meeting-card{border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--surface);margin-bottom:8px}
+    .meeting-card:last-child{margin-bottom:0}.meeting-title{font-size:13px;font-weight:800}.meeting-time{font-size:12px;color:var(--text2);margin-top:4px}
+    .meeting-comment{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.35}
+    .meeting-link{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:var(--primary);text-decoration:none}
+    .meeting-link:hover{text-decoration:underline}
+    .chat-fab{position:fixed;right:18px;bottom:18px;z-index:26;height:52px;padding:0 16px;border-radius:999px;background:var(--primary);color:#fff;border:1px solid transparent;box-shadow:0 10px 24px rgba(15,118,110,.32);font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
+    .chat-fab:hover{background:var(--primary-h)}
+    .chat-sheet{position:fixed;left:16px;right:16px;bottom:16px;height:min(50vh,520px);z-index:25;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 20px 36px rgba(15,31,27,.18);display:flex;flex-direction:column;transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none;transition:all .22s ease}
+    .chat-sheet.open{transform:translateY(0);opacity:1;pointer-events:auto}
+    .chat-top{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .chat-actions{display:flex;gap:8px}
+    .chat-close{width:30px;height:30px;border-radius:999px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:16px;font-weight:800;line-height:1;display:grid;place-items:center;padding:0}
+    .chat-close:hover{background:#fee2e2}
+    .chat-body{padding:12px;display:grid;grid-template-columns:280px minmax(0,1fr);gap:12px;min-height:0;flex:1}
+    .chat-list{border:1px solid var(--border);border-radius:12px;padding:8px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+    .chat-item{width:100%;text-align:left;border:1px solid transparent;border-radius:10px;padding:10px;background:var(--surface)}
+    .chat-item:hover{background:var(--sub)}
+    .chat-item.active{background:var(--p-soft);border-color:var(--p-border)}
+    .chat-name{font-size:13px;font-weight:800}
+    .chat-preview{margin-top:3px;font-size:12px;color:var(--text2)}
+    .chat-window{border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;min-height:0}
+    .chat-messages{padding:10px;overflow:auto;display:flex;flex-direction:column;gap:8px;flex:1}
+    .msg{max-width:78%;padding:9px 10px;border-radius:10px;font-size:12px;line-height:1.35}
+    .msg.in{background:var(--sub);align-self:flex-start}
+    .msg.out{background:var(--p-soft);align-self:flex-end}
+    .chat-compose{padding:10px;border-top:1px solid var(--border);display:flex;gap:8px}
+    .chat-input{flex:1;height:36px;border:1px solid var(--border);border-radius:9px;padding:0 10px}
+    .chat-input:focus{outline:none;border-color:var(--p-border)}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field>span{font-size:12px;font-weight:700;color:var(--text2)}
+    .field.full{grid-column:1/-1}
+    .field textarea{min-height:110px;resize:vertical;border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:10px 12px;color:var(--text)}
+    .field textarea:focus{outline:none;border-color:var(--p-border);box-shadow:0 0 0 3px rgba(15,118,110,.16)}
+    .form-actions{margin-top:6px;display:flex;justify-content:flex-end;gap:8px}
+    .modal-bg{position:fixed;inset:0;background:rgba(5,22,19,.45);display:flex;align-items:center;justify-content:center;padding:18px;z-index:30;opacity:0;pointer-events:none;transition:opacity .18s ease}.modal{width:min(560px,100%);background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;opacity:0;transform:translateY(10px) scale(.98);transition:transform .2s ease,opacity .2s ease}
+    .modal-bg.candidate-open{background:rgba(5,22,19,.62)}
+    .modal-bg.open{opacity:1;pointer-events:auto}
+    .modal-bg.open .modal{opacity:1;transform:translateY(0) scale(1)}
+    .modal.candidate{width:min(960px,100%)}
+    .mh{padding:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:10px}.mb{padding:14px;display:flex;flex-direction:column;gap:10px}.mf{padding:0 14px 14px;display:flex;justify-content:flex-end}
+    .modal-head-actions{display:flex;gap:8px;align-items:center}
+    .candidate-row{cursor:pointer}
+    .candidate-row:hover td{background:#f6fbf9}
+    .candidate-main{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+    .candidate-pane{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:12px}
+    .candidate-head{font-size:18px;font-weight:800}
+    .candidate-role{font-size:13px;color:var(--text2);margin-top:4px}
+    .candidate-label{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}
+    .candidate-text{margin-top:6px;font-size:13px;line-height:1.5}
+    .candidate-video{margin-top:10px}
+    .video-shell{border:1px dashed var(--border);border-radius:10px;padding:10px;background:var(--sub)}
+    .video-preview{height:120px;border:1px solid var(--border);border-radius:8px;background:linear-gradient(135deg,#e8f4ef,#f8fbfa);display:grid;place-items:center;font-size:13px;color:var(--text2);text-align:center;padding:8px}
+    .video-actions{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+    .video-chip{height:30px;border-radius:8px;border:1px solid var(--border);padding:0 10px;background:var(--surface);font-size:12px;font-weight:700;color:var(--text2);text-decoration:none;display:inline-flex;align-items:center}
+    .video-chip:hover{background:#f6fbf9;color:var(--text)}
+    .video-chip.primary{background:var(--p-soft);border-color:var(--p-border);color:var(--primary)}
+    .video-muted{font-size:12px;color:var(--text2)}
+    .docs-card{margin-top:10px;border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--surface)}
+    .docs-head{display:flex;align-items:center;gap:8px}
+    .docs-list-horizontal{margin-top:8px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+    .doc-chip{min-width:210px;max-width:250px;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--sub)}
+    .doc-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .doc-type{font-size:11px;color:var(--text2)}
+    .doc-link{font-size:12px;color:var(--primary);text-decoration:none;font-weight:700;white-space:nowrap}
+    .doc-link:hover{text-decoration:underline}
+    .doc-add-chip{justify-content:center;border-style:dashed;background:#f8fbfa;color:var(--text2);font-weight:700}
+    .doc-add-chip:hover{background:#eef7f4;color:var(--text)}
+    .toast{position:fixed;right:20px;bottom:20px;max-width:320px;border-radius:10px;padding:12px 14px;color:#fff;font-size:13px;font-weight:700;z-index:35} .toast.ok{background:#166534}.toast.e{background:#991b1b}.toast.i{background:#075985}
+    .app.sidebar-collapsed .sidebar{width:88px;padding:16px 12px}
+    .app.sidebar-collapsed .brand-copy,.app.sidebar-collapsed .nav-label,.app.sidebar-collapsed .badge,.app.sidebar-collapsed .footer{display:none}
+    .app.sidebar-collapsed .nav-btn{justify-content:center;padding:0;min-width:56px}
+    .app.sidebar-collapsed .nav-left{justify-content:center;width:100%}
+    .app.sidebar-collapsed .nav-icon{width:24px;font-size:17px}
+    @media(max-width:1200px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}.header-search{width:240px}}
+    @media(max-width:900px){.sidebar{display:none}.header{height:auto;padding:12px 16px;flex-direction:column;align-items:flex-start}.hr{width:100%;justify-content:space-between}.ctx-pop{left:auto;right:0}.content{padding:16px}.chat-fab{right:12px;bottom:12px}.chat-sheet{left:10px!important;right:10px!important;bottom:10px}.chat-body{grid-template-columns:1fr}}
+    @media(max-width:767px){.stats{grid-template-columns:1fr}.header-actions{width:100%}.header-search{flex:1;width:auto}.orders-bulk{flex-direction:column;align-items:flex-start}.orders-layout{grid-template-columns:1fr}.state-rail{flex-direction:row}.state-btn{min-height:38px;writing-mode:horizontal-tb;transform:none;flex:1}.form-grid{grid-template-columns:1fr}.profile-columns{grid-template-columns:1fr}.candidate-main{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><div class="mark">SP</div><div class="brand-copy"><div><b>SelectProfi</b></div><div class="muted">Платформа подбора специалистов</div></div><button class="side-btn" id="sidebarToggle" aria-label="Свернуть навигацию">⇤</button></div>
+      <nav class="nav">
+        <button class="nav-btn active" data-page="search"><span class="nav-left"><span class="nav-icon">🧾</span><span class="nav-label">Мои проекты</span></span><span class="badge" id="bSearch">7</span></button>
+        <button class="nav-btn" data-page="executors"><span class="nav-left"><span class="nav-icon">🧑</span><span class="nav-label">Кандидаты</span></span></button>
+        <button class="nav-btn" data-page="meetings"><span class="nav-left"><span class="nav-icon">📅</span><span class="nav-label">Встречи</span></span><span class="badge" id="bMeet">6</span></button>
+        <button class="nav-btn" data-page="stats"><span class="nav-left"><span class="nav-icon">📈</span><span class="nav-label">Статистика</span></span></button>
+        <button class="nav-btn" data-page="analytics"><span class="nav-left"><span class="nav-icon">📊</span><span class="nav-label">Аналитика</span></span></button>
+      </nav>
+      <div class="footer"><div class="mini"><div><b>Следующий шаг</b></div><div class="muted" id="hint">Откройте проект, добавьте кандидатов и отправьте shortlist заказчику.</div></div></div>
+    </aside>
+    <div class="main">
+      <header class="header">
+        <div><div class="title" id="title">Проекты и кандидаты</div><div class="subt" id="subtitle">Вы ведёте подбор, отправляете кандидатов заказчику и планируете интервью.</div></div>
+        <div class="hr">
+          <div class="header-actions">
+            <button class="btn btn-p" id="headerCreate">Добавить кандидата</button>
+            <input class="input header-search" id="headerSearch" placeholder="Поиск по проектам и кандидатам..." />
+          </div>
+          <div class="ctx-wrap" id="ctxWrap">
+            <div class="h-tabs">
+              <button class="h-tab active" data-ctx="meetings" aria-label="Встречи">📅 <span class="badge" id="cMeet">3</span></button>
+              <button class="h-tab" data-ctx="notifications" aria-label="Уведомления">🔔 <span class="badge" id="cNoti">5</span></button>
+            </div>
+            <div class="ctx-pop" id="ctxPop">
+              <div class="ctx-head">
+                <div class="ctx-title" id="ctxTitle">Ближайшие встречи</div>
+                <div class="ctx-sub" id="ctxSub">Синхроны и интервью по текущим заказам.</div>
+              </div>
+              <div class="list" id="ctxList"></div>
+            </div>
+          </div>
+          <div class="profile-wrap" id="profileWrap">
+            <button class="chip" id="profileBtn"><div><div class="name">Мария К.</div><div class="muted">Исполнитель</div></div><div class="avatar">ИС</div></button>
+            <div class="profile-menu" id="profileMenu">
+              <button class="menu-btn" id="menuProfile">Мой профиль</button>
+              <button class="menu-btn" id="menuSettings">Настройки</button>
+              <button class="menu-btn" id="menuLogout">Выйти из аккаунта</button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main class="content">
+        <section class="stats" id="stats"></section>
+        <section id="vSearch">
+          <div class="card"><div class="ph orders-top"><div><div class="pt">Проекты в работе</div><div class="ps">Нажмите карточку, чтобы открыть проект и управлять кандидатами.</div></div><div class="orders-controls"><select class="select" id="sort"><option value="updated">Сначала обновлённые</option><option value="responses">По числу кандидатов</option><option value="priority">По приоритету</option></select><button class="btn btn-s" id="filters">Фильтры</button></div></div><div class="pb"><div class="orders-bulk"><div class="orders-bulk-left"><input type="checkbox" class="order-select" id="ordersSelectAll" /><label for="ordersSelectAll">Выбрать все</label><span id="ordersBulkCount">0</span></div><div class="orders-bulk-actions"><button type="button" class="tb" id="bulkPause" disabled>На паузу</button><button type="button" class="tb" id="bulkArchive" disabled>В архив</button><button type="button" class="tb" id="bulkActivate" disabled>Активировать</button></div></div><div class="orders-layout"><div class="feed orders-feed" id="orders"></div><div class="state-rail"><button class="state-btn active" data-entity="active">Активные</button><button class="state-btn" data-entity="paused">На паузе</button><button class="state-btn" data-entity="archive">Архив</button></div></div></div></div>
+        </section>
+        <section id="vExecSearch" class="hidden">
+          <div class="card"><div class="ph"><div class="pt">База кандидатов</div><div class="ps">Список кандидатов с переходом в профиль и резюме.</div></div><div class="pb"><div class="executor-list" id="executors"></div></div></div>
+        </section>
+        <section id="vExecutor" class="hidden">
+          <div class="card"><div class="ph"><button class="tb" id="backExecutor">← Назад к базе кандидатов</button><div class="pt">Профиль кандидата</div><div class="ps">Проверьте резюме, статус и отправьте кандидата заказчику.</div></div><div class="pb"><div class="profile-head"><div><div class="profile-name" id="executorName">Кандидат</div><div class="profile-role" id="executorRole"></div></div><span class="tag ok" id="executorStatus">В работе</span></div><div class="tags" id="executorTags"></div><div class="profile-columns"><div class="info-block"><div class="info-title">О кандидате</div><div class="info-value" id="executorAbout"></div></div><div class="info-block"><div class="info-title">Опыт и стек</div><div class="info-value" id="executorExperience"></div></div><div class="info-block"><div class="info-title">Город</div><div class="info-value" id="executorCity"></div></div><div class="info-block"><div class="info-title">Контакт</div><div class="info-value" id="executorContact"></div></div></div><div class="form-actions"><button class="btn btn-s" id="executorMessage">Написать в чат</button><button class="btn btn-p" id="executorInvite">Пригласить на собеседование</button></div></div></div>
+        </section>
+        <section id="vOrder" class="hidden">
+          <div class="card"><div class="ph"><button class="tb" id="back">← Назад к проектам</button><div class="pt" id="oTitle"></div><div class="ps" id="oSub"></div></div><div class="pb"><div class="tags" id="oTags"></div></div></div>
+          <div class="grid">
+            <div class="card"><div class="ph"><div class="pt" id="respTitle">Кандидаты по проекту</div><div class="ps" id="respSub">Добавляйте кандидатов, назначайте интервью и собирайте shortlist.</div></div><div class="pb"><div class="table-wrap"><table class="table"><thead><tr><th id="respCol1">Кандидат</th><th id="respCol2">Роль</th><th id="respCol3">Статус</th><th id="respCol4">Комментарий</th><th id="respCol5">Действия</th></tr></thead><tbody id="resp"></tbody></table></div></div></div>
+            <div class="card"><div class="ph"><div class="pt">Лента по заказу</div><div class="ps">Последние действия команды и кандидатов.</div></div><div class="pb"><div class="list" id="timeline"></div></div></div>
+          </div>
+        </section>
+        <section id="vStats" class="hidden">
+          <div class="card"><div class="ph"><div class="pt">Статистика воронки</div><div class="ps">Сводка по этапам подбора вынесена в отдельную вкладку.</div></div><div class="pb"><div class="table-wrap"><table class="table"><thead><tr><th>Этап</th><th>Количество</th><th>Изменение</th><th>Комментарий</th></tr></thead><tbody id="stTable"></tbody></table></div></div></div>
+          <div class="card"><div class="ph"><div class="pt">Ключевые точки по заказам</div></div><div class="pb"><div class="list" id="stList"></div></div></div>
+        </section>
+        <section id="vMeet" class="hidden">
+          <div class="card"><div class="ph"><div class="pt">Календарь встреч</div><div class="ps">Даты в таблице, встречи отмечены карточками как в корпоративных мессенджерах.</div></div><div class="pb"><div class="table-wrap meetings-table"><table class="table"><thead><tr><th>Дата</th><th class="meet-cell">Встречи</th></tr></thead><tbody id="meetTable"></tbody></table></div></div></div>
+        </section>
+        <section id="vCreate" class="hidden">
+          <div class="card"><div class="ph"><div class="pt">Новый кандидат</div><div class="ps">Добавьте кандидата в проект и отправьте заказчику.</div></div><div class="pb"><form id="createOrderForm"><div class="form-grid"><label class="field"><span>Проект</span><select class="select" name="projectId"><option value="ord-201">Frontend Developer (React) • ООО Альфа</option><option value="ord-202">Data Analyst • FinTech Project</option><option value="ord-203">Product Designer • HR SaaS</option></select></label><label class="field"><span>ФИО кандидата</span><input class="input" name="candidateName" required placeholder="Например, Елена Петрова" /></label><label class="field"><span>Специализация</span><select class="select" name="specialization"><option>Frontend</option><option>Backend</option><option>Product Design</option><option>Data Analyst</option></select></label><label class="field"><span>Уровень</span><select class="select" name="level"><option>Middle</option><option>Middle+</option><option>Senior</option><option>Lead</option></select></label><label class="field"><span>Формат</span><select class="select" name="format"><option>Удаленно</option><option>Гибрид</option><option>Офис</option></select></label><label class="field"><span>Город</span><input class="input" name="location" placeholder="Москва / РФ" /></label><label class="field"><span>Ожидания по доходу</span><input class="input" name="salary" placeholder="от 250 000 ₽" /></label><label class="field full"><span>Комментарий исполнителя</span><textarea name="description" placeholder="Краткое резюме, релевантный опыт, готовность к интервью..."></textarea></label></div><div class="form-actions"><button type="button" class="btn btn-s" id="cancelCreate">Отмена</button><button type="submit" class="btn btn-p">Добавить кандидата</button></div></form></div></div>
+        </section>
+        <section id="vChats" class="hidden"><div class="card"><div class="ph"><div class="pt">Чаты</div><div class="ps">Полный режим чатов с сохранением хедера и навигации.</div></div><div class="pb"><div class="chat-body"><div class="chat-list" id="chatsFullList"></div><div class="chat-window"><div class="chat-messages" id="chatsFullMessages"></div><div class="chat-compose"><input class="chat-input" id="chatFullInput" placeholder="Написать сообщение..." /><button class="btn btn-p" id="chatFullSend">Отправить</button></div></div></div></div></div></section>
+        <section id="vAn" class="hidden"><div class="card"><div class="ph"><div class="pt">Аналитика</div></div><div class="pb"><div class="err">Не удалось загрузить отчёт по конверсии.<div class="tags"><button class="tb" id="retry">Повторить</button></div></div></div></div></section>
+      </main>
+    </div>
+  </div>
+  <button class="chat-fab" id="chatFab">💬 Чаты</button>
+  <div class="chat-sheet" id="chatSheet"><div class="chat-top"><div><div class="pt">Чаты</div><div class="ps">Быстрый доступ к переписке</div></div><div class="chat-actions"><button class="tb" id="chatExpand">Раскрыть</button><button class="chat-close" id="chatClose" aria-label="Закрыть чат">✕</button></div></div><div class="chat-body"><div class="chat-list" id="chatList"></div><div class="chat-window"><div class="chat-messages" id="chatMessages"></div><div class="chat-compose"><input class="chat-input" id="chatInput" placeholder="Написать сообщение..." /><button class="btn btn-p" id="chatSend">Отправить</button></div></div></div></div>
+  <div class="modal-bg hidden" id="modal"><div class="modal" id="modalCard"><div class="mh"><div><div class="pt" id="mTitle">Детали кандидата</div><div class="ps" id="mSub"></div></div><div class="modal-head-actions"><button class="tb hidden" id="candPrev">←</button><button class="tb hidden" id="candNext">→</button><button class="tb" id="mClose1">Закрыть</button></div></div><div class="mb" id="modalDefault"><div class="mini"><div><b>Комментарий исполнителя</b></div><div class="muted" id="mComment"></div></div><div class="mini"><div><b>Следующий шаг</b></div><div class="muted" id="mStep"></div></div></div><div class="mb hidden" id="modalCandidate"><div class="candidate-main"><div class="candidate-pane"><div class="candidate-head" id="candName"></div><div class="candidate-role" id="candRole"></div><div class="candidate-label">Резюме кандидата</div><div class="candidate-text" id="candResume"></div></div><div class="candidate-pane"><div class="candidate-label">Комментарий от исполнителя</div><div class="candidate-text" id="candComment"></div><div class="candidate-label">Видео встречи с интервью</div><div class="candidate-video" id="candVideo"></div></div></div><div id="candDocs"></div><div class="form-actions"><button class="btn btn-s" id="candReject">Отклонить</button><button class="btn btn-p" id="candApprove">Добавить в short list</button></div></div></div></div>
+  <div class="toast hidden" id="toast"></div>
+  <script>
+    const d = {
+      badges: { orders: "7", meetings: "4" },
+      counts: { meet: "2", noti: "4" },
+      stats: [
+        ["Проектов в работе", "7", "2 на этапе согласования"],
+        ["Кандидатов в пайплайне", "23", "5 добавлено сегодня"],
+        ["Назначено интервью", "4", "2 подтверждено заказчиком"],
+        ["Отправлено shortlist", "3", "1 сегодня"]
+      ],
+      executors: [
+        { id: "ex-1", name: "Елена Петрова", role: "Senior Frontend Developer", rating: "4.8", about: "8 лет в продуктовой разработке, React/TypeScript.", experience: "B2B SaaS, design systems, performance", city: "Москва", contact: "elena.petrova@mail.ru", tags: [["Short-list", "ok"], ["React", "i"], ["Готова к интервью", "n"]] },
+        { id: "ex-2", name: "Дмитрий Орлов", role: "Backend Developer (Node.js)", rating: "4.7", about: "Микросервисная архитектура, highload, CI/CD.", experience: "Node.js, NestJS, PostgreSQL, Kafka", city: "Санкт-Петербург", contact: "d.orlov@mail.ru", tags: [["Новый", "w"], ["Backend", "i"], ["Релокация", "n"]] },
+        { id: "ex-3", name: "Виктория Самойлова", role: "Senior Data Analyst", rating: "4.9", about: "Продуктовая аналитика, A/B тесты, BI.", experience: "SQL, Python, Power BI, unit-экономика", city: "Казань", contact: "v.samoylova@mail.ru", tags: [["На согласовании", "i"], ["Data", "i"], ["Интервью назначено", "ok"]] }
+      ],
+      orders: [
+        { id: "ord-201", mode: "executor_work", g: "active", p: 3, u: 1711708200000, title: "Frontend Developer (React) • ООО Альфа", sub: "Заказчик: Иван Петров. Этап подбора кандидатов.", tags: [["React", "i"], ["Подбор", "ok"], ["5 кандидатов", "w"]], owner: "Мария Кузнецова", candidates: [{ id: "c401", c: "Елена Петрова", role: "Senior Frontend Developer", s: ["Short-list", "i"], source: "Отклик с платформы", comment: "Комментарий кандидата: готова выйти через 2 недели.", execComment: "Сильный профиль по React и B2B, рекомендую заказчику.", resume: "8 лет опыта, React/TypeScript, дизайн-системы, продуктовые команды.", meeting: "Собеседование: 3 апреля, 14:00 • Телемост", videoLaunch: "https://telemost.yandex.ru/j/884-frontend", videoCloud: "https://disk.yandex.ru/i/front-c401", docs: [{ name: "CV_Елена_Петрова.pdf", type: "PDF", url: "https://disk.yandex.ru/i/front-c401-cv" }], step: "Отправить в shortlist заказчику." }, { id: "c402", c: "Никита Сергеев", role: "Middle+ Frontend Developer", s: ["Новый", "w"], source: "Добавлен вручную", comment: "Комментарий кандидата: рассматривает гибридный формат.", execComment: "Нужно дополнительно проверить архитектурный опыт.", resume: "5 лет опыта, React, Next.js, тестирование, API интеграции.", meeting: "Встреча не назначена", videoLaunch: "", videoCloud: "https://disk.yandex.ru/i/front-c402", docs: [{ name: "Никита_Сергеев_CV.pdf", type: "PDF", url: "https://disk.yandex.ru/i/front-c402-cv" }], step: "Провести первичный скрининг." }], timeline: [["Добавлен новый кандидат", "Сегодня, 15:10 • вручную"], ["Кандидат отправлен в shortlist", "Сегодня, 12:40 • Елена Петрова"]] },
+        { id: "ord-202", mode: "candidate_selection", g: "active", p: 2, u: 1711709100000, title: "Data Analyst • FinTech Project", sub: "Заказчик: Артём Лебедев. Этап согласования short-list.", tags: [["Data", "i"], ["На согласовании", "ok"], ["4 кандидата", "w"]], candidates: [{ id: "c501", c: "Виктория Самойлова", role: "Senior Data Analyst", s: ["Потенциальный", "i"], source: "Передан в shortlist", comment: "Комментарий кандидата: готова к этапу финального интервью.", execComment: "Лучшее совпадение по продуктовой аналитике.", resume: "6 лет аналитики, SQL/Python, BI, продуктовые метрики.", meeting: "Встреча: 4 апреля, 11:30 • Телемост", videoLaunch: "https://telemost.yandex.ru/j/501-analyst", videoCloud: "https://disk.yandex.ru/i/analyst-c501", docs: [{ name: "CV_Виктория_Самойлова.pdf", type: "PDF", url: "https://disk.yandex.ru/i/analyst-c501-resume" }, { name: "Тестовое_задание.xlsx", type: "XLSX", url: "https://disk.yandex.ru/i/analyst-c501-test" }], step: "Ждём решение заказчика." }, { id: "c502", c: "Дмитрий Гуров", role: "Middle Data Analyst", s: ["На проверке", "w"], source: "Добавлен вручную", comment: "Комментарий кандидата: открыт к интервью в ближайшие дни.", execComment: "Хороший профиль, но ниже по уровню Senior.", resume: "4 года аналитики, SQL/Python/Tableau, retail и e-commerce.", meeting: "Встреча: 5 апреля, 16:00 • Zoom", videoLaunch: "https://zoom.us/j/502-analyst", videoCloud: "https://drive.google.com/file/d/analyst-c502/view", docs: [], step: "Актуализировать фидбэк от заказчика." }], timeline: [["Short-list отправлен заказчику", "Сегодня, 13:25"], ["Назначены встречи", "Сегодня, 10:10"]] },
+        { id: "ord-203", g: "active", p: 2, u: 1711706400000, title: "Product Designer • HR SaaS", sub: "Заказчик: Ольга Романова. Формируем первичный shortlist.", tags: [["Design", "i"], ["Новые кандидаты", "ok"], ["3 профиля", "w"]], responses: [{ id: "r11", c: "Марина Крылова", r: "Senior Product Designer", s: ["Новый", "w"], src: "Портфолио подтверждено", com: "Сильный UX-опыт в B2B продуктах.", step: "Провести скрининг и назначить интервью." }, { id: "r12", c: "Кирилл Зотов", r: "Product Designer", s: ["Скрининг", "i"], src: "Рекомендация из базы", com: "Подходит по стеку, нужен кейс-интервью.", step: "Отправить в shortlist после интервью." }], timeline: [["Добавлен профиль кандидата", "Сегодня, 14:20"], ["Старт скрининга", "Сегодня, 11:05"]] },
+        { id: "ord-204", g: "paused", p: 1, u: 1711612800000, title: "Head of Sales • B2B", sub: "Заказчик: ООО Омега. Пауза по бюджету.", tags: [["Sales", "i"], ["Офис", "n"], ["Пауза", "w"]], responses: [{ id: "r31", c: "Олег Петров", r: "Head of Sales", s: ["Ожидание", "w"], src: "Профиль готов", com: "Кандидат релевантен, ожидаем разблокировки бюджета.", step: "Вернуться к заказу после снятия паузы." }], timeline: [["Проект на паузе", "3 дня назад • ждём бюджет"]] }
+      ],
+      meet: [
+        ["Интервью с Еленой Петровой", "ord-201 • завтра 14:00 • Телемост", [["Критично", "w"]]],
+        ["Синк с заказчиком по shortlist", "ord-202 • сегодня 18:30", [["Созвон", "i"]]]
+      ],
+      noti: [
+        ["Заказчик обновил комментарий", "ord-202 • нужен 1 дополнительный кандидат.", [["Только что", "w"]]],
+        ["Кандидат подтвердил интервью", "Елена Петрова подтвердила слот на завтра.", [["Интервью", "ok"]]],
+        ["Чат по ord-201 обновлён", "Новый вопрос от заказчика.", [["Сообщения", "i"]]]
+      ],
+      calendar: [
+        { date: "Понедельник, 30 марта", items: [{ title: "Скрининг Елены Петровой", from: "10:00", to: "10:45", comment: "Подготовка к отправке в shortlist", link: "https://telemost.yandex.ru/j/123-screen" }, { title: "Синк с заказчиком", from: "16:30", to: "17:00", comment: "Статус по проекту ord-201", link: "https://telemost.yandex.ru/j/321-sync" }] },
+        { date: "Вторник, 31 марта", items: [{ title: "Финальное интервью Data Analyst", from: "12:00", to: "13:00", comment: "Заказчик + кандидат", link: "https://telemost.yandex.ru/j/555-final" }] }
+      ],
+      st: [["Новые кандидаты", "11", "+3", "Добавлены сегодня вручную и из откликов"], ["Скрининг", "7", "+1", "Часть профилей в работе"], ["Short-list", "4", "+2", "Переданы заказчикам"], ["Интервью", "4", "+1", "Есть подтвержденные слоты"], ["Отказ", "3", "0", "Без изменений"]],
+      stList: [["Ускорение short-list", "Среднее время отправки short-list: 2.8 дня.", [["Хороший тренд", "ok"]]], ["Нужен дополнительный sourcing", "По ord-203 требуется ещё 2 релевантных профиля.", [["Нужен фокус", "w"]]], ["Пауза по sales проекту", "ord-204 ожидает бюджет заказчика.", [["Блокер", "e"]]]],
+      chats: [
+        { id: "chat-1", name: "Елена Петрова (кандидат)", preview: "Подтверждаю интервью на завтра", messages: [{ dir: "in", text: "Подтверждаю интервью на завтра в 14:00." }, { dir: "out", text: "Отлично, отправлю инвайт и детали." }] },
+        { id: "chat-2", name: "Иван Петров (заказчик)", preview: "Подтвердите 2 кандидатов в shortlist", messages: [{ dir: "in", text: "Подтвердите, кого отправляем в shortlist сегодня." }, { dir: "out", text: "Отправлю 2 профиля до 18:00." }] },
+        { id: "chat-3", name: "Команда подбора", preview: "Согласуем приоритет проектов", messages: [{ dir: "in", text: "Сфокусируйтесь на ord-201 и ord-202." }, { dir: "out", text: "Принято, перераспределю время команды." }] }
+      ]
+    };
+
+    const s = { page: "search", prevPage: "search", ctx: "meetings", entity: "active", sort: "updated", search: "", selOrder: null, selExecutor: "ex-1", selOrders: [], loading: false, pop: false, collapsed: false, orderAnim: "", profileOpen: false, chatOpen: false, chatId: "chat-1", modalCandidateIds: [], modalCandidateIndex: -1, t: null, pageAnimT: null, modalT: null };
+    const q = id => document.getElementById(id);
+    const qa = sel => document.querySelectorAll(sel);
+    const app = document.querySelector(".app");
+    const ton = t => ({ n: "n", ok: "ok", w: "w", i: "i", e: "e" }[t] || "n");
+    const tag = (t, c) => `<span class="tag ${ton(c)}">${t}</span>`;
+    const tags = a => a.map(x => tag(x[0], x[1])).join("");
+    const checkAction = (label, action, key, id) => `<label class="check-action"><input class="check-box" type="checkbox" data-ra="${action}" data-${key}="${id}" /><span>${label}</span></label>`;
+    const checkActions = (...items) => `<div class="check-actions">${items.join("")}</div>`;
+
+    const refs = {
+      content: document.querySelector(".content"), title: q("title"), subtitle: q("subtitle"), stats: q("stats"), orders: q("orders"), executors: q("executors"),
+      ctxWrap: q("ctxWrap"), ctxPop: q("ctxPop"), ctxTitle: q("ctxTitle"), ctxSub: q("ctxSub"), ctxList: q("ctxList"),
+      profileWrap: q("profileWrap"), profileBtn: q("profileBtn"), profileMenu: q("profileMenu"), menuProfile: q("menuProfile"), menuSettings: q("menuSettings"), menuLogout: q("menuLogout"),
+      resp: q("resp"), respTitle: q("respTitle"), respSub: q("respSub"), respCol1: q("respCol1"), respCol2: q("respCol2"), respCol3: q("respCol3"), respCol4: q("respCol4"), respCol5: q("respCol5"), timeline: q("timeline"), oTitle: q("oTitle"), oSub: q("oSub"), oTags: q("oTags"),
+      executorName: q("executorName"), executorRole: q("executorRole"), executorStatus: q("executorStatus"), executorTags: q("executorTags"), executorAbout: q("executorAbout"), executorExperience: q("executorExperience"), executorCity: q("executorCity"), executorContact: q("executorContact"), backExecutor: q("backExecutor"), executorMessage: q("executorMessage"), executorInvite: q("executorInvite"),
+      stTable: q("stTable"), stList: q("stList"), meetTable: q("meetTable"),
+      chatsFullList: q("chatsFullList"), chatsFullMessages: q("chatsFullMessages"), chatFullInput: q("chatFullInput"), chatFullSend: q("chatFullSend"),
+      chatFab: q("chatFab"), chatSheet: q("chatSheet"), chatExpand: q("chatExpand"), chatClose: q("chatClose"), chatList: q("chatList"), chatMessages: q("chatMessages"), chatInput: q("chatInput"), chatSend: q("chatSend"),
+      vSearch: q("vSearch"), vExecSearch: q("vExecSearch"), vExecutor: q("vExecutor"), vOrder: q("vOrder"), vStats: q("vStats"), vMeet: q("vMeet"), vCreate: q("vCreate"), vChats: q("vChats"), vAn: q("vAn"),
+      search: q("headerSearch"), sort: q("sort"), toast: q("toast"), modal: q("modal"), modalCard: q("modalCard"), modalDefault: q("modalDefault"), modalCandidate: q("modalCandidate"),
+      mTitle: q("mTitle"), mSub: q("mSub"), mComment: q("mComment"), mStep: q("mStep"), candName: q("candName"), candRole: q("candRole"), candResume: q("candResume"), candComment: q("candComment"), candVideo: q("candVideo"), candDocs: q("candDocs"), candPrev: q("candPrev"), candNext: q("candNext"), candApprove: q("candApprove"), candReject: q("candReject"),
+      sidebarToggle: q("sidebarToggle"), headerCreate: q("headerCreate"), createOrderForm: q("createOrderForm"), cancelCreate: q("cancelCreate"),
+      ordersSelectAll: q("ordersSelectAll"), ordersBulkCount: q("ordersBulkCount"), bulkPause: q("bulkPause"), bulkArchive: q("bulkArchive"), bulkActivate: q("bulkActivate"),
+      bSearch: q("bSearch"), bMeet: q("bMeet"), cMeet: q("cMeet"), cNoti: q("cNoti")
+    };
+
+    const pages = {
+      search: ["Мои проекты", "Ваши активные проекты и воронка кандидатов по каждому заказу."],
+      executors: ["Поиск кандидатов", "Подберите кандидата и провалитесь в профиль по клику."],
+      executor: ["Профиль кандидата", "Проверьте профиль, резюме и передайте кандидата заказчику."],
+      order: ["Карточка проекта", "Детальный просмотр проекта, кандидатов и действий по подбору."],
+      meetings: ["Встречи", "План встреч по датам с карточками слотов и ссылками на подключение."],
+      create: ["Добавление кандидата", "Заполните данные и добавьте кандидата в выбранный проект."],
+      stats: ["Статистика", "Сводка воронки и динамика по кандидатам."],
+      chats: ["Чаты", "Полноэкранный режим коммуникации с заказчиками и кандидатами."],
+      analytics: ["Аналитика", "Демонстрация error state и retry."]
+    };
+
+    const orderStatusLabel = { active: "В работе", paused: "На паузе", archive: "Архив" };
+    const orderStatusTone = { active: "ok", paused: "w", archive: "n" };
+    function orderStage(o) {
+      if (o.mode === "candidate_selection") return { text: "Согласование shortlist", tone: "i" };
+      if (o.mode === "executor_work" && o.g === "active") return { text: "Подбор кандидатов", tone: "ok" };
+      if ((!o.mode || o.mode === "candidate_pool") && o.g === "active") return { text: "Первичный скрининг", tone: "ok" };
+      return null;
+    }
+    function loading(v) { return `<div class="empty">${v ? "Загрузка данных..." : "Пока нет данных."}</div>`; }
+    function applyCounters() {
+      refs.bSearch.textContent = d.badges.orders;
+      refs.bMeet.textContent = d.badges.meetings;
+      refs.cMeet.textContent = d.counts.meet;
+      refs.cNoti.textContent = d.counts.noti;
+    }
+    function orderItems(o) {
+      if (o.mode === "executor_work" || o.mode === "candidate_selection") return o.candidates || [];
+      return o.responses || [];
+    }
+    function getOrders() {
+      let a = d.orders.filter(o => o.g === s.entity);
+      const t = s.search.trim().toLowerCase();
+      if (t) a = a.filter(o => o.title.toLowerCase().includes(t) || o.sub.toLowerCase().includes(t) || o.tags.some(x => x[0].toLowerCase().includes(t)) || orderItems(o).some(r => (r.c || "").toLowerCase().includes(t) || (r.r || r.role || "").toLowerCase().includes(t)));
+      a = [...a];
+      if (s.sort === "responses") a.sort((x, y) => orderItems(y).length - orderItems(x).length);
+      else if (s.sort === "priority") a.sort((x, y) => y.p - x.p);
+      else a.sort((x, y) => y.u - x.u);
+      return a;
+    }
+    function syncOrderSelection() {
+      const ids = new Set(d.orders.map(o => o.id));
+      s.selOrders = s.selOrders.filter(id => ids.has(id));
+    }
+    function drawOrdersBulk(visibleOrders) {
+      const visibleIds = visibleOrders.map(o => o.id);
+      const selectedVisible = visibleIds.filter(id => s.selOrders.includes(id)).length;
+      const hasSelection = s.selOrders.length > 0;
+      const canPause = s.entity !== "paused";
+      const canArchive = s.entity !== "archive";
+      const canActivate = s.entity !== "active";
+      refs.ordersBulkCount.textContent = `${s.selOrders.length} выбрано`;
+      refs.bulkPause.classList.toggle("hidden", !canPause);
+      refs.bulkArchive.classList.toggle("hidden", !canArchive);
+      refs.bulkActivate.classList.toggle("hidden", !canActivate);
+      refs.bulkPause.disabled = !hasSelection || !canPause;
+      refs.bulkArchive.disabled = !hasSelection || !canArchive;
+      refs.bulkActivate.disabled = !hasSelection || !canActivate;
+      if (!visibleIds.length) {
+        refs.ordersSelectAll.checked = false;
+        refs.ordersSelectAll.indeterminate = false;
+        refs.ordersSelectAll.disabled = true;
+        return;
+      }
+      refs.ordersSelectAll.disabled = false;
+      refs.ordersSelectAll.checked = selectedVisible === visibleIds.length;
+      refs.ordersSelectAll.indeterminate = selectedVisible > 0 && selectedVisible < visibleIds.length;
+    }
+    function applyBulkOrderState(nextState, label) {
+      if (!s.selOrders.length) return;
+      const selected = new Set(s.selOrders);
+      let changed = 0;
+      d.orders.forEach(o => {
+        if (!selected.has(o.id) || o.g === nextState) return;
+        o.g = nextState;
+        o.u = Date.now();
+        if (!Array.isArray(o.timeline)) o.timeline = [];
+        o.timeline.unshift([label, "Только что"]);
+        changed += 1;
+      });
+      s.selOrders = [];
+      toast(`Обновлено карточек: ${changed}`, changed ? "ok" : "i");
+      render();
+    }
+    function getExecutors() {
+      let a = [...d.executors];
+      const t = s.search.trim().toLowerCase();
+      if (!t) return a;
+      return a.filter(x => x.name.toLowerCase().includes(t) || x.role.toLowerCase().includes(t) || x.about.toLowerCase().includes(t) || x.city.toLowerCase().includes(t) || x.tags.some(z => z[0].toLowerCase().includes(t)));
+    }
+    function currentOrder() { return d.orders.find(o => o.id === s.selOrder) || null; }
+    function currentExecutor() { return d.executors.find(x => x.id === s.selExecutor) || d.executors[0] || null; }
+    function currentChat() { return d.chats.find(x => x.id === s.chatId) || d.chats[0] || null; }
+    function drawStats() { refs.stats.innerHTML = d.stats.map(x => `<div class="card"><div class="muted">${x[0]}</div><div class="v">${x[1]}</div><div class="meta">${x[2]}</div></div>`).join(""); }
+    function drawOrders() {
+      syncOrderSelection();
+      refs.orders.classList.remove("anim-out", "anim-in");
+      if (s.orderAnim) refs.orders.classList.add(`anim-${s.orderAnim}`);
+      if (s.loading) { refs.orders.innerHTML = loading(1); drawOrdersBulk([]); return; }
+      const a = getOrders();
+      if (!a.length) { refs.orders.innerHTML = `<div class="empty">По текущему фильтру заказов нет.</div>`; drawOrdersBulk([]); return; }
+      refs.orders.innerHTML = a.map(o => {
+        const stage = orderStage(o);
+        const rightStatus = stage
+          ? `<span class="tag ${stage.tone}">${stage.text}</span>`
+          : `<span class="tag ${orderStatusTone[o.g] || "n"}">${orderStatusLabel[o.g] || "Архив"}</span>`;
+        const checked = s.selOrders.includes(o.id) ? "checked" : "";
+        return `<div class="order-row"><div class="order-select-wrap"><input type="checkbox" class="order-select" data-order-select="${o.id}" ${checked} /></div><button class="item" data-order="${o.id}"><div class="top"><div><div class="h">${o.title}</div><div class="txt">${o.sub}</div></div>${rightStatus}</div><div class="tags">${tags(o.tags)}</div></button></div>`;
+      }).join("");
+      drawOrdersBulk(a);
+    }
+    function drawExecutors() {
+      if (s.loading) { refs.executors.innerHTML = loading(1); return; }
+      const a = getExecutors();
+      if (!a.length) { refs.executors.innerHTML = `<div class="empty">По запросу кандидаты не найдены.</div>`; return; }
+      refs.executors.innerHTML = a.map(x => `<button class="executor-item" data-executor="${x.id}"><div class="executor-title">${x.name}</div><div class="executor-sub">${x.role} • Рейтинг ${x.rating}</div><div class="tags">${tags(x.tags)}</div></button>`).join("");
+    }
+    function drawExecutorProfile() {
+      const ex = currentExecutor();
+      if (!ex) return;
+      const [mainTagText, mainTagTone] = ex.tags[0] || ["В работе", "w"];
+      refs.executorName.textContent = ex.name;
+      refs.executorRole.textContent = `${ex.role} • Рейтинг ${ex.rating}`;
+      refs.executorStatus.textContent = mainTagText;
+      refs.executorStatus.className = `tag ${ton(mainTagTone)}`;
+      refs.executorTags.innerHTML = tags(ex.tags);
+      refs.executorAbout.textContent = ex.about;
+      refs.executorExperience.textContent = ex.experience;
+      refs.executorCity.textContent = ex.city;
+      refs.executorContact.textContent = ex.contact;
+    }
+    function drawCtx() {
+      const meet = s.ctx === "meetings";
+      refs.ctxTitle.textContent = meet ? "Ближайшие встречи" : "Уведомления";
+      refs.ctxSub.textContent = meet ? "Синхроны и интервью по текущим заказам." : "Оперативные события по заказам и откликам.";
+      refs.ctxPop.classList.toggle("open", s.pop);
+      if (!s.pop) return;
+      if (s.loading) { refs.ctxList.innerHTML = loading(1); return; }
+      const a = meet ? d.meet : d.noti;
+      refs.ctxList.innerHTML = a.map(x => `<div class="item"><div class="h">${x[0]}</div><div class="txt">${x[1]}</div><div class="tags">${tags(x[2])}</div></div>`).join("");
+    }
+    function drawOrder() {
+      const o = currentOrder();
+      if (!o) { refs.resp.innerHTML = `<tr><td colspan="5"><div class="empty">Заказ не найден.</div></td></tr>`; refs.timeline.innerHTML = ""; refs.oTitle.textContent = ""; refs.oSub.textContent = ""; refs.oTags.innerHTML = ""; return; }
+      refs.oTitle.textContent = o.title;
+      refs.oSub.textContent = o.sub;
+      refs.oTags.innerHTML = tags(o.tags);
+      const mode = o.mode || "candidate_pool";
+      if (mode === "executor_work") {
+        refs.respTitle.textContent = "Кандидаты в работе";
+        refs.respSub.textContent = `Проект ведёт ${o.owner}. Проводите скрининг, назначайте интервью и формируйте shortlist.`;
+        refs.respCol1.textContent = "Кандидат";
+        refs.respCol2.textContent = "Роль";
+        refs.respCol3.textContent = "Статус";
+        refs.respCol4.textContent = "Комментарий / источник";
+        refs.respCol5.classList.remove("hidden");
+        refs.respCol5.textContent = "Отметки";
+        refs.resp.innerHTML = (o.candidates || []).length ? o.candidates.map(c => `<tr class="candidate-row" data-open-candidate="1" data-cid="${c.id}"><td>${c.c}</td><td>${c.role}</td><td>${tag(c.s[0], c.s[1])}</td><td>${c.comment}<div class="muted">${c.source}</div></td><td>${checkActions(checkAction("Интервью", "meet", "cid", c.id), checkAction("Добавить в short list", "selectc", "cid", c.id), checkAction("Отклонить", "rejectc", "cid", c.id))}</td></tr>`).join("") : `<tr><td colspan="5"><div class="empty">Кандидатов пока нет.</div></td></tr>`;
+      } else if (mode === "candidate_selection") {
+        refs.respTitle.textContent = "Согласование shortlist";
+        refs.respSub.textContent = "Кандидаты переданы заказчику. Доступен просмотр профиля и статус согласования.";
+        refs.respCol1.textContent = "Кандидат";
+        refs.respCol2.textContent = "Роль";
+        refs.respCol3.textContent = "Статус";
+        refs.respCol4.textContent = "Комментарий / встреча";
+        refs.respCol5.classList.remove("hidden");
+        refs.respCol5.textContent = "Отметки";
+        refs.resp.innerHTML = (o.candidates || []).length ? o.candidates.map(c => `<tr class="candidate-row" data-open-candidate="1" data-cid="${c.id}"><td>${c.c}</td><td>${c.role}</td><td>${tag(c.s[0], c.s[1])}</td><td>${c.comment}<div class="muted">${c.meeting}</div></td><td>${checkActions(checkAction("Профиль", "detailsc", "cid", c.id), checkAction("Добавить в short list", "selectc", "cid", c.id), checkAction("Отклонить", "rejectc", "cid", c.id))}</td></tr>`).join("") : `<tr><td colspan="5"><div class="empty">Кандидатов пока нет.</div></td></tr>`;
+      } else {
+        refs.respTitle.textContent = "Кандидаты по проекту";
+        refs.respSub.textContent = "Первичный пул кандидатов: проводите скрининг и переводите в shortlist.";
+        refs.respCol1.textContent = "Кандидат";
+        refs.respCol2.textContent = "Роль";
+        refs.respCol3.textContent = "Статус";
+        refs.respCol4.textContent = "Комментарий";
+        refs.respCol5.classList.remove("hidden");
+        refs.respCol5.textContent = "Отметки";
+        refs.resp.innerHTML = (o.responses || []).length ? o.responses.map(r => `<tr><td>${r.c}</td><td>${r.r}</td><td>${tag(r.s[0], r.s[1])}</td><td>${r.com}<div class="muted">${r.src}</div></td><td>${checkActions(checkAction("Детали", "details", "rid", r.id), checkAction("Интервью", "meetr", "rid", r.id), checkAction("Добавить в short list", "accept", "rid", r.id), checkAction("Отклонить", "reject", "rid", r.id))}</td></tr>`).join("") : `<tr><td colspan="5"><div class="empty">Кандидатов пока нет.</div></td></tr>`;
+      }
+      refs.timeline.innerHTML = o.timeline.map(x => `<div class="mini"><div><b>${x[0]}</b></div><div class="muted">${x[1]}</div></div>`).join("");
+    }
+    function drawMeetings() { refs.meetTable.innerHTML = d.calendar.map(day => `<tr><td>${day.date}</td><td class="meet-cell">${day.items.map(m => `<div class="meeting-card"><div class="meeting-title">${m.title}</div><div class="meeting-time">${m.from} — ${m.to}</div><div class="meeting-comment">${m.comment}</div><a class="meeting-link" href="${m.link}" target="_blank" rel="noopener noreferrer">Открыть Телемост</a></div>`).join("")}</td></tr>`).join(""); }
+    function drawStatsView() {
+      refs.stTable.innerHTML = d.st.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td><td>${x[3]}</td></tr>`).join("");
+      refs.stList.innerHTML = d.stList.map(x => `<div class="item"><div class="h">${x[0]}</div><div class="txt">${x[1]}</div><div class="tags">${tags(x[2])}</div></div>`).join("");
+    }
+    function chatListMarkup() { return d.chats.map(x => `<button class="chat-item ${x.id === s.chatId ? "active" : ""}" data-chat="${x.id}"><div class="chat-name">${x.name}</div><div class="chat-preview">${x.preview}</div></button>`).join(""); }
+    function chatMessagesMarkup() {
+      const c = currentChat();
+      if (!c) return `<div class="empty">Нет доступных чатов.</div>`;
+      if (!c.messages.length) return `<div class="empty">Сообщений пока нет.</div>`;
+      return c.messages.map(m => `<div class="msg ${m.dir}">${m.text}</div>`).join("");
+    }
+    function drawChats() {
+      refs.chatList.innerHTML = chatListMarkup();
+      refs.chatMessages.innerHTML = chatMessagesMarkup();
+      refs.chatsFullList.innerHTML = chatListMarkup();
+      refs.chatsFullMessages.innerHTML = chatMessagesMarkup();
+    }
+    function nav() {
+      qa(".nav-btn").forEach(b => {
+        const p = b.dataset.page;
+        const activeSearch = ["search", "order", "create"].includes(s.page) && p === "search";
+        const activeExecutors = ["executors", "executor"].includes(s.page) && p === "executors";
+        b.classList.toggle("active", p === s.page || activeSearch || activeExecutors);
+      });
+      qa(".h-tab").forEach(b => b.classList.toggle("active", b.dataset.ctx === s.ctx));
+      qa(".state-btn").forEach(b => b.classList.toggle("active", b.dataset.entity === s.entity));
+      app.classList.toggle("sidebar-collapsed", s.collapsed);
+      refs.sidebarToggle.textContent = s.collapsed ? "⇥" : "⇤";
+    }
+    function views() {
+      refs.vSearch.classList.toggle("hidden", s.page !== "search");
+      refs.vExecSearch.classList.toggle("hidden", s.page !== "executors");
+      refs.vExecutor.classList.toggle("hidden", s.page !== "executor");
+      refs.vOrder.classList.toggle("hidden", s.page !== "order");
+      refs.vMeet.classList.toggle("hidden", s.page !== "meetings");
+      refs.vCreate.classList.toggle("hidden", s.page !== "create");
+      refs.vStats.classList.toggle("hidden", s.page !== "stats");
+      refs.vChats.classList.toggle("hidden", s.page !== "chats");
+      refs.vAn.classList.toggle("hidden", s.page !== "analytics");
+      refs.stats.classList.toggle("hidden", !["search", "stats"].includes(s.page));
+      refs.chatFab.classList.toggle("hidden", s.page === "chats");
+      refs.chatSheet.classList.toggle("open", s.chatOpen);
+      refs.profileMenu.classList.toggle("open", s.profileOpen);
+    }
+    function toast(t, c) {
+      clearTimeout(s.t);
+      refs.toast.className = `toast ${c}`;
+      refs.toast.textContent = t;
+      refs.toast.classList.remove("hidden");
+      s.t = setTimeout(() => refs.toast.classList.add("hidden"), 2500);
+    }
+    function videoMarkup(c) {
+      const launch = typeof c.videoLaunch === "string" && c.videoLaunch.startsWith("http");
+      const cloud = typeof c.videoCloud === "string" && c.videoCloud.startsWith("http");
+      if (!launch && !cloud) return `<div class="video-muted">Видео встречи пока не добавлено.</div>`;
+      return `<div class="video-shell"><div class="video-preview">${launch ? "Окно видеоинтервью готово к запуску" : "Доступна запись/материалы в облаке"}</div><div class="video-actions">${launch ? `<a class="video-chip primary" href="${c.videoLaunch}" target="_blank" rel="noopener noreferrer">Запустить видео</a>` : ""}${cloud ? `<a class="video-chip" href="${c.videoCloud}" target="_blank" rel="noopener noreferrer">Ссылка на облако</a>` : ""}</div></div>`;
+    }
+    function docsMarkup(c) {
+      const docs = Array.isArray(c.docs) ? c.docs : [];
+      const files = docs.map(d => `<div class="doc-chip"><div><div class="doc-name">${d.name}</div><div class="doc-type">${d.type || "Файл"}</div></div><a class="doc-link" href="${d.url}" target="_blank" rel="noopener noreferrer">Открыть</a></div>`).join("");
+      const empty = docs.length ? "" : `<div class="doc-chip"><div><div class="doc-name">Документов пока нет</div><div class="doc-type">Можно добавить файл</div></div></div>`;
+      return `<div class="docs-card"><div class="docs-head"><div class="doc-name">Сопроводительные документы</div></div><div class="docs-list-horizontal">${files}${empty}<button class="doc-chip doc-add-chip" data-doc-add="1" type="button">+ Добавить</button></div></div>`;
+    }
+    function showModalAnimated() {
+      clearTimeout(s.modalT);
+      refs.modal.classList.remove("hidden");
+      requestAnimationFrame(() => refs.modal.classList.add("open"));
+    }
+    function hideModalAnimated() {
+      refs.modal.classList.remove("open");
+      clearTimeout(s.modalT);
+      s.modalT = setTimeout(() => refs.modal.classList.add("hidden"), 180);
+    }
+    function openModal(r) {
+      refs.modal.classList.remove("candidate-open");
+      refs.modalCard.classList.remove("candidate");
+      refs.modalDefault.classList.remove("hidden");
+      refs.modalCandidate.classList.add("hidden");
+      refs.candPrev.classList.add("hidden");
+      refs.candNext.classList.add("hidden");
+      s.modalCandidateIds = [];
+      s.modalCandidateIndex = -1;
+      refs.mTitle.textContent = r.c;
+      refs.mSub.textContent = `${r.r} • ${r.src}`;
+      refs.mComment.textContent = r.com;
+      refs.mStep.textContent = r.step;
+      showModalAnimated();
+    }
+    function currentModalCandidate() {
+      const o = currentOrder();
+      if (!o || !Array.isArray(o.candidates) || !o.candidates.length) return null;
+      if (s.modalCandidateIndex < 0 || s.modalCandidateIndex >= o.candidates.length) return o.candidates[0];
+      const wantedId = s.modalCandidateIds[s.modalCandidateIndex];
+      return o.candidates.find(x => x.id === wantedId) || o.candidates[s.modalCandidateIndex] || o.candidates[0];
+    }
+    function renderCandidateModal() {
+      const o = currentOrder();
+      const c = currentModalCandidate();
+      if (!o || !c) return;
+      refs.mTitle.textContent = c.c;
+      refs.mSub.textContent = `${c.role} • ${c.source || "Кандидат"}`;
+      refs.candName.textContent = c.c;
+      refs.candRole.textContent = c.role;
+      refs.candResume.textContent = c.resume || "Резюме не заполнено.";
+      refs.candComment.textContent = c.execComment || c.comment || "Комментарий исполнителя не добавлен.";
+      refs.candVideo.innerHTML = videoMarkup(c);
+      refs.candDocs.innerHTML = docsMarkup(c);
+      const len = s.modalCandidateIds.length;
+      refs.candPrev.classList.toggle("hidden", len < 2);
+      refs.candNext.classList.toggle("hidden", len < 2);
+      refs.candPrev.disabled = s.modalCandidateIndex <= 0;
+      refs.candNext.disabled = s.modalCandidateIndex >= len - 1;
+    }
+    function openCandidateModal(c) {
+      const o = currentOrder();
+      const allCandidates = o && Array.isArray(o.candidates) ? o.candidates : [];
+      s.modalCandidateIds = allCandidates.map(x => x.id);
+      s.modalCandidateIndex = Math.max(0, s.modalCandidateIds.indexOf(c.id));
+      refs.modal.classList.add("candidate-open");
+      refs.modalCard.classList.add("candidate");
+      refs.modalDefault.classList.add("hidden");
+      refs.modalCandidate.classList.remove("hidden");
+      renderCandidateModal();
+      showModalAnimated();
+    }
+    function closeModal() {
+      refs.modal.classList.remove("candidate-open");
+      refs.modalCard.classList.remove("candidate");
+      refs.modalDefault.classList.remove("hidden");
+      refs.modalCandidate.classList.add("hidden");
+      refs.candPrev.classList.add("hidden");
+      refs.candNext.classList.add("hidden");
+      s.modalCandidateIds = [];
+      s.modalCandidateIndex = -1;
+      hideModalAnimated();
+    }
+    function animatePageTransition() {
+      if (s.prevPage === s.page) return;
+      clearTimeout(s.pageAnimT);
+      refs.content.classList.remove("page-enter");
+      void refs.content.offsetWidth;
+      refs.content.classList.add("page-enter");
+      s.pageAnimT = setTimeout(() => refs.content.classList.remove("page-enter"), 260);
+      s.prevPage = s.page;
+    }
+    function render() {
+      const p = pages[s.page] || pages.search;
+      refs.title.textContent = p[0];
+      refs.subtitle.textContent = p[1];
+      refs.search.value = s.search;
+      syncChatSheetPosition();
+      applyCounters();
+      nav();
+      views();
+      animatePageTransition();
+      drawStats();
+      drawOrders();
+      drawExecutors();
+      drawExecutorProfile();
+      drawCtx();
+      drawOrder();
+      drawMeetings();
+      drawStatsView();
+      drawChats();
+    }
+    function withLoading(fn) {
+      s.loading = true;
+      render();
+      setTimeout(() => {
+        fn();
+        s.loading = false;
+        render();
+      }, 220);
+    }
+    function switchEntity(nextEntity) {
+      if (s.entity === nextEntity) return;
+      s.orderAnim = "out";
+      s.selOrders = [];
+      render();
+      setTimeout(() => {
+        s.entity = nextEntity;
+        s.orderAnim = "in";
+        render();
+        setTimeout(() => {
+          s.orderAnim = "";
+          render();
+        }, 240);
+      }, 180);
+    }
+    function sendChatMessage(inputRef) {
+      const c = currentChat();
+      if (!c) return;
+      const text = inputRef.value.trim();
+      if (!text) return;
+      c.messages.push({ dir: "out", text });
+      c.preview = text;
+      inputRef.value = "";
+      render();
+    }
+    function syncChatSheetPosition() {
+      if (window.innerWidth <= 900) {
+        refs.chatSheet.style.removeProperty("left");
+        refs.chatSheet.style.removeProperty("right");
+        return;
+      }
+      const rect = refs.search.getBoundingClientRect();
+      const minRight = 20;
+      const minWidth = 460;
+      let left = Math.max(16, Math.round(rect.left));
+      const maxLeft = window.innerWidth - minWidth - minRight;
+      if (left > maxLeft) left = Math.max(16, maxLeft);
+      refs.chatSheet.style.left = `${left}px`;
+      refs.chatSheet.style.right = `${minRight}px`;
+    }
+
+    qa(".nav-btn").forEach(b => b.addEventListener("click", () => withLoading(() => {
+      s.page = b.dataset.page;
+      s.pop = false;
+      s.profileOpen = false;
+      s.chatOpen = false;
+      if (s.page !== "order") s.selOrder = null;
+    })));
+    qa(".h-tab").forEach(b => b.addEventListener("click", e => {
+      e.stopPropagation();
+      if (s.pop && s.ctx === b.dataset.ctx) s.pop = false;
+      else {
+        s.ctx = b.dataset.ctx;
+        s.pop = true;
+      }
+      s.profileOpen = false;
+      render();
+    }));
+    qa(".state-btn").forEach(b => b.addEventListener("click", () => {
+      s.page = "search";
+      s.selOrder = null;
+      s.pop = false;
+      s.profileOpen = false;
+      switchEntity(b.dataset.entity);
+    }));
+    refs.search.addEventListener("input", e => {
+      s.search = e.target.value;
+      drawOrders();
+      drawExecutors();
+    });
+    refs.sort.addEventListener("change", e => {
+      s.sort = e.target.value;
+      drawOrders();
+    });
+    refs.ordersSelectAll.addEventListener("change", e => {
+      const visibleIds = getOrders().map(o => o.id);
+      if (e.target.checked) {
+        s.selOrders = Array.from(new Set([...s.selOrders, ...visibleIds]));
+      } else {
+        const hidden = new Set(visibleIds);
+        s.selOrders = s.selOrders.filter(id => !hidden.has(id));
+      }
+      render();
+    });
+    refs.bulkPause.addEventListener("click", () => applyBulkOrderState("paused", "Карточка переведена на паузу"));
+    refs.bulkArchive.addEventListener("click", () => applyBulkOrderState("archive", "Карточка отправлена в архив"));
+    refs.bulkActivate.addEventListener("click", () => applyBulkOrderState("active", "Карточка активирована"));
+    refs.sidebarToggle.addEventListener("click", () => {
+      s.collapsed = !s.collapsed;
+      render();
+    });
+    refs.headerCreate.addEventListener("click", () => withLoading(() => {
+      s.page = "create";
+      s.pop = false;
+      s.profileOpen = false;
+      s.chatOpen = false;
+    }));
+    q("filters").addEventListener("click", () => toast("Фильтры применены к текущей выдаче", "i"));
+    q("back").addEventListener("click", () => {
+      s.page = "search";
+      s.pop = false;
+      render();
+    });
+    refs.backExecutor.addEventListener("click", () => {
+      s.page = "executors";
+      render();
+    });
+    q("retry").addEventListener("click", () => toast("Повторная загрузка аналитики запущена", "i"));
+    refs.cancelCreate.addEventListener("click", () => {
+      s.page = "search";
+      render();
+    });
+    refs.createOrderForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const form = new FormData(refs.createOrderForm);
+      const candidateName = String(form.get("candidateName") || "").trim();
+      if (!candidateName) return;
+      const projectId = String(form.get("projectId") || "");
+      const specialization = String(form.get("specialization") || "Специалист");
+      const level = String(form.get("level") || "Middle");
+      const format = String(form.get("format") || "Удаленно");
+      const location = String(form.get("location") || "Локация не указана");
+      const salary = String(form.get("salary") || "Не указано");
+      const description = String(form.get("description") || "").trim();
+      const order = d.orders.find(x => x.id === projectId) || d.orders.find(x => x.g === "active");
+      if (!order) {
+        toast("Не найден активный проект для добавления кандидата", "e");
+        return;
+      }
+      const candidateId = `c${Date.now()}`;
+      if (order.mode === "executor_work" || order.mode === "candidate_selection") {
+        if (!Array.isArray(order.candidates)) order.candidates = [];
+        order.candidates.unshift({
+          id: candidateId,
+          c: candidateName,
+          role: `${level} ${specialization}`,
+          s: ["Новый", "w"],
+          source: "Добавлен исполнителем",
+          comment: description || "Комментарий кандидата пока не добавлен.",
+          execComment: description || "Профиль добавлен в проект исполнителем.",
+          resume: `${level} ${specialization}. Формат: ${format}. Локация: ${location}. Ожидания: ${salary}.`,
+          meeting: "Встреча не назначена",
+          videoLaunch: "",
+          videoCloud: "",
+          docs: [],
+          step: "Провести скрининг и назначить интервью."
+        });
+      } else {
+        if (!Array.isArray(order.responses)) order.responses = [];
+        order.responses.unshift({
+          id: `r${Date.now()}`,
+          c: candidateName,
+          r: `${level} ${specialization}`,
+          s: ["Новый", "w"],
+          src: "Добавлен вручную исполнителем",
+          com: description || `Формат: ${format}. Локация: ${location}. Ожидания: ${salary}.`,
+          step: "Провести скрининг и назначить интервью."
+        });
+      }
+      if (!Array.isArray(order.timeline)) order.timeline = [];
+      order.timeline.unshift(["Добавлен кандидат", `Только что • ${candidateName}`]);
+      order.u = Date.now();
+      toast(`Кандидат "${candidateName}" добавлен в проект`, "ok");
+      refs.createOrderForm.reset();
+      s.selOrder = order.id;
+      s.page = "order";
+      s.search = "";
+      s.entity = "active";
+      render();
+    });
+    refs.orders.addEventListener("change", e => {
+      const cb = e.target.closest("[data-order-select]");
+      if (!cb) return;
+      const orderId = cb.dataset.orderSelect;
+      if (cb.checked) {
+        if (!s.selOrders.includes(orderId)) s.selOrders.push(orderId);
+      } else {
+        s.selOrders = s.selOrders.filter(id => id !== orderId);
+      }
+      drawOrders();
+    });
+    refs.orders.addEventListener("click", e => {
+      if (e.target.closest("[data-order-select]")) return;
+      const t = e.target.closest("[data-order]");
+      if (!t) return;
+      withLoading(() => {
+        s.selOrder = t.dataset.order;
+        s.page = "order";
+        s.pop = false;
+        s.profileOpen = false;
+      });
+    });
+    refs.executors.addEventListener("click", e => {
+      const t = e.target.closest("[data-executor]");
+      if (!t) return;
+      withLoading(() => {
+        s.selExecutor = t.dataset.executor;
+        s.page = "executor";
+        s.pop = false;
+        s.profileOpen = false;
+      });
+    });
+    refs.executorMessage.addEventListener("click", () => withLoading(() => {
+      const ex = currentExecutor();
+      if (ex) {
+        const exKey = ex.name.toLowerCase();
+        const found = d.chats.find(x => x.name.toLowerCase().includes(exKey));
+        if (found) s.chatId = found.id;
+        else {
+          const id = `chat-${Date.now()}`;
+          d.chats.unshift({
+            id,
+            name: `${ex.name} (кандидат)`,
+            preview: "Новый чат",
+            messages: [{ dir: "out", text: "Здравствуйте! Пишу по вашему профилю." }]
+          });
+          s.chatId = id;
+        }
+      }
+      s.page = "chats";
+      s.chatOpen = false;
+      s.pop = false;
+      toast("Открыт чат по кандидату", "i");
+    }));
+    refs.executorInvite.addEventListener("click", () => {
+      const ex = currentExecutor();
+      if (!ex) return;
+      toast(`Кандидату ${ex.name} отправлено приглашение на собеседование`, "ok");
+    });
+    refs.resp.addEventListener("click", e => {
+      const o = currentOrder();
+      if (!o) return;
+      const mode = o.mode || "candidate_pool";
+      if (e.target.closest(".check-action")) return;
+      if (mode === "candidate_pool") return;
+      const row = e.target.closest("[data-open-candidate]");
+      if (!row) return;
+      const c = (o.candidates || []).find(x => x.id === row.dataset.cid);
+      if (!c) return;
+      openCandidateModal(c);
+    });
+    refs.resp.addEventListener("change", e => {
+      const o = currentOrder();
+      if (!o) return;
+      const mode = o.mode || "candidate_pool";
+      const b = e.target.closest("input[type='checkbox'][data-ra]");
+      if (!b || !b.checked) return;
+      b.checked = false;
+      if (mode === "candidate_pool") {
+        const r = (o.responses || []).find(x => x.id === b.dataset.rid);
+        if (!r) return;
+        if (b.dataset.ra === "details") {
+          openModal(r);
+          return;
+        }
+        if (b.dataset.ra === "meetr") {
+          r.s = ["Интервью", "i"];
+          r.step = "Интервью назначено, ожидаем фидбэк.";
+          toast(`Интервью по ${r.c} запланировано`, "i");
+        }
+        if (b.dataset.ra === "accept") {
+          r.s = ["Short-list", "ok"];
+          toast(`Кандидат ${r.c} добавлен в shortlist`, "ok");
+        }
+        if (b.dataset.ra === "reject") {
+          r.s = ["Отклонён", "e"];
+          toast(`Кандидат ${r.c} отклонён`, "e");
+        }
+        drawOrder();
+        return;
+      }
+      const c = (o.candidates || []).find(x => x.id === b.dataset.cid);
+      if (!c) return;
+      if (b.dataset.ra === "detailsc") {
+        openCandidateModal(c);
+        return;
+      }
+      if (b.dataset.ra === "meet") {
+        c.s = ["Интервью", "i"];
+        c.meeting = c.meeting && c.meeting !== "Встреча не назначена" ? c.meeting : "Собеседование: назначено, время уточняется";
+        if (!c.videoLaunch) c.videoLaunch = "https://telemost.yandex.ru/";
+        toast(`Встреча по ${c.c} запланирована`, "i");
+      }
+      if (b.dataset.ra === "selectc") {
+        c.s = ["Short-list", "ok"];
+        toast(`Кандидат ${c.c} добавлен в short list`, "ok");
+      }
+      if (b.dataset.ra === "rejectc") {
+        c.s = ["Отклонён", "e"];
+        toast(`Кандидат ${c.c} отклонён`, "e");
+      }
+      drawOrder();
+    });
+    refs.profileBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      s.profileOpen = !s.profileOpen;
+      s.pop = false;
+      render();
+    });
+    refs.menuProfile.addEventListener("click", () => {
+      s.profileOpen = false;
+      toast("Переход в профиль будет подключен на следующем шаге", "i");
+      render();
+    });
+    refs.menuSettings.addEventListener("click", () => {
+      s.profileOpen = false;
+      toast("Переход в настройки будет подключен на следующем шаге", "i");
+      render();
+    });
+    refs.menuLogout.addEventListener("click", () => {
+      window.location.href = "login.html";
+    });
+    refs.chatSheet.addEventListener("click", e => {
+      e.stopPropagation();
+    });
+    refs.chatFab.addEventListener("click", e => {
+      e.stopPropagation();
+      s.chatOpen = !s.chatOpen;
+      s.pop = false;
+      s.profileOpen = false;
+      render();
+    });
+    refs.chatClose.addEventListener("click", () => {
+      s.chatOpen = false;
+      render();
+    });
+    refs.chatExpand.addEventListener("click", () => withLoading(() => {
+      s.page = "chats";
+      s.chatOpen = false;
+      s.pop = false;
+    }));
+    refs.chatList.addEventListener("click", e => {
+      const t = e.target.closest("[data-chat]");
+      if (!t) return;
+      s.chatId = t.dataset.chat;
+      drawChats();
+    });
+    refs.chatsFullList.addEventListener("click", e => {
+      const t = e.target.closest("[data-chat]");
+      if (!t) return;
+      s.chatId = t.dataset.chat;
+      drawChats();
+    });
+    refs.chatSend.addEventListener("click", () => sendChatMessage(refs.chatInput));
+    refs.chatInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") sendChatMessage(refs.chatInput);
+    });
+    refs.chatFullSend.addEventListener("click", () => sendChatMessage(refs.chatFullInput));
+    refs.chatFullInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") sendChatMessage(refs.chatFullInput);
+    });
+    q("mClose1").addEventListener("click", closeModal);
+    refs.candPrev.addEventListener("click", () => {
+      if (s.modalCandidateIndex <= 0) return;
+      s.modalCandidateIndex -= 1;
+      renderCandidateModal();
+    });
+    refs.candNext.addEventListener("click", () => {
+      if (s.modalCandidateIndex >= s.modalCandidateIds.length - 1) return;
+      s.modalCandidateIndex += 1;
+      renderCandidateModal();
+    });
+    refs.candApprove.addEventListener("click", () => {
+      const c = currentModalCandidate();
+      if (!c) return;
+      c.s = ["Short-list", "ok"];
+      toast(`Кандидат ${c.c} добавлен в short list`, "ok");
+      drawOrder();
+      renderCandidateModal();
+    });
+    refs.candReject.addEventListener("click", () => {
+      const c = currentModalCandidate();
+      if (!c) return;
+      c.s = ["Отклонён", "e"];
+      toast(`Кандидат ${c.c} отклонён`, "e");
+      drawOrder();
+      renderCandidateModal();
+    });
+    refs.modal.addEventListener("click", e => { if (e.target === refs.modal) closeModal(); });
+    refs.modalCandidate.addEventListener("click", e => {
+      const addBtn = e.target.closest("[data-doc-add]");
+      if (!addBtn) return;
+      e.preventDefault();
+      toast("Загрузка документов будет подключена на следующем шаге", "i");
+    });
+    document.addEventListener("click", e => {
+      let changed = false;
+      if (s.pop && !refs.ctxWrap.contains(e.target)) { s.pop = false; changed = true; }
+      if (s.profileOpen && !refs.profileWrap.contains(e.target)) { s.profileOpen = false; changed = true; }
+      if (s.chatOpen && !refs.chatSheet.contains(e.target) && !refs.chatFab.contains(e.target)) { s.chatOpen = false; changed = true; }
+      if (changed) render();
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Escape") return;
+      let changed = false;
+      if (s.pop) { s.pop = false; changed = true; }
+      if (s.profileOpen) { s.profileOpen = false; changed = true; }
+      if (s.chatOpen) { s.chatOpen = false; changed = true; }
+      if (!refs.modal.classList.contains("hidden")) { closeModal(); changed = true; }
+      if (changed) render();
+    });
+    window.addEventListener("resize", syncChatSheetPosition);
+    render();
+  </script>
+</body>
+</html>

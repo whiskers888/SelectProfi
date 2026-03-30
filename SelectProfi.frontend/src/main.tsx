@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from './app/router'
 import { store } from './app/store'
 import { AuthSessionBootstrap } from './app/AuthSessionBootstrap'
+import './design/tokens.css'
 import './style.css'
 
 ReactDOM.createRoot(document.getElementById('app')!).render(

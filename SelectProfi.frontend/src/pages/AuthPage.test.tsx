@@ -38,7 +38,7 @@ function readRequestUrl(input: unknown): string {
 }
 
 describe('AuthPage', () => {
-  it('renders registration form with allowed public roles', () => {
+  it('renders registration form with allowed public roles', async () => {
     renderAuthPage()
 
     expect(screen.getByRole('heading', { name: 'Регистрация' })).toBeInTheDocument()
@@ -47,8 +47,14 @@ describe('AuthPage', () => {
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByLabelText('Телефон')).toBeInTheDocument()
     expect(screen.getByLabelText('Пароль')).toBeInTheDocument()
-    expect(screen.getByLabelText('Роль')).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Соискатель' })).toBeInTheDocument()
+
+    const roleTrigger = screen.getByLabelText('Роль')
+    expect(roleTrigger).toBeInTheDocument()
+
+    roleTrigger.focus()
+    fireEvent.keyDown(roleTrigger, { key: 'ArrowDown' })
+
+    expect(await screen.findByRole('option', { name: 'Соискатель' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Заказчик' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Исполнитель' })).toBeInTheDocument()
     expect(screen.queryByRole('option', { name: /admin/i })).not.toBeInTheDocument()

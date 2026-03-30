@@ -9,11 +9,12 @@ import {
   useRegisterUserMutation,
 } from '../shared/api/authApi'
 import { setAuthSession } from '../app/authSessionSlice'
-import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { FormFieldError, FormStatusMessage } from '@/components/ui/form-feedback'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const publicRegistrationRoles = [
@@ -21,6 +22,7 @@ const publicRegistrationRoles = [
   { value: 'Executor', label: 'Исполнитель' },
   { value: 'Customer', label: 'Заказчик' },
 ] as const
+const defaultRegistrationRole: RegisterUserRole = publicRegistrationRoles[0].value
 
 type RegistrationFormValues = {
   firstName: string
@@ -186,6 +188,7 @@ export function AuthPage() {
   const [registrationErrors, setRegistrationErrors] = useState<RegistrationFormErrors>(
     emptyRegistrationFormErrors,
   )
+  const [registrationRole, setRegistrationRole] = useState<RegisterUserRole>(defaultRegistrationRole)
   const [loginErrors, setLoginErrors] = useState<LoginFormErrors>(emptyLoginFormErrors)
   const [submitState, setSubmitState] = useState<SubmitState | null>(null)
   const isLoading = authMode === 'register' ? isRegistrationLoading : isLoginLoading
@@ -194,6 +197,7 @@ export function AuthPage() {
     setAuthMode(nextMode)
     setSubmitState(null)
     setRegistrationErrors(emptyRegistrationFormErrors)
+    setRegistrationRole(defaultRegistrationRole)
     setLoginErrors(emptyLoginFormErrors)
   }
 
@@ -208,10 +212,6 @@ export function AuthPage() {
     const formElement = event.currentTarget
 
     const formData = new FormData(formElement)
-    const roleRawValue = String(formData.get('role') ?? '').trim()
-    const role = isPublicRegistrationRole(roleRawValue)
-      ? roleRawValue
-      : publicRegistrationRoles[0].value
 
     const values: RegistrationFormValues = {
       firstName: String(formData.get('firstName') ?? '').trim(),
@@ -219,7 +219,7 @@ export function AuthPage() {
       email: String(formData.get('email') ?? '').trim(),
       phone: String(formData.get('phone') ?? '').trim(),
       password: String(formData.get('password') ?? '').trim(),
-      role,
+      role: registrationRole,
     }
 
     const nextErrors: RegistrationFormErrors = {}
@@ -242,7 +242,7 @@ export function AuthPage() {
       nextErrors.password = 'Пароль обязателен'
     }
 
-    if (!isPublicRegistrationRole(roleRawValue)) {
+    if (!isPublicRegistrationRole(values.role)) {
       nextErrors.role = 'Роль обязательна'
     }
 
@@ -269,6 +269,7 @@ export function AuthPage() {
       dispatch(setAuthSession(session))
       setSubmitState({ status: 'success', message: 'Регистрация выполнена успешно.' })
       formElement.reset()
+      setRegistrationRole(defaultRegistrationRole)
     } catch (error) {
       if (isFetchBaseQueryError(error) && typeof error.status === 'number') {
         const parsedError = parseRegistrationServerError(error.status, error.data)
@@ -362,46 +363,59 @@ export function AuthPage() {
               </TabsTrigger>
             </TabsList>
 
-            {submitState ? (
-              <Alert
-                role={submitState.status === 'error' ? 'alert' : 'status'}
-                variant={submitState.status === 'error' ? 'destructive' : 'success'}
-              >
-                {submitState.message}
-              </Alert>
-            ) : null}
+            {/* @dvnull: Статус отправки формы вынесен в единый form-feedback паттерн. */}
+            {submitState ? <FormStatusMessage message={submitState.message} status={submitState.status} /> : null}
 
             <TabsContent value="register">
+              {/* @dvnull: Для полей с ошибками добавлены явные aria-связки input <-> error message. */}
               <form noValidate onSubmit={handleRegistrationSubmit} className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="register-firstName">Имя</Label>
-                    <Input id="register-firstName" type="text" name="firstName" autoComplete="given-name" required />
-                    {registrationErrors.firstName ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {registrationErrors.firstName}
-                      </p>
-                    ) : null}
+                    <Input
+                      id="register-firstName"
+                      type="text"
+                      name="firstName"
+                      autoComplete="given-name"
+                      required
+                      aria-invalid={Boolean(registrationErrors.firstName)}
+                      aria-describedby={
+                        registrationErrors.firstName ? 'register-firstName-error' : undefined
+                      }
+                    />
+                    <FormFieldError id="register-firstName-error">
+                      {registrationErrors.firstName}
+                    </FormFieldError>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="register-lastName">Фамилия</Label>
-                    <Input id="register-lastName" type="text" name="lastName" autoComplete="family-name" required />
-                    {registrationErrors.lastName ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {registrationErrors.lastName}
-                      </p>
-                    ) : null}
+                    <Input
+                      id="register-lastName"
+                      type="text"
+                      name="lastName"
+                      autoComplete="family-name"
+                      required
+                      aria-invalid={Boolean(registrationErrors.lastName)}
+                      aria-describedby={registrationErrors.lastName ? 'register-lastName-error' : undefined}
+                    />
+                    <FormFieldError id="register-lastName-error">
+                      {registrationErrors.lastName}
+                    </FormFieldError>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="register-email">Email</Label>
-                    <Input id="register-email" type="email" name="email" autoComplete="email" required />
-                    {registrationErrors.email ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {registrationErrors.email}
-                      </p>
-                    ) : null}
+                    <Input
+                      id="register-email"
+                      type="email"
+                      name="email"
+                      autoComplete="email"
+                      required
+                      aria-invalid={Boolean(registrationErrors.email)}
+                      aria-describedby={registrationErrors.email ? 'register-email-error' : undefined}
+                    />
+                    <FormFieldError id="register-email-error">{registrationErrors.email}</FormFieldError>
                   </div>
 
                   <div className="space-y-2">
@@ -417,34 +431,50 @@ export function AuthPage() {
                       name="password"
                       autoComplete="new-password"
                       required
+                      aria-invalid={Boolean(registrationErrors.password)}
+                      aria-describedby={registrationErrors.password ? 'register-password-error' : undefined}
                     />
-                    {registrationErrors.password ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {registrationErrors.password}
-                      </p>
-                    ) : null}
+                    <FormFieldError id="register-password-error">
+                      {registrationErrors.password}
+                    </FormFieldError>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="register-role">Роль</Label>
-                    <select
-                      id="register-role"
+                    <Select
                       name="role"
-                      defaultValue={publicRegistrationRoles[0].value}
-                      required
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={registrationRole}
+                      onValueChange={(nextRole) => {
+                        if (!isPublicRegistrationRole(nextRole)) {
+                          return
+                        }
+
+                        setRegistrationRole(nextRole)
+
+                        if (registrationErrors.role) {
+                          setRegistrationErrors((previousErrors) => ({
+                            ...previousErrors,
+                            role: undefined,
+                          }))
+                        }
+                      }}
                     >
-                      {publicRegistrationRoles.map((role) => (
-                        <option key={role.value} value={role.value}>
-                          {role.label}
-                        </option>
-                      ))}
-                    </select>
-                    {registrationErrors.role ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {registrationErrors.role}
-                      </p>
-                    ) : null}
+                      <SelectTrigger
+                        id="register-role"
+                        aria-invalid={Boolean(registrationErrors.role)}
+                        aria-describedby={registrationErrors.role ? 'register-role-error' : undefined}
+                      >
+                        <SelectValue placeholder="Выберите роль" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {publicRegistrationRoles.map((role) => (
+                          <SelectItem key={role.value} value={role.value}>
+                            {role.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormFieldError id="register-role-error">{registrationErrors.role}</FormFieldError>
                   </div>
                 </div>
 
@@ -459,12 +489,16 @@ export function AuthPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
-                    <Input id="login-email" type="email" name="email" autoComplete="email" required />
-                    {loginErrors.email ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {loginErrors.email}
-                      </p>
-                    ) : null}
+                    <Input
+                      id="login-email"
+                      type="email"
+                      name="email"
+                      autoComplete="email"
+                      required
+                      aria-invalid={Boolean(loginErrors.email)}
+                      aria-describedby={loginErrors.email ? 'login-email-error' : undefined}
+                    />
+                    <FormFieldError id="login-email-error">{loginErrors.email}</FormFieldError>
                   </div>
 
                   <div className="space-y-2">
@@ -475,12 +509,10 @@ export function AuthPage() {
                       name="password"
                       autoComplete="current-password"
                       required
+                      aria-invalid={Boolean(loginErrors.password)}
+                      aria-describedby={loginErrors.password ? 'login-password-error' : undefined}
                     />
-                    {loginErrors.password ? (
-                      <p role="alert" className="text-xs text-destructive">
-                        {loginErrors.password}
-                      </p>
-                    ) : null}
+                    <FormFieldError id="login-password-error">{loginErrors.password}</FormFieldError>
                   </div>
                 </div>
 

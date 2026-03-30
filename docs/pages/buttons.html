@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Button Component</title>
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --bg: #F8FAFC;
+      --text: #0F172A;
+      --border: #E2E8F0;
+      --text-secondary: #64748B;
+      --danger: #DC2626;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* variants */
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: #F1F5F9;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+    }
+
+    .btn-ghost:hover {
+      background: #F1F5F9;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      opacity: 0.9;
+    }
+
+    /* states */
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* loading */
+
+    .btn-loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <h2>Buttons</h2>
+
+  <div class="container">
+    <button class="btn btn-primary">Primary</button>
+    <button class="btn btn-secondary">Secondary</button>
+    <button class="btn btn-ghost">Ghost</button>
+    <button class="btn btn-danger">Danger</button>
+
+    <button class="btn btn-primary" disabled>Disabled</button>
+
+    <button class="btn btn-primary" id="loadBtn">
+      <span class="label">Loading</span>
+    </button>
+  </div>
+
+  <script>
+    const btn = document.getElementById("loadBtn");
+
+    btn.addEventListener("click", () => {
+      btn.classList.add("btn-loading");
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      setTimeout(() => {
+        btn.classList.remove("btn-loading");
+        btn.innerHTML = '<span class="label">Done</span>';
+      }, 2000);
+    });
+  </script>
+
+</body>
+</html>

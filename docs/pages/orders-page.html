@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orders Page</title>
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .logo {
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .nav-item {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    .nav-item.active {
+      background: #EFF6FF;
+      color: var(--primary);
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+
+    .header {
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    /* CONTENT */
+
+    .content {
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+    }
+
+    .input {
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      width: 260px;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-trigger {
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 46px;
+      left: 0;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px;
+    }
+
+    .dropdown.open .dropdown-menu {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .dropdown-item:hover {
+      background: #F1F5F9;
+    }
+
+    /* CARD */
+
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .title {
+      font-weight: 600;
+    }
+
+    .meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    .footer {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* EMPTY */
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">SelectProfi</div>
+    <div class="nav-item active">Заказы</div>
+    <div class="nav-item">Кандидаты</div>
+    <div class="nav-item">Отклики</div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div>Поиск заказов</div>
+      <div>👤 Иван</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+
+        <input class="input" placeholder="Поиск вакансий..." />
+
+        <div class="filters">
+
+          <div class="dropdown" id="sort">
+            <button class="dropdown-trigger">Сортировка</button>
+            <div class="dropdown-menu">
+              <div class="dropdown-item">По дате</div>
+              <div class="dropdown-item">По зарплате</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- CARDS -->
+
+      <div class="card">
+        <div class="title">Frontend Developer</div>
+        <div class="meta">Москва • Удаленно • IT</div>
+
+        <div class="footer">
+          <div>150 000 ₽</div>
+          <button class="btn btn-primary">Откликнуться</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="title">HR Manager</div>
+        <div class="meta">СПб • Офис • HR</div>
+
+        <div class="footer">
+          <div>120 000 ₽</div>
+          <button class="btn btn-primary">Откликнуться</button>
+        </div>
+      </div>
+
+      <!-- EMPTY -->
+
+      <div class="empty" style="display:none">
+        Ничего не найдено  
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  // dropdown
+  const dropdown = document.getElementById("sort");
+
+  dropdown.querySelector(".dropdown-trigger").onclick = (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("open");
+  };
+
+  document.addEventListener("click", () => {
+    dropdown.classList.remove("open");
+  });
+</script>
+
+</body>
+</html>

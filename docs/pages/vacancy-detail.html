@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vacancy Detail</title>
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 240px;
+      background: white;
+      border-right: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .nav-item {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      background: #EFF6FF;
+      color: var(--primary);
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      height: 60px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    /* CONTENT */
+
+    .content {
+      padding: 24px;
+      overflow-y: auto;
+      max-width: 900px;
+    }
+
+    .back {
+      font-size: 14px;
+      color: var(--primary);
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .company {
+      margin-top: 4px;
+      color: var(--text-secondary);
+    }
+
+    .meta {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .salary {
+      margin-top: 16px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .section {
+      margin-top: 24px;
+    }
+
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .text {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #F1F5F9;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="nav-item active">Заказы</div>
+    <div class="nav-item">Кандидаты</div>
+    <div class="nav-item">Отклики</div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div>Детали заказа</div>
+      <div>👤 Иван</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <div class="back">← Назад к списку</div>
+
+      <div class="card">
+
+        <div class="title">Frontend Developer</div>
+        <div class="company">Яндекс • Москва</div>
+
+        <div class="meta">
+          <span>💼 IT</span>
+          <span>📍 Удаленно</span>
+          <span>⏱ Срок: 2 недели</span>
+        </div>
+
+        <div class="salary">150 000 ₽</div>
+
+        <!-- DESCRIPTION -->
+        <div class="section">
+          <div class="section-title">Описание</div>
+          <div class="text">
+            Ищем frontend разработчика для разработки SaaS платформы.
+            Основной стек: React, TypeScript.
+          </div>
+        </div>
+
+        <!-- RESPONSIBILITIES -->
+        <div class="section">
+          <div class="section-title">Обязанности</div>
+          <div class="text">
+            — Разработка интерфейсов<br/>
+            — Работа с API<br/>
+            — Участие в архитектуре
+          </div>
+        </div>
+
+        <!-- REQUIREMENTS -->
+        <div class="section">
+          <div class="section-title">Требования</div>
+          <div class="text">
+            — Опыт от 3 лет<br/>
+            — React / TS<br/>
+            — Понимание UX
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+          <button class="btn btn-primary">Откликнуться</button>
+          <button class="btn btn-secondary">Скрыть</button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  document.querySelector(".back").onclick = () => {
+    alert("Назад к списку");
+  };
+</script>
+
+</body>
+</html>
