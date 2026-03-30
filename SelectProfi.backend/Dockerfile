@@ -2,6 +2,9 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY SelectProfi.backend/SelectProfi.backend.csproj SelectProfi.backend/
+COPY SelectProfi.backend.Application/SelectProfi.backend.Application.csproj SelectProfi.backend.Application/
+COPY SelectProfi.backend.Domain/SelectProfi.backend.Domain.csproj SelectProfi.backend.Domain/
+COPY SelectProfi.backend.Infrastructure/SelectProfi.backend.Infrastructure.csproj SelectProfi.backend.Infrastructure/
 RUN dotnet restore SelectProfi.backend/SelectProfi.backend.csproj
 
 COPY . .
