@@ -68,6 +68,27 @@ body {
     #f8fafc;
 }
 
+#login-email,
+#login-password,
+#login-email:focus,
+#login-password:focus,
+#login-email:active,
+#login-password:active {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a;
+}
+
+#login-email:-webkit-autofill,
+#login-email:-webkit-autofill:hover,
+#login-email:-webkit-autofill:focus,
+#login-password:-webkit-autofill,
+#login-password:-webkit-autofill:hover,
+#login-password:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: inset 0 0 0 1000px #fff !important;
+}
+
 @keyframes auth-panel-enter {
   from {
     opacity: 0;
@@ -101,6 +122,28 @@ body {
   }
 }
 
+@keyframes auth-role-switch-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes auth-role-switch-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
 .auth-panel-enter {
   animation: auth-panel-enter 460ms ease-out both;
 }
@@ -111,6 +154,14 @@ body {
 
 .auth-list-item {
   animation: auth-list-item-enter 380ms ease-out both;
+}
+
+.auth-role-switch-left {
+  animation: auth-role-switch-left 260ms ease-out both;
+}
+
+.auth-role-switch-right {
+  animation: auth-role-switch-right 260ms ease-out both;
 }
 
 .auth-list-item-delay-1 {
@@ -124,7 +175,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .auth-panel-enter,
   .auth-hero-enter,
-  .auth-list-item {
+  .auth-list-item,
+  .auth-role-switch-left,
+  .auth-role-switch-right {
     animation: none;
   }
 }

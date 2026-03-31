@@ -8,6 +8,9 @@ import type {
 } from './types'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const registrationPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$/
+const registrationPasswordPolicyMessage =
+  'Пароль должен содержать 12+ символов, заглавную и строчную буквы, цифру и спецсимвол'
 
 type NameParts = {
   firstName: string
@@ -73,12 +76,34 @@ export function validateRegistrationValues(values: RegistrationFormValues): Regi
 
   if (!values.password) {
     errors.password = 'Пароль обязателен'
-  } else if (values.password.length < 8) {
-    errors.password = 'Минимум 8 символов'
+  } else if (!registrationPasswordRegex.test(values.password)) {
+    errors.password = registrationPasswordPolicyMessage
   }
 
   if (!isPublicRegistrationRole(values.role)) {
     errors.role = 'Роль обязательна'
+  }
+
+  if (values.role === 'Customer') {
+    if (!values.customerLegalForm) {
+      errors.customerLegalForm = 'Выберите юрформу'
+    } else {
+      if (!values.customerInn) {
+        errors.customerInn = 'ИНН обязателен'
+      }
+
+      if (values.customerLegalForm === 'Ooo' && !values.customerEgrn) {
+        errors.customerEgrn = 'Для ООО требуется ЕГРН'
+      }
+
+      if (values.customerLegalForm === 'Ip' && !values.customerEgrnip) {
+        errors.customerEgrnip = 'Для ИП требуется ЕГРНИП'
+      }
+
+      if (!values.offerAccepted) {
+        errors.offerAccepted = 'Необходимо принять условия оферты'
+      }
+    }
   }
 
   return errors

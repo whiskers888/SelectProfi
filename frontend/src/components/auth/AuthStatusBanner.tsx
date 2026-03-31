@@ -2,14 +2,12 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { SubmitState } from '@/features/auth/types'
 
+type ActiveSubmitStatus = Exclude<SubmitState['status'], 'idle'>
+
 const statusMeta: Record<
-  SubmitState['status'],
+  ActiveSubmitStatus,
   { badgeLabel: string; badgeVariant: 'neutral' | 'default' | 'success' | 'destructive' }
 > = {
-  idle: {
-    badgeLabel: 'Пусто',
-    badgeVariant: 'neutral',
-  },
   loading: {
     badgeLabel: 'Отправка',
     badgeVariant: 'default',
@@ -29,19 +27,21 @@ type AuthStatusBannerProps = {
 }
 
 export function AuthStatusBanner({ state }: AuthStatusBannerProps) {
+  if (state.status === 'idle') {
+    return null
+  }
+
   const meta = statusMeta[state.status]
 
   return (
     <div
       className={cn(
-        'rounded-xl border px-3 py-2.5 text-sm transition-colors',
+        'animate-[auth-panel-enter_220ms_ease-out] rounded-xl border px-3 py-2.5 text-sm transition-colors',
         state.status === 'error'
           ? 'border-red-200 bg-red-50 text-red-700'
           : state.status === 'success'
             ? 'border-green-200 bg-green-50 text-green-700'
-            : state.status === 'loading'
-              ? 'border-blue-200 bg-blue-50 text-blue-700'
-              : 'border-slate-200 bg-slate-100 text-slate-600',
+            : 'border-blue-200 bg-blue-50 text-blue-700',
       )}
       role={state.status === 'error' ? 'alert' : 'status'}
     >

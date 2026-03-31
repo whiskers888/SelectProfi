@@ -7,7 +7,7 @@ type AuthFormShellProps = {
   actionText: string
   children: ReactNode
   description: string
-  status: ReactNode
+  status?: ReactNode
   title: string
 }
 
@@ -27,7 +27,7 @@ export function AuthFormShell({
         <p className="text-sm leading-relaxed text-slate-600">{description}</p>
       </header>
 
-      <div className="mb-5">{status}</div>
+      {status ? <div className="mb-5">{status}</div> : null}
 
       <div className="space-y-5">{children}</div>
 

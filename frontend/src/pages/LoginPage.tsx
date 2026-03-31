@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { routePaths } from '@/app/routePaths'
 import { AuthFormShell, AuthHeroPanel, AuthSplitLayout, AuthStatusBanner } from '@/components/auth'
 import { FormFieldError } from '@/components/ui/form-feedback'
 import { Input } from '@/components/ui/input'
@@ -12,14 +13,17 @@ import { validateLoginValues } from '@/features/auth/validation'
 
 const defaultLoginState: SubmitState = {
   status: 'idle',
-  message: 'Введите рабочие данные аккаунта SelectProfi.',
+  message: '',
 }
 
 const defaultLoginErrors: LoginFormErrors = {}
+const authInputClassName =
+  'h-11 rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-600/30 autofill:[-webkit-text-fill-color:#0f172a] autofill:shadow-[inset_0_0_0px_1000px_#ffffff]'
+const authInputStyle = { WebkitTextFillColor: '#0f172a' } as const
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { executeDemoLogin, executeLogin, isApiError, isLoading } = useLoginUseCase()
+  const { executeLogin, isApiError, isLoading } = useLoginUseCase()
   const [errors, setErrors] = useState<LoginFormErrors>(defaultLoginErrors)
   const [submitState, setSubmitState] = useState<SubmitState>(defaultLoginState)
   const timeoutRef = useRef<number | null>(null)
@@ -36,7 +40,8 @@ export function LoginPage() {
   function navigateToPreviewAfterDelay() {
     clearPendingNavigation()
     timeoutRef.current = window.setTimeout(() => {
-      navigate('/preview?role=Customer')
+      // @dvnull: Ранее после логина роль жёстко пробрасывалась через query, теперь источник роли — backend profile.
+      navigate(routePaths.app)
     }, 400)
   }
 
@@ -107,14 +112,11 @@ export function LoginPage() {
     }
   }
 
-  function handleQuickLogin() {
-    clearPendingNavigation()
-    executeDemoLogin()
+  function handleSocialLogin(providerName: string) {
     setSubmitState({
-      status: 'success',
-      message: 'Demo-вход выполнен. Открываем preview.',
+      status: 'error',
+      message: `Вход через ${providerName} пока недоступен. Используйте email и пароль.`,
     })
-    navigateToPreviewAfterDelay()
   }
 
   return (
@@ -134,11 +136,11 @@ export function LoginPage() {
     >
       <AuthFormShell
         title="Войти"
-        description="Введите рабочие данные аккаунта SelectProfi."
-        status={<AuthStatusBanner state={submitState} />}
+        description="Введите email и пароль рабочего аккаунта."
+        status={submitState.status !== 'idle' ? <AuthStatusBanner state={submitState} /> : null}
         actionText="Нет аккаунта?"
         actionLabel="Зарегистрироваться"
-        actionHref="/register"
+        actionHref={routePaths.authJoin}
       >
         <form noValidate onSubmit={handleSubmit} className="grid gap-4">
           <div className="space-y-2">
@@ -154,7 +156,8 @@ export function LoginPage() {
               placeholder="you@company.ru"
               aria-invalid={Boolean(errors.email)}
               aria-describedby={errors.email ? 'login-email-error' : undefined}
-              className="h-11 rounded-xl border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-600/30"
+              className={authInputClassName}
+              style={authInputStyle}
             />
             <FormFieldError id="login-email-error">{errors.email}</FormFieldError>
           </div>
@@ -172,7 +175,8 @@ export function LoginPage() {
               placeholder="••••••••"
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? 'login-password-error' : undefined}
-              className="h-11 rounded-xl border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-600/30"
+              className={authInputClassName}
+              style={authInputStyle}
             />
             <FormFieldError id="login-password-error">{errors.password}</FormFieldError>
           </div>
@@ -195,16 +199,51 @@ export function LoginPage() {
                 'Войти'
               )}
             </Button>
+          </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isLoading}
-              onClick={handleQuickLogin}
-              className="h-11 rounded-xl border-slate-200 text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900 active:translate-y-px"
-            >
-              Быстрый демо-вход
-            </Button>
+          <div className="grid gap-3 pt-1">
+            <div className="relative text-center text-xs text-slate-500">
+              <span className="relative z-10 bg-white px-2">или войти через</span>
+              <span className="absolute inset-x-0 top-1/2 -z-0 h-px -translate-y-1/2 bg-slate-200" />
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isLoading}
+                onClick={() => handleSocialLogin('Google')}
+                className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 active:translate-y-px"
+              >
+                Google
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isLoading}
+                onClick={() => handleSocialLogin('VK ID')}
+                className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 active:translate-y-px"
+              >
+                VK ID
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isLoading}
+                onClick={() => handleSocialLogin('Яндекс')}
+                className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 active:translate-y-px"
+              >
+                Яндекс
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isLoading}
+                onClick={() => handleSocialLogin('Mail.ru')}
+                className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 active:translate-y-px"
+              >
+                Mail.ru
+              </Button>
+            </div>
           </div>
         </form>
       </AuthFormShell>

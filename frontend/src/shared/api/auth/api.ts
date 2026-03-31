@@ -2,6 +2,20 @@ import { type FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { api } from '../generated/openapi'
 
 export type RegisterUserRole = 'Applicant' | 'Executor' | 'Customer'
+export type CustomerLegalForm = 'Ooo' | 'Ip' | 1 | 2
+
+export type RegisterCustomerRequest = {
+  inn: string
+  legalForm: CustomerLegalForm
+  egrn?: string
+  egrnip?: string
+  companyName?: string
+}
+
+export type RegisterOfferAcceptanceRequest = {
+  accepted: boolean
+  version: string
+}
 
 export type RegisterUserRequest = {
   email: string
@@ -10,6 +24,8 @@ export type RegisterUserRequest = {
   firstName: string
   lastName: string
   role: RegisterUserRole
+  customerRegistration?: RegisterCustomerRequest
+  offerAcceptance?: RegisterOfferAcceptanceRequest
 }
 
 export type RegisterUserResponse = {
@@ -36,6 +52,16 @@ export type RefreshSessionResponse = {
   refreshToken: string
 }
 
+export type MyAuthInfoResponse = {
+  userId: string
+  email: string
+  role: RegisterUserRole | 'Admin'
+}
+
+export type CustomerAreaResponse = {
+  status: string
+}
+
 const authApi = api.injectEndpoints({
   endpoints: (build) => ({
     registerUser: build.mutation<RegisterUserResponse, RegisterUserRequest>({
@@ -59,11 +85,29 @@ const authApi = api.injectEndpoints({
         body,
       }),
     }),
+    getMyAuthInfo: build.query<MyAuthInfoResponse, void>({
+      query: () => ({
+        url: '/api/auth/me',
+        method: 'GET',
+      }),
+    }),
+    getCustomerAreaStatus: build.query<CustomerAreaResponse, void>({
+      query: () => ({
+        url: '/api/auth/customer-area',
+        method: 'GET',
+      }),
+    }),
   }),
   overrideExisting: false,
 })
 
-export const { useRegisterUserMutation, useLoginUserMutation, useRefreshSessionMutation } = authApi
+export const {
+  useRegisterUserMutation,
+  useLoginUserMutation,
+  useRefreshSessionMutation,
+  useGetMyAuthInfoQuery,
+  useGetCustomerAreaStatusQuery,
+} = authApi
 
 export function isFetchBaseQueryError(error: unknown): error is FetchBaseQueryError {
   return typeof error === 'object' && error !== null && 'status' in error

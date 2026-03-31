@@ -1,4 +1,4 @@
-import type { RegisterUserRole } from '@/shared/api/auth'
+import type { CustomerLegalForm, RegisterUserRole } from '@/shared/api/auth'
 
 export type LoginFormValues = {
   email: string
@@ -11,7 +11,12 @@ export type RegistrationFormValues = {
   fullName: string
   email: string
   phone: string
-  company: string
+  companyName: string
+  customerInn: string
+  customerLegalForm: '' | Extract<CustomerLegalForm, 'Ooo' | 'Ip'>
+  customerEgrn: string
+  customerEgrnip: string
+  offerAccepted: boolean
   password: string
   role: RegisterUserRole
 }
