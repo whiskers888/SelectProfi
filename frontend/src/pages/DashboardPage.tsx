@@ -1,11 +1,11 @@
-import { useGetHealthQuery } from '../shared/api/generated/openapi'
+import { useHealthServer } from '@/features/dashboard/model'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 export function DashboardPage() {
-  const { isLoading, isError, refetch } = useGetHealthQuery()
+  const { isLoading, isError, refetch } = useHealthServer()
 
   // @dvnull: Ветки loading/error переведены на единый UX-шаблон состояний с явным retry.
   if (isLoading) {

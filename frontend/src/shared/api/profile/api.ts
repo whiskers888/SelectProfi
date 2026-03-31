@@ -1,4 +1,4 @@
-import { api } from './generated/openapi'
+import { api } from '../generated/openapi'
 
 export type UserRole = 'Applicant' | 'Executor' | 'Customer' | 'Admin'
 export type ExecutorEmploymentType = 'Fl' | 'Smz' | 'Ip'

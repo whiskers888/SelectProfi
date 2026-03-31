@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
-  useGetMyProfileQuery,
-  useUpdateMyProfileMutation,
+  useProfileServer,
   type ExecutorEmploymentType,
   type MyProfileResponse,
   type UserRole,
-} from '../shared/api/profileApi'
+} from '@/features/profile/model'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -286,8 +285,8 @@ function validateExecutorProfileForm(values: ExecutorProfileFormValues): Executo
 }
 
 export function ProfilePage() {
-  const { data, isLoading, isError, error, refetch } = useGetMyProfileQuery()
-  const [updateMyProfile, { isLoading: isUpdatingProfile }] = useUpdateMyProfileMutation()
+  const { data, isLoading, isError, error, isUpdatingProfile, refetch, updateMyProfile } =
+    useProfileServer()
 
   const [isEditingCommon, setIsEditingCommon] = useState(false)
   const [commonFormValues, setCommonFormValues] = useState<CommonProfileFormValues>({

@@ -1,14 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { useDispatch } from 'react-redux'
-import {
-  type LoginUserRequest,
-  type RegisterUserRequest,
-  type RegisterUserRole,
-  isFetchBaseQueryError,
-  useLoginUserMutation,
-  useRegisterUserMutation,
-} from '../shared/api/authApi'
-import { setAuthSession } from '../app/authSessionSlice'
+import { useLoginUseCase, useRegisterUseCase } from '@/features/auth/model'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormFieldError, FormStatusMessage } from '@/components/ui/form-feedback'
@@ -16,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+type RegisterUserRole = 'Applicant' | 'Executor' | 'Customer'
 
 const publicRegistrationRoles = [
   { value: 'Applicant', label: 'Соискатель' },
@@ -181,10 +174,13 @@ function parseLoginServerError(
 }
 
 export function AuthPage() {
-  const dispatch = useDispatch()
   const [authMode, setAuthMode] = useState<AuthMode>('register')
-  const [registerUser, { isLoading: isRegistrationLoading }] = useRegisterUserMutation()
-  const [loginUser, { isLoading: isLoginLoading }] = useLoginUserMutation()
+  const {
+    executeRegister,
+    isApiError: isRegisterApiError,
+    isLoading: isRegistrationLoading,
+  } = useRegisterUseCase()
+  const { executeLogin, isApiError: isLoginApiError, isLoading: isLoginLoading } = useLoginUseCase()
   const [registrationErrors, setRegistrationErrors] = useState<RegistrationFormErrors>(
     emptyRegistrationFormErrors,
   )
@@ -253,25 +249,22 @@ export function AuthPage() {
       return
     }
 
-    const payload: RegisterUserRequest = {
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      phone: values.phone ? values.phone : undefined,
-      password: values.password,
-      role: values.role,
-    }
-
     setRegistrationErrors(nextErrors)
 
     try {
-      const session = await registerUser(payload).unwrap()
-      dispatch(setAuthSession(session))
+      await executeRegister({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        phone: values.phone ? values.phone : undefined,
+        password: values.password,
+        role: values.role,
+      })
       setSubmitState({ status: 'success', message: 'Регистрация выполнена успешно.' })
       formElement.reset()
       setRegistrationRole(defaultRegistrationRole)
     } catch (error) {
-      if (isFetchBaseQueryError(error) && typeof error.status === 'number') {
+      if (isRegisterApiError(error) && typeof error.status === 'number') {
         const parsedError = parseRegistrationServerError(error.status, error.data)
         setRegistrationErrors(parsedError.fieldErrors)
         setSubmitState({ status: 'error', message: parsedError.formMessage })
@@ -314,20 +307,17 @@ export function AuthPage() {
       return
     }
 
-    const payload: LoginUserRequest = {
-      email: values.email,
-      password: values.password,
-    }
-
     setLoginErrors(emptyLoginFormErrors)
 
     try {
-      const session = await loginUser(payload).unwrap()
-      dispatch(setAuthSession(session))
+      await executeLogin({
+        email: values.email,
+        password: values.password,
+      })
       setSubmitState({ status: 'success', message: 'Вход выполнен успешно.' })
       formElement.reset()
     } catch (error) {
-      if (isFetchBaseQueryError(error) && typeof error.status === 'number') {
+      if (isLoginApiError(error) && typeof error.status === 'number') {
         const parsedError = parseLoginServerError(error.status, error.data)
         setLoginErrors(parsedError.fieldErrors)
         setSubmitState({ status: 'error', message: parsedError.formMessage })

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useRefreshSessionMutation } from '../shared/api/authApi'
+import { useRefreshSessionMutation } from '../shared/api/auth'
 import {
   clearAuthSession,
   setAuthSession,

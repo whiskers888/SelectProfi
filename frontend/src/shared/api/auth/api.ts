@@ -1,5 +1,5 @@
 import { type FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import { api } from './generated/openapi'
+import { api } from '../generated/openapi'
 
 export type RegisterUserRole = 'Applicant' | 'Executor' | 'Customer'
 
