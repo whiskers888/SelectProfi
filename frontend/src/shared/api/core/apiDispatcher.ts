@@ -1,7 +1,6 @@
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { clearAuthSession, setAuthSession, type AuthSession } from '../../../app/authSessionSlice'
-import { apiMode } from '../../config/apiMode'
 
 const baseUrl =
   import.meta.env.VITE_API_BASE_URL ??
@@ -483,6 +482,8 @@ const mockBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryErro
   })
 }
 
+void mockBaseQuery
+
 let refreshPromise: Promise<AuthSession | null> | null = null
 
 export const apiDispatcher: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
@@ -490,10 +491,6 @@ export const apiDispatcher: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
   api,
   extraOptions,
 ) => {
-  if (apiMode === 'mock') {
-    return mockBaseQuery(args, api, extraOptions)
-  }
-
   let result = await rawBaseQuery(args, api, extraOptions)
 
   if (!isUnauthorized(result.error) || isRefreshRequest(args)) {

@@ -1,6 +1,4 @@
-export type ApiMode = 'mock' | 'server'
+export type ApiMode = 'server'
 
-const rawApiMode = (import.meta.env.VITE_API_MODE ?? 'server').toLowerCase()
-
-export const apiMode: ApiMode = rawApiMode === 'mock' ? 'mock' : 'server'
-export const isMockApiMode = apiMode === 'mock'
+export const apiMode: ApiMode = 'server'
+export const isMockApiMode = false
