@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Profile;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Profile.UpdateMyProfile;
@@ -23,6 +24,7 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
     private const int CustomerEgrnipMaxLength = 15;
     private const int CustomerCompanyNameMaxLength = 255;
     private const int CustomerCompanyLogoUrlMaxLength = 512;
+    private const int CustomerOfferVersionMaxLength = 100;
 
     private const int ExecutorProjectTitleMaxLength = 200;
     private const int ExecutorProjectCompanyNameMaxLength = 200;
@@ -62,6 +64,9 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
         if (saveResult == ProfileWritePersistenceResult.Conflict)
             return new UpdateMyProfileResult { ErrorCode = UpdateMyProfileErrorCode.PhoneAlreadyExists };
 
+        var activeRole = user.Role.ToString();
+        var roles = ProfileRoleSet.Resolve(user.Role);
+
         return new UpdateMyProfileResult
         {
             ErrorCode = UpdateMyProfileErrorCode.None,
@@ -70,7 +75,9 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
             Phone = user.Phone,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Role = user.Role.ToString(),
+            Role = activeRole,
+            ActiveRole = activeRole,
+            Roles = roles,
             IsEmailVerified = user.IsEmailVerified,
             IsPhoneVerified = user.IsPhoneVerified,
             ApplicantResumeTitle = user.ApplicantResumeTitle,
@@ -85,10 +92,14 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
             ApplicantAbout = user.ApplicantAbout,
             ApplicantDesiredSalary = user.ApplicantDesiredSalary,
             CustomerInn = user.CustomerInn,
+            CustomerLegalForm = user.CustomerLegalForm,
             CustomerEgrn = user.CustomerEgrn,
             CustomerEgrnip = user.CustomerEgrnip,
             CustomerCompanyName = user.CustomerCompanyName,
             CustomerCompanyLogoUrl = user.CustomerCompanyLogoUrl,
+            CustomerOfferAccepted = user.CustomerOfferAccepted,
+            CustomerOfferVersion = user.CustomerOfferVersion,
+            CustomerOfferAcceptedAtUtc = user.CustomerOfferAcceptedAtUtc,
             ExecutorEmploymentType = user.ExecutorEmploymentType,
             ExecutorProjectTitle = user.ExecutorProjectTitle,
             ExecutorProjectCompanyName = user.ExecutorProjectCompanyName,
@@ -180,11 +191,27 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
         if (payload is null)
             return;
 
+        var normalizedOfferVersion = NormalizeOptional(payload.OfferVersion);
+
         user.CustomerInn = NormalizeOptional(payload.Inn);
+        user.CustomerLegalForm = payload.LegalForm;
         user.CustomerEgrn = NormalizeOptional(payload.Egrn);
         user.CustomerEgrnip = NormalizeOptional(payload.Egrnip);
         user.CustomerCompanyName = NormalizeOptional(payload.CompanyName);
         user.CustomerCompanyLogoUrl = NormalizeOptional(payload.CompanyLogoUrl);
+
+        if (payload.OfferAccepted is true)
+        {
+            user.CustomerOfferAccepted = true;
+            user.CustomerOfferVersion = normalizedOfferVersion;
+            user.CustomerOfferAcceptedAtUtc = DateTime.UtcNow;
+        }
+        else if (payload.OfferAccepted is false)
+        {
+            user.CustomerOfferAccepted = false;
+            user.CustomerOfferVersion = null;
+            user.CustomerOfferAcceptedAtUtc = null;
+        }
     }
 
     private static void ApplyExecutorProfile(ExecutorProfileUpdatePayload? payload, User user)
@@ -261,7 +288,8 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
         var egrnip = NormalizeOptional(payload.Egrnip);
 
         if (!IsValidOptionalMaxLength(payload.CompanyName, CustomerCompanyNameMaxLength) ||
-            !IsValidOptionalUrl(payload.CompanyLogoUrl, CustomerCompanyLogoUrlMaxLength))
+            !IsValidOptionalUrl(payload.CompanyLogoUrl, CustomerCompanyLogoUrlMaxLength) ||
+            !IsValidOptionalMaxLength(payload.OfferVersion, CustomerOfferVersionMaxLength))
             return false;
 
         if (inn is not null && (!InnRegex.IsMatch(inn) || inn.Length > CustomerInnMaxLength))
@@ -271,6 +299,13 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
             return false;
 
         if (egrnip is not null && (!EgrnipRegex.IsMatch(egrnip) || egrnip.Length > CustomerEgrnipMaxLength))
+            return false;
+
+        var offerVersion = NormalizeOptional(payload.OfferVersion);
+        if (payload.OfferAccepted is true && offerVersion is null)
+            return false;
+
+        if (payload.OfferAccepted is not true && offerVersion is not null)
             return false;
 
         return true;

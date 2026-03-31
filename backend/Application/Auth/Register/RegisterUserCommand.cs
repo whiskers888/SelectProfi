@@ -17,7 +17,39 @@ public sealed class RegisterUserCommand : ICommand<RegisterUserResult>
 
     public UserRole Role { get; init; }
 
+    public IReadOnlyList<UserRole> Roles { get; init; } = [];
+
+    public RegisterCustomerPayload? CustomerRegistration { get; init; }
+
+    public RegisterOfferAcceptancePayload? OfferAcceptance { get; init; }
+
     public bool RequireEmailVerification { get; init; }
 
     public bool RequirePhoneVerification { get; init; }
+}
+
+public sealed class RegisterCustomerPayload
+{
+    public string Inn { get; init; } = string.Empty;
+
+    public RegisterCustomerLegalForm? LegalForm { get; init; }
+
+    public string? Egrn { get; init; }
+
+    public string? Egrnip { get; init; }
+
+    public string? CompanyName { get; init; }
+}
+
+public sealed class RegisterOfferAcceptancePayload
+{
+    public bool Accepted { get; init; }
+
+    public string Version { get; init; } = string.Empty;
+}
+
+public enum RegisterCustomerLegalForm
+{
+    Ooo = 1,
+    Ip = 2
 }

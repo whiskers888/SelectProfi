@@ -2,6 +2,7 @@ using System.Text.Json;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
 using SelectProfi.backend.Application.Profile.UpdateMyProfile;
 using SelectProfi.backend.Contracts.Profile;
+using DomainCustomerLegalForm = SelectProfi.backend.Domain.Users.CustomerLegalForm;
 using DomainExecutorEmploymentType = SelectProfi.backend.Domain.Users.ExecutorEmploymentType;
 
 namespace SelectProfi.backend.Mappings;
@@ -18,6 +19,8 @@ public static class ProfileResponseMapper
             FirstName = result.FirstName,
             LastName = result.LastName,
             Role = result.Role,
+            ActiveRole = result.ActiveRole,
+            Roles = result.Roles,
             IsEmailVerified = result.IsEmailVerified,
             IsPhoneVerified = result.IsPhoneVerified,
             ApplicantProfile = BuildApplicantProfile(result),
@@ -36,6 +39,8 @@ public static class ProfileResponseMapper
             FirstName = result.FirstName,
             LastName = result.LastName,
             Role = result.Role,
+            ActiveRole = result.ActiveRole,
+            Roles = result.Roles,
             IsEmailVerified = result.IsEmailVerified,
             IsPhoneVerified = result.IsPhoneVerified,
             ApplicantProfile = BuildApplicantProfile(result),
@@ -80,20 +85,28 @@ public static class ProfileResponseMapper
     {
         return BuildCustomerProfile(
             result.CustomerInn,
+            result.CustomerLegalForm,
             result.CustomerEgrn,
             result.CustomerEgrnip,
             result.CustomerCompanyName,
-            result.CustomerCompanyLogoUrl);
+            result.CustomerCompanyLogoUrl,
+            result.CustomerOfferAccepted,
+            result.CustomerOfferVersion,
+            result.CustomerOfferAcceptedAtUtc);
     }
 
     private static CustomerProfileResponse? BuildCustomerProfile(UpdateMyProfileResult result)
     {
         return BuildCustomerProfile(
             result.CustomerInn,
+            result.CustomerLegalForm,
             result.CustomerEgrn,
             result.CustomerEgrnip,
             result.CustomerCompanyName,
-            result.CustomerCompanyLogoUrl);
+            result.CustomerCompanyLogoUrl,
+            result.CustomerOfferAccepted,
+            result.CustomerOfferVersion,
+            result.CustomerOfferAcceptedAtUtc);
     }
 
     private static ExecutorProfileResponse? BuildExecutorProfile(GetMyProfileResult result)
@@ -166,25 +179,37 @@ public static class ProfileResponseMapper
 
     private static CustomerProfileResponse? BuildCustomerProfile(
         string? inn,
+        DomainCustomerLegalForm? legalForm,
         string? egrn,
         string? egrnip,
         string? companyName,
-        string? companyLogoUrl)
+        string? companyLogoUrl,
+        bool offerAccepted,
+        string? offerVersion,
+        DateTime? offerAcceptedAtUtc)
     {
         if (string.IsNullOrWhiteSpace(inn) &&
+            legalForm is null &&
             string.IsNullOrWhiteSpace(egrn) &&
             string.IsNullOrWhiteSpace(egrnip) &&
             string.IsNullOrWhiteSpace(companyName) &&
-            string.IsNullOrWhiteSpace(companyLogoUrl))
+            string.IsNullOrWhiteSpace(companyLogoUrl) &&
+            !offerAccepted &&
+            string.IsNullOrWhiteSpace(offerVersion) &&
+            offerAcceptedAtUtc is null)
             return null;
 
         return new CustomerProfileResponse
         {
             Inn = inn,
+            LegalForm = MapCustomerLegalFormToContract(legalForm),
             Egrn = egrn,
             Egrnip = egrnip,
             CompanyName = companyName,
-            CompanyLogoUrl = companyLogoUrl
+            CompanyLogoUrl = companyLogoUrl,
+            OfferAccepted = offerAccepted,
+            OfferVersion = offerVersion,
+            OfferAcceptedAtUtc = offerAcceptedAtUtc
         };
     }
 
@@ -247,6 +272,16 @@ public static class ProfileResponseMapper
             DomainExecutorEmploymentType.Fl => ExecutorEmploymentType.Fl,
             DomainExecutorEmploymentType.Smz => ExecutorEmploymentType.Smz,
             DomainExecutorEmploymentType.Ip => ExecutorEmploymentType.Ip,
+            _ => null
+        };
+    }
+
+    private static CustomerLegalForm? MapCustomerLegalFormToContract(DomainCustomerLegalForm? value)
+    {
+        return value switch
+        {
+            DomainCustomerLegalForm.Ooo => CustomerLegalForm.Ooo,
+            DomainCustomerLegalForm.Ip => CustomerLegalForm.Ip,
             _ => null
         };
     }

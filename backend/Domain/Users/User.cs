@@ -50,6 +50,8 @@ public sealed class User
 
     public string? CustomerInn { get; set; }
 
+    public CustomerLegalForm? CustomerLegalForm { get; set; }
+
     public string? CustomerEgrn { get; set; }
 
     public string? CustomerEgrnip { get; set; }
@@ -57,6 +59,12 @@ public sealed class User
     public string? CustomerCompanyName { get; set; }
 
     public string? CustomerCompanyLogoUrl { get; set; }
+
+    public bool CustomerOfferAccepted { get; set; }
+
+    public string? CustomerOfferVersion { get; set; }
+
+    public DateTime? CustomerOfferAcceptedAtUtc { get; set; }
 
     public ExecutorEmploymentType? ExecutorEmploymentType { get; set; }
 

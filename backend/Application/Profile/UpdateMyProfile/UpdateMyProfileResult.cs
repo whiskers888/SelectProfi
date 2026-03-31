@@ -18,6 +18,10 @@ public sealed class UpdateMyProfileResult
 
     public string Role { get; init; } = string.Empty;
 
+    public string ActiveRole { get; init; } = string.Empty;
+
+    public IReadOnlyList<string> Roles { get; init; } = [];
+
     public bool IsEmailVerified { get; init; }
 
     public bool IsPhoneVerified { get; init; }
@@ -46,6 +50,8 @@ public sealed class UpdateMyProfileResult
 
     public string? CustomerInn { get; init; }
 
+    public CustomerLegalForm? CustomerLegalForm { get; init; }
+
     public string? CustomerEgrn { get; init; }
 
     public string? CustomerEgrnip { get; init; }
@@ -53,6 +59,12 @@ public sealed class UpdateMyProfileResult
     public string? CustomerCompanyName { get; init; }
 
     public string? CustomerCompanyLogoUrl { get; init; }
+
+    public bool CustomerOfferAccepted { get; init; }
+
+    public string? CustomerOfferVersion { get; init; }
+
+    public DateTime? CustomerOfferAcceptedAtUtc { get; init; }
 
     public ExecutorEmploymentType? ExecutorEmploymentType { get; init; }
 

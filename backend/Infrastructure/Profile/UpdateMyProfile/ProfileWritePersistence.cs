@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using SelectProfi.backend.Application.Profile.SwitchMyActiveRole;
 using SelectProfi.backend.Application.Profile.UpdateMyProfile;
 using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Infrastructure.Data;
 
 namespace SelectProfi.backend.Infrastructure.Profile.UpdateMyProfile;
 
-public sealed class ProfileWritePersistence(AppDbContext dbContext) : IProfileWritePersistence
+public sealed class ProfileWritePersistence(AppDbContext dbContext)
+    : IProfileWritePersistence, ISwitchMyActiveRolePersistence
 {
     public Task<User?> FindByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -30,6 +32,15 @@ public sealed class ProfileWritePersistence(AppDbContext dbContext) : IProfileWr
         {
             return ProfileWritePersistenceResult.Conflict;
         }
+    }
+
+    async Task<SwitchMyActiveRolePersistenceResult> ISwitchMyActiveRolePersistence.SaveChangesAsync(
+        CancellationToken cancellationToken)
+    {
+        var result = await SaveChangesAsync(cancellationToken);
+        return result == ProfileWritePersistenceResult.Saved
+            ? SwitchMyActiveRolePersistenceResult.Saved
+            : SwitchMyActiveRolePersistenceResult.Conflict;
     }
 
     private static bool IsUniqueViolation(DbUpdateException exception)

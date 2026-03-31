@@ -114,6 +114,39 @@ public sealed class AuthFlowHttpTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task Register_WithCustomerCombinedWithApplicant_ReturnsBadRequest()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/auth/register",
+            new RegisterUserRequest
+            {
+                Email = BuildUniqueEmail(),
+                Password = "ValidPassword!123",
+                FirstName = "Combo",
+                LastName = "User",
+                Roles = [RegisterUserRole.Customer, RegisterUserRole.Applicant],
+                CustomerRegistration = new CustomerRegistrationRequest
+                {
+                    Inn = "1234567890",
+                    LegalForm = SelectProfi.backend.Contracts.Auth.CustomerLegalForm.Ooo,
+                    Egrn = "1234567890123"
+                },
+                OfferAcceptance = new OfferAcceptanceRequest
+                {
+                    Accepted = true,
+                    Version = "public-offer-v1"
+                }
+            });
+
+        using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("validation_error", payload.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
     public async Task Login_WithWrongPassword_ReturnsUnauthorized()
     {
         using var client = _factory.CreateClient();
@@ -267,6 +300,75 @@ public sealed class AuthFlowHttpTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, registerResponse.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, updateResponse.StatusCode);
         Assert.Equal("invalid_role_specific_profile_payload", errorPayload.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task Profile_SwitchMyActiveRole_FromApplicantToExecutor_ReturnsUpdatedProfile()
+    {
+        using var client = _factory.CreateClient();
+        var email = BuildUniqueEmail();
+
+        using var registerResponse = await client.PostAsJsonAsync(
+            "/api/auth/register",
+            new RegisterUserRequest
+            {
+                Email = email,
+                Password = "ValidPassword!123",
+                FirstName = "Applicant",
+                LastName = "User",
+                Role = RegisterUserRole.Applicant
+            });
+        var registerPayload = await registerResponse.Content.ReadFromJsonAsync<RegisterUserResponse>();
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", registerPayload?.AccessToken);
+        using var switchResponse = await client.PostAsJsonAsync(
+            "/api/profile/me/active-role",
+            new SwitchMyActiveRoleRequest
+            {
+                ActiveRole = ProfileUserRole.Executor
+            });
+        var switchPayload = await switchResponse.Content.ReadFromJsonAsync<MyProfileResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, registerResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, switchResponse.StatusCode);
+        Assert.NotNull(switchPayload);
+        Assert.Equal("Executor", switchPayload!.Role);
+        Assert.Equal("Executor", switchPayload.ActiveRole);
+        Assert.NotNull(switchPayload.Roles);
+        Assert.Contains("Applicant", switchPayload.Roles);
+        Assert.Contains("Executor", switchPayload.Roles);
+    }
+
+    [Fact]
+    public async Task Profile_SwitchMyActiveRole_FromApplicantToCustomer_ReturnsBadRequest()
+    {
+        using var client = _factory.CreateClient();
+        var email = BuildUniqueEmail();
+
+        using var registerResponse = await client.PostAsJsonAsync(
+            "/api/auth/register",
+            new RegisterUserRequest
+            {
+                Email = email,
+                Password = "ValidPassword!123",
+                FirstName = "Applicant",
+                LastName = "User",
+                Role = RegisterUserRole.Applicant
+            });
+        var registerPayload = await registerResponse.Content.ReadFromJsonAsync<RegisterUserResponse>();
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", registerPayload?.AccessToken);
+        using var switchResponse = await client.PostAsJsonAsync(
+            "/api/profile/me/active-role",
+            new SwitchMyActiveRoleRequest
+            {
+                ActiveRole = ProfileUserRole.Customer
+            });
+        using var switchError = JsonDocument.Parse(await switchResponse.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, registerResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, switchResponse.StatusCode);
+        Assert.Equal("active_role_not_allowed", switchError.RootElement.GetProperty("code").GetString());
     }
 
     [Fact]

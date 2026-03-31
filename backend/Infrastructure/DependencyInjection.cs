@@ -5,6 +5,7 @@ using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
+using SelectProfi.backend.Application.Profile.SwitchMyActiveRole;
 using SelectProfi.backend.Application.Profile.UpdateMyProfile;
 using SelectProfi.backend.HealthChecks;
 using SelectProfi.backend.Infrastructure.Auth.Login;
@@ -34,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IRefreshAuthSessionPersistence, RefreshAuthSessionPersistence>();
         services.AddScoped<IProfileReadPersistence, ProfileReadPersistence>();
         services.AddScoped<IProfileWritePersistence, ProfileWritePersistence>();
+        services.AddScoped<ISwitchMyActiveRolePersistence, ProfileWritePersistence>();
         services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         {
             var configuration = serviceProvider.GetRequiredService<IConfiguration>();

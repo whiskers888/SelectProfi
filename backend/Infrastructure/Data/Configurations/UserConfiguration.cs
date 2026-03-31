@@ -88,6 +88,10 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.CustomerInn)
             .HasMaxLength(12);
 
+        builder.Property(user => user.CustomerLegalForm)
+            .HasConversion<string>()
+            .HasMaxLength(16);
+
         builder.Property(user => user.CustomerEgrn)
             .HasMaxLength(13);
 
@@ -99,6 +103,14 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(user => user.CustomerCompanyLogoUrl)
             .HasMaxLength(512);
+
+        builder.Property(user => user.CustomerOfferAccepted)
+            .IsRequired();
+
+        builder.Property(user => user.CustomerOfferVersion)
+            .HasMaxLength(100);
+
+        builder.Property(user => user.CustomerOfferAcceptedAtUtc);
 
         builder.Property(user => user.ExecutorEmploymentType)
             .HasConversion<string>()

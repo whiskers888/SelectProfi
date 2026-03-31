@@ -49,6 +49,8 @@ public sealed class CustomerProfileUpdatePayload
 {
     public string? Inn { get; init; }
 
+    public CustomerLegalForm? LegalForm { get; init; }
+
     public string? Egrn { get; init; }
 
     public string? Egrnip { get; init; }
@@ -56,6 +58,10 @@ public sealed class CustomerProfileUpdatePayload
     public string? CompanyName { get; init; }
 
     public string? CompanyLogoUrl { get; init; }
+
+    public bool? OfferAccepted { get; init; }
+
+    public string? OfferVersion { get; init; }
 }
 
 public sealed class ExecutorProfileUpdatePayload

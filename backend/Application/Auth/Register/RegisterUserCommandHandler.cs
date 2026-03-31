@@ -20,6 +20,9 @@ public sealed class RegisterUserCommandHandler(
             return new RegisterUserResult { ErrorCode = RegisterUserErrorCode.PhoneAlreadyExists };
 
         var utcNow = DateTime.UtcNow;
+        var normalizedCustomerRegistration = NormalizeCustomerRegistration(command.CustomerRegistration);
+        var normalizedOfferAcceptance = NormalizeOfferAcceptance(command.OfferAcceptance);
+
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -31,6 +34,14 @@ public sealed class RegisterUserCommandHandler(
             FirstName = command.FirstName.Trim(),
             LastName = command.LastName.Trim(),
             Role = command.Role,
+            CustomerInn = normalizedCustomerRegistration?.Inn,
+            CustomerLegalForm = MapCustomerLegalForm(normalizedCustomerRegistration?.LegalForm),
+            CustomerEgrn = normalizedCustomerRegistration?.Egrn,
+            CustomerEgrnip = normalizedCustomerRegistration?.Egrnip,
+            CustomerCompanyName = normalizedCustomerRegistration?.CompanyName,
+            CustomerOfferAccepted = normalizedOfferAcceptance?.Accepted ?? false,
+            CustomerOfferVersion = normalizedOfferAcceptance?.Accepted == true ? normalizedOfferAcceptance.Version : null,
+            CustomerOfferAcceptedAtUtc = normalizedOfferAcceptance?.Accepted == true ? utcNow : null,
             IsEmailVerified = !command.RequireEmailVerification,
             IsPhoneVerified = normalizedPhone is null || !command.RequirePhoneVerification,
             CreatedAtUtc = utcNow
@@ -69,5 +80,53 @@ public sealed class RegisterUserCommandHandler(
             return null;
 
         return phone.Trim();
+    }
+
+    private static RegisterCustomerPayload? NormalizeCustomerRegistration(RegisterCustomerPayload? payload)
+    {
+        if (payload is null)
+            return null;
+
+        return new RegisterCustomerPayload
+        {
+            Inn = payload.Inn.Trim(),
+            LegalForm = payload.LegalForm,
+            Egrn = NormalizeOptional(payload.Egrn),
+            Egrnip = NormalizeOptional(payload.Egrnip),
+            CompanyName = NormalizeOptional(payload.CompanyName)
+        };
+    }
+
+    private static RegisterOfferAcceptancePayload? NormalizeOfferAcceptance(RegisterOfferAcceptancePayload? payload)
+    {
+        if (payload is null)
+            return null;
+
+        return new RegisterOfferAcceptancePayload
+        {
+            Accepted = payload.Accepted,
+            Version = payload.Version.Trim()
+        };
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return value.Trim();
+    }
+
+    private static CustomerLegalForm? MapCustomerLegalForm(RegisterCustomerLegalForm? legalForm)
+    {
+        if (!legalForm.HasValue)
+            return null;
+
+        return legalForm.Value switch
+        {
+            RegisterCustomerLegalForm.Ooo => CustomerLegalForm.Ooo,
+            RegisterCustomerLegalForm.Ip => CustomerLegalForm.Ip,
+            _ => throw new ArgumentOutOfRangeException(nameof(legalForm), legalForm.Value, "Unsupported legal form.")
+        };
     }
 }

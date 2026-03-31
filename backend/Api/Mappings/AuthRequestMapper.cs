@@ -17,6 +17,10 @@ public static partial class AuthRequestMapper
 
     public static RegisterUserCommand ToCommand(this RegisterUserRequest request, AuthFeatureFlagsOptions featureFlags)
     {
+        var resolvedRoles = request.ResolveRoles().Select(MapRole).ToArray();
+        if (resolvedRoles.Length == 0)
+            throw new InvalidOperationException("At least one role must be provided.");
+
         return new RegisterUserCommand
         {
             Email = request.Email,
@@ -24,7 +28,10 @@ public static partial class AuthRequestMapper
             Password = request.Password,
             FirstName = request.FirstName,
             LastName = request.LastName,
-            Role = MapRole(request.Role),
+            Role = resolvedRoles[0],
+            Roles = resolvedRoles,
+            CustomerRegistration = MapCustomerRegistration(request.CustomerRegistration),
+            OfferAcceptance = MapOfferAcceptance(request.OfferAcceptance),
             RequireEmailVerification = featureFlags.RequireEmailVerification,
             RequirePhoneVerification = featureFlags.RequirePhoneVerification
         };
@@ -38,6 +45,46 @@ public static partial class AuthRequestMapper
             RegisterUserRole.Executor => UserRole.Executor,
             RegisterUserRole.Customer => UserRole.Customer,
             _ => throw new ArgumentOutOfRangeException(nameof(role), role, "Unsupported role.")
+        };
+    }
+
+    private static RegisterCustomerPayload? MapCustomerRegistration(CustomerRegistrationRequest? customerRegistration)
+    {
+        if (customerRegistration is null)
+            return null;
+
+        return new RegisterCustomerPayload
+        {
+            Inn = customerRegistration.Inn,
+            LegalForm = MapCustomerLegalForm(customerRegistration.LegalForm),
+            Egrn = customerRegistration.Egrn,
+            Egrnip = customerRegistration.Egrnip,
+            CompanyName = customerRegistration.CompanyName
+        };
+    }
+
+    private static RegisterOfferAcceptancePayload? MapOfferAcceptance(OfferAcceptanceRequest? offerAcceptance)
+    {
+        if (offerAcceptance is null)
+            return null;
+
+        return new RegisterOfferAcceptancePayload
+        {
+            Accepted = offerAcceptance.Accepted,
+            Version = offerAcceptance.Version
+        };
+    }
+
+    private static RegisterCustomerLegalForm? MapCustomerLegalForm(SelectProfi.backend.Contracts.Auth.CustomerLegalForm? legalForm)
+    {
+        if (!legalForm.HasValue)
+            return null;
+
+        return legalForm.Value switch
+        {
+            SelectProfi.backend.Contracts.Auth.CustomerLegalForm.Ooo => RegisterCustomerLegalForm.Ooo,
+            SelectProfi.backend.Contracts.Auth.CustomerLegalForm.Ip => RegisterCustomerLegalForm.Ip,
+            _ => throw new ArgumentOutOfRangeException(nameof(legalForm), legalForm.Value, "Unsupported legal form.")
         };
     }
 }

@@ -14,6 +14,10 @@ public sealed class MyProfileResponse
 
     public string Role { get; init; } = string.Empty;
 
+    public string ActiveRole { get; init; } = string.Empty;
+
+    public IReadOnlyList<string> Roles { get; init; } = [];
+
     public bool IsEmailVerified { get; init; }
 
     public bool IsPhoneVerified { get; init; }
