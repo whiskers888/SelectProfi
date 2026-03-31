@@ -13,34 +13,65 @@
 
 ## Быстрый старт (локальная разработка)
 
-### 1. Поднять инфраструктуру
+### 1. Запуск всего стека одной командой (backend + frontend + infra)
 
 ```powershell
 cd Z:\SelectProfi
-docker compose up -d postgres redis rabbitmq
+copy .env.example .env
+docker compose up --build
 ```
 
-### 2. Запустить backend
+После старта:
+- Backend: `http://localhost:5268`
+- Frontend: `http://localhost:5173`
+- OpenAPI: `http://localhost:5268/openapi/v1.json`
+
+В development backend автоматически:
+- применяет EF Core миграции;
+- создаёт тестовые учётки:
+  - `executor@selectprofi.local` / `1`
+  - `customer@selectprofi.local` / `1`
+
+### 2. Локальный запуск без Docker frontend (опционально)
 
 ```powershell
-cd Z:\SelectProfi\backend
-dotnet restore .\backend.sln
-dotnet run --project .\Api
+cd Z:\SelectProfi
+docker compose up -d postgres redis rabbitmq app
 ```
-
-API по умолчанию: `http://localhost:5268`  
-OpenAPI (Development): `http://localhost:5268/openapi/v1.json`
-
-### 3. Запустить frontend
 
 ```powershell
 cd Z:\SelectProfi\frontend
 npm install
-$env:VITE_API_BASE_URL="http://localhost:5268"
 npm run dev
 ```
 
-Frontend по умолчанию: `http://localhost:5173`
+Vite dev proxy уже настроен на backend (`/api`, `/health`, `/openapi`), поэтому `VITE_API_BASE_URL` по умолчанию можно не задавать.
+
+### 2.1. Режимы запуска frontend: mock или server
+
+Frontend поддерживает 2 режима API:
+- `server` — запросы идут в backend (через Vite proxy).
+- `mock` — in-memory mock API внутри frontend, backend не нужен.
+
+```powershell
+cd Z:\SelectProfi\frontend
+npm run dev:server
+```
+
+```powershell
+cd Z:\SelectProfi\frontend
+npm run dev:mock
+```
+
+Также можно использовать `frontend/.env.example` и задать `VITE_API_MODE` вручную.
+
+### 3. Как избежать конфликтов портов
+
+Порты и имя compose-проекта вынесены в `.env`:
+- `COMPOSE_PROJECT_NAME`
+- `BACKEND_PORT`
+- `FRONTEND_PORT`
+- `POSTGRES_PASSWORD`
 
 ## Полезные команды
 
@@ -75,7 +106,7 @@ dotnet test .\backend.sln
 
 ```powershell
 cd Z:\SelectProfi
-docker compose up --build
+docker compose up --build app postgres redis rabbitmq
 ```
 
 Контейнер backend публикуется на `http://localhost:5268`.

@@ -8,7 +8,7 @@
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Manrope', 'Nunito Sans', 'Segoe UI', sans-serif;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
 }
@@ -55,4 +55,126 @@ body {
   font-weight: 500;
   line-height: 1.4;
   color: hsl(var(--foreground));
+}
+
+.auth-page-bg {
+  background:
+    radial-gradient(
+      circle at 16% 16%,
+      rgb(219 234 254 / 72%) 0%,
+      rgb(248 250 252) 43%,
+      rgb(241 245 249) 100%
+    ),
+    #f8fafc;
+}
+
+@keyframes auth-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-hero-enter {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes auth-list-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-panel-enter {
+  animation: auth-panel-enter 460ms ease-out both;
+}
+
+.auth-hero-enter {
+  animation: auth-hero-enter 520ms ease-out both;
+}
+
+.auth-list-item {
+  animation: auth-list-item-enter 380ms ease-out both;
+}
+
+.auth-list-item-delay-1 {
+  animation-delay: 90ms;
+}
+
+.auth-list-item-delay-2 {
+  animation-delay: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-panel-enter,
+  .auth-hero-enter,
+  .auth-list-item {
+    animation: none;
+  }
+}
+
+@keyframes preview-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes preview-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preview-fade-in {
+  animation: preview-fade-in 220ms ease-out both;
+}
+
+.preview-slide-up {
+  animation: preview-slide-up 280ms ease-out both;
+}
+
+.preview-stagger-1 {
+  animation-delay: 40ms;
+}
+
+.preview-stagger-2 {
+  animation-delay: 90ms;
+}
+
+.preview-stagger-3 {
+  animation-delay: 140ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-fade-in,
+  .preview-slide-up,
+  .preview-stagger-1,
+  .preview-stagger-2,
+  .preview-stagger-3 {
+    animation: none;
+  }
 }

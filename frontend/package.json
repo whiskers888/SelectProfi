@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "npm run tokens:build && vite",
+    "dev:mock": "npm run tokens:build && vite --mode mock",
+    "dev:server": "npm run tokens:build && vite --mode server",
     "build": "npm run tokens:build && tsc && vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

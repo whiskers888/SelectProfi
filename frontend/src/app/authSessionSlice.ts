@@ -24,12 +24,31 @@ function isAuthSession(value: unknown): value is AuthSession {
   return typeof value.accessToken === 'string' && typeof value.refreshToken === 'string'
 }
 
-function readAuthSession(): AuthSession | null {
+function readStorage(): Storage | null {
   if (typeof window === 'undefined') {
     return null
   }
 
-  const storedSession = window.localStorage.getItem(authSessionStorageKey)
+  const storageCandidate = window.localStorage as Partial<Storage> | undefined
+  if (
+    !storageCandidate ||
+    typeof storageCandidate.getItem !== 'function' ||
+    typeof storageCandidate.setItem !== 'function' ||
+    typeof storageCandidate.removeItem !== 'function'
+  ) {
+    return null
+  }
+
+  return storageCandidate as Storage
+}
+
+function readAuthSession(): AuthSession | null {
+  const storage = readStorage()
+  if (!storage) {
+    return null
+  }
+
+  const storedSession = storage.getItem(authSessionStorageKey)
   if (!storedSession) {
     return null
   }
@@ -43,16 +62,17 @@ function readAuthSession(): AuthSession | null {
 }
 
 function writeAuthSession(session: AuthSession | null): void {
-  if (typeof window === 'undefined') {
+  const storage = readStorage()
+  if (!storage) {
     return
   }
 
   if (!session) {
-    window.localStorage.removeItem(authSessionStorageKey)
+    storage.removeItem(authSessionStorageKey)
     return
   }
 
-  window.localStorage.setItem(authSessionStorageKey, JSON.stringify(session))
+  storage.setItem(authSessionStorageKey, JSON.stringify(session))
 }
 
 const initialState: AuthSessionState = {

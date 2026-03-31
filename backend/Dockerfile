@@ -13,7 +13,10 @@ RUN dotnet publish Api/Api.csproj -c Release -o /app/publish --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:8080
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
 
 COPY --from=build /app/publish .

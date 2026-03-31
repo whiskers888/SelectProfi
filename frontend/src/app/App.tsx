@@ -6,7 +6,8 @@ import { applyTheme, getNextTheme, readTheme, type Theme } from './theme'
 
 const navigationItems = [
   { to: '/dashboard', label: 'Dashboard' },
-  { to: '/auth', label: 'Auth' },
+  { to: '/preview', label: 'Preview' },
+  { to: '/login', label: 'Login' },
   { to: '/profile', label: 'Profile' },
 ] as const
 
@@ -27,7 +28,9 @@ export function App() {
               type="button"
               variant="outline"
               onClick={() => setTheme((currentTheme) => getNextTheme(currentTheme))}
-              aria-label={theme === 'dark' ? 'Переключить на светлую тему' : 'Переключить на темную тему'}
+              aria-label={
+                theme === 'dark' ? 'Переключить на светлую тему' : 'Переключить на темную тему'
+              }
             >
               {theme === 'dark' ? 'Тема: темная' : 'Тема: светлая'}
             </Button>
