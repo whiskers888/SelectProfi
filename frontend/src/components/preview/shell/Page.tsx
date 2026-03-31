@@ -1,5 +1,4 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import '../styles/shell.css'
 import { CalendarPanel } from '../panels/CalendarPanel'
 import { MainFeedPanel } from '../panels/MainFeedPanel'
@@ -14,12 +13,18 @@ import { Label } from '@/components/ui/label'
 import { Modal } from '@/components/ui/modal'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { useGetMyAuthInfoQuery } from '@/shared/api/auth'
+import {
+  useGetMyProfileQuery,
+  useSwitchMyActiveRoleMutation,
+  type UserRole,
+} from '@/shared/api/profile'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
+import { RoleSwitch } from '../navigation/RoleSwitch'
 import {
   defaultPreviewRole,
   defaultPreviewView,
-  isPreviewRole,
   previewDataByRole,
   previewToneToBadgeVariant,
   type PreviewCandidate,
@@ -67,10 +72,54 @@ function todayTimeLabel(): string {
   })
 }
 
+function toPreviewRole(role: UserRole | null | undefined): PreviewRole | null {
+  if (role === 'Customer' || role === 'Executor' || role === 'Applicant') {
+    return role
+  }
+
+  return null
+}
+
+function toAvailablePreviewRoles(roles: UserRole[] | undefined, fallbackRole: PreviewRole): PreviewRole[] {
+  if (!roles || roles.length === 0) {
+    return [fallbackRole]
+  }
+
+  const mappedRoles = roles
+    .map((role) => toPreviewRole(role))
+    .filter((role): role is PreviewRole => role !== null)
+
+  if (mappedRoles.length === 0) {
+    return [fallbackRole]
+  }
+
+  return Array.from(new Set(mappedRoles))
+}
+
+function toRoleLabel(role: PreviewRole): string {
+  if (role === 'Applicant') {
+    return 'Соискатель'
+  }
+
+  if (role === 'Executor') {
+    return 'Исполнитель'
+  }
+
+  return 'Заказчик'
+}
+
 export function ShellPage() {
-  const [searchParams] = useSearchParams()
-  const roleFromUrl = searchParams.get('role')
-  const role = isPreviewRole(roleFromUrl) ? roleFromUrl : defaultPreviewRole
+  const { data: profile, isFetching: isProfileFetching, refetch: refetchProfile } = useGetMyProfileQuery()
+  const { data: authMe } = useGetMyAuthInfoQuery()
+  const [switchMyActiveRole, { isLoading: isRoleSwitching }] = useSwitchMyActiveRoleMutation()
+  // @dvnull: Раньше роль бралась из query-параметра, теперь primary source — профиль с бэкенда.
+  const role = toPreviewRole(profile?.activeRole ?? profile?.role) ?? defaultPreviewRole
+  const availableRoles = toAvailablePreviewRoles(profile?.roles, role)
+  const canSwitchRole = availableRoles.includes('Applicant') && availableRoles.includes('Executor')
+  const profileDisplayName =
+    `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || authMe?.email || 'Пользователь'
+  const profileEmail = profile?.email ?? authMe?.email ?? '—'
+  const profileRoleLabel = toRoleLabel(role)
   const dataset = previewDataByRole[role]
 
   const [activeView, setActiveView] = useState<PreviewView>(defaultPreviewView)
@@ -223,6 +272,34 @@ export function ShellPage() {
   function handleViewChange(nextView: PreviewView) {
     setActiveView(nextView)
     startViewTransition()
+  }
+
+  async function handleRoleChange(nextRole: PreviewRole) {
+    if (nextRole === role) {
+      return
+    }
+
+    if (!canSwitchRole || !availableRoles.includes(nextRole)) {
+      setBanner({
+        variant: 'destructive',
+        message: 'Эта роль недоступна для текущего профиля.',
+      })
+      return
+    }
+
+    try {
+      await switchMyActiveRole({ activeRole: nextRole }).unwrap()
+      setBanner({
+        variant: 'success',
+        message: `Активная роль изменена на «${nextRole === 'Applicant' ? 'Соискатель' : 'Исполнитель'}».`,
+      })
+      void refetchProfile()
+    } catch {
+      setBanner({
+        variant: 'destructive',
+        message: 'Не удалось переключить роль. Повторите попытку.',
+      })
+    }
   }
 
   function handleSendMessage() {
@@ -380,13 +457,24 @@ export function ShellPage() {
               })
             }}
             onSearchChange={setSearchValue}
-            role={role}
+            profileDisplayName={profileDisplayName}
+            profileEmail={profileEmail}
+            profileRoleLabel={profileRoleLabel}
             searchValue={searchValue}
             subtitle={dataset.headerSubtitle}
             title={createHeaderTitle(role)}
           />
 
           <main className="preview11-content flex-1 space-y-4">
+            {canSwitchRole ? (
+              <RoleSwitch
+                disabled={isProfileFetching || isRoleSwitching}
+                role={role}
+                roles={availableRoles}
+                onRoleChange={handleRoleChange}
+              />
+            ) : null}
+
             {banner ? <Alert variant={banner.variant}>{banner.message}</Alert> : null}
 
             {(activeView === 'dashboard' ||

@@ -1,5 +1,5 @@
 import { Dropdown } from '@/components/ui/dropdown'
-import { type PreviewRole, type PreviewView } from '../model/data'
+import { type PreviewView } from '../model/data'
 
 type HeaderMenuAction = 'profile' | 'settings' | 'logout'
 
@@ -13,46 +13,29 @@ type HeaderProps = {
   onOpenNotifications: () => void
   onMenuAction: (action: HeaderMenuAction) => void
   onSearchChange: (value: string) => void
-  role: PreviewRole
+  profileDisplayName: string
+  profileEmail: string
+  profileRoleLabel: string
   searchValue: string
   title: string
   subtitle: string
 }
 
-function profileLabel(role: PreviewRole): string {
-  if (role === 'Executor') {
-    return 'Исполнитель'
+function profileInitials(displayName: string): string {
+  const parts = displayName
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part.length > 0)
+
+  if (parts.length === 0) {
+    return 'SP'
   }
 
-  if (role === 'Applicant') {
-    return 'Соискатель'
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase()
   }
 
-  return 'Заказчик'
-}
-
-function profileName(role: PreviewRole): string {
-  if (role === 'Executor') {
-    return 'Мария К.'
-  }
-
-  if (role === 'Applicant') {
-    return 'Андрей Н.'
-  }
-
-  return 'Иван П.'
-}
-
-function profileInitials(role: PreviewRole): string {
-  if (role === 'Executor') {
-    return 'ИС'
-  }
-
-  if (role === 'Applicant') {
-    return 'СИ'
-  }
-
-  return 'ЗК'
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
 }
 
 export function Header({
@@ -65,7 +48,9 @@ export function Header({
   onOpenNotifications,
   onMenuAction,
   onSearchChange,
-  role,
+  profileDisplayName,
+  profileEmail,
+  profileRoleLabel,
   searchValue,
   subtitle,
   title,
@@ -130,10 +115,12 @@ export function Header({
           trigger={
             <span className="preview11-profile-chip">
               <span>
-                <span className="preview11-profile-name">{profileName(role)}</span>
-                <span className="preview11-muted">{profileLabel(role)}</span>
+                {/* @dvnull: Ранее имя/роль в хедере были статическими от demo-role, переведено на данные профиля backend. */}
+                <span className="preview11-profile-name">{profileDisplayName}</span>
+                <span className="preview11-muted">{profileRoleLabel}</span>
+                <span className="preview11-muted">{profileEmail}</span>
               </span>
-              <span className="preview11-avatar">{profileInitials(role)}</span>
+              <span className="preview11-avatar">{profileInitials(profileDisplayName)}</span>
             </span>
           }
         />

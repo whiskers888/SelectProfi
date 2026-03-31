@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
   useProfileServer,
+  type CustomerLegalForm,
   type ExecutorEmploymentType,
   type MyProfileResponse,
   type UserRole,
@@ -56,11 +57,16 @@ type ApplicantProfileFormErrors = Partial<Record<keyof ApplicantProfileFormValue
 
 type CustomerProfileFormValues = {
   inn: string
+  legalForm: '' | 'Ooo' | 'Ip'
   egrn: string
   egrnip: string
   companyName: string
   companyLogoUrl: string
+  offerAccepted: boolean
+  offerVersion: string
 }
+
+type CustomerProfileFormErrors = Partial<Record<'offerVersion', string>>
 
 type ExecutorProfileFormValues = {
   employmentType: '' | ExecutorEmploymentType
@@ -141,6 +147,29 @@ function toRoleLabel(role: UserRole): string {
   }
 }
 
+function isUserRole(value: string): value is UserRole {
+  return value === 'Applicant' || value === 'Executor' || value === 'Customer' || value === 'Admin'
+}
+
+function resolveActiveRole(profile: MyProfileResponse): UserRole {
+  if (profile.activeRole && isUserRole(profile.activeRole)) {
+    return profile.activeRole
+  }
+
+  return profile.role
+}
+
+function resolveAvailableRoles(profile: MyProfileResponse, activeRole: UserRole): UserRole[] {
+  const roleCandidates = profile.roles?.filter(isUserRole) ?? []
+  const uniqueRoles = Array.from(new Set(roleCandidates))
+
+  if (!uniqueRoles.includes(activeRole)) {
+    uniqueRoles.unshift(activeRole)
+  }
+
+  return uniqueRoles.length > 0 ? uniqueRoles : [activeRole]
+}
+
 function toEmploymentTypeLabel(value: ExecutorEmploymentType | null | undefined): string {
   switch (value) {
     case 'Fl':
@@ -152,6 +181,54 @@ function toEmploymentTypeLabel(value: ExecutorEmploymentType | null | undefined)
     default:
       return '—'
   }
+}
+
+function toCustomerLegalFormValue(value: CustomerLegalForm | null | undefined): '' | 'Ooo' | 'Ip' {
+  if (value === 'Ooo' || value === 1) {
+    return 'Ooo'
+  }
+
+  if (value === 'Ip' || value === 2) {
+    return 'Ip'
+  }
+
+  return ''
+}
+
+function toCustomerLegalFormLabel(value: CustomerLegalForm | null | undefined): string {
+  switch (toCustomerLegalFormValue(value)) {
+    case 'Ooo':
+      return 'ООО'
+    case 'Ip':
+      return 'ИП'
+    default:
+      return '—'
+  }
+}
+
+function toCustomerLegalFormPayload(value: '' | 'Ooo' | 'Ip'): 1 | 2 | undefined {
+  if (value === 'Ooo') {
+    return 1
+  }
+
+  if (value === 'Ip') {
+    return 2
+  }
+
+  return undefined
+}
+
+function toDateTimeOrDash(value: string | null | undefined): string {
+  if (!value) {
+    return '—'
+  }
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return parsed.toLocaleString('ru-RU')
 }
 
 function isProblemDetailsPayload(payload: unknown): payload is ProblemDetailsPayload {
@@ -212,10 +289,13 @@ function createApplicantProfileFormValues(profile: MyProfileResponse): Applicant
 function createCustomerProfileFormValues(profile: MyProfileResponse): CustomerProfileFormValues {
   return {
     inn: profile.customerProfile?.inn ?? '',
+    legalForm: toCustomerLegalFormValue(profile.customerProfile?.legalForm),
     egrn: profile.customerProfile?.egrn ?? '',
     egrnip: profile.customerProfile?.egrnip ?? '',
     companyName: profile.customerProfile?.companyName ?? '',
     companyLogoUrl: profile.customerProfile?.companyLogoUrl ?? '',
+    offerAccepted: profile.customerProfile?.offerAccepted ?? false,
+    offerVersion: profile.customerProfile?.offerVersion ?? '',
   }
 }
 
@@ -284,9 +364,34 @@ function validateExecutorProfileForm(values: ExecutorProfileFormValues): Executo
   return errors
 }
 
+function validateCustomerProfileForm(values: CustomerProfileFormValues): CustomerProfileFormErrors {
+  const errors: CustomerProfileFormErrors = {}
+  const offerVersion = values.offerVersion.trim()
+
+  if (values.offerAccepted && !offerVersion) {
+    errors.offerVersion = 'Укажите версию оферты'
+    return errors
+  }
+
+  if (!values.offerAccepted && offerVersion) {
+    errors.offerVersion = 'Версия оферты указывается только при согласии'
+  }
+
+  return errors
+}
+
 export function ProfilePage() {
-  const { data, isLoading, isError, error, isUpdatingProfile, refetch, updateMyProfile } =
-    useProfileServer()
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    isSwitchingRole,
+    isUpdatingProfile,
+    refetch,
+    switchMyActiveRole,
+    updateMyProfile,
+  } = useProfileServer()
 
   const [isEditingCommon, setIsEditingCommon] = useState(false)
   const [commonFormValues, setCommonFormValues] = useState<CommonProfileFormValues>({
@@ -316,10 +421,13 @@ export function ProfilePage() {
   })
   const [customerFormValues, setCustomerFormValues] = useState<CustomerProfileFormValues>({
     inn: '',
+    legalForm: '',
     egrn: '',
     egrnip: '',
     companyName: '',
     companyLogoUrl: '',
+    offerAccepted: false,
+    offerVersion: '',
   })
   const [executorFormValues, setExecutorFormValues] = useState<ExecutorProfileFormValues>({
     employmentType: '',
@@ -332,8 +440,13 @@ export function ProfilePage() {
     extraInfo: '',
   })
   const [applicantFormErrors, setApplicantFormErrors] = useState<ApplicantProfileFormErrors>({})
+  const [customerFormErrors, setCustomerFormErrors] = useState<CustomerProfileFormErrors>({})
   const [executorFormErrors, setExecutorFormErrors] = useState<ExecutorProfileFormErrors>({})
   const [roleSubmitMessage, setRoleSubmitMessage] = useState<SubmitMessageState>({
+    status: 'idle',
+    message: '',
+  })
+  const [roleSwitchMessage, setRoleSwitchMessage] = useState<SubmitMessageState>({
     status: 'idle',
     message: '',
   })
@@ -395,10 +508,37 @@ export function ProfilePage() {
   }
 
   const profile = data
+  // @dvnull: Ранее страница профиля ориентировалась только на поле role, переключение переведено на activeRole/roles от backend.
+  const activeRole = resolveActiveRole(profile)
+  const availableRoles = resolveAvailableRoles(profile, activeRole)
+  const canSwitchApplicantExecutor =
+    availableRoles.includes('Applicant') && availableRoles.includes('Executor')
 
   function resetRoleFormErrors() {
     setApplicantFormErrors({})
+    setCustomerFormErrors({})
     setExecutorFormErrors({})
+  }
+
+  async function handleSwitchActiveRole(nextRole: Extract<UserRole, 'Applicant' | 'Executor'>) {
+    if (!canSwitchApplicantExecutor || activeRole === nextRole) {
+      return
+    }
+
+    try {
+      await switchMyActiveRole({ activeRole: nextRole }).unwrap()
+      setRoleSwitchMessage({
+        status: 'success',
+        message: `Активная роль изменена на «${nextRole === 'Applicant' ? 'Соискатель' : 'Исполнитель'}».`,
+      })
+      void refetch()
+    } catch (switchError) {
+      const message = isFetchBaseQueryError(switchError)
+        ? getRequestErrorMessage(switchError)
+        : 'Не удалось переключить роль.'
+
+      setRoleSwitchMessage({ status: 'error', message })
+    }
   }
 
   function handleStartEditCommon() {
@@ -449,7 +589,7 @@ export function ProfilePage() {
   }
 
   function handleStartEditRoleSpecific() {
-    if (isEditingCommon || profile.role === 'Admin') {
+    if (isEditingCommon || activeRole === 'Admin') {
       return
     }
 
@@ -457,17 +597,17 @@ export function ProfilePage() {
     setRoleSubmitMessage({ status: 'idle', message: '' })
     resetRoleFormErrors()
 
-    if (profile.role === 'Applicant') {
+    if (activeRole === 'Applicant') {
       setApplicantFormValues(createApplicantProfileFormValues(profile))
       return
     }
 
-    if (profile.role === 'Customer') {
+    if (activeRole === 'Customer') {
       setCustomerFormValues(createCustomerProfileFormValues(profile))
       return
     }
 
-    if (profile.role === 'Executor') {
+    if (activeRole === 'Executor') {
       setExecutorFormValues(createExecutorProfileFormValues(profile))
     }
   }
@@ -489,7 +629,7 @@ export function ProfilePage() {
     }
 
     try {
-      if (profile.role === 'Applicant') {
+      if (activeRole === 'Applicant') {
         const nextErrors = validateApplicantProfileForm(applicantFormValues)
         if (Object.keys(nextErrors).length > 0) {
           setApplicantFormErrors(nextErrors)
@@ -518,20 +658,36 @@ export function ProfilePage() {
         }).unwrap()
 
         setApplicantFormValues(createApplicantProfileFormValues(updatedProfile))
-      } else if (profile.role === 'Customer') {
+      } else if (activeRole === 'Customer') {
+        const nextErrors = validateCustomerProfileForm(customerFormValues)
+        if (Object.keys(nextErrors).length > 0) {
+          setCustomerFormErrors(nextErrors)
+          return
+        }
+
+        const currentOfferAccepted = profile.customerProfile?.offerAccepted ?? false
+        const currentOfferVersion = (profile.customerProfile?.offerVersion ?? '').trim()
+        const nextOfferAccepted = customerFormValues.offerAccepted
+        const nextOfferVersion = customerFormValues.offerVersion.trim()
+        const offerChanged =
+          currentOfferAccepted !== nextOfferAccepted || currentOfferVersion !== nextOfferVersion
+
         const updatedProfile = await updateMyProfile({
           ...basePayload,
           customerProfile: {
             inn: normalizeOptional(customerFormValues.inn),
+            legalForm: toCustomerLegalFormPayload(customerFormValues.legalForm),
             egrn: normalizeOptional(customerFormValues.egrn),
             egrnip: normalizeOptional(customerFormValues.egrnip),
             companyName: normalizeOptional(customerFormValues.companyName),
             companyLogoUrl: normalizeOptional(customerFormValues.companyLogoUrl),
+            offerAccepted: offerChanged ? customerFormValues.offerAccepted : undefined,
+            offerVersion: offerChanged ? normalizeOptional(customerFormValues.offerVersion) : undefined,
           },
         }).unwrap()
 
         setCustomerFormValues(createCustomerProfileFormValues(updatedProfile))
-      } else if (profile.role === 'Executor') {
+      } else if (activeRole === 'Executor') {
         const nextErrors = validateExecutorProfileForm(executorFormValues)
         if (Object.keys(nextErrors).length > 0) {
           setExecutorFormErrors(nextErrors)
@@ -579,7 +735,8 @@ export function ProfilePage() {
     { label: 'Фамилия', value: toTextOrDash(profile.lastName) },
     { label: 'Email', value: toTextOrDash(profile.email) },
     { label: 'Телефон', value: toTextOrDash(profile.phone) },
-    { label: 'Роль', value: toRoleLabel(profile.role) },
+    { label: 'Роль', value: toRoleLabel(activeRole) },
+    { label: 'Доступные роли', value: availableRoles.map((role) => toRoleLabel(role)).join(', ') },
     { label: 'Email подтвержден', value: profile.isEmailVerified ? 'Да' : 'Нет' },
     { label: 'Телефон подтвержден', value: profile.isPhoneVerified ? 'Да' : 'Нет' },
   ]
@@ -600,10 +757,14 @@ export function ProfilePage() {
 
   const customerDetailItems: DetailItem[] = [
     { label: 'ИНН', value: toTextOrDash(profile.customerProfile?.inn) },
+    { label: 'Юрформа', value: toCustomerLegalFormLabel(profile.customerProfile?.legalForm) },
     { label: 'ЕГРН', value: toTextOrDash(profile.customerProfile?.egrn) },
     { label: 'ЕГРНИП', value: toTextOrDash(profile.customerProfile?.egrnip) },
     { label: 'Компания', value: toTextOrDash(profile.customerProfile?.companyName) },
     { label: 'Логотип', value: toTextOrDash(profile.customerProfile?.companyLogoUrl) },
+    { label: 'Согласие с офертой', value: profile.customerProfile?.offerAccepted ? 'Да' : 'Нет' },
+    { label: 'Версия оферты', value: toTextOrDash(profile.customerProfile?.offerVersion) },
+    { label: 'Дата акцепта', value: toDateTimeOrDash(profile.customerProfile?.offerAcceptedAtUtc) },
   ]
 
   const executorDetailItems: DetailItem[] = [
@@ -616,6 +777,8 @@ export function ProfilePage() {
     { label: 'Грейд', value: toTextOrDash(profile.executorProfile?.grade) },
     { label: 'Дополнительно', value: toTextOrDash(profile.executorProfile?.extraInfo) },
   ]
+  const isRoleSwitchDisabled =
+    isEditingCommon || isEditingRoleSpecific || isSwitchingRole || isUpdatingProfile
 
   return (
     <section className="page profile-page">
@@ -719,7 +882,42 @@ export function ProfilePage() {
         </CardContent>
       </Card>
 
-      {profile.role === 'Applicant' ? (
+      {canSwitchApplicantExecutor ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Активная роль</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {roleSwitchMessage.status !== 'idle' ? (
+              <FormStatusMessage
+                message={roleSwitchMessage.message}
+                status={roleSwitchMessage.status === 'error' ? 'error' : 'success'}
+              />
+            ) : null}
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                onClick={() => void handleSwitchActiveRole('Applicant')}
+                variant={activeRole === 'Applicant' ? 'default' : 'outline'}
+                disabled={isRoleSwitchDisabled || activeRole === 'Applicant'}
+              >
+                Соискатель
+              </Button>
+              <Button
+                type="button"
+                onClick={() => void handleSwitchActiveRole('Executor')}
+                variant={activeRole === 'Executor' ? 'default' : 'outline'}
+                disabled={isRoleSwitchDisabled || activeRole === 'Executor'}
+              >
+                Исполнитель
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {activeRole === 'Applicant' ? (
         <Card>
           <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
             <CardTitle className="text-xl">Профиль соискателя</CardTitle>
@@ -929,7 +1127,7 @@ export function ProfilePage() {
         </Card>
       ) : null}
 
-      {profile.role === 'Customer' ? (
+      {activeRole === 'Customer' ? (
         <Card>
           <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
             <CardTitle className="text-xl">Профиль заказчика</CardTitle>
@@ -965,6 +1163,27 @@ export function ProfilePage() {
                         setCustomerFormValues((previous) => ({ ...previous, inn: event.target.value }))
                       }
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="customer-legalForm">Юрформа</Label>
+                    <Select
+                      value={customerFormValues.legalForm || undefined}
+                      onValueChange={(value) =>
+                        setCustomerFormValues((previous) => ({
+                          ...previous,
+                          legalForm: value as 'Ooo' | 'Ip',
+                        }))
+                      }
+                    >
+                      <SelectTrigger id="customer-legalForm">
+                        <SelectValue placeholder="Выберите юрформу" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Ooo">ООО</SelectItem>
+                        <SelectItem value="Ip">ИП</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
@@ -1016,6 +1235,47 @@ export function ProfilePage() {
                       }
                     />
                   </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="customer-offerAccepted"
+                        type="checkbox"
+                        checked={customerFormValues.offerAccepted}
+                        onChange={(event) =>
+                          setCustomerFormValues((previous) => ({
+                            ...previous,
+                            offerAccepted: event.target.checked,
+                            offerVersion: event.target.checked ? previous.offerVersion : '',
+                          }))
+                        }
+                        className="h-4 w-4 rounded border-input"
+                      />
+                      <Label htmlFor="customer-offerAccepted">
+                        Согласен с офертой
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="customer-offerVersion">Версия оферты</Label>
+                    <Input
+                      id="customer-offerVersion"
+                      value={customerFormValues.offerVersion}
+                      onChange={(event) =>
+                        setCustomerFormValues((previous) => ({
+                          ...previous,
+                          offerVersion: event.target.value,
+                        }))
+                      }
+                      disabled={!customerFormValues.offerAccepted}
+                      aria-invalid={Boolean(customerFormErrors.offerVersion)}
+                      aria-describedby={customerFormErrors.offerVersion ? 'customer-offerVersion-error' : undefined}
+                    />
+                    <FormFieldError id="customer-offerVersion-error">
+                      {customerFormErrors.offerVersion}
+                    </FormFieldError>
+                  </div>
                 </div>
 
                 <div className="flex gap-2">
@@ -1039,7 +1299,7 @@ export function ProfilePage() {
         </Card>
       ) : null}
 
-      {profile.role === 'Executor' ? (
+      {activeRole === 'Executor' ? (
         <Card>
           <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
             <CardTitle className="text-xl">Профиль исполнителя</CardTitle>
@@ -1217,7 +1477,7 @@ export function ProfilePage() {
         </Card>
       ) : null}
 
-      {profile.role === 'Admin' ? (
+      {activeRole === 'Admin' ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Профиль администратора</CardTitle>
