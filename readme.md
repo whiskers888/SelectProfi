@@ -1,84 +1,98 @@
-
 # SelectProfi
 
-Монорепозиторий сервиса SelectProfi:
+Монорепозиторий сервиса SelectProfi.
+
 - `backend` — ASP.NET Core API (`.NET 10`, EF Core, PostgreSQL, Redis, RabbitMQ).
-- `frontend` — React + Vite + TypeScript (RTK Query, Tailwind, Shadcn UI).
+- `frontend` — React + Vite + TypeScript (RTK Query, Tailwind, Radix UI).
+- `docker-compose.yml` — локальный контур backend + frontend + инфраструктура.
+
+## Структура
+
+- `backend/` — API, application/domain/infrastructure слои, интеграционные тесты.
+- `frontend/` — UI-приложение, feature-модули, shared API layer.
+- `docs/` — проектная документация и UI-материалы.
 
 ## Требования
 
-- .NET SDK 10
-- Node.js 22+ и npm
-- Docker Desktop (для PostgreSQL/Redis/RabbitMQ)
+### Для запуска через Docker (рекомендуется)
 
-## Быстрый старт (локальная разработка)
+- Docker Desktop / Docker Engine с Compose.
 
-### 1. Запуск всего стека одной командой (backend + frontend + infra)
+### Для локального запуска без контейнера frontend
 
-```powershell
-cd Z:\SelectProfi
-copy .env.example .env
+- .NET SDK `10.0`
+- Node.js `22+` и npm
+
+## Быстрый старт (Docker Compose)
+
+1. Создайте `.env` из шаблона:
+
+```bash
+cp .env.example .env
+```
+
+2. Поднимите стек:
+
+```bash
 docker compose up --build
 ```
 
-После старта:
+3. Сервисы:
+
 - Backend: `http://localhost:5268`
 - Frontend: `http://localhost:5173`
 - OpenAPI: `http://localhost:5268/openapi/v1.json`
 
-В development backend автоматически:
+В `Development` backend автоматически:
+
 - применяет EF Core миграции;
-- создаёт тестовые учётки:
+- создаёт тестовые аккаунты:
   - `executor@selectprofi.local` / `1`
   - `customer@selectprofi.local` / `1`
 
-### 2. Локальный запуск без Docker frontend (опционально)
+## Локальный запуск (frontend вне Docker)
 
-```powershell
-cd Z:\SelectProfi
-docker compose up -d postgres redis rabbitmq app
+1. Поднимите backend + инфраструктуру:
+
+```bash
+docker compose up -d app postgres redis rabbitmq
 ```
 
-```powershell
-cd Z:\SelectProfi\frontend
-npm install
-npm run dev
-```
+2. Запустите frontend:
 
-Vite dev proxy уже настроен на backend (`/api`, `/health`, `/openapi`), поэтому `VITE_API_BASE_URL` по умолчанию можно не задавать.
-
-### 2.1. Режимы запуска frontend: mock или server
-
-Frontend поддерживает 2 режима API:
-- `server` — запросы идут в backend (через Vite proxy).
-- `mock` — in-memory mock API внутри frontend, backend не нужен.
-
-```powershell
-cd Z:\SelectProfi\frontend
+```bash
+cd frontend
+npm ci
 npm run dev:server
 ```
 
-```powershell
-cd Z:\SelectProfi\frontend
+Альтернатива без backend:
+
+```bash
+cd frontend
+npm ci
 npm run dev:mock
 ```
 
-Также можно использовать `frontend/.env.example` и задать `VITE_API_MODE` вручную.
+## Frontend: режимы API
 
-### 3. Как избежать конфликтов портов
+Управляется переменной `VITE_API_MODE`:
 
-Порты и имя compose-проекта вынесены в `.env`:
-- `COMPOSE_PROJECT_NAME`
-- `BACKEND_PORT`
-- `FRONTEND_PORT`
-- `POSTGRES_PASSWORD`
+- `server` — запросы идут в backend (через Vite proxy).
+- `mock` — in-memory API внутри frontend.
+
+Файлы:
+
+- `frontend/.env.server`
+- `frontend/.env.mock`
+- `frontend/.env.example`
 
 ## Полезные команды
 
 ### Frontend
 
-```powershell
-cd Z:\SelectProfi\frontend
+```bash
+cd frontend
 npm run lint
 npm run test:run
 npm run build
@@ -86,27 +100,23 @@ npm run build
 
 ### Backend
 
-```powershell
-cd Z:\SelectProfi\backend
-dotnet build .\backend.sln
-dotnet test .\backend.sln
+```bash
+cd backend
+dotnet build backend.sln
+dotnet test backend.sln
 ```
 
-## Backend CQRS (текущий baseline)
+## Переменные окружения
 
-- Контроллеры вызывают application-логику через `ICommandDispatcher` / `IQueryDispatcher`.
-- `Command/Query` и их `Handler` размещаются в `backend/Application` по доменным папкам (`Auth`, `Profile` и т.д.).
-- Для нового сценария:
-  - создать `Command` или `Query` + `Result`;
-  - добавить `ICommandHandler<,>` или `IQueryHandler<,>`;
-  - зарегистрировать handler в `backend/Application/DependencyInjection.cs`;
-  - вызвать из контроллера через dispatcher.
+Корневой `.env`:
 
-## Запуск backend в Docker (вместе с инфраструктурой)
+- `COMPOSE_PROJECT_NAME` — имя compose-проекта.
+- `BACKEND_PORT` — внешний порт backend (по умолчанию `5268`).
+- `FRONTEND_PORT` — внешний порт frontend (по умолчанию `5173`).
+- `POSTGRES_PASSWORD` — пароль PostgreSQL.
 
-```powershell
-cd Z:\SelectProfi
-docker compose up --build app postgres redis rabbitmq
-```
+## Документация
 
-Контейнер backend публикуется на `http://localhost:5268`.
+- Общая: `docs/`
+- API-контракты frontend: `docs/frontend-api-contracts.md`
+- UI/UX baseline: `docs/system-design-ui-ux.md`
