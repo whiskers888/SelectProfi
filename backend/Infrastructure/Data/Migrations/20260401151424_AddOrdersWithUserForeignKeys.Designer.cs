@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SelectProfi.backend.Infrastructure.Data;
@@ -11,9 +12,11 @@ using SelectProfi.backend.Infrastructure.Data;
 namespace SelectProfi.backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260401151424_AddOrdersWithUserForeignKeys")]
+    partial class AddOrdersWithUserForeignKeys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -315,20 +318,16 @@ namespace SelectProfi.backend.Migrations
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Orders.Order", b =>
                 {
-                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Customer")
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("ExecutorId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Executor");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.RefreshSession", b =>
@@ -340,33 +339,6 @@ namespace SelectProfi.backend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SelectProfi.backend.Domain.Vacancies.Vacancy", b =>
-                {
-                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
-                        .WithMany()
-                        .HasForeignKey("ExecutorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SelectProfi.backend.Domain.Orders.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Executor");
-
-                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.User", b =>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SelectProfi.backend.Infrastructure.Data;
@@ -11,9 +12,11 @@ using SelectProfi.backend.Infrastructure.Data;
 namespace SelectProfi.backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260401150850_AddVacanciesForCrud")]
+    partial class AddVacanciesForCrud
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,45 +24,6 @@ namespace SelectProfi.backend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.Order", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<Guid?>("ExecutorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId", "DeletedAtUtc");
-
-                    b.HasIndex("ExecutorId", "DeletedAtUtc");
-
-                    b.ToTable("Orders");
-                });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.RefreshSession", b =>
                 {
@@ -313,24 +277,6 @@ namespace SelectProfi.backend.Migrations
                     b.ToTable("Vacancies");
                 });
 
-            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.Order", b =>
-                {
-                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
-                        .WithMany()
-                        .HasForeignKey("ExecutorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Executor");
-                });
-
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.RefreshSession", b =>
                 {
                     b.HasOne("SelectProfi.backend.Domain.Users.User", "User")
@@ -340,33 +286,6 @@ namespace SelectProfi.backend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SelectProfi.backend.Domain.Vacancies.Vacancy", b =>
-                {
-                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
-                        .WithMany()
-                        .HasForeignKey("ExecutorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SelectProfi.backend.Domain.Orders.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Executor");
-
-                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.User", b =>
