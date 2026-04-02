@@ -1,6 +1,6 @@
 # Decision Log
 
-Last updated: 2026-03-30
+Last updated: 2026-04-01
 
 ## ADR-001: Старт через модульный монолит
 
@@ -37,3 +37,15 @@ Last updated: 2026-03-30
 - Context: До миграции контроллеры напрямую зависели от отдельных интерфейсов application-слоя, что затрудняло унификацию под CQRS и усложняло дальнейшее масштабирование сценариев.
 - Decision: Для базовых сценариев `auth` (`register/login/refresh`) и `profile` (`get/update`) внедрить единый вызов application-слоя через `ICommandDispatcher` / `IQueryDispatcher` и `Command/Query handlers`; прямые зависимости контроллеров от legacy application-сервисов удалить.
 - Consequences: Вызовы application-логики унифицированы, слой контроллеров упрощен, дальнейшее расширение CQRS (pipeline-behaviors, cross-cutting policies, новые handlers) можно делать без повторного рефакторинга endpoint-ов.
+
+## ADR-005: Единый API-термин для этапа B2 — `vacancy`
+
+- Date: 2026-04-01
+- Status: Accepted
+- Context: В артефактах проекта смешиваются термины `vacancy` и `order` (в том числе в тексте roadmap/preview), что создает риск расхождений в именовании endpoint-ов, DTO и контрактов между backend и frontend.
+- Decision: Для backend/frontend API и OpenAPI в рамках `B2` использовать единый канонический термин `vacancy`:
+  - ресурс: `/api/vacancies`
+  - идентификатор: `vacancyId`
+  - сущность/DTO/handler naming: `Vacancy*`
+  - термин `order/заказ` допускается только как UI/бизнес-лексика, но не как имя API-ресурсов и контрактов.
+- Consequences: Устраняется неоднозначность в контрактах `PRI-74..PRI-78`, снижается риск дублирующих сущностей (`Order` vs `Vacancy`) и последующих breaking changes при расширении B2.
