@@ -22,6 +22,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
+        // @dvnull: Сообщения глобальной валидации переведены на русский, чтобы фронт показывал локализованный текст в алертах.
         options.InvalidModelStateResponseFactory = context =>
         {
             var validationErrors = context.ModelState
@@ -29,7 +30,7 @@ builder.Services.AddControllers()
                 .SelectMany(entry => entry.Value!.Errors.Select(error => new
                 {
                     field = string.IsNullOrWhiteSpace(entry.Key) ? "request" : entry.Key,
-                    message = string.IsNullOrWhiteSpace(error.ErrorMessage) ? "Validation error." : error.ErrorMessage,
+                    message = string.IsNullOrWhiteSpace(error.ErrorMessage) ? "Ошибка валидации." : error.ErrorMessage,
                     code = "invalid"
                 }))
                 .ToArray();
@@ -37,9 +38,9 @@ builder.Services.AddControllers()
             var problemDetails = new ProblemDetails
             {
                 Type = "https://httpstatuses.com/400",
-                Title = "Validation failed",
+                Title = "Ошибка валидации",
                 Status = StatusCodes.Status400BadRequest,
-                Detail = "One or more validation errors occurred.",
+                Detail = "Произошла одна или несколько ошибок валидации.",
                 Instance = context.HttpContext.Request.Path
             };
 
@@ -60,6 +61,7 @@ builder.Services.AddOptions<JwtOptions>()
 builder.Services.AddOptions<AuthFeatureFlagsOptions>()
     .Bind(builder.Configuration.GetSection(AuthFeatureFlagsOptions.SectionName));
 builder.Services.AddScoped<IValidator<PostgresOptions>, PostgresOptionsValidator>();
+// @dvnull: Проверка корректности claims перенесена в authentication handler; доп. accessor/filter больше не требуются.
 builder.Services.AddApplicationLayer();
 builder.Services.AddInfrastructureLayer();
 var allowedCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -83,7 +85,21 @@ builder.Services.AddCors(options =>
 builder.Services
     .AddAuthentication("Bearer")
     .AddScheme<AuthenticationSchemeOptions, SimpleJwtAuthenticationHandler>("Bearer", _ => { });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        AuthorizationPolicies.CustomerOnly,
+        policy => policy.RequireRole(nameof(UserRole.Customer)));
+    options.AddPolicy(
+        AuthorizationPolicies.ExecutorOnly,
+        policy => policy.RequireRole(nameof(UserRole.Executor)));
+    options.AddPolicy(
+        AuthorizationPolicies.CustomerOrAdmin,
+        policy => policy.RequireRole(nameof(UserRole.Customer), nameof(UserRole.Admin)));
+    options.AddPolicy(
+        AuthorizationPolicies.CustomerAdminExecutor,
+        policy => policy.RequireRole(nameof(UserRole.Customer), nameof(UserRole.Admin), nameof(UserRole.Executor)));
+});
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())

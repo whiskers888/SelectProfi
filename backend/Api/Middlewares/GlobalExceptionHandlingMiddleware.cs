@@ -20,9 +20,10 @@ public sealed class GlobalExceptionHandlingMiddleware(RequestDelegate next)
             var problemDetails = new ProblemDetails
             {
                 Type = "https://httpstatuses.com/500",
-                Title = "Internal server error",
+                // @dvnull: Локализовано сообщение 500 для единообразного отображения на фронтенде.
+                Title = "Внутренняя ошибка сервера",
                 Status = StatusCodes.Status500InternalServerError,
-                Detail = "An unexpected error occurred.",
+                Detail = "Произошла непредвиденная ошибка.",
                 Instance = context.Request.Path
             };
 

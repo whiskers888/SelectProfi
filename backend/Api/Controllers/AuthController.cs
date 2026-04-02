@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
@@ -16,6 +17,7 @@ namespace SelectProfi.backend.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+// @dvnull: Сообщения ProblemDetails переведены на русский для корректного отображения на фронтенде.
 public sealed class AuthController(
     IOptions<AuthFeatureFlagsOptions> authFeatureFlagsOptions,
     ICommandDispatcher commandDispatcher) : ControllerBase
@@ -39,13 +41,13 @@ public sealed class AuthController(
             RegisterUserErrorCode.None => Ok(result.ToResponse()),
             RegisterUserErrorCode.EmailAlreadyExists => Conflict(CreateConflictProblem(
                 "email_already_exists",
-                "Email is already registered.",
+                "Email уже зарегистрирован.",
                 "email")),
             RegisterUserErrorCode.PhoneAlreadyExists => Conflict(CreateConflictProblem(
                 "phone_already_exists",
-                "Phone is already registered.",
+                "Телефон уже зарегистрирован.",
                 "phone")),
-            _ => Conflict(CreateConflictProblem("user_already_exists", "User already exists."))
+            _ => Conflict(CreateConflictProblem("user_already_exists", "Пользователь уже существует."))
         };
     }
 
@@ -63,7 +65,7 @@ public sealed class AuthController(
             cancellationToken);
 
         if (result.ErrorCode == LoginUserErrorCode.InvalidCredentials)
-            return Unauthorized(CreateUnauthorizedProblem("invalid_credentials", "Invalid email or password."));
+            return Unauthorized(CreateUnauthorizedProblem("invalid_credentials", "Неверный email или пароль."));
 
         return Ok(result.ToResponse());
     }
@@ -82,7 +84,7 @@ public sealed class AuthController(
             cancellationToken);
 
         if (result.ErrorCode == RefreshAuthSessionErrorCode.InvalidRefreshToken)
-            return Unauthorized(CreateUnauthorizedProblem("invalid_refresh_token", "Invalid refresh token."));
+            return Unauthorized(CreateUnauthorizedProblem("invalid_refresh_token", "Недействительный refresh-токен."));
 
         return Ok(result.ToResponse());
     }
@@ -101,7 +103,7 @@ public sealed class AuthController(
         if (string.IsNullOrWhiteSpace(userId) ||
             string.IsNullOrWhiteSpace(email) ||
             string.IsNullOrWhiteSpace(role))
-            return Unauthorized(CreateUnauthorizedProblem("invalid_access_token", "Invalid access token."));
+            return Unauthorized(CreateUnauthorizedProblem("invalid_access_token", "Недействительный токен доступа."));
 
         return Ok(new
         {
@@ -111,7 +113,7 @@ public sealed class AuthController(
         });
     }
 
-    [Authorize(Roles = nameof(UserRole.Customer))]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOnly)]
     [HttpGet("customer-area")]
     [Produces("application/json", "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -130,7 +132,7 @@ public sealed class AuthController(
         var problemDetails = new ProblemDetails
         {
             Type = "https://httpstatuses.com/409",
-            Title = "Conflict",
+            Title = "Конфликт",
             Status = StatusCodes.Status409Conflict,
             Detail = detail,
             Instance = HttpContext.Request.Path
@@ -160,7 +162,7 @@ public sealed class AuthController(
         var problemDetails = new ProblemDetails
         {
             Type = "https://httpstatuses.com/401",
-            Title = "Unauthorized",
+            Title = "Не авторизован",
             Status = StatusCodes.Status401Unauthorized,
             Detail = detail,
             Instance = HttpContext.Request.Path

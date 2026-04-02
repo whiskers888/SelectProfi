@@ -6,6 +6,7 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using SelectProfi.backend.Configuration;
+using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Authentication;
 
@@ -85,11 +86,16 @@ public sealed class SimpleJwtAuthenticationHandler(
             !TryGetString(payload, "role", out var role))
             return TokenValidationResult.Invalid;
 
+        // @dvnull: Перенес строгую проверку sub/role в аутентификацию, чтобы контроллеры работали только с валидным контекстом.
+        if (!Guid.TryParse(subject, out _) ||
+            !Enum.TryParse<UserRole>(role, ignoreCase: true, out var parsedRole))
+            return TokenValidationResult.Invalid;
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, subject),
             new(ClaimTypes.Email, email),
-            new(ClaimTypes.Role, role)
+            new(ClaimTypes.Role, parsedRole.ToString())
         };
 
         return TokenValidationResult.Valid(claims);
