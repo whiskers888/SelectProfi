@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SelectProfi.backend.Domain.Candidates;
 using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Domain.Vacancies;
@@ -9,6 +10,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
     // @dvnull: Добавлен отдельный контур Order как источник требований и назначений исполнителя.
     public DbSet<Order> Orders => Set<Order>();
+
+    public DbSet<Candidate> Candidates => Set<Candidate>();
+
+    public DbSet<CandidateResume> CandidateResumes => Set<CandidateResume>();
+
+    public DbSet<VacancyCandidate> VacancyCandidates => Set<VacancyCandidate>();
 
     public DbSet<User> Users => Set<User>();
 
@@ -115,11 +122,95 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .HasForeignKey(vacancy => vacancy.ExecutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // @dvnull: Добавлена FK-связь финального выбранного кандидата в вакансии.
+            builder.HasOne(vacancy => vacancy.SelectedCandidate)
+                .WithMany()
+                .HasForeignKey(vacancy => vacancy.SelectedCandidateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasIndex(vacancy => vacancy.OrderId)
                 .HasFilter("\"DeletedAtUtc\" IS NULL")
                 .IsUnique();
             builder.HasIndex(vacancy => new { vacancy.CustomerId, vacancy.DeletedAtUtc });
             builder.HasIndex(vacancy => new { vacancy.ExecutorId, vacancy.DeletedAtUtc });
+            builder.HasIndex(vacancy => vacancy.SelectedCandidateId);
+        });
+
+        modelBuilder.Entity<Candidate>(builder =>
+        {
+            builder.HasKey(candidate => candidate.Id);
+
+            builder.Property(candidate => candidate.Source)
+                .HasConversion<string>()
+                .HasMaxLength(32)
+                .IsRequired();
+
+            builder.HasOne(candidate => candidate.User)
+                .WithMany()
+                .HasForeignKey(candidate => candidate.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(candidate => candidate.CreatedByExecutor)
+                .WithMany()
+                .HasForeignKey(candidate => candidate.CreatedByExecutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(candidate => candidate.UserId)
+                .HasFilter("\"DeletedAtUtc\" IS NULL AND \"UserId\" IS NOT NULL")
+                .IsUnique();
+            builder.HasIndex(candidate => new { candidate.CreatedByExecutorId, candidate.DeletedAtUtc });
+        });
+
+        modelBuilder.Entity<CandidateResume>(builder =>
+        {
+            builder.HasKey(resume => resume.Id);
+
+            builder.HasOne(resume => resume.Candidate)
+                .WithMany(candidate => candidate.Resumes)
+                .HasForeignKey(resume => resume.CandidateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(resume => resume.OwnerUser)
+                .WithMany()
+                .HasForeignKey(resume => resume.OwnerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(resume => new { resume.CandidateId, resume.DeletedAtUtc });
+            builder.HasIndex(resume => new { resume.OwnerUserId, resume.DeletedAtUtc });
+        });
+
+        modelBuilder.Entity<VacancyCandidate>(builder =>
+        {
+            builder.HasKey(vacancyCandidate => vacancyCandidate.Id);
+
+            builder.Property(vacancyCandidate => vacancyCandidate.Stage)
+                .HasConversion<string>()
+                .HasMaxLength(32)
+                .IsRequired();
+
+            builder.HasOne(vacancyCandidate => vacancyCandidate.Vacancy)
+                .WithMany(vacancy => vacancy.VacancyCandidates)
+                .HasForeignKey(vacancyCandidate => vacancyCandidate.VacancyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(vacancyCandidate => vacancyCandidate.Candidate)
+                .WithMany(candidate => candidate.VacancyLinks)
+                .HasForeignKey(vacancyCandidate => vacancyCandidate.CandidateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(vacancyCandidate => vacancyCandidate.AddedByExecutor)
+                .WithMany()
+                .HasForeignKey(vacancyCandidate => vacancyCandidate.AddedByExecutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(vacancyCandidate => new
+                { vacancyCandidate.VacancyId, vacancyCandidate.CandidateId })
+                .HasFilter("\"DeletedAtUtc\" IS NULL")
+                .IsUnique();
+            builder.HasIndex(vacancyCandidate => new
+                { vacancyCandidate.VacancyId, vacancyCandidate.Stage, vacancyCandidate.DeletedAtUtc });
+            builder.HasIndex(vacancyCandidate => new
+                { vacancyCandidate.CandidateId, vacancyCandidate.DeletedAtUtc });
         });
 
         base.OnModelCreating(modelBuilder);
