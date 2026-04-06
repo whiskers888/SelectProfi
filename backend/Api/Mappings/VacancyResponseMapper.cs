@@ -2,6 +2,14 @@ using SelectProfi.backend.Application.Vacancies.CreateVacancy;
 using SelectProfi.backend.Application.Vacancies.GetVacancies;
 using SelectProfi.backend.Application.Vacancies.GetVacancyById;
 using SelectProfi.backend.Application.Vacancies.UpdateVacancy;
+using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
+using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
+using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
+using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
+using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
+using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Domain.Vacancies;
 using SelectProfi.backend.Contracts.Vacancies;
 
 namespace SelectProfi.backend.Mappings;
@@ -18,6 +26,7 @@ public static class VacancyResponseMapper
             ExecutorId = result.ExecutorId,
             Title = result.Title,
             Description = result.Description,
+            Status = MapStatus(result.Status),
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc
         };
@@ -33,6 +42,7 @@ public static class VacancyResponseMapper
             ExecutorId = result.ExecutorId,
             Title = result.Title,
             Description = result.Description,
+            Status = MapStatus(result.Status),
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc
         };
@@ -48,6 +58,7 @@ public static class VacancyResponseMapper
             ExecutorId = result.ExecutorId,
             Title = result.Title,
             Description = result.Description,
+            Status = MapStatus(result.Status),
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc
         };
@@ -65,11 +76,112 @@ public static class VacancyResponseMapper
                 ExecutorId = item.ExecutorId,
                 Title = item.Title,
                 Description = item.Description,
+                Status = MapStatus(item.Status),
                 CreatedAtUtc = item.CreatedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc
             }).ToArray(),
             Limit = result.Limit,
             Offset = result.Offset
+        };
+    }
+
+    public static CandidateResumeResponse ToResponse(this CreateCandidateResumeResult result)
+    {
+        return new CandidateResumeResponse
+        {
+            CandidateId = result.CandidateId,
+            CandidateResumeId = result.CandidateResumeId,
+            VacancyCandidateId = result.VacancyCandidateId,
+            PublicAlias = result.PublicAlias,
+            ContactsAccessExpiresAtUtc = result.ContactsAccessExpiresAtUtc
+        };
+    }
+
+    public static VacancyCandidateResponse ToResponse(this AddCandidateFromBaseResult result)
+    {
+        return new VacancyCandidateResponse
+        {
+            VacancyCandidateId = result.VacancyCandidateId,
+            VacancyId = result.VacancyId,
+            CandidateId = result.CandidateId,
+            Stage = result.Stage.ToString(),
+            AddedAtUtc = result.AddedAtUtc,
+            UpdatedAtUtc = result.UpdatedAtUtc
+        };
+    }
+
+    public static VacancyResponse ToResponse(this UpdateVacancyStatusResult result)
+    {
+        return new VacancyResponse
+        {
+            Id = result.VacancyId,
+            OrderId = result.OrderId,
+            CustomerId = result.CustomerId,
+            ExecutorId = result.ExecutorId,
+            Title = result.Title,
+            Description = result.Description,
+            Status = MapStatus(result.Status),
+            CreatedAtUtc = result.CreatedAtUtc,
+            UpdatedAtUtc = result.UpdatedAtUtc
+        };
+    }
+
+    public static VacancyCandidateResponse ToResponse(this UpdateVacancyCandidateStageResult result)
+    {
+        return new VacancyCandidateResponse
+        {
+            VacancyCandidateId = result.VacancyCandidateId,
+            VacancyId = result.VacancyId,
+            CandidateId = result.CandidateId,
+            Stage = result.Stage.ToString(),
+            AddedAtUtc = result.AddedAtUtc,
+            UpdatedAtUtc = result.UpdatedAtUtc
+        };
+    }
+
+    public static SelectedVacancyCandidateResponse ToResponse(this SelectVacancyCandidateResult result)
+    {
+        return new SelectedVacancyCandidateResponse
+        {
+            VacancyId = result.VacancyId,
+            SelectedCandidateId = result.SelectedCandidateId,
+            UpdatedAtUtc = result.UpdatedAtUtc
+        };
+    }
+
+    public static SelectedCandidateContactsResponse ToResponse(this GetSelectedCandidateContactsResult result)
+    {
+        return new SelectedCandidateContactsResponse
+        {
+            VacancyId = result.VacancyId,
+            CandidateId = result.CandidateId,
+            FullName = result.FullName,
+            Email = result.Email,
+            Phone = result.Phone
+        };
+    }
+
+    public static ExecutorCandidateContactsResponse ToResponse(this GetVacancyCandidateContactsForExecutorResult result)
+    {
+        return new ExecutorCandidateContactsResponse
+        {
+            VacancyId = result.VacancyId,
+            CandidateId = result.CandidateId,
+            FullName = result.FullName,
+            Email = result.Email,
+            Phone = result.Phone,
+            ContactsAccessExpiresAtUtc = result.ContactsAccessExpiresAtUtc
+        };
+    }
+
+    private static VacancyStatusContract MapStatus(VacancyStatus status)
+    {
+        return status switch
+        {
+            VacancyStatus.Draft => VacancyStatusContract.Draft,
+            VacancyStatus.OnApproval => VacancyStatusContract.OnApproval,
+            VacancyStatus.Published => VacancyStatusContract.Published,
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported vacancy status.")
         };
     }
 }

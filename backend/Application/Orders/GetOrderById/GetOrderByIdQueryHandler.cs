@@ -1,4 +1,5 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Orders.GetOrderById;
@@ -12,7 +13,7 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
         if (order is null)
             return new GetOrderByIdResult { ErrorCode = GetOrderByIdErrorCode.NotFound };
 
-        if (!CanReadOrder(query.RequesterRole, query.RequesterUserId, order.CustomerId, order.ExecutorId))
+        if (!OrderAccessRules.CanReadOrder(query.RequesterRole, query.RequesterUserId, order.CustomerId, order.ExecutorId))
             return new GetOrderByIdResult { ErrorCode = GetOrderByIdErrorCode.Forbidden };
 
         return new GetOrderByIdResult
@@ -25,21 +26,6 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
             Description = order.Description,
             CreatedAtUtc = order.CreatedAtUtc,
             UpdatedAtUtc = order.UpdatedAtUtc
-        };
-    }
-
-    private static bool CanReadOrder(
-        UserRole requesterRole,
-        Guid requesterUserId,
-        Guid orderCustomerId,
-        Guid? orderExecutorId)
-    {
-        return requesterRole switch
-        {
-            UserRole.Admin => true,
-            UserRole.Customer => requesterUserId == orderCustomerId,
-            UserRole.Executor => orderExecutorId == null || orderExecutorId == requesterUserId,
-            _ => false
         };
     }
 }

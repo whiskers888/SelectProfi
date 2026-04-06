@@ -14,6 +14,8 @@ public sealed class VacancyResponse
 
     public string Description { get; init; } = string.Empty;
 
+    public VacancyStatusContract Status { get; init; } = VacancyStatusContract.Draft;
+
     public DateTime CreatedAtUtc { get; init; }
 
     public DateTime UpdatedAtUtc { get; init; }

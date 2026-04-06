@@ -1,4 +1,5 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Domain.Vacancies;
 
@@ -13,7 +14,7 @@ public sealed class CreateVacancyCommandHandler(ICreateVacancyPersistence persis
         if (order is null)
             return new CreateVacancyResult { ErrorCode = CreateVacancyErrorCode.OrderNotFound };
 
-        if (!CanCreate(command.RequesterRole, command.RequesterUserId, order.ExecutorId))
+        if (!VacancyAccessRules.CanCreateVacancy(command.RequesterRole, command.RequesterUserId, order.ExecutorId))
             return new CreateVacancyResult { ErrorCode = CreateVacancyErrorCode.Forbidden };
 
         var activeVacancyExists = await persistence.ActiveVacancyExistsForOrderAsync(command.OrderId, cancellationToken);
@@ -29,6 +30,7 @@ public sealed class CreateVacancyCommandHandler(ICreateVacancyPersistence persis
             ExecutorId = order.ExecutorId!.Value,
             Title = command.Title.Trim(),
             Description = command.Description.Trim(),
+            Status = VacancyStatus.Draft,
             CreatedAtUtc = utcNow,
             UpdatedAtUtc = utcNow
         };
@@ -46,13 +48,9 @@ public sealed class CreateVacancyCommandHandler(ICreateVacancyPersistence persis
             ExecutorId = vacancy.ExecutorId,
             Title = vacancy.Title,
             Description = vacancy.Description,
+            Status = vacancy.Status,
             CreatedAtUtc = vacancy.CreatedAtUtc,
             UpdatedAtUtc = vacancy.UpdatedAtUtc
         };
-    }
-
-    private static bool CanCreate(UserRole requesterRole, Guid requesterUserId, Guid? orderExecutorId)
-    {
-        return requesterRole == UserRole.Executor && orderExecutorId == requesterUserId;
     }
 }

@@ -56,7 +56,8 @@ public static class OrderRequestMapper
             RequesterUserId = requesterUserId,
             RequesterRole = requesterRole,
             Title = request.Title,
-            Description = request.Description
+            Description = request.Description,
+            ExecutorId = request.ExecutorId
         };
     }
 

@@ -1,5 +1,7 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
+using SelectProfi.backend.Domain.Vacancies;
 
 namespace SelectProfi.backend.Application.Vacancies.GetVacancyById;
 
@@ -12,7 +14,12 @@ public sealed class GetVacancyByIdQueryHandler(IGetVacancyByIdPersistence persis
         if (vacancy is null)
             return new GetVacancyByIdResult { ErrorCode = GetVacancyByIdErrorCode.NotFound };
 
-        if (!CanRead(query.RequesterRole, query.RequesterUserId, vacancy.CustomerId, vacancy.ExecutorId))
+        if (!VacancyAccessRules.CanReadVacancy(
+                query.RequesterRole,
+                query.RequesterUserId,
+                vacancy.CustomerId,
+                vacancy.ExecutorId,
+                vacancy.Status))
             return new GetVacancyByIdResult { ErrorCode = GetVacancyByIdErrorCode.Forbidden };
 
         return new GetVacancyByIdResult
@@ -24,19 +31,9 @@ public sealed class GetVacancyByIdQueryHandler(IGetVacancyByIdPersistence persis
             ExecutorId = vacancy.ExecutorId,
             Title = vacancy.Title,
             Description = vacancy.Description,
+            Status = vacancy.Status,
             CreatedAtUtc = vacancy.CreatedAtUtc,
             UpdatedAtUtc = vacancy.UpdatedAtUtc
-        };
-    }
-
-    private static bool CanRead(UserRole requesterRole, Guid requesterUserId, Guid customerId, Guid executorId)
-    {
-        return requesterRole switch
-        {
-            UserRole.Admin => true,
-            UserRole.Customer => requesterUserId == customerId,
-            UserRole.Executor => requesterUserId == executorId,
-            _ => false
         };
     }
 }

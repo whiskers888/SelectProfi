@@ -27,6 +27,15 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("ContactsAccessExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ContactsOwnerExecutorId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -45,9 +54,27 @@ namespace SelectProfi.backend.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<string>("NormalizedFullName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("NormalizedPhone")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("Phone")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("PublicAlias")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -62,11 +89,21 @@ namespace SelectProfi.backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("NormalizedEmail")
+                        .HasFilter("\"DeletedAtUtc\" IS NULL AND \"NormalizedEmail\" IS NOT NULL");
+
+                    b.HasIndex("NormalizedPhone")
+                        .HasFilter("\"DeletedAtUtc\" IS NULL AND \"NormalizedPhone\" IS NOT NULL");
+
                     b.HasIndex("UserId")
                         .IsUnique()
                         .HasFilter("\"DeletedAtUtc\" IS NULL AND \"UserId\" IS NOT NULL");
 
                     b.HasIndex("CreatedByExecutorId", "DeletedAtUtc");
+
+                    b.HasIndex("ContactsOwnerExecutorId", "ContactsAccessExpiresAtUtc", "DeletedAtUtc");
+
+                    b.HasIndex("NormalizedFullName", "BirthDate", "DeletedAtUtc");
 
                     b.ToTable("Candidates");
                 });
@@ -431,6 +468,11 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid?>("SelectedCandidateId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -451,11 +493,18 @@ namespace SelectProfi.backend.Migrations
 
                     b.HasIndex("ExecutorId", "DeletedAtUtc");
 
+                    b.HasIndex("Status", "DeletedAtUtc");
+
                     b.ToTable("Vacancies");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Candidates.Candidate", b =>
                 {
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "ContactsOwnerExecutor")
+                        .WithMany()
+                        .HasForeignKey("ContactsOwnerExecutorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("SelectProfi.backend.Domain.Users.User", "CreatedByExecutor")
                         .WithMany()
                         .HasForeignKey("CreatedByExecutorId")
@@ -465,6 +514,8 @@ namespace SelectProfi.backend.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ContactsOwnerExecutor");
 
                     b.Navigation("CreatedByExecutor");
 

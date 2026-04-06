@@ -1,4 +1,5 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Orders.UpdateOrder;
@@ -12,7 +13,7 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
         if (order is null)
             return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.NotFound };
 
-        if (!CanManage(command.RequesterRole, command.RequesterUserId, order.CustomerId))
+        if (!OrderAccessRules.CanManageOrder(command.RequesterRole, command.RequesterUserId, order.CustomerId))
             return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.Forbidden };
 
         if (command.Title is not null)
@@ -20,6 +21,15 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
 
         if (command.Description is not null)
             order.Description = command.Description.Trim();
+
+        if (command.ExecutorId.HasValue)
+        {
+            var executorExists = await persistence.ExecutorExistsAsync(command.ExecutorId.Value, cancellationToken);
+            if (!executorExists)
+                return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.ExecutorNotFound };
+
+            order.ExecutorId = command.ExecutorId.Value;
+        }
 
         order.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -37,16 +47,6 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             Description = order.Description,
             CreatedAtUtc = order.CreatedAtUtc,
             UpdatedAtUtc = order.UpdatedAtUtc
-        };
-    }
-
-    private static bool CanManage(UserRole requesterRole, Guid requesterUserId, Guid orderCustomerId)
-    {
-        return requesterRole switch
-        {
-            UserRole.Admin => true,
-            UserRole.Customer => requesterUserId == orderCustomerId,
-            _ => false
         };
     }
 }

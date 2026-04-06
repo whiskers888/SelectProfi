@@ -5,5 +5,6 @@ public enum UpdateOrderErrorCode
     None = 0,
     NotFound = 1,
     Forbidden = 2,
-    Conflict = 3
+    Conflict = 3,
+    ExecutorNotFound = 4
 }

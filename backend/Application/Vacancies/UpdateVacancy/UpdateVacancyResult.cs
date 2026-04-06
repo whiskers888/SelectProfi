@@ -1,3 +1,5 @@
+using SelectProfi.backend.Domain.Vacancies;
+
 namespace SelectProfi.backend.Application.Vacancies.UpdateVacancy;
 
 public sealed class UpdateVacancyResult
@@ -15,6 +17,8 @@ public sealed class UpdateVacancyResult
     public string Title { get; init; } = string.Empty;
 
     public string Description { get; init; } = string.Empty;
+
+    public VacancyStatus Status { get; init; } = VacancyStatus.Draft;
 
     public DateTime CreatedAtUtc { get; init; }
 

@@ -14,4 +14,6 @@ public sealed class UpdateOrderCommand : ICommand<UpdateOrderResult>
     public string? Title { get; init; }
 
     public string? Description { get; init; }
+
+    public Guid? ExecutorId { get; init; }
 }

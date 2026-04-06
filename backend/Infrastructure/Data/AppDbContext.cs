@@ -107,6 +107,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         {
             builder.HasKey(vacancy => vacancy.Id);
 
+            // @dvnull: Ранее статус жизненного цикла вакансии не хранился; добавлен enum-статус для draft/approval/published.
+            builder.Property(vacancy => vacancy.Status)
+                .HasConversion<string>()
+                .HasMaxLength(32)
+                .IsRequired();
+
             builder.HasOne(vacancy => vacancy.Order)
                 .WithMany()
                 .HasForeignKey(vacancy => vacancy.OrderId)
@@ -134,11 +140,24 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             builder.HasIndex(vacancy => new { vacancy.CustomerId, vacancy.DeletedAtUtc });
             builder.HasIndex(vacancy => new { vacancy.ExecutorId, vacancy.DeletedAtUtc });
             builder.HasIndex(vacancy => vacancy.SelectedCandidateId);
+            builder.HasIndex(vacancy => new { vacancy.Status, vacancy.DeletedAtUtc });
         });
 
         modelBuilder.Entity<Candidate>(builder =>
         {
             builder.HasKey(candidate => candidate.Id);
+
+            // @dvnull: Ранее матчинга и обезличенного alias в Candidate не было; добавлено для безопасного merge и скрытия ФИО.
+            builder.Property(candidate => candidate.NormalizedFullName)
+                .HasMaxLength(200)
+                .IsRequired();
+            builder.Property(candidate => candidate.PublicAlias)
+                .HasMaxLength(200)
+                .IsRequired();
+            builder.Property(candidate => candidate.NormalizedEmail)
+                .HasMaxLength(254);
+            builder.Property(candidate => candidate.NormalizedPhone)
+                .HasMaxLength(32);
 
             builder.Property(candidate => candidate.Source)
                 .HasConversion<string>()
@@ -155,10 +174,23 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .HasForeignKey(candidate => candidate.CreatedByExecutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(candidate => candidate.ContactsOwnerExecutor)
+                .WithMany()
+                .HasForeignKey(candidate => candidate.ContactsOwnerExecutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasIndex(candidate => candidate.UserId)
                 .HasFilter("\"DeletedAtUtc\" IS NULL AND \"UserId\" IS NOT NULL")
                 .IsUnique();
             builder.HasIndex(candidate => new { candidate.CreatedByExecutorId, candidate.DeletedAtUtc });
+            builder.HasIndex(candidate => new
+                { candidate.NormalizedFullName, candidate.BirthDate, candidate.DeletedAtUtc });
+            builder.HasIndex(candidate => candidate.NormalizedEmail)
+                .HasFilter("\"DeletedAtUtc\" IS NULL AND \"NormalizedEmail\" IS NOT NULL");
+            builder.HasIndex(candidate => candidate.NormalizedPhone)
+                .HasFilter("\"DeletedAtUtc\" IS NULL AND \"NormalizedPhone\" IS NOT NULL");
+            builder.HasIndex(candidate => new
+                { candidate.ContactsOwnerExecutorId, candidate.ContactsAccessExpiresAtUtc, candidate.DeletedAtUtc });
         });
 
         modelBuilder.Entity<CandidateResume>(builder =>

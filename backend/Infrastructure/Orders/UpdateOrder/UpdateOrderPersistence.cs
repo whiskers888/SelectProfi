@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Domain.Orders;
+using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Infrastructure.Data;
 
 namespace SelectProfi.backend.Infrastructure.Orders.UpdateOrder;
@@ -11,6 +12,13 @@ public sealed class UpdateOrderPersistence(AppDbContext dbContext) : IUpdateOrde
     {
         return dbContext.Orders.FirstOrDefaultAsync(
             order => order.Id == orderId && order.DeletedAtUtc == null,
+            cancellationToken);
+    }
+
+    public Task<bool> ExecutorExistsAsync(Guid executorId, CancellationToken cancellationToken)
+    {
+        return dbContext.Users.AnyAsync(
+            user => user.Id == executorId && user.Role == UserRole.Executor,
             cancellationToken);
     }
 

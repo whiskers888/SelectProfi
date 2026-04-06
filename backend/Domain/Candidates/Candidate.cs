@@ -22,11 +22,32 @@ public sealed class Candidate
     [MaxLength(200)]
     public string FullName { get; set; } = string.Empty;
 
+    [MaxLength(200)]
+    public string NormalizedFullName { get; set; } = string.Empty;
+
+    public DateOnly? BirthDate { get; set; }
+
+    [MaxLength(200)]
+    public string PublicAlias { get; set; } = string.Empty;
+
     [MaxLength(254)]
     public string? Email { get; set; }
 
+    [MaxLength(254)]
+    public string? NormalizedEmail { get; set; }
+
     [MaxLength(32)]
     public string? Phone { get; set; }
+
+    [MaxLength(32)]
+    public string? NormalizedPhone { get; set; }
+
+    public Guid? ContactsOwnerExecutorId { get; set; }
+
+    [ForeignKey(nameof(ContactsOwnerExecutorId))]
+    public User? ContactsOwnerExecutor { get; set; }
+
+    public DateTime? ContactsAccessExpiresAtUtc { get; set; }
 
     public CandidateSource Source { get; set; }
 

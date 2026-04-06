@@ -6,6 +6,8 @@ public interface IUpdateOrderPersistence
 {
     Task<Order?> FindActiveByIdAsync(Guid orderId, CancellationToken cancellationToken);
 
+    Task<bool> ExecutorExistsAsync(Guid executorId, CancellationToken cancellationToken);
+
     Task<UpdateOrderPersistenceResult> SaveChangesAsync(CancellationToken cancellationToken);
 }
 

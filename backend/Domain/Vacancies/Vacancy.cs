@@ -39,6 +39,9 @@ public sealed class Vacancy
     [MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 
+    // @dvnull: Добавлен статус жизненного цикла вакансии для процесса согласования и публикации.
+    public VacancyStatus Status { get; set; } = VacancyStatus.Draft;
+
     public DateTime CreatedAtUtc { get; set; }
 
     public DateTime UpdatedAtUtc { get; set; }

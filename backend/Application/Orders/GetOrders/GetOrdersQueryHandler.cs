@@ -1,4 +1,5 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Orders.GetOrders;
@@ -8,7 +9,7 @@ public sealed class GetOrdersQueryHandler(IGetOrdersPersistence persistence)
 {
     public async Task<GetOrdersResult> HandleAsync(GetOrdersQuery query, CancellationToken cancellationToken)
     {
-        if (!CanReadOrders(query.RequesterRole))
+        if (!OrderAccessRules.CanReadOrders(query.RequesterRole))
             return new GetOrdersResult { ErrorCode = GetOrdersErrorCode.Forbidden };
 
         var orders = await persistence.FindVisibleActiveOrdersAsync(
@@ -36,10 +37,5 @@ public sealed class GetOrdersQueryHandler(IGetOrdersPersistence persistence)
             Limit = query.Limit,
             Offset = query.Offset
         };
-    }
-
-    private static bool CanReadOrders(UserRole requesterRole)
-    {
-        return requesterRole is UserRole.Customer or UserRole.Admin or UserRole.Executor;
     }
 }

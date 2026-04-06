@@ -12,13 +12,15 @@ public sealed class UpdateOrderRequest : IValidatableObject
     [MaxLength(4000)]
     public string? Description { get; init; }
 
+    public Guid? ExecutorId { get; init; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (Title is null && Description is null)
+        if (Title is null && Description is null && ExecutorId is null)
         {
             yield return new ValidationResult(
-                "At least one field (title or description) is required.",
-                [nameof(Title), nameof(Description)]);
+                "At least one field (title, description or executorId) is required.",
+                [nameof(Title), nameof(Description), nameof(ExecutorId)]);
         }
     }
 }

@@ -1,4 +1,5 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Orders.DeleteOrder;
@@ -12,7 +13,7 @@ public sealed class DeleteOrderCommandHandler(IDeleteOrderPersistence persistenc
         if (order is null)
             return new DeleteOrderResult { ErrorCode = DeleteOrderErrorCode.NotFound };
 
-        if (!CanManage(command.RequesterRole, command.RequesterUserId, order.CustomerId))
+        if (!OrderAccessRules.CanManageOrder(command.RequesterRole, command.RequesterUserId, order.CustomerId))
             return new DeleteOrderResult { ErrorCode = DeleteOrderErrorCode.Forbidden };
 
         var hasActiveVacancy = await persistence.HasActiveVacancyAsync(order.Id, cancellationToken);
@@ -28,15 +29,5 @@ public sealed class DeleteOrderCommandHandler(IDeleteOrderPersistence persistenc
             return new DeleteOrderResult { ErrorCode = DeleteOrderErrorCode.Conflict };
 
         return new DeleteOrderResult { ErrorCode = DeleteOrderErrorCode.None };
-    }
-
-    private static bool CanManage(UserRole requesterRole, Guid requesterUserId, Guid orderCustomerId)
-    {
-        return requesterRole switch
-        {
-            UserRole.Admin => true,
-            UserRole.Customer => requesterUserId == orderCustomerId,
-            _ => false
-        };
     }
 }

@@ -24,6 +24,7 @@ public sealed class GetVacanciesPersistence(AppDbContext dbContext) : IGetVacanc
             UserRole.Admin => query,
             UserRole.Customer => query.Where(vacancy => vacancy.CustomerId == requesterUserId),
             UserRole.Executor => query.Where(vacancy => vacancy.ExecutorId == requesterUserId),
+            UserRole.Applicant => query.Where(vacancy => vacancy.Status == VacancyStatus.Published),
             _ => query.Where(_ => false)
         };
 

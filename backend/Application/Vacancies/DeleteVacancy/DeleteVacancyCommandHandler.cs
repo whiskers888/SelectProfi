@@ -1,4 +1,5 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Vacancies.DeleteVacancy;
@@ -12,7 +13,7 @@ public sealed class DeleteVacancyCommandHandler(IDeleteVacancyPersistence persis
         if (vacancy is null)
             return new DeleteVacancyResult { ErrorCode = DeleteVacancyErrorCode.NotFound };
 
-        if (!CanDelete(command.RequesterRole, command.RequesterUserId, vacancy.ExecutorId))
+        if (!VacancyAccessRules.CanManageVacancyByExecutor(command.RequesterRole, command.RequesterUserId, vacancy.ExecutorId))
             return new DeleteVacancyResult { ErrorCode = DeleteVacancyErrorCode.Forbidden };
 
         var utcNow = DateTime.UtcNow;
@@ -24,10 +25,5 @@ public sealed class DeleteVacancyCommandHandler(IDeleteVacancyPersistence persis
             return new DeleteVacancyResult { ErrorCode = DeleteVacancyErrorCode.Conflict };
 
         return new DeleteVacancyResult { ErrorCode = DeleteVacancyErrorCode.None };
-    }
-
-    private static bool CanDelete(UserRole requesterRole, Guid requesterUserId, Guid vacancyExecutorId)
-    {
-        return requesterRole == UserRole.Executor && requesterUserId == vacancyExecutorId;
     }
 }

@@ -1,4 +1,5 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Vacancies.GetVacancies;
@@ -8,7 +9,7 @@ public sealed class GetVacanciesQueryHandler(IGetVacanciesPersistence persistenc
 {
     public async Task<GetVacanciesResult> HandleAsync(GetVacanciesQuery query, CancellationToken cancellationToken)
     {
-        if (!CanReadVacancies(query.RequesterRole))
+        if (!VacancyAccessRules.CanReadVacancies(query.RequesterRole))
             return new GetVacanciesResult { ErrorCode = GetVacanciesErrorCode.Forbidden };
 
         var vacancies = await persistence.FindVisibleActiveVacanciesAsync(
@@ -26,6 +27,7 @@ public sealed class GetVacanciesQueryHandler(IGetVacanciesPersistence persistenc
             ExecutorId = vacancy.ExecutorId,
             Title = vacancy.Title,
             Description = vacancy.Description,
+            Status = vacancy.Status,
             CreatedAtUtc = vacancy.CreatedAtUtc,
             UpdatedAtUtc = vacancy.UpdatedAtUtc
         }).ToArray();
@@ -37,10 +39,5 @@ public sealed class GetVacanciesQueryHandler(IGetVacanciesPersistence persistenc
             Limit = query.Limit,
             Offset = query.Offset
         };
-    }
-
-    private static bool CanReadVacancies(UserRole requesterRole)
-    {
-        return requesterRole is UserRole.Admin or UserRole.Customer or UserRole.Executor;
     }
 }

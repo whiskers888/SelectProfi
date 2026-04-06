@@ -20,6 +20,12 @@ public static class OrdersProblemMap
         "order_not_found",
         "Заказ не найден.");
 
+    private static readonly ApiProblemDescriptor ExecutorNotFound = new(
+        StatusCodes.Status404NotFound,
+        "Не найдено",
+        "executor_not_found",
+        "Рекрутер не найден.");
+
     private static readonly ApiProblemDescriptor OrderAccessForbidden = new(
         StatusCodes.Status403Forbidden,
         "Доступ запрещен",
@@ -88,6 +94,7 @@ public static class OrdersProblemMap
         return errorCode switch
         {
             UpdateOrderErrorCode.NotFound => OrderNotFound,
+            UpdateOrderErrorCode.ExecutorNotFound => ExecutorNotFound,
             UpdateOrderErrorCode.Forbidden => OrderAccessForbidden,
             _ => UpdateOrderConflict
         };

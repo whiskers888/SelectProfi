@@ -99,6 +99,13 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(
         AuthorizationPolicies.CustomerAdminExecutor,
         policy => policy.RequireRole(nameof(UserRole.Customer), nameof(UserRole.Admin), nameof(UserRole.Executor)));
+    options.AddPolicy(
+        AuthorizationPolicies.CustomerAdminExecutorApplicant,
+        policy => policy.RequireRole(
+            nameof(UserRole.Customer),
+            nameof(UserRole.Admin),
+            nameof(UserRole.Executor),
+            nameof(UserRole.Applicant)));
 });
 
 var app = builder.Build();

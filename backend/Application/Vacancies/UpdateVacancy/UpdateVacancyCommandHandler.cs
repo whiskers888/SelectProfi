@@ -1,4 +1,5 @@
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Vacancies.UpdateVacancy;
@@ -12,7 +13,7 @@ public sealed class UpdateVacancyCommandHandler(IUpdateVacancyPersistence persis
         if (vacancy is null)
             return new UpdateVacancyResult { ErrorCode = UpdateVacancyErrorCode.NotFound };
 
-        if (!CanUpdate(command.RequesterRole, command.RequesterUserId, vacancy.ExecutorId))
+        if (!VacancyAccessRules.CanManageVacancyByExecutor(command.RequesterRole, command.RequesterUserId, vacancy.ExecutorId))
             return new UpdateVacancyResult { ErrorCode = UpdateVacancyErrorCode.Forbidden };
 
         if (command.Title is not null)
@@ -36,13 +37,9 @@ public sealed class UpdateVacancyCommandHandler(IUpdateVacancyPersistence persis
             ExecutorId = vacancy.ExecutorId,
             Title = vacancy.Title,
             Description = vacancy.Description,
+            Status = vacancy.Status,
             CreatedAtUtc = vacancy.CreatedAtUtc,
             UpdatedAtUtc = vacancy.UpdatedAtUtc
         };
-    }
-
-    private static bool CanUpdate(UserRole requesterRole, Guid requesterUserId, Guid vacancyExecutorId)
-    {
-        return requesterRole == UserRole.Executor && requesterUserId == vacancyExecutorId;
     }
 }

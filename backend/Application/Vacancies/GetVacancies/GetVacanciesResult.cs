@@ -1,3 +1,5 @@
+using SelectProfi.backend.Domain.Vacancies;
+
 namespace SelectProfi.backend.Application.Vacancies.GetVacancies;
 
 public sealed class GetVacanciesResult
@@ -24,6 +26,8 @@ public sealed class GetVacanciesItemResult
     public string Title { get; init; } = string.Empty;
 
     public string Description { get; init; } = string.Empty;
+
+    public VacancyStatus Status { get; init; } = VacancyStatus.Draft;
 
     public DateTime CreatedAtUtc { get; init; }
 
