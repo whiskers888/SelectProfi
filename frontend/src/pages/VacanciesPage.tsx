@@ -41,18 +41,10 @@ type CreateVacancyFormState = {
 }
 
 type PipelineFormState = {
-  vacancyId: string
-  candidateId: string
   stage: VacancyCandidateStageContract
 }
 
-type SelectionFormState = {
-  vacancyId: string
-  candidateId: string
-}
-
 type CreateCandidateResumeFormState = {
-  vacancyId: string
   fullName: string
   birthDate: string
   email: string
@@ -191,17 +183,11 @@ export function VacanciesPage() {
     description: '',
   })
   const [pipelineForm, setPipelineForm] = useState<PipelineFormState>({
-    vacancyId: '',
-    candidateId: '',
     stage: 'Pool',
   })
-  const [selectionForm, setSelectionForm] = useState<SelectionFormState>({
-    vacancyId: '',
-    candidateId: '',
-  })
+  const [candidateInputId, setCandidateInputId] = useState('')
   const [createCandidateResumeForm, setCreateCandidateResumeForm] =
     useState<CreateCandidateResumeFormState>({
-      vacancyId: '',
       fullName: '',
       birthDate: '',
       email: '',
@@ -215,8 +201,12 @@ export function VacanciesPage() {
     useState<SelectedCandidateContactsResponse | null>(null)
   const [executorCandidateContacts, setExecutorCandidateContacts] =
     useState<ExecutorCandidateContactsResponse | null>(null)
+  const [selectedVacancyId, setSelectedVacancyId] = useState('')
+  const [selectedCandidateId, setSelectedCandidateId] = useState('')
 
   const vacancies = data?.items ?? []
+  const currentVacancyId = selectedVacancyId || vacancies[0]?.id || ''
+  const currentCandidateId = candidateInputId.trim() || selectedCandidateId
   const canCreateVacancy = authMe?.role === 'Executor'
   const canManagePipeline = authMe?.role === 'Executor'
   const canSelectCandidate = authMe?.role === 'Customer'
@@ -236,15 +226,8 @@ export function VacanciesPage() {
     }))
   }
 
-  function handlePipelineInputChange(
-    field: 'vacancyId' | 'candidateId',
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
-    const nextValue = event.target.value
-    setPipelineForm((previous) => ({
-      ...previous,
-      [field]: nextValue,
-    }))
+  function handleCandidateInputChange(event: ChangeEvent<HTMLInputElement>) {
+    setCandidateInputId(event.target.value)
   }
 
   function handlePipelineStageChange(event: ChangeEvent<HTMLSelectElement>) {
@@ -256,17 +239,6 @@ export function VacanciesPage() {
     setPipelineForm((previous) => ({
       ...previous,
       stage: nextValue,
-    }))
-  }
-
-  function handleSelectionInputChange(
-    field: keyof SelectionFormState,
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
-    const nextValue = event.target.value
-    setSelectionForm((previous) => ({
-      ...previous,
-      [field]: nextValue,
     }))
   }
 
@@ -334,22 +306,27 @@ export function VacanciesPage() {
       return
     }
 
-    const vacancyId = createCandidateResumeForm.vacancyId.trim()
+    const vacancyId = currentVacancyId.trim()
     const fullName = createCandidateResumeForm.fullName.trim()
     const specialization = createCandidateResumeForm.specialization.trim()
     const resumeTitle = createCandidateResumeForm.resumeTitle.trim()
     const resumeContentJson = createCandidateResumeForm.resumeContentJson.trim()
 
-    if (!vacancyId || !fullName || !specialization || !resumeTitle || !resumeContentJson) {
+    if (!vacancyId) {
+      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
+      return
+    }
+
+    if (!fullName || !specialization || !resumeTitle || !resumeContentJson) {
       setSubmitMessage({
         status: 'error',
-        text: 'Заполните vacancyId, fullName, specialization, resumeTitle и resumeContentJson.',
+        text: 'Заполните fullName, specialization, resumeTitle и resumeContentJson.',
       })
       return
     }
 
     try {
-      await createCandidateResume({
+      const result = await createCandidateResume({
         vacancyId,
         body: {
           fullName,
@@ -362,9 +339,10 @@ export function VacanciesPage() {
           resumeAttachmentsJson: createCandidateResumeForm.resumeAttachmentsJson.trim() || undefined,
         },
       }).unwrap()
+      setSelectedCandidateId(result.candidateId)
+      setCandidateInputId(result.candidateId)
       setSubmitMessage({ status: 'success', text: 'Кандидат с резюме добавлен в pipeline.' })
       setCreateCandidateResumeForm({
-        vacancyId: createCandidateResumeForm.vacancyId,
         fullName: '',
         birthDate: '',
         email: '',
@@ -386,16 +364,23 @@ export function VacanciesPage() {
       return
     }
 
-    const vacancyId = pipelineForm.vacancyId.trim()
-    const candidateId = pipelineForm.candidateId.trim()
+    const vacancyId = currentVacancyId.trim()
+    const candidateId = currentCandidateId
 
-    if (!vacancyId || !candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните vacancyId и candidateId.' })
+    if (!vacancyId) {
+      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
+      return
+    }
+
+    if (!candidateId) {
+      setSubmitMessage({ status: 'error', text: 'Заполните candidateId.' })
       return
     }
 
     try {
-      await addCandidateFromBase({ vacancyId, candidateId }).unwrap()
+      const result = await addCandidateFromBase({ vacancyId, candidateId }).unwrap()
+      setSelectedCandidateId(result.candidateId)
+      setCandidateInputId(result.candidateId)
       setSubmitMessage({ status: 'success', text: 'Кандидат добавлен в pipeline (Pool).' })
       await refetch()
     } catch (requestError) {
@@ -409,20 +394,27 @@ export function VacanciesPage() {
       return
     }
 
-    const vacancyId = pipelineForm.vacancyId.trim()
-    const candidateId = pipelineForm.candidateId.trim()
+    const vacancyId = currentVacancyId.trim()
+    const candidateId = currentCandidateId
 
-    if (!vacancyId || !candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните vacancyId и candidateId.' })
+    if (!vacancyId) {
+      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
+      return
+    }
+
+    if (!candidateId) {
+      setSubmitMessage({ status: 'error', text: 'Заполните candidateId.' })
       return
     }
 
     try {
-      await updateVacancyCandidateStage({
+      const result = await updateVacancyCandidateStage({
         vacancyId,
         candidateId,
         body: { stage: pipelineForm.stage },
       }).unwrap()
+      setSelectedCandidateId(result.candidateId)
+      setCandidateInputId(result.candidateId)
       setSubmitMessage({ status: 'success', text: `Стадия кандидата обновлена: ${pipelineForm.stage}.` })
       await refetch()
     } catch (requestError) {
@@ -436,19 +428,26 @@ export function VacanciesPage() {
       return
     }
 
-    const vacancyId = selectionForm.vacancyId.trim()
-    const candidateId = selectionForm.candidateId.trim()
+    const vacancyId = currentVacancyId.trim()
+    const candidateId = currentCandidateId
 
-    if (!vacancyId || !candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните vacancyId и candidateId для выбора кандидата.' })
+    if (!vacancyId) {
+      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
+      return
+    }
+
+    if (!candidateId) {
+      setSubmitMessage({ status: 'error', text: 'Заполните candidateId для выбора кандидата.' })
       return
     }
 
     try {
-      await selectVacancyCandidate({
+      const result = await selectVacancyCandidate({
         vacancyId,
         body: { candidateId },
       }).unwrap()
+      setSelectedCandidateId(result.selectedCandidateId)
+      setCandidateInputId(result.selectedCandidateId)
       setSubmitMessage({ status: 'success', text: 'Финальный кандидат выбран.' })
       setSelectedCandidateContacts(null)
       await refetch()
@@ -463,15 +462,17 @@ export function VacanciesPage() {
       return
     }
 
-    const vacancyId = selectionForm.vacancyId.trim()
+    const vacancyId = currentVacancyId.trim()
     if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните vacancyId для чтения контактов.' })
+      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
       return
     }
 
     try {
       const contacts = await fetchSelectedCandidateContacts({ vacancyId }).unwrap()
       setSelectedCandidateContacts(contacts)
+      setSelectedCandidateId(contacts.candidateId)
+      setCandidateInputId(contacts.candidateId)
       setSubmitMessage({ status: 'success', text: 'Контакты выбранного кандидата загружены.' })
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
@@ -484,16 +485,23 @@ export function VacanciesPage() {
       return
     }
 
-    const vacancyId = selectionForm.vacancyId.trim()
-    const candidateId = selectionForm.candidateId.trim()
-    if (!vacancyId || !candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните vacancyId и candidateId для чтения контактов.' })
+    const vacancyId = currentVacancyId.trim()
+    const candidateId = currentCandidateId
+    if (!vacancyId) {
+      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
+      return
+    }
+
+    if (!candidateId) {
+      setSubmitMessage({ status: 'error', text: 'Заполните candidateId для чтения контактов.' })
       return
     }
 
     try {
       const contacts = await fetchExecutorCandidateContacts({ vacancyId, candidateId }).unwrap()
       setExecutorCandidateContacts(contacts)
+      setSelectedCandidateId(contacts.candidateId)
+      setCandidateInputId(contacts.candidateId)
       setSubmitMessage({ status: 'success', text: 'Контакты кандидата загружены.' })
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
@@ -522,6 +530,9 @@ export function VacanciesPage() {
               {submitMessage.text}
             </Alert>
           ) : null}
+          <Alert>
+            Контекст: vacancyId={currentVacancyId || 'не выбрано'}, candidateId={currentCandidateId || 'не выбрано'}
+          </Alert>
           {!isLoading && !isError && vacancies.length === 0 ? <Alert>Пока нет вакансий.</Alert> : null}
 
           <Card className="border-slate-200 shadow-none">
@@ -570,14 +581,14 @@ export function VacanciesPage() {
               ) : null}
               <div className="grid gap-3 md:grid-cols-4">
                 <Input
-                  value={pipelineForm.vacancyId}
-                  onChange={(event) => handlePipelineInputChange('vacancyId', event)}
-                  placeholder="vacancyId (GUID)"
-                  disabled={!canManagePipeline || isAddingCandidateFromBase || isUpdatingCandidateStage}
+                  value={currentVacancyId}
+                  placeholder="vacancyId из таблицы"
+                  readOnly
+                  disabled
                 />
                 <Input
-                  value={pipelineForm.candidateId}
-                  onChange={(event) => handlePipelineInputChange('candidateId', event)}
+                  value={candidateInputId}
+                  onChange={handleCandidateInputChange}
                   placeholder="candidateId (GUID)"
                   disabled={!canManagePipeline || isAddingCandidateFromBase || isUpdatingCandidateStage}
                 />
@@ -622,10 +633,10 @@ export function VacanciesPage() {
               <form onSubmit={handleCreateCandidateResume} className="grid gap-3">
                 <div className="grid gap-3 md:grid-cols-3">
                   <Input
-                    value={createCandidateResumeForm.vacancyId}
-                    onChange={(event) => handleCreateCandidateResumeInputChange('vacancyId', event)}
-                    placeholder="vacancyId (GUID)"
-                    disabled={!canManagePipeline || isCreatingCandidateResume}
+                    value={currentVacancyId}
+                    placeholder="vacancyId из таблицы"
+                    readOnly
+                    disabled
                   />
                   <Input
                     value={createCandidateResumeForm.fullName}
@@ -701,14 +712,14 @@ export function VacanciesPage() {
               ) : null}
               <div className="grid gap-3 md:grid-cols-4">
                 <Input
-                  value={selectionForm.vacancyId}
-                  onChange={(event) => handleSelectionInputChange('vacancyId', event)}
-                  placeholder="vacancyId (GUID)"
-                  disabled={isSelectionActionLoading}
+                  value={currentVacancyId}
+                  placeholder="vacancyId из таблицы"
+                  readOnly
+                  disabled
                 />
                 <Input
-                  value={selectionForm.candidateId}
-                  onChange={(event) => handleSelectionInputChange('candidateId', event)}
+                  value={candidateInputId}
+                  onChange={handleCandidateInputChange}
                   placeholder="candidateId (GUID)"
                   disabled={isSelectionActionLoading}
                 />
@@ -783,6 +794,7 @@ export function VacanciesPage() {
                   <TableHead>Название</TableHead>
                   <TableHead>OrderId</TableHead>
                   <TableHead>Статус</TableHead>
+                  <TableHead className="w-[140px]">Контекст</TableHead>
                   <TableHead className="w-[220px]">Lifecycle</TableHead>
                 </TableRow>
               </TableHeader>
@@ -790,10 +802,19 @@ export function VacanciesPage() {
                 {vacancies.map((vacancy) => {
                   const action = getLifecycleAction(authMe?.role, vacancy)
                   return (
-                    <TableRow key={vacancy.id}>
+                    <TableRow key={vacancy.id} className={vacancy.id === currentVacancyId ? 'bg-slate-50' : undefined}>
                       <TableCell>{vacancy.title}</TableCell>
                       <TableCell>{vacancy.orderId}</TableCell>
                       <TableCell>{vacancy.status}</TableCell>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          variant={vacancy.id === currentVacancyId ? 'default' : 'outline'}
+                          onClick={() => setSelectedVacancyId(vacancy.id)}
+                        >
+                          Использовать
+                        </Button>
+                      </TableCell>
                       <TableCell>
                         {action ? (
                           <Button

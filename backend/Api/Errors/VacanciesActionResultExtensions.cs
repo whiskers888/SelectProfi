@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
@@ -110,6 +111,14 @@ public static class VacanciesActionResultExtensions
     public static IActionResult ToActionResult(this GetVacancyCandidateContactsForExecutorResult result, ControllerBase controller)
     {
         if (result.ErrorCode == GetVacancyCandidateContactsForExecutorErrorCode.None)
+            return controller.Ok(result.ToResponse());
+
+        return controller.ToProblem(VacanciesProblemMap.Resolve(result.ErrorCode));
+    }
+
+    public static IActionResult ToActionResult(this GetVacancyCandidatesResult result, ControllerBase controller)
+    {
+        if (result.ErrorCode == GetVacancyCandidatesErrorCode.None)
             return controller.Ok(result.ToResponse());
 
         return controller.ToProblem(VacanciesProblemMap.Resolve(result.ErrorCode));

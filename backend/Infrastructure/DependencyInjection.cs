@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
@@ -31,6 +32,7 @@ using SelectProfi.backend.Infrastructure.Auth.Register;
 using SelectProfi.backend.Infrastructure.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Infrastructure.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Infrastructure.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Infrastructure.Candidates.UpdateVacancyCandidateStage;
@@ -80,6 +82,8 @@ public static class DependencyInjection
         services.AddScoped<ISelectVacancyCandidatePersistence, SelectVacancyCandidatePersistence>();
         // @dvnull: Добавлена persistence-реализация чтения контактов кандидата для рекрутера с проверкой owner/TTL.
         services.AddScoped<IGetVacancyCandidateContactsForExecutorPersistence, GetVacancyCandidateContactsForExecutorPersistence>();
+        // @dvnull: Добавлена persistence-реализация чтения обезличенного списка кандидатов вакансии.
+        services.AddScoped<IGetVacancyCandidatesPersistence, GetVacancyCandidatesPersistence>();
         // @dvnull: Добавлена persistence-реализация чтения контактов выбранного кандидата для заказчика.
         services.AddScoped<IGetSelectedCandidateContactsPersistence, GetSelectedCandidateContactsPersistence>();
         // @dvnull: Ранее infra-слой не умел сохранять связку Candidate + Resume + VacancyCandidate; добавлена persistence-реализация для нового сценария.

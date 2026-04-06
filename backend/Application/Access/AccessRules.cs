@@ -123,4 +123,19 @@ public static class CandidateAccessRules
     {
         return requesterRole == UserRole.Customer && requesterUserId == vacancyCustomerId;
     }
+
+    public static bool CanReadVacancyCandidates(
+        UserRole requesterRole,
+        Guid requesterUserId,
+        Guid vacancyCustomerId,
+        Guid vacancyExecutorId)
+    {
+        return requesterRole switch
+        {
+            UserRole.Admin => true,
+            UserRole.Customer => requesterUserId == vacancyCustomerId,
+            UserRole.Executor => requesterUserId == vacancyExecutorId,
+            _ => false
+        };
+    }
 }

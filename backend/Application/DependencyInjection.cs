@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
@@ -57,6 +58,8 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetVacanciesQuery, GetVacanciesResult>, GetVacanciesQueryHandler>();
         // @dvnull: Добавлен query получения контактов кандидата для назначенного рекрутера с проверкой owner+TTL.
         services.AddScoped<IQueryHandler<GetVacancyCandidateContactsForExecutorQuery, GetVacancyCandidateContactsForExecutorResult>, GetVacancyCandidateContactsForExecutorQueryHandler>();
+        // @dvnull: Добавлен query получения обезличенного списка кандидатов вакансии для выборки на frontend без контактов.
+        services.AddScoped<IQueryHandler<GetVacancyCandidatesQuery, GetVacancyCandidatesResult>, GetVacancyCandidatesQueryHandler>();
         // @dvnull: Добавлен query получения контактов выбранного кандидата для заказчика после финального выбора.
         services.AddScoped<IQueryHandler<GetSelectedCandidateContactsQuery, GetSelectedCandidateContactsResult>, GetSelectedCandidateContactsQueryHandler>();
         services.AddScoped<IQueryHandler<GetMyProfileQuery, GetMyProfileResult>, GetMyProfileQueryHandler>();

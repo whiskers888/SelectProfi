@@ -7,6 +7,7 @@ using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
@@ -201,6 +202,12 @@ public static class VacanciesProblemMap
         "vacancy_candidate_contacts_access_denied",
         "Срок доступа к контактам кандидата истек или вы не являетесь владельцем контактов.");
 
+    private static readonly ApiProblemDescriptor VacancyCandidatesReadForbidden = new(
+        StatusCodes.Status403Forbidden,
+        "Доступ запрещен",
+        "vacancy_candidates_forbidden",
+        "У вас нет доступа к списку кандидатов этой вакансии.");
+
     public static ApiProblemDescriptor Resolve(CreateVacancyErrorCode errorCode)
     {
         return errorCode switch
@@ -331,6 +338,15 @@ public static class VacanciesProblemMap
             GetVacancyCandidateContactsForExecutorErrorCode.Forbidden => VacancyCandidateContactsForbidden,
             GetVacancyCandidateContactsForExecutorErrorCode.ContactsAccessDenied => VacancyCandidateContactsDenied,
             _ => VacancyCandidateContactsDenied
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(GetVacancyCandidatesErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            GetVacancyCandidatesErrorCode.VacancyNotFound => VacancyNotFound,
+            _ => VacancyCandidatesReadForbidden
         };
     }
 }

@@ -4,6 +4,7 @@ using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
@@ -236,6 +237,22 @@ public sealed class VacanciesController(
             GetVacancyCandidateContactsForExecutorQuery,
             GetVacancyCandidateContactsForExecutorResult>(
             candidateId.ToGetVacancyCandidateContactsForExecutorQuery(vacancyId, RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("{vacancyId:guid}/candidates")]
+    [Authorize(Policy = AuthorizationPolicies.CustomerAdminExecutor)]
+    [ProducesResponseType(typeof(VacancyCandidatesResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    // @dvnull: Добавлен endpoint чтения обезличенного pipeline кандидатов по вакансии для customer/executor/admin без раскрытия контактов.
+    public async Task<IActionResult> GetVacancyCandidates(
+        Guid vacancyId,
+        CancellationToken cancellationToken)
+    {
+        var result = await queryDispatcher.DispatchAsync<GetVacancyCandidatesQuery, GetVacancyCandidatesResult>(
+            vacancyId.ToGetVacancyCandidatesQuery(RequesterUserId, RequesterRole),
             cancellationToken);
 
         return result.ToActionResult(this);
