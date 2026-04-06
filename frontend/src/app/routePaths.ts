@@ -6,6 +6,8 @@ export const routePaths = {
   legacyLogin: '/login',
   legacyPreview: '/preview',
   legacyRegister: '/register',
+  orders: '/orders',
   profile: '/profile',
+  vacancies: '/vacancies',
   root: '/',
 } as const

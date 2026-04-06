@@ -1,7 +1,7 @@
 import { Dropdown } from '@/components/ui/dropdown'
 import { type PreviewView } from '../model/data'
 
-type HeaderMenuAction = 'profile' | 'settings' | 'logout'
+type HeaderMenuAction = 'profile' | 'settings' | 'orders' | 'vacancies' | 'logout'
 
 type HeaderProps = {
   activeView: PreviewView
@@ -101,12 +101,16 @@ export function Header({
           items={[
             { id: 'profile', label: 'Мой профиль' },
             { id: 'settings', label: 'Настройки' },
+            { id: 'orders', label: 'Заказы (API)' },
+            { id: 'vacancies', label: 'Вакансии (API)' },
             { id: 'logout', label: 'Выйти из аккаунта', tone: 'destructive' },
           ]}
           onSelect={(itemId) => {
             if (
               itemId === 'profile' ||
               itemId === 'settings' ||
+              itemId === 'orders' ||
+              itemId === 'vacancies' ||
               itemId === 'logout'
             ) {
               onMenuAction(itemId)

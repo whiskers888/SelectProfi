@@ -1,0 +1,1 @@
+export { useVacanciesServer } from './useVacanciesServer'

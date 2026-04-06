@@ -1,4 +1,6 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { routePaths } from '@/app/routePaths'
 import '../styles/shell.css'
 import { CalendarPanel } from '../panels/CalendarPanel'
 import { MainFeedPanel } from '../panels/MainFeedPanel'
@@ -109,6 +111,7 @@ function toRoleLabel(role: PreviewRole): string {
 }
 
 export function ShellPage() {
+  const navigate = useNavigate()
   const { data: profile, isFetching: isProfileFetching, refetch: refetchProfile } = useGetMyProfileQuery()
   const { data: authMe } = useGetMyAuthInfoQuery()
   const [switchMyActiveRole, { isLoading: isRoleSwitching }] = useSwitchMyActiveRoleMutation()
@@ -446,6 +449,16 @@ export function ShellPage() {
             onOpenMeetings={() => handleViewChange('meetings')}
             onOpenNotifications={() => handleViewChange('chats')}
             onMenuAction={(action) => {
+              if (action === 'orders') {
+                navigate(routePaths.orders)
+                return
+              }
+
+              if (action === 'vacancies') {
+                navigate(routePaths.vacancies)
+                return
+              }
+
               setBanner({
                 variant: action === 'logout' ? 'destructive' : 'default',
                 message:
