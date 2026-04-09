@@ -1,5 +1,6 @@
 # SelectProfi
 
+
 Монорепозиторий сервиса SelectProfi.
 
 - `backend` — ASP.NET Core API (`.NET 10`, EF Core, PostgreSQL, Redis, RabbitMQ).
