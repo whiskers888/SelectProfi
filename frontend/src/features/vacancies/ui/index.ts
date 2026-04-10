@@ -1,0 +1,7 @@
+export { VacanciesListSurface } from './VacanciesListSurface'
+export { VacancyCandidatesSurface } from './VacancyCandidatesSurface'
+export { VacancyCandidateDetailsSurface } from './VacancyCandidateDetailsSurface'
+export { VacancyContactsSurface } from './VacancyContactsSurface'
+export { VacancyDetailsSurface } from './VacancyDetailsSurface'
+export { VacancyPipelineSurface } from './VacancyPipelineSurface'
+export { VacancyWorkspaceNavSurface } from './VacancyWorkspaceNavSurface'

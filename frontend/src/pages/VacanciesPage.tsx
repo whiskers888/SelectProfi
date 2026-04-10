@@ -1,18 +1,28 @@
 import { type ChangeEvent, type FormEvent, useState } from 'react'
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { skipToken, type FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { Link } from 'react-router-dom'
 import { routePaths } from '@/app/routePaths'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Textarea } from '@/components/ui/textarea'
 import { useVacanciesServer } from '@/features/vacancies/model'
+import {
+  VacanciesListSurface,
+  VacancyCandidateDetailsSurface,
+  VacancyCandidatesSurface,
+  VacancyContactsSurface,
+  VacancyDetailsSurface,
+  VacancyPipelineSurface,
+  VacancyWorkspaceNavSurface,
+} from '@/features/vacancies/ui'
 import { useGetMyAuthInfoQuery } from '@/shared/api/auth'
+import { useGetOrdersQuery } from '@/shared/api/orders'
 import {
   useAddCandidateFromBaseMutation,
   useCreateCandidateResumeMutation,
+  useGetVacancyBaseCandidatesQuery,
+  useGetVacancyCandidatesQuery,
   useLazyGetExecutorCandidateContactsQuery,
   useLazyGetSelectedCandidateContactsQuery,
   useSelectVacancyCandidateMutation,
@@ -21,7 +31,12 @@ import {
   type SelectedCandidateContactsResponse,
   type VacancyCandidateStageContract,
 } from '@/shared/api/candidates'
-import type { VacancyResponse, VacancyStatusContract } from '@/shared/api/vacancies'
+import {
+  useGetVacancyByIdQuery,
+  type GetVacanciesRequest,
+  type VacancyResponse,
+  type VacancyStatusContract,
+} from '@/shared/api/vacancies'
 
 type ProblemDetailsPayload = {
   code?: string
@@ -35,7 +50,6 @@ type SubmitMessage = {
 }
 
 type CreateVacancyFormState = {
-  orderId: string
   title: string
   description: string
 }
@@ -51,9 +65,12 @@ type CreateCandidateResumeFormState = {
   phone: string
   specialization: string
   resumeTitle: string
-  resumeContentJson: string
-  resumeAttachmentsJson: string
+  resumeSummary: string
+  resumeSkills: string
+  resumeAttachmentLinks: string
 }
+
+type VacancyWorkspaceSection = 'details' | 'pipeline' | 'candidates'
 
 function isProblemDetailsPayload(value: unknown): value is ProblemDetailsPayload {
   return typeof value === 'object' && value !== null
@@ -82,14 +99,22 @@ function getRequestErrorMessage(error: unknown): string {
         return 'Заказ для вакансии не найден.'
       case 'vacancy_create_forbidden':
         return 'У вас нет прав создавать вакансию для этого заказа.'
+      case 'vacancy_access_forbidden':
+        return 'У вас нет доступа к этой вакансии.'
       case 'vacancy_status_forbidden':
         return 'У вас нет прав менять статус этой вакансии.'
+      case 'vacancy_conflict':
+        return 'Не удалось сохранить вакансию из-за конфликта данных.'
       case 'vacancy_status_transition_invalid':
         return 'Недопустимый переход статуса вакансии.'
       case 'vacancy_status_conflict':
         return 'Конфликт при обновлении статуса вакансии.'
       case 'vacancy_not_published':
         return 'Операция доступна только для опубликованной вакансии.'
+      case 'vacancy_candidates_forbidden':
+        return 'У вас нет доступа к списку кандидатов этой вакансии.'
+      case 'vacancy_base_candidates_forbidden':
+        return 'У вас нет доступа к списку кандидатов из системной базы для этой вакансии.'
       case 'candidate_resume_create_forbidden':
         return 'У вас нет прав на ручное добавление кандидата в эту вакансию.'
       case 'candidate_resume_invalid_input':
@@ -135,6 +160,46 @@ function getRequestErrorMessage(error: unknown): string {
   return 'Не удалось выполнить запрос.'
 }
 
+function parseNonNegativeInteger(rawValue: string): number | null {
+  const trimmedValue = rawValue.trim()
+  if (!/^\d+$/.test(trimmedValue)) {
+    return null
+  }
+
+  const parsedValue = Number(trimmedValue)
+  if (!Number.isSafeInteger(parsedValue)) {
+    return null
+  }
+
+  return parsedValue
+}
+
+function buildResumeContentJson(form: CreateCandidateResumeFormState): string {
+  const skills = form.resumeSkills
+    .split(',')
+    .map((skill) => skill.trim())
+    .filter((skill) => skill.length > 0)
+
+  // @dvnull: Ранее `resumeContentJson` вводился вручную; переведено на сериализацию structured-полей формы.
+  return JSON.stringify({
+    summary: form.resumeSummary.trim(),
+    skills,
+  })
+}
+
+function buildResumeAttachmentsJson(form: CreateCandidateResumeFormState): string | undefined {
+  const links = form.resumeAttachmentLinks
+    .split('\n')
+    .map((link) => link.trim())
+    .filter((link) => link.length > 0)
+
+  if (links.length === 0) {
+    return undefined
+  }
+
+  return JSON.stringify(links)
+}
+
 function getLifecycleAction(
   role: string | undefined,
   vacancy: VacancyResponse,
@@ -155,17 +220,29 @@ function getLifecycleAction(
 }
 
 export function VacanciesPage() {
+  const defaultVacanciesLimit = 20
+  const defaultVacanciesOffset = 0
+  const [vacanciesQuery, setVacanciesQuery] = useState<GetVacanciesRequest>({
+    limit: defaultVacanciesLimit,
+    offset: defaultVacanciesOffset,
+  })
+  const [vacanciesLimitInput, setVacanciesLimitInput] = useState(String(defaultVacanciesLimit))
+  const [vacanciesOffsetInput, setVacanciesOffsetInput] = useState(String(defaultVacanciesOffset))
   const {
     data,
     error,
     isError,
     isLoading,
     isCreatingVacancy,
+    isUpdatingVacancy,
     isUpdatingVacancyStatus,
+    isDeletingVacancy,
     refetch,
     createVacancy,
+    updateVacancy,
     updateVacancyStatus,
-  } = useVacanciesServer()
+    deleteVacancy,
+  } = useVacanciesServer(vacanciesQuery)
   const { data: authMe } = useGetMyAuthInfoQuery()
   const [createCandidateResume, { isLoading: isCreatingCandidateResume }] = useCreateCandidateResumeMutation()
   const [addCandidateFromBase, { isLoading: isAddingCandidateFromBase }] = useAddCandidateFromBaseMutation()
@@ -178,14 +255,14 @@ export function VacanciesPage() {
     useLazyGetExecutorCandidateContactsQuery()
   const [submitMessage, setSubmitMessage] = useState<SubmitMessage>({ status: 'idle', text: '' })
   const [createForm, setCreateForm] = useState<CreateVacancyFormState>({
-    orderId: '',
     title: '',
     description: '',
   })
+  const [selectedCreateOrderId, setSelectedCreateOrderId] = useState('')
   const [pipelineForm, setPipelineForm] = useState<PipelineFormState>({
     stage: 'Pool',
   })
-  const [candidateInputId, setCandidateInputId] = useState('')
+  const [selectedAddFromBaseCandidateId, setSelectedAddFromBaseCandidateId] = useState('')
   const [createCandidateResumeForm, setCreateCandidateResumeForm] =
     useState<CreateCandidateResumeFormState>({
       fullName: '',
@@ -194,8 +271,9 @@ export function VacanciesPage() {
       phone: '',
       specialization: '',
       resumeTitle: '',
-      resumeContentJson: '{}',
-      resumeAttachmentsJson: '',
+      resumeSummary: '',
+      resumeSkills: '',
+      resumeAttachmentLinks: '',
     })
   const [selectedCandidateContacts, setSelectedCandidateContacts] =
     useState<SelectedCandidateContactsResponse | null>(null)
@@ -203,17 +281,85 @@ export function VacanciesPage() {
     useState<ExecutorCandidateContactsResponse | null>(null)
   const [selectedVacancyId, setSelectedVacancyId] = useState('')
   const [selectedCandidateId, setSelectedCandidateId] = useState('')
+  const [activeVacancySection, setActiveVacancySection] = useState<VacancyWorkspaceSection>('details')
+  const [vacancyEditTitleInput, setVacancyEditTitleInput] = useState('')
+  const [vacancyEditDescriptionInput, setVacancyEditDescriptionInput] = useState('')
+  const [isVacancyEditTitleDirty, setIsVacancyEditTitleDirty] = useState(false)
+  const [isVacancyEditDescriptionDirty, setIsVacancyEditDescriptionDirty] = useState(false)
 
   const vacancies = data?.items ?? []
+  const currentVacanciesLimit = data?.limit ?? vacanciesQuery.limit ?? defaultVacanciesLimit
+  const currentVacanciesOffset = data?.offset ?? vacanciesQuery.offset ?? defaultVacanciesOffset
   const currentVacancyId = selectedVacancyId || vacancies[0]?.id || ''
-  const currentCandidateId = candidateInputId.trim() || selectedCandidateId
+  const vacancyDetailsQueryArg = currentVacancyId ? currentVacancyId : skipToken
+  const {
+    data: vacancyDetailsData,
+    error: vacancyDetailsError,
+    isFetching: isVacancyDetailsFetching,
+    refetch: refetchVacancyDetails,
+  } = useGetVacancyByIdQuery(vacancyDetailsQueryArg)
   const canCreateVacancy = authMe?.role === 'Executor'
+  const canEditVacancy = authMe?.role === 'Executor'
+  const {
+    data: ordersData,
+    error: ordersError,
+    isFetching: isOrdersLoading,
+  } = useGetOrdersQuery(canCreateVacancy ? undefined : skipToken)
+  const availableOrders = ordersData?.items ?? []
+  const currentCreateOrderId = selectedCreateOrderId || availableOrders[0]?.id || ''
   const canManagePipeline = authMe?.role === 'Executor'
   const canSelectCandidate = authMe?.role === 'Customer'
   const canReadSelectedContacts = authMe?.role === 'Customer'
   const canReadExecutorContacts = authMe?.role === 'Executor'
+  const canReadVacancyCandidates =
+    authMe?.role === 'Customer' || authMe?.role === 'Executor' || authMe?.role === 'Admin'
+  const vacancyCandidatesQueryArg =
+    canReadVacancyCandidates && currentVacancyId ? { vacancyId: currentVacancyId } : skipToken
+  const {
+    data: vacancyCandidatesData,
+    error: vacancyCandidatesError,
+    isFetching: isVacancyCandidatesFetching,
+    refetch: refetchVacancyCandidates,
+  } = useGetVacancyCandidatesQuery(vacancyCandidatesQueryArg)
+  const vacancyBaseCandidatesQueryArg =
+    canManagePipeline && currentVacancyId ? { vacancyId: currentVacancyId } : skipToken
+  const {
+    data: vacancyBaseCandidatesData,
+    error: vacancyBaseCandidatesError,
+    isFetching: isVacancyBaseCandidatesFetching,
+    refetch: refetchVacancyBaseCandidates,
+  } = useGetVacancyBaseCandidatesQuery(vacancyBaseCandidatesQueryArg)
+  const vacancyCandidates = vacancyCandidatesData?.items ?? []
+  const vacancyBaseCandidates = vacancyBaseCandidatesData?.items ?? []
+  const hasSelectedAddFromBaseCandidate = vacancyBaseCandidates.some(
+    (candidate) => candidate.candidateId === selectedAddFromBaseCandidateId,
+  )
+  const currentAddFromBaseCandidateId = hasSelectedAddFromBaseCandidate
+    ? selectedAddFromBaseCandidateId
+    : vacancyBaseCandidates[0]?.candidateId || ''
+  const backendSelectedCandidateId = vacancyCandidatesData?.selectedCandidateId ?? ''
   const isSelectionActionLoading =
     isSelectingCandidate || isFetchingSelectedCandidateContacts || isFetchingExecutorCandidateContacts
+  const isVacancyEditActionLoading = isUpdatingVacancy || isDeletingVacancy || isVacancyDetailsFetching
+  const currentCandidateId = selectedCandidateId || backendSelectedCandidateId
+  const currentVacancyCandidate = vacancyCandidates.find((candidate) => candidate.candidateId === currentCandidateId)
+  const currentVacancyEditTitle = isVacancyEditTitleDirty
+    ? vacancyEditTitleInput
+    : vacancyDetailsData?.title ?? ''
+  const currentVacancyEditDescription = isVacancyEditDescriptionDirty
+    ? vacancyEditDescriptionInput
+    : vacancyDetailsData?.description ?? ''
+  const currentVacancyStatus: VacancyStatusContract | undefined =
+    vacancyDetailsData?.status ?? vacancies.find((vacancy) => vacancy.id === currentVacancyId)?.status
+
+  function ensurePublishedVacancyForPipeline(): boolean {
+    if (currentVacancyStatus === 'Published') {
+      return true
+    }
+
+    setSubmitMessage({ status: 'error', text: 'Операции pipeline доступны только для опубликованной вакансии.' })
+    return false
+  }
 
   function handleCreateFormChange(
     field: keyof CreateVacancyFormState,
@@ -226,8 +372,39 @@ export function VacanciesPage() {
     }))
   }
 
-  function handleCandidateInputChange(event: ChangeEvent<HTMLInputElement>) {
-    setCandidateInputId(event.target.value)
+  function handleCreateOrderSelectChange(event: ChangeEvent<HTMLSelectElement>) {
+    setSelectedCreateOrderId(event.target.value)
+  }
+
+  function handleAddFromBaseCandidateSelectChange(event: ChangeEvent<HTMLSelectElement>) {
+    setSelectedAddFromBaseCandidateId(event.target.value)
+  }
+
+  function applyVacancyContext(vacancyId: string) {
+    setSelectedVacancyId(vacancyId)
+    setSelectedCandidateId('')
+    setActiveVacancySection('details')
+    setSelectedAddFromBaseCandidateId('')
+    setVacancyEditTitleInput('')
+    setVacancyEditDescriptionInput('')
+    setIsVacancyEditTitleDirty(false)
+    setIsVacancyEditDescriptionDirty(false)
+    setSelectedCandidateContacts(null)
+    setExecutorCandidateContacts(null)
+  }
+
+  function handleSelectVacancy(vacancyId: string) {
+    applyVacancyContext(vacancyId)
+  }
+
+  function handleVacancyEditTitleChange(event: ChangeEvent<HTMLInputElement>) {
+    setVacancyEditTitleInput(event.target.value)
+    setIsVacancyEditTitleDirty(true)
+  }
+
+  function handleVacancyEditDescriptionChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setVacancyEditDescriptionInput(event.target.value)
+    setIsVacancyEditDescriptionDirty(true)
   }
 
   function handlePipelineStageChange(event: ChangeEvent<HTMLSelectElement>) {
@@ -253,6 +430,60 @@ export function VacanciesPage() {
     }))
   }
 
+  function applyVacanciesQuery(limit: number, offset: number) {
+    setVacanciesQuery({ limit, offset })
+    setVacanciesLimitInput(String(limit))
+    setVacanciesOffsetInput(String(offset))
+    applyVacancyContext('')
+  }
+
+  function handleVacanciesQueryInputChange(field: 'limit' | 'offset', event: ChangeEvent<HTMLInputElement>) {
+    const nextValue = event.target.value
+    if (field === 'limit') {
+      setVacanciesLimitInput(nextValue)
+      return
+    }
+
+    setVacanciesOffsetInput(nextValue)
+  }
+
+  function handleApplyVacanciesQuery(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const parsedLimit = parseNonNegativeInteger(vacanciesLimitInput)
+    const parsedOffset = parseNonNegativeInteger(vacanciesOffsetInput)
+
+    if (parsedLimit === null || parsedLimit <= 0) {
+      setSubmitMessage({ status: 'error', text: 'limit должен быть целым числом больше 0.' })
+      return
+    }
+
+    if (parsedOffset === null) {
+      setSubmitMessage({ status: 'error', text: 'offset должен быть целым числом от 0.' })
+      return
+    }
+
+    applyVacanciesQuery(parsedLimit, parsedOffset)
+  }
+
+  function handlePreviousVacanciesPage() {
+    if (currentVacanciesOffset <= 0) {
+      return
+    }
+
+    const nextOffset = Math.max(0, currentVacanciesOffset - currentVacanciesLimit)
+    applyVacanciesQuery(currentVacanciesLimit, nextOffset)
+  }
+
+  function handleNextVacanciesPage() {
+    if (vacancies.length < currentVacanciesLimit) {
+      return
+    }
+
+    const nextOffset = currentVacanciesOffset + currentVacanciesLimit
+    applyVacanciesQuery(currentVacanciesLimit, nextOffset)
+  }
+
   async function handleCreateVacancy(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -261,19 +492,19 @@ export function VacanciesPage() {
       return
     }
 
-    const orderId = createForm.orderId.trim()
+    const orderId = currentCreateOrderId.trim()
     const title = createForm.title.trim()
     const description = createForm.description.trim()
 
     if (!orderId || !title || !description) {
-      setSubmitMessage({ status: 'error', text: 'Заполните orderId, title и description.' })
+      setSubmitMessage({ status: 'error', text: 'Выберите orderId, заполните title и description.' })
       return
     }
 
     try {
       await createVacancy({ orderId, title, description }).unwrap()
       setSubmitMessage({ status: 'success', text: 'Вакансия создана.' })
-      setCreateForm({ orderId: '', title: '', description: '' })
+      setCreateForm({ title: '', description: '' })
       await refetch()
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
@@ -298,6 +529,74 @@ export function VacanciesPage() {
     }
   }
 
+  async function handleUpdateVacancyDetails() {
+    if (!canEditVacancy) {
+      setSubmitMessage({ status: 'error', text: 'Редактирование вакансии доступно только исполнителю.' })
+      return
+    }
+
+    const vacancyId = currentVacancyId.trim()
+    const title = currentVacancyEditTitle.trim()
+    const description = currentVacancyEditDescription.trim()
+
+    if (!vacancyId) {
+      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
+      return
+    }
+
+    if (!title || !description) {
+      setSubmitMessage({ status: 'error', text: 'Заполните title и description для редактирования вакансии.' })
+      return
+    }
+
+    try {
+      await updateVacancy({
+        vacancyId,
+        body: {
+          title,
+          description,
+        },
+      }).unwrap()
+      setVacancyEditTitleInput('')
+      setVacancyEditDescriptionInput('')
+      setIsVacancyEditTitleDirty(false)
+      setIsVacancyEditDescriptionDirty(false)
+      setSubmitMessage({ status: 'success', text: 'Вакансия обновлена.' })
+      await refetch()
+      void refetchVacancyDetails()
+    } catch (requestError) {
+      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
+    }
+  }
+
+  async function handleDeleteVacancy() {
+    if (!canEditVacancy) {
+      setSubmitMessage({ status: 'error', text: 'Удаление вакансии доступно только исполнителю.' })
+      return
+    }
+
+    const vacancyId = currentVacancyId.trim()
+    if (!vacancyId) {
+      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
+      return
+    }
+
+    const confirmed = window.confirm('Удалить выбранную вакансию? Действие необратимо.')
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      await deleteVacancy(vacancyId).unwrap()
+      const nextVacancyId = vacancies.find((vacancy) => vacancy.id !== vacancyId)?.id ?? ''
+      applyVacancyContext(nextVacancyId)
+      setSubmitMessage({ status: 'success', text: 'Вакансия удалена.' })
+      await refetch()
+    } catch (requestError) {
+      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
+    }
+  }
+
   async function handleCreateCandidateResume(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -310,20 +609,26 @@ export function VacanciesPage() {
     const fullName = createCandidateResumeForm.fullName.trim()
     const specialization = createCandidateResumeForm.specialization.trim()
     const resumeTitle = createCandidateResumeForm.resumeTitle.trim()
-    const resumeContentJson = createCandidateResumeForm.resumeContentJson.trim()
+    const resumeSummary = createCandidateResumeForm.resumeSummary.trim()
 
     if (!vacancyId) {
       setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
       return
     }
+    if (!ensurePublishedVacancyForPipeline()) {
+      return
+    }
 
-    if (!fullName || !specialization || !resumeTitle || !resumeContentJson) {
+    if (!fullName || !specialization || !resumeTitle || !resumeSummary) {
       setSubmitMessage({
         status: 'error',
-        text: 'Заполните fullName, specialization, resumeTitle и resumeContentJson.',
+        text: 'Заполните fullName, specialization, resumeTitle и резюме (summary).',
       })
       return
     }
+
+    const resumeContentJson = buildResumeContentJson(createCandidateResumeForm)
+    const resumeAttachmentsJson = buildResumeAttachmentsJson(createCandidateResumeForm)
 
     try {
       const result = await createCandidateResume({
@@ -336,11 +641,10 @@ export function VacanciesPage() {
           specialization,
           resumeTitle,
           resumeContentJson,
-          resumeAttachmentsJson: createCandidateResumeForm.resumeAttachmentsJson.trim() || undefined,
+          resumeAttachmentsJson,
         },
       }).unwrap()
       setSelectedCandidateId(result.candidateId)
-      setCandidateInputId(result.candidateId)
       setSubmitMessage({ status: 'success', text: 'Кандидат с резюме добавлен в pipeline.' })
       setCreateCandidateResumeForm({
         fullName: '',
@@ -349,10 +653,12 @@ export function VacanciesPage() {
         phone: '',
         specialization: '',
         resumeTitle: '',
-        resumeContentJson: '{}',
-        resumeAttachmentsJson: '',
+        resumeSummary: '',
+        resumeSkills: '',
+        resumeAttachmentLinks: '',
       })
       await refetch()
+      void refetchVacancyCandidates()
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
     }
@@ -365,24 +671,29 @@ export function VacanciesPage() {
     }
 
     const vacancyId = currentVacancyId.trim()
-    const candidateId = currentCandidateId
+    const candidateId = currentAddFromBaseCandidateId
 
     if (!vacancyId) {
       setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
       return
     }
+    if (!ensurePublishedVacancyForPipeline()) {
+      return
+    }
 
     if (!candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните candidateId.' })
+      setSubmitMessage({ status: 'error', text: 'Выберите кандидата из системной базы.' })
       return
     }
 
     try {
       const result = await addCandidateFromBase({ vacancyId, candidateId }).unwrap()
       setSelectedCandidateId(result.candidateId)
-      setCandidateInputId(result.candidateId)
+      setSelectedAddFromBaseCandidateId('')
       setSubmitMessage({ status: 'success', text: 'Кандидат добавлен в pipeline (Pool).' })
       await refetch()
+      void refetchVacancyCandidates()
+      void refetchVacancyBaseCandidates()
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
     }
@@ -401,9 +712,12 @@ export function VacanciesPage() {
       setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
       return
     }
+    if (!ensurePublishedVacancyForPipeline()) {
+      return
+    }
 
     if (!candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните candidateId.' })
+      setSubmitMessage({ status: 'error', text: 'Выберите кандидата в таблице вакансии.' })
       return
     }
 
@@ -414,9 +728,9 @@ export function VacanciesPage() {
         body: { stage: pipelineForm.stage },
       }).unwrap()
       setSelectedCandidateId(result.candidateId)
-      setCandidateInputId(result.candidateId)
       setSubmitMessage({ status: 'success', text: `Стадия кандидата обновлена: ${pipelineForm.stage}.` })
       await refetch()
+      void refetchVacancyCandidates()
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
     }
@@ -437,7 +751,7 @@ export function VacanciesPage() {
     }
 
     if (!candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните candidateId для выбора кандидата.' })
+      setSubmitMessage({ status: 'error', text: 'Выберите кандидата в таблице вакансии.' })
       return
     }
 
@@ -447,10 +761,10 @@ export function VacanciesPage() {
         body: { candidateId },
       }).unwrap()
       setSelectedCandidateId(result.selectedCandidateId)
-      setCandidateInputId(result.selectedCandidateId)
       setSubmitMessage({ status: 'success', text: 'Финальный кандидат выбран.' })
       setSelectedCandidateContacts(null)
       await refetch()
+      void refetchVacancyCandidates()
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
     }
@@ -472,7 +786,6 @@ export function VacanciesPage() {
       const contacts = await fetchSelectedCandidateContacts({ vacancyId }).unwrap()
       setSelectedCandidateContacts(contacts)
       setSelectedCandidateId(contacts.candidateId)
-      setCandidateInputId(contacts.candidateId)
       setSubmitMessage({ status: 'success', text: 'Контакты выбранного кандидата загружены.' })
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
@@ -493,7 +806,7 @@ export function VacanciesPage() {
     }
 
     if (!candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Заполните candidateId для чтения контактов.' })
+      setSubmitMessage({ status: 'error', text: 'Выберите кандидата в таблице вакансии.' })
       return
     }
 
@@ -501,7 +814,6 @@ export function VacanciesPage() {
       const contacts = await fetchExecutorCandidateContacts({ vacancyId, candidateId }).unwrap()
       setExecutorCandidateContacts(contacts)
       setSelectedCandidateId(contacts.candidateId)
-      setCandidateInputId(contacts.candidateId)
       setSubmitMessage({ status: 'success', text: 'Контакты кандидата загружены.' })
     } catch (requestError) {
       setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
@@ -533,306 +845,208 @@ export function VacanciesPage() {
           <Alert>
             Контекст: vacancyId={currentVacancyId || 'не выбрано'}, candidateId={currentCandidateId || 'не выбрано'}
           </Alert>
-          {!isLoading && !isError && vacancies.length === 0 ? <Alert>Пока нет вакансий.</Alert> : null}
 
           <Card className="border-slate-200 shadow-none">
             <CardHeader>
-              <CardTitle className="text-base">Создать вакансию</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!canCreateVacancy ? (
-                <Alert>Создание вакансии доступно только для роли исполнителя.</Alert>
-              ) : null}
-              <form onSubmit={handleCreateVacancy} className="grid gap-3 md:grid-cols-3">
-                <Input
-                  value={createForm.orderId}
-                  onChange={(event) => handleCreateFormChange('orderId', event)}
-                  placeholder="orderId (GUID)"
-                  disabled={!canCreateVacancy || isCreatingVacancy}
-                />
-                <Input
-                  value={createForm.title}
-                  onChange={(event) => handleCreateFormChange('title', event)}
-                  placeholder="Название вакансии"
-                  disabled={!canCreateVacancy || isCreatingVacancy}
-                />
-                <div className="flex gap-2">
-                  <Input
-                    value={createForm.description}
-                    onChange={(event) => handleCreateFormChange('description', event)}
-                    placeholder="Описание"
-                    disabled={!canCreateVacancy || isCreatingVacancy}
-                  />
-                  <Button type="submit" disabled={!canCreateVacancy || isCreatingVacancy}>
-                    Создать
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-200 shadow-none">
-            <CardHeader>
-              <CardTitle className="text-base">Pipeline кандидатов</CardTitle>
+              <CardTitle className="text-base">Пагинация вакансий</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {!canManagePipeline ? (
-                <Alert>Операции pipeline доступны только для роли исполнителя.</Alert>
-              ) : null}
-              <div className="grid gap-3 md:grid-cols-4">
+              <form onSubmit={handleApplyVacanciesQuery} className="grid gap-3 md:grid-cols-4">
                 <Input
-                  value={currentVacancyId}
-                  placeholder="vacancyId из таблицы"
-                  readOnly
-                  disabled
+                  type="number"
+                  min={1}
+                  value={vacanciesLimitInput}
+                  onChange={(event) => handleVacanciesQueryInputChange('limit', event)}
+                  placeholder="limit"
+                  disabled={isLoading}
                 />
                 <Input
-                  value={candidateInputId}
-                  onChange={handleCandidateInputChange}
-                  placeholder="candidateId (GUID)"
-                  disabled={!canManagePipeline || isAddingCandidateFromBase || isUpdatingCandidateStage}
+                  type="number"
+                  min={0}
+                  value={vacanciesOffsetInput}
+                  onChange={(event) => handleVacanciesQueryInputChange('offset', event)}
+                  placeholder="offset"
+                  disabled={isLoading}
                 />
-                <select
-                  value={pipelineForm.stage}
-                  onChange={handlePipelineStageChange}
-                  className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  disabled={!canManagePipeline || isAddingCandidateFromBase || isUpdatingCandidateStage}
-                >
-                  <option value="Pool">Pool</option>
-                  <option value="Shortlist">Shortlist</option>
-                </select>
+                <Button type="submit" variant="outline" disabled={isLoading}>
+                  Применить
+                </Button>
                 <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => void handleAddCandidateFromBase()}
-                    disabled={!canManagePipeline || isAddingCandidateFromBase || isUpdatingCandidateStage}
+                    onClick={handlePreviousVacanciesPage}
+                    disabled={isLoading || currentVacanciesOffset <= 0}
                   >
-                    Add from base
+                    Назад
                   </Button>
                   <Button
                     type="button"
-                    onClick={() => void handleUpdateCandidateStage()}
-                    disabled={!canManagePipeline || isAddingCandidateFromBase || isUpdatingCandidateStage}
+                    variant="outline"
+                    onClick={handleNextVacanciesPage}
+                    disabled={isLoading || currentVacanciesLimit <= 0 || vacancies.length < currentVacanciesLimit}
                   >
-                    Update stage
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-200 shadow-none">
-            <CardHeader>
-              <CardTitle className="text-base">Ручное добавление кандидата с резюме</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {!canManagePipeline ? (
-                <Alert>Ручное добавление кандидата доступно только для роли исполнителя.</Alert>
-              ) : null}
-              <form onSubmit={handleCreateCandidateResume} className="grid gap-3">
-                <div className="grid gap-3 md:grid-cols-3">
-                  <Input
-                    value={currentVacancyId}
-                    placeholder="vacancyId из таблицы"
-                    readOnly
-                    disabled
-                  />
-                  <Input
-                    value={createCandidateResumeForm.fullName}
-                    onChange={(event) => handleCreateCandidateResumeInputChange('fullName', event)}
-                    placeholder="ФИО"
-                    disabled={!canManagePipeline || isCreatingCandidateResume}
-                  />
-                  <Input
-                    value={createCandidateResumeForm.birthDate}
-                    onChange={(event) => handleCreateCandidateResumeInputChange('birthDate', event)}
-                    placeholder="Дата рождения (YYYY-MM-DD)"
-                    disabled={!canManagePipeline || isCreatingCandidateResume}
-                  />
-                </div>
-                <div className="grid gap-3 md:grid-cols-3">
-                  <Input
-                    value={createCandidateResumeForm.email}
-                    onChange={(event) => handleCreateCandidateResumeInputChange('email', event)}
-                    placeholder="Email"
-                    disabled={!canManagePipeline || isCreatingCandidateResume}
-                  />
-                  <Input
-                    value={createCandidateResumeForm.phone}
-                    onChange={(event) => handleCreateCandidateResumeInputChange('phone', event)}
-                    placeholder="Телефон"
-                    disabled={!canManagePipeline || isCreatingCandidateResume}
-                  />
-                  <Input
-                    value={createCandidateResumeForm.specialization}
-                    onChange={(event) => handleCreateCandidateResumeInputChange('specialization', event)}
-                    placeholder="Специализация"
-                    disabled={!canManagePipeline || isCreatingCandidateResume}
-                  />
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Input
-                    value={createCandidateResumeForm.resumeTitle}
-                    onChange={(event) => handleCreateCandidateResumeInputChange('resumeTitle', event)}
-                    placeholder="Заголовок резюме"
-                    disabled={!canManagePipeline || isCreatingCandidateResume}
-                  />
-                  <Input
-                    value={createCandidateResumeForm.resumeAttachmentsJson}
-                    onChange={(event) =>
-                      handleCreateCandidateResumeInputChange('resumeAttachmentsJson', event)
-                    }
-                    placeholder="attachmentsJson (optional)"
-                    disabled={!canManagePipeline || isCreatingCandidateResume}
-                  />
-                </div>
-                <Textarea
-                  value={createCandidateResumeForm.resumeContentJson}
-                  onChange={(event) => handleCreateCandidateResumeInputChange('resumeContentJson', event)}
-                  placeholder="resumeContentJson"
-                  disabled={!canManagePipeline || isCreatingCandidateResume}
-                />
-                <div>
-                  <Button type="submit" disabled={!canManagePipeline || isCreatingCandidateResume}>
-                    Add resume
+                    Вперед
                   </Button>
                 </div>
               </form>
+              <Alert>
+                Текущая выборка: limit={currentVacanciesLimit}, offset={currentVacanciesOffset}
+              </Alert>
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200 shadow-none">
-            <CardHeader>
-              <CardTitle className="text-base">Финальный выбор и контакты</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {!canSelectCandidate && !canReadExecutorContacts ? (
-                <Alert>Операции выбора и чтения контактов доступны заказчику или исполнителю.</Alert>
-              ) : null}
-              <div className="grid gap-3 md:grid-cols-4">
-                <Input
-                  value={currentVacancyId}
-                  placeholder="vacancyId из таблицы"
-                  readOnly
-                  disabled
-                />
-                <Input
-                  value={candidateInputId}
-                  onChange={handleCandidateInputChange}
-                  placeholder="candidateId (GUID)"
-                  disabled={isSelectionActionLoading}
-                />
-                <div className="flex gap-2 md:col-span-2">
-                  {canSelectCandidate ? (
-                    <Button
-                      type="button"
-                      onClick={() => void handleSelectCandidate()}
-                      disabled={isSelectionActionLoading}
-                    >
-                      Select candidate
-                    </Button>
-                  ) : null}
-                  {canReadSelectedContacts ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => void handleGetSelectedCandidateContacts()}
-                      disabled={isSelectionActionLoading}
-                    >
-                      Selected contacts
-                    </Button>
-                  ) : null}
-                  {canReadExecutorContacts ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => void handleGetExecutorCandidateContacts()}
-                      disabled={isSelectionActionLoading}
-                    >
-                      Candidate contacts
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
+          <VacanciesListSurface
+            vacancies={vacancies}
+            currentVacancyId={currentVacancyId}
+            currentVacanciesOffset={currentVacanciesOffset}
+            requesterRole={authMe?.role}
+            isUpdatingVacancyStatus={isUpdatingVacancyStatus}
+            onSelectVacancy={handleSelectVacancy}
+            onStatusTransition={handleStatusTransition}
+          />
 
-              {selectedCandidateContacts ? (
-                <Card className="border-slate-200 shadow-none">
-                  <CardHeader>
-                    <CardTitle className="text-sm">Контакты выбранного кандидата (Customer)</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid gap-1 text-sm">
-                    <p>CandidateId: {selectedCandidateContacts.candidateId}</p>
-                    <p>ФИО: {selectedCandidateContacts.fullName}</p>
-                    <p>Email: {selectedCandidateContacts.email ?? '—'}</p>
-                    <p>Телефон: {selectedCandidateContacts.phone ?? '—'}</p>
-                  </CardContent>
-                </Card>
-              ) : null}
+          <VacancyWorkspaceNavSurface
+            activeSection={activeVacancySection}
+            onSectionChange={setActiveVacancySection}
+          />
 
-              {executorCandidateContacts ? (
-                <Card className="border-slate-200 shadow-none">
-                  <CardHeader>
-                    <CardTitle className="text-sm">Контакты кандидата в вакансии (Executor)</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid gap-1 text-sm">
-                    <p>CandidateId: {executorCandidateContacts.candidateId}</p>
-                    <p>ФИО: {executorCandidateContacts.fullName}</p>
-                    <p>Email: {executorCandidateContacts.email ?? '—'}</p>
-                    <p>Телефон: {executorCandidateContacts.phone ?? '—'}</p>
-                    <p>Доступ до: {executorCandidateContacts.contactsAccessExpiresAtUtc}</p>
-                  </CardContent>
-                </Card>
-              ) : null}
-            </CardContent>
-          </Card>
+          {activeVacancySection === 'details' ? (
+            <>
+              <VacancyDetailsSurface
+                currentVacancyId={currentVacancyId}
+                isVacancyDetailsFetching={isVacancyDetailsFetching}
+                vacancyDetailsError={vacancyDetailsError}
+                vacancyDetailsData={vacancyDetailsData}
+                canEditVacancy={canEditVacancy}
+                currentVacancyEditTitle={currentVacancyEditTitle}
+                currentVacancyEditDescription={currentVacancyEditDescription}
+                isVacancyEditActionLoading={isVacancyEditActionLoading}
+                onVacancyEditTitleChange={handleVacancyEditTitleChange}
+                onVacancyEditDescriptionChange={handleVacancyEditDescriptionChange}
+                onUpdateVacancyDetails={handleUpdateVacancyDetails}
+                onDeleteVacancy={handleDeleteVacancy}
+                getRequestErrorMessage={getRequestErrorMessage}
+              />
 
-          {vacancies.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Название</TableHead>
-                  <TableHead>OrderId</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="w-[140px]">Контекст</TableHead>
-                  <TableHead className="w-[220px]">Lifecycle</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vacancies.map((vacancy) => {
-                  const action = getLifecycleAction(authMe?.role, vacancy)
-                  return (
-                    <TableRow key={vacancy.id} className={vacancy.id === currentVacancyId ? 'bg-slate-50' : undefined}>
-                      <TableCell>{vacancy.title}</TableCell>
-                      <TableCell>{vacancy.orderId}</TableCell>
-                      <TableCell>{vacancy.status}</TableCell>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant={vacancy.id === currentVacancyId ? 'default' : 'outline'}
-                          onClick={() => setSelectedVacancyId(vacancy.id)}
-                        >
-                          Использовать
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        {action ? (
-                          <Button
-                            type="button"
-                            onClick={() => void handleStatusTransition(vacancy)}
-                            disabled={isUpdatingVacancyStatus}
-                          >
-                            {action.label}
-                          </Button>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">Нет доступного перехода</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+              <Card className="border-slate-200 shadow-none">
+                <CardHeader>
+                  <CardTitle className="text-base">Создать вакансию</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {!canCreateVacancy ? (
+                    <Alert>Создание вакансии доступно только для роли исполнителя.</Alert>
+                  ) : null}
+                  {canCreateVacancy && isOrdersLoading ? <Alert>Загрузка заказов...</Alert> : null}
+                  {canCreateVacancy && ordersError ? (
+                    <Alert variant="destructive">{getRequestErrorMessage(ordersError)}</Alert>
+                  ) : null}
+                  {canCreateVacancy && !isOrdersLoading && !ordersError && availableOrders.length === 0 ? (
+                    <Alert>Нет доступных заказов для создания вакансии.</Alert>
+                  ) : null}
+                  <form onSubmit={handleCreateVacancy} className="grid gap-3 md:grid-cols-3">
+                    <select
+                      value={currentCreateOrderId}
+                      onChange={handleCreateOrderSelectChange}
+                      className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      disabled={
+                        !canCreateVacancy || isCreatingVacancy || isOrdersLoading || availableOrders.length === 0
+                      }
+                    >
+                      <option value="" disabled>
+                        Выберите заказ
+                      </option>
+                      {availableOrders.map((order) => (
+                        <option key={order.id} value={order.id}>
+                          {order.title} ({order.id})
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      value={createForm.title}
+                      onChange={(event) => handleCreateFormChange('title', event)}
+                      placeholder="Название вакансии"
+                      disabled={!canCreateVacancy || isCreatingVacancy}
+                    />
+                    <div className="flex gap-2">
+                      <Input
+                        value={createForm.description}
+                        onChange={(event) => handleCreateFormChange('description', event)}
+                        placeholder="Описание"
+                        disabled={!canCreateVacancy || isCreatingVacancy}
+                      />
+                      <Button type="submit" disabled={!canCreateVacancy || isCreatingVacancy}>
+                        Создать
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </>
+          ) : null}
+
+          {activeVacancySection === 'pipeline' ? (
+            <VacancyPipelineSurface
+              canManagePipeline={canManagePipeline}
+              isVacancyPublished={currentVacancyStatus === 'Published'}
+              currentVacancyId={currentVacancyId}
+              isVacancyBaseCandidatesFetching={isVacancyBaseCandidatesFetching}
+              vacancyBaseCandidatesError={vacancyBaseCandidatesError}
+              vacancyBaseCandidates={vacancyBaseCandidates}
+              currentAddFromBaseCandidateId={currentAddFromBaseCandidateId}
+              pipelineStage={pipelineForm.stage}
+              isAddingCandidateFromBase={isAddingCandidateFromBase}
+              isUpdatingCandidateStage={isUpdatingCandidateStage}
+              currentCandidateId={currentCandidateId}
+              createCandidateResumeForm={createCandidateResumeForm}
+              isCreatingCandidateResume={isCreatingCandidateResume}
+              onAddFromBaseCandidateSelectChange={handleAddFromBaseCandidateSelectChange}
+              onPipelineStageChange={handlePipelineStageChange}
+              onAddCandidateFromBase={handleAddCandidateFromBase}
+              onUpdateCandidateStage={handleUpdateCandidateStage}
+              onCreateCandidateResumeInputChange={handleCreateCandidateResumeInputChange}
+              onCreateCandidateResume={handleCreateCandidateResume}
+              getRequestErrorMessage={getRequestErrorMessage}
+            />
+          ) : null}
+
+          {activeVacancySection === 'candidates' ? (
+            <>
+              <VacancyCandidatesSurface
+                canReadVacancyCandidates={canReadVacancyCandidates}
+                currentVacancyId={currentVacancyId}
+                isVacancyCandidatesFetching={isVacancyCandidatesFetching}
+                vacancyCandidatesError={vacancyCandidatesError}
+                vacancyCandidates={vacancyCandidates}
+                currentCandidateId={currentCandidateId}
+                backendSelectedCandidateId={backendSelectedCandidateId}
+                getRequestErrorMessage={getRequestErrorMessage}
+                onSelectCandidateId={(candidateId) => {
+                  setSelectedCandidateId(candidateId)
+                }}
+              />
+
+              <VacancyCandidateDetailsSurface
+                canSelectCandidate={canSelectCandidate}
+                canReadSelectedContacts={canReadSelectedContacts}
+                canReadExecutorContacts={canReadExecutorContacts}
+                isSelectionActionLoading={isSelectionActionLoading}
+                currentVacancyId={currentVacancyId}
+                currentCandidateId={currentCandidateId}
+                candidatePublicAlias={currentVacancyCandidate?.publicAlias ?? null}
+                candidateStage={currentVacancyCandidate?.stage ?? null}
+                candidateUpdatedAtUtc={currentVacancyCandidate?.updatedAtUtc ?? null}
+                candidateIsSelected={currentVacancyCandidate?.isSelected ?? false}
+                onSelectCandidate={handleSelectCandidate}
+                onGetSelectedCandidateContacts={handleGetSelectedCandidateContacts}
+                onGetExecutorCandidateContacts={handleGetExecutorCandidateContacts}
+              />
+
+              <VacancyContactsSurface
+                selectedCandidateContacts={selectedCandidateContacts}
+                executorCandidateContacts={executorCandidateContacts}
+              />
+            </>
           ) : null}
         </CardContent>
       </Card>
