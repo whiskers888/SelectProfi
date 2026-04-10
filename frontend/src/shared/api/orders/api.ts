@@ -21,6 +21,15 @@ export type GetOrdersRequest = {
   offset?: number
 }
 
+export type OrderExecutorResponse = {
+  id: string
+  fullName: string
+}
+
+export type OrderExecutorListResponse = {
+  items: OrderExecutorResponse[]
+}
+
 export type CreateOrderRequest = {
   title: string
   description: string
@@ -44,6 +53,12 @@ const ordersApi = api.injectEndpoints({
     getOrderById: build.query<OrderResponse, string>({
       query: (orderId) => ({
         url: `/api/orders/${orderId}`,
+        method: 'GET',
+      }),
+    }),
+    getOrderExecutors: build.query<OrderExecutorListResponse, void>({
+      query: () => ({
+        url: '/api/orders/executors',
         method: 'GET',
       }),
     }),
@@ -74,6 +89,8 @@ const ordersApi = api.injectEndpoints({
 export const {
   useGetOrdersQuery,
   useGetOrderByIdQuery,
+  useLazyGetOrderByIdQuery,
+  useGetOrderExecutorsQuery,
   useCreateOrderMutation,
   useUpdateOrderMutation,
   useDeleteOrderMutation,

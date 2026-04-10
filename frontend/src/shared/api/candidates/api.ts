@@ -30,6 +30,33 @@ export type VacancyCandidateResponse = {
   updatedAtUtc: string
 }
 
+export type VacancyCandidatesItemResponse = {
+  vacancyCandidateId: string
+  candidateId: string
+  publicAlias: string
+  stage: VacancyCandidateStageContract
+  addedAtUtc: string
+  updatedAtUtc: string
+  isSelected: boolean
+}
+
+export type VacancyCandidatesResponse = {
+  vacancyId: string
+  selectedCandidateId?: string | null
+  items: VacancyCandidatesItemResponse[]
+}
+
+export type VacancyBaseCandidatesItemResponse = {
+  candidateId: string
+  publicAlias: string
+  updatedAtUtc: string
+}
+
+export type VacancyBaseCandidatesResponse = {
+  vacancyId: string
+  items: VacancyBaseCandidatesItemResponse[]
+}
+
 export type UpdateVacancyCandidateStageRequest = {
   stage: VacancyCandidateStageContract
 }
@@ -82,6 +109,18 @@ const candidatesApi = api.injectEndpoints({
         method: 'POST',
       }),
     }),
+    getVacancyCandidates: build.query<VacancyCandidatesResponse, { vacancyId: string }>({
+      query: ({ vacancyId }) => ({
+        url: `/api/vacancies/${vacancyId}/candidates`,
+        method: 'GET',
+      }),
+    }),
+    getVacancyBaseCandidates: build.query<VacancyBaseCandidatesResponse, { vacancyId: string }>({
+      query: ({ vacancyId }) => ({
+        url: `/api/vacancies/${vacancyId}/base-candidates`,
+        method: 'GET',
+      }),
+    }),
     updateVacancyCandidateStage: build.mutation<
       VacancyCandidateResponse,
       { vacancyId: string; candidateId: string; body: UpdateVacancyCandidateStageRequest }
@@ -124,6 +163,8 @@ const candidatesApi = api.injectEndpoints({
 export const {
   useCreateCandidateResumeMutation,
   useAddCandidateFromBaseMutation,
+  useGetVacancyCandidatesQuery,
+  useGetVacancyBaseCandidatesQuery,
   useUpdateVacancyCandidateStageMutation,
   useSelectVacancyCandidateMutation,
   useGetSelectedCandidateContactsQuery,

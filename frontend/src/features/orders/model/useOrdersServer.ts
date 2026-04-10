@@ -1,7 +1,15 @@
-import { useGetOrdersQuery, useUpdateOrderMutation } from '@/shared/api/orders'
+import {
+  useCreateOrderMutation,
+  useDeleteOrderMutation,
+  useGetOrdersQuery,
+  useUpdateOrderMutation,
+  type GetOrdersRequest,
+} from '@/shared/api/orders'
 
-export function useOrdersServer() {
-  const { data, error, isError, isLoading, refetch } = useGetOrdersQuery()
+export function useOrdersServer(query?: GetOrdersRequest) {
+  const { data, error, isError, isLoading, refetch } = useGetOrdersQuery(query)
+  const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
+  const [deleteOrder, { isLoading: isDeletingOrder }] = useDeleteOrderMutation()
   const [updateOrder, { isLoading: isUpdatingOrder }] = useUpdateOrderMutation()
 
   return {
@@ -9,8 +17,12 @@ export function useOrdersServer() {
     error,
     isError,
     isLoading,
+    isCreatingOrder,
+    isDeletingOrder,
     isUpdatingOrder,
     refetch,
+    createOrder,
+    deleteOrder,
     updateOrder,
   }
 }

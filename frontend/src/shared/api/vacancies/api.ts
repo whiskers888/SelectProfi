@@ -79,6 +79,12 @@ const vacanciesApi = api.injectEndpoints({
         body,
       }),
     }),
+    deleteVacancy: build.mutation<void, string>({
+      query: (vacancyId) => ({
+        url: `/api/vacancies/${vacancyId}`,
+        method: 'DELETE',
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -89,4 +95,5 @@ export const {
   useCreateVacancyMutation,
   useUpdateVacancyMutation,
   useUpdateVacancyStatusMutation,
+  useDeleteVacancyMutation,
 } = vacanciesApi
