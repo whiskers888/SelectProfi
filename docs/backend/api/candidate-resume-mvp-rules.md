@@ -1,7 +1,7 @@
-mc# Candidate Resume MVP Rules
+# Candidate Resume MVP Rules
 
 Дата фиксации: 2026-04-03  
-Статус: updated baseline требований (архитектурная фиксация перед серверной реализацией)
+Статус: updated baseline требований + frontend/ui coverage review (архитектурная фиксация перед следующими UI-шагами)
 
 ## 1. Целевой бизнес-поток
 
@@ -168,6 +168,7 @@ mc# Candidate Resume MVP Rules
    - `PATCH /api/vacancies/{vacancyId}`
    - `PATCH /api/vacancies/{vacancyId}/status`
 4. Интеграция candidate pipeline (основной контур):
+   - `GET /api/vacancies/{vacancyId}/candidates`
    - `POST /api/vacancies/{vacancyId}/candidates/resumes`
    - `POST /api/vacancies/{vacancyId}/candidates/{candidateId}`
    - `PATCH /api/vacancies/{vacancyId}/candidates/{candidateId}/stage`
@@ -199,3 +200,73 @@ mc# Candidate Resume MVP Rules
 
 - Выбор рекрутера реализован в рамках существующего `PATCH /api/orders/{orderId}` (через `executorId`), отдельный endpoint для этого шага не требуется.
 - Отдельный процесс «отклики нескольких рекрутеров» (лист откликов, статусы отклика, автотрекинг) пока не выделен в самостоятельный API-контур и остается следующим этапом.
+
+### 15.5. Фактическая сверка controller-ов и runtime frontend (на 2026-04-07)
+
+Источники сверки:
+
+- backend: `OrdersController`, `VacanciesController`
+- runtime frontend: `frontend/src/pages/OrdersPage.tsx`, `frontend/src/pages/VacanciesPage.tsx`
+- frontend API layer: `frontend/src/shared/api/orders/api.ts`, `frontend/src/shared/api/vacancies/api.ts`, `frontend/src/shared/api/candidates/api.ts`
+- UI reference: `docs/pages/customer-preview.html`, `docs/pages/executor-preview.html`, `docs/pages/pipeline.html`
+- product ТЗ: `docs/ТЗ profi search (1) (2).pdf`
+
+| Контур | Реализовано в controller | Используется в runtime frontend | Комментарий |
+| --- | --- | --- | --- |
+| Orders | `GET list`, `GET by id`, `POST`, `PATCH`, `DELETE`, `GET executors` | `GET /api/orders` (`limit/offset`), `GET /api/orders/{orderId}`, `GET /api/orders/executors`, `POST /api/orders`, `PATCH /api/orders/{orderId}`, `DELETE /api/orders/{orderId}` | Runtime UI покрывает CRUD заказов, назначение `executorId` через системный `select` и пагинацию list-запроса. |
+| Vacancies CRUD | `GET list`, `GET by id`, `POST`, `PATCH`, `DELETE`, `PATCH status` | `GET /api/vacancies` (`limit/offset`), `GET /api/vacancies/{vacancyId}`, `POST /api/vacancies`, `PATCH /api/vacancies/{vacancyId}`, `DELETE /api/vacancies/{vacancyId}`, `PATCH /api/vacancies/{vacancyId}/status` | Runtime UI использует полный baseline CRUD вакансий + lifecycle-статусы. |
+| Candidate pipeline | `GET /api/vacancies/{vacancyId}/candidates`, `GET /api/vacancies/{vacancyId}/base-candidates`, `POST resumes`, `POST add from base`, `PATCH stage`, `PATCH selected-candidate` | `GET /api/vacancies/{vacancyId}/candidates`, `GET /api/vacancies/{vacancyId}/base-candidates`, `POST resumes`, `POST add from base`, `PATCH stage`, `PATCH selected-candidate` | Добавление `add from base` переведено на системный выбор кандидата из backend-списка, ручной GUID-ввод снят. |
+| Contacts | `GET selected-candidate/contacts`, `GET candidates/{candidateId}/contacts` | оба endpoint используются | Контур чтения контактов уже заведен и соответствует текущему MVP-правилу доступа. |
+
+### 15.6. Что backend уже умеет, но runtime UI еще не поднял
+
+#### OrdersController
+
+- По текущему MVP baseline блокирующих gap нет: runtime UI использует `create`, `detail`, `edit title/description`, `delete`, `assign executor` и `limit/offset`.
+
+#### VacanciesController
+
+- По текущему MVP baseline блокирующих gap нет: runtime UI использует `GET list/by id`, `POST`, `PATCH`, `DELETE`, `PATCH status`, `GET candidates`, `GET base-candidates`, candidate pipeline и contacts endpoints.
+- Непокрытые задачи текущего этапа относятся уже не к отсутствию endpoint-интеграции, а к UX/архитектуре экранов (см. `15.8`, `15.9`).
+
+### 15.7. Что уже есть в UI/preview/ТЗ, но еще не реализовано в текущем controller scope
+
+#### Из product ТЗ и preview, но вне текущего MVP API
+
+- Полноценный поиск заказов и вакансий с фильтрами (`локация`, `сфера`, `стоимость`, `должность`, `навыки`, `занятость`).
+- Отдельный поток откликов исполнителей на заказы: список откликов, статусы отклика, выбор исполнителя из входящих предложений.
+- Отдельный поток откликов соискателей на вакансии: `Откликнуться`, `Скрыть`, вложение резюме/сопроводительного письма, повторный вход в чат по отклику.
+- Чаты между `Customer <-> Executor` и `Executor <-> Applicant`.
+- Назначение интервью с параметрами `date/time`, `format`, `officeAddress`, плюс уведомление участников.
+- Богатая карточка кандидата: `age`, `city`, `gender`, `motivation`, `recruiter feedback`, `photo`, `portfolio`, дополнительные structured fields.
+- Прикрепление документов и видео к кандидату/отклику.
+- Аналитика по воронке, конверсии, срокам и статусам заказа.
+- Покупка/открытие контактов как отдельный платежный сценарий.
+
+#### Уже показано в preview, но не должно считаться реализованным в MVP без отдельного API
+
+- Стадии pipeline вида `Новые`, `Скрининг`, `Интервью`, `Оффер`, `Отказ`.
+- В текущем backend MVP зафиксированы только `Pool` и `Shortlist`; расширять stage-модель без отдельного контракта нельзя.
+- Candidate modal с полным резюме, документами и видео.
+- Кнопки `Назначить интервью`, `Добавить в shortlist`, `Выбрать кандидата` как rich workflow.
+- Workspace-экраны `meetings`, `chats`, `analytics`, которые сейчас существуют только как demo/preview слой.
+
+### 15.8. Что runtime UI уже делает, но в production-виде должно быть переработано
+
+- Статус на `2026-04-07`:
+  - закрыто: ручной ввод `executorId`, `orderId`, `vacancyId`, `candidateId` в runtime UI снят, значения выбираются из системных данных и текущего контекста;
+  - закрыто: raw-ввод `resumeContentJson` и `resumeAttachmentsJson` из UI-формы снят; используется structured-форма с сериализацией payload в client layer;
+  - закрыто: `VacanciesPage` разложен на отдельные поверхности (`vacancies list`, `vacancy details`, `pipeline`, `candidate details`, `contacts`) через `features/vacancies/ui/*`.
+
+### 15.9. Приоритет следующей UI-реализации поверх уже существующего backend
+
+1. Закрыто: `VacanciesPage` декомпозирован на production-friendly поверхности (`list/detail/pipeline/candidate-details/contacts`), raw-технический ввод `resumeContentJson`/`resumeAttachmentsJson` убран.
+2. Закрыто: `OrdersPage` декомпозирован на surface-слой (`header`, `runtime alerts`, `create`, `pagination`, `list`, `details`) с минимальной связностью page-контейнера и UI-компонентов.
+3. In progress: введена явная секционная навигация `Детали / Pipeline / Кандидаты` в runtime `VacanciesPage`; следующий шаг — дожать единый UX-навигационный паттерн между `list/detail/pipeline` по всем связанным runtime-экранам.
+4. После закрытия этих шагов переходить к отдельному контракту richer-сценариев (candidate card, интервью, документы, видео, чаты).
+
+### 15.10. Вывод по границе MVP
+
+- Для текущего MVP backend уже покрывает минимальный жизненный цикл `Order -> Vacancy -> Pool/Shortlist -> Selected Candidate -> Contacts`.
+- На стороне frontend runtime декомпозиция `VacanciesPage` и `OrdersPage` в production-friendly surface-слой уже выполнена; основной остаток работ смещен на UX-навигацию между `list/detail/pipeline`.
+- Основной дефицит на стороне preview/TЗ относительно MVP — наличие сценариев следующего этапа, для которых еще не зафиксированы endpoint-ы и контракты.
