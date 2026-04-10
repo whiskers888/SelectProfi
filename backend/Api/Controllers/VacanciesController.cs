@@ -4,6 +4,7 @@ using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
@@ -253,6 +254,22 @@ public sealed class VacanciesController(
     {
         var result = await queryDispatcher.DispatchAsync<GetVacancyCandidatesQuery, GetVacancyCandidatesResult>(
             vacancyId.ToGetVacancyCandidatesQuery(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("{vacancyId:guid}/base-candidates")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    [ProducesResponseType(typeof(VacancyBaseCandidatesResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    [ProducesConflictProblem]
+    public async Task<IActionResult> GetVacancyBaseCandidates(
+        Guid vacancyId,
+        CancellationToken cancellationToken)
+    {
+        var result = await queryDispatcher.DispatchAsync<GetVacancyBaseCandidatesQuery, GetVacancyBaseCandidatesResult>(
+            vacancyId.ToGetVacancyBaseCandidatesQuery(RequesterUserId, RequesterRole),
             cancellationToken);
 
         return result.ToActionResult(this);

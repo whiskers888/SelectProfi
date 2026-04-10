@@ -34,6 +34,11 @@ public static class OrderAccessRules
             _ => false
         };
     }
+
+    public static bool CanReadOrderExecutors(UserRole requesterRole)
+    {
+        return requesterRole is UserRole.Customer or UserRole.Admin;
+    }
 }
 
 public static class VacancyAccessRules

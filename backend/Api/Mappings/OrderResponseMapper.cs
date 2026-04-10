@@ -1,5 +1,6 @@
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
+using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Contracts.Orders;
@@ -66,6 +67,18 @@ public static class OrderResponseMapper
             Description = result.Description,
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc
+        };
+    }
+
+    public static OrderExecutorListResponse ToResponse(this GetOrderExecutorsResult result)
+    {
+        return new OrderExecutorListResponse
+        {
+            Items = result.Items.Select(item => new OrderExecutorResponse
+            {
+                Id = item.ExecutorId,
+                FullName = item.FullName
+            }).ToArray()
         };
     }
 }

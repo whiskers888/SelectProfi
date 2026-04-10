@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
@@ -13,6 +14,7 @@ using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
+using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
@@ -53,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateVacancyStatusCommand, UpdateVacancyStatusResult>, UpdateVacancyStatusCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteVacancyCommand, DeleteVacancyResult>, DeleteVacancyCommandHandler>();
         services.AddScoped<IQueryHandler<GetOrderByIdQuery, GetOrderByIdResult>, GetOrderByIdQueryHandler>();
+        services.AddScoped<IQueryHandler<GetOrderExecutorsQuery, GetOrderExecutorsResult>, GetOrderExecutorsQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrdersQuery, GetOrdersResult>, GetOrdersQueryHandler>();
         services.AddScoped<IQueryHandler<GetVacancyByIdQuery, GetVacancyByIdResult>, GetVacancyByIdQueryHandler>();
         services.AddScoped<IQueryHandler<GetVacanciesQuery, GetVacanciesResult>, GetVacanciesQueryHandler>();
@@ -60,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetVacancyCandidateContactsForExecutorQuery, GetVacancyCandidateContactsForExecutorResult>, GetVacancyCandidateContactsForExecutorQueryHandler>();
         // @dvnull: Добавлен query получения обезличенного списка кандидатов вакансии для выборки на frontend без контактов.
         services.AddScoped<IQueryHandler<GetVacancyCandidatesQuery, GetVacancyCandidatesResult>, GetVacancyCandidatesQueryHandler>();
+        services.AddScoped<IQueryHandler<GetVacancyBaseCandidatesQuery, GetVacancyBaseCandidatesResult>, GetVacancyBaseCandidatesQueryHandler>();
         // @dvnull: Добавлен query получения контактов выбранного кандидата для заказчика после финального выбора.
         services.AddScoped<IQueryHandler<GetSelectedCandidateContactsQuery, GetSelectedCandidateContactsResult>, GetSelectedCandidateContactsQueryHandler>();
         services.AddScoped<IQueryHandler<GetMyProfileQuery, GetMyProfileResult>, GetMyProfileQueryHandler>();

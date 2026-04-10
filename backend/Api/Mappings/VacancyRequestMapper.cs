@@ -7,6 +7,7 @@ using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
@@ -205,6 +206,19 @@ public static class VacancyRequestMapper
         UserRole requesterRole)
     {
         return new GetVacancyCandidatesQuery
+        {
+            VacancyId = vacancyId,
+            RequesterUserId = requesterUserId,
+            RequesterRole = requesterRole
+        };
+    }
+
+    public static GetVacancyBaseCandidatesQuery ToGetVacancyBaseCandidatesQuery(
+        this Guid vacancyId,
+        Guid requesterUserId,
+        UserRole requesterRole)
+    {
+        return new GetVacancyBaseCandidatesQuery
         {
             VacancyId = vacancyId,
             RequesterUserId = requesterUserId,

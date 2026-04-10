@@ -5,6 +5,7 @@ using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
+using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Contracts.Orders;
@@ -68,6 +69,19 @@ public sealed class OrdersController(
     {
         var result = await queryDispatcher.DispatchAsync<GetOrdersQuery, GetOrdersResult>(
             request.ToQuery(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("executors")]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOrAdmin)]
+    [ProducesResponseType(typeof(OrderExecutorListResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    public async Task<IActionResult> GetExecutors(CancellationToken cancellationToken)
+    {
+        var result = await queryDispatcher.DispatchAsync<GetOrderExecutorsQuery, GetOrderExecutorsResult>(
+            OrderRequestMapper.ToQuery(RequesterUserId, RequesterRole),
             cancellationToken);
 
         return result.ToActionResult(this);

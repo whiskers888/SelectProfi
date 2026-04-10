@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
@@ -14,6 +15,7 @@ using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
+using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
@@ -32,6 +34,7 @@ using SelectProfi.backend.Infrastructure.Auth.Register;
 using SelectProfi.backend.Infrastructure.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Infrastructure.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Infrastructure.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Infrastructure.Candidates.SelectVacancyCandidate;
@@ -40,6 +43,7 @@ using SelectProfi.backend.Infrastructure.Data;
 using SelectProfi.backend.Infrastructure.Orders.CreateOrder;
 using SelectProfi.backend.Infrastructure.Orders.DeleteOrder;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderById;
+using SelectProfi.backend.Infrastructure.Orders.GetOrderExecutors;
 using SelectProfi.backend.Infrastructure.Orders.GetOrders;
 using SelectProfi.backend.Infrastructure.Orders.UpdateOrder;
 using SelectProfi.backend.Infrastructure.Profile.GetMyProfile;
@@ -71,6 +75,7 @@ public static class DependencyInjection
         services.AddScoped<IRefreshAuthSessionPersistence, RefreshAuthSessionPersistence>();
         services.AddScoped<ICreateOrderPersistence, CreateOrderPersistence>();
         services.AddScoped<IGetOrderByIdPersistence, GetOrderByIdPersistence>();
+        services.AddScoped<IGetOrderExecutorsPersistence, GetOrderExecutorsPersistence>();
         services.AddScoped<IGetOrdersPersistence, GetOrdersPersistence>();
         services.AddScoped<IUpdateOrderPersistence, UpdateOrderPersistence>();
         services.AddScoped<IDeleteOrderPersistence, DeleteOrderPersistence>();
@@ -84,6 +89,7 @@ public static class DependencyInjection
         services.AddScoped<IGetVacancyCandidateContactsForExecutorPersistence, GetVacancyCandidateContactsForExecutorPersistence>();
         // @dvnull: Добавлена persistence-реализация чтения обезличенного списка кандидатов вакансии.
         services.AddScoped<IGetVacancyCandidatesPersistence, GetVacancyCandidatesPersistence>();
+        services.AddScoped<IGetVacancyBaseCandidatesPersistence, GetVacancyBaseCandidatesPersistence>();
         // @dvnull: Добавлена persistence-реализация чтения контактов выбранного кандидата для заказчика.
         services.AddScoped<IGetSelectedCandidateContactsPersistence, GetSelectedCandidateContactsPersistence>();
         // @dvnull: Ранее infra-слой не умел сохранять связку Candidate + Resume + VacancyCandidate; добавлена persistence-реализация для нового сценария.

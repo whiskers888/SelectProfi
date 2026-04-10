@@ -6,6 +6,7 @@ using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
@@ -190,6 +191,20 @@ public static class VacancyResponseMapper
                 AddedAtUtc = item.AddedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc,
                 IsSelected = item.IsSelected
+            }).ToArray()
+        };
+    }
+
+    public static VacancyBaseCandidatesResponse ToResponse(this GetVacancyBaseCandidatesResult result)
+    {
+        return new VacancyBaseCandidatesResponse
+        {
+            VacancyId = result.VacancyId,
+            Items = result.Items.Select(item => new VacancyBaseCandidatesItemResponse
+            {
+                CandidateId = item.CandidateId,
+                PublicAlias = item.PublicAlias,
+                UpdatedAtUtc = item.UpdatedAtUtc
             }).ToArray()
         };
     }

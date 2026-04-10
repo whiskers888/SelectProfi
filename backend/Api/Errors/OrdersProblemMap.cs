@@ -1,6 +1,7 @@
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
+using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 
@@ -37,6 +38,12 @@ public static class OrdersProblemMap
         "Доступ запрещен",
         "order_list_access_forbidden",
         "У вас нет доступа к списку заказов.");
+
+    private static readonly ApiProblemDescriptor OrderExecutorsAccessForbidden = new(
+        StatusCodes.Status403Forbidden,
+        "Доступ запрещен",
+        "order_executors_access_forbidden",
+        "У вас нет доступа к списку исполнителей.");
 
     private static readonly ApiProblemDescriptor OrderHasActiveVacancy = new(
         StatusCodes.Status409Conflict,
@@ -86,6 +93,15 @@ public static class OrdersProblemMap
         {
             GetOrdersErrorCode.Forbidden => OrderListAccessForbidden,
             _ => OrderListAccessForbidden
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(GetOrderExecutorsErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            GetOrderExecutorsErrorCode.Forbidden => OrderExecutorsAccessForbidden,
+            _ => OrderExecutorsAccessForbidden
         };
     }
 

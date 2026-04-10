@@ -1,6 +1,7 @@
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
+using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Contracts.Orders;
@@ -41,6 +42,15 @@ public static class OrderRequestMapper
             RequesterRole = requesterRole,
             Limit = request.Limit,
             Offset = request.Offset
+        };
+    }
+
+    public static GetOrderExecutorsQuery ToQuery(Guid requesterUserId, UserRole requesterRole)
+    {
+        return new GetOrderExecutorsQuery
+        {
+            RequesterUserId = requesterUserId,
+            RequesterRole = requesterRole
         };
     }
 

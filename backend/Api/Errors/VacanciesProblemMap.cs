@@ -7,6 +7,7 @@ using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
+using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
@@ -208,6 +209,12 @@ public static class VacanciesProblemMap
         "vacancy_candidates_forbidden",
         "У вас нет доступа к списку кандидатов этой вакансии.");
 
+    private static readonly ApiProblemDescriptor VacancyBaseCandidatesReadForbidden = new(
+        StatusCodes.Status403Forbidden,
+        "Доступ запрещен",
+        "vacancy_base_candidates_forbidden",
+        "У вас нет доступа к списку кандидатов из системной базы для этой вакансии.");
+
     public static ApiProblemDescriptor Resolve(CreateVacancyErrorCode errorCode)
     {
         return errorCode switch
@@ -347,6 +354,16 @@ public static class VacanciesProblemMap
         {
             GetVacancyCandidatesErrorCode.VacancyNotFound => VacancyNotFound,
             _ => VacancyCandidatesReadForbidden
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(GetVacancyBaseCandidatesErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            GetVacancyBaseCandidatesErrorCode.VacancyNotFound => VacancyNotFound,
+            GetVacancyBaseCandidatesErrorCode.VacancyNotPublished => VacancyNotPublished,
+            _ => VacancyBaseCandidatesReadForbidden
         };
     }
 }

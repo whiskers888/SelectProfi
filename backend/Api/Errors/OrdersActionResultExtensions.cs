@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
+using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Mappings;
@@ -29,6 +30,14 @@ public static class OrdersActionResultExtensions
     public static IActionResult ToActionResult(this GetOrdersResult result, ControllerBase controller)
     {
         if (result.ErrorCode == GetOrdersErrorCode.None)
+            return controller.Ok(result.ToResponse());
+
+        return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
+    }
+
+    public static IActionResult ToActionResult(this GetOrderExecutorsResult result, ControllerBase controller)
+    {
+        if (result.ErrorCode == GetOrderExecutorsErrorCode.None)
             return controller.Ok(result.ToResponse());
 
         return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
