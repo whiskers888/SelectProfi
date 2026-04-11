@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { parseLoginServerError } from '@/features/auth/error-parsing'
 import { useLoginUseCase } from '@/features/auth/model'
 import type { LoginFormErrors, SubmitState } from '@/features/auth/types'
+import { AuthSocialButtons } from '@/features/auth/ui/AuthSocialButtons'
 import { validateLoginValues } from '@/features/auth/validation'
 
 const defaultLoginState: SubmitState = {
@@ -37,7 +38,7 @@ export function LoginPage() {
     timeoutRef.current = null
   }
 
-  function navigateToPreviewAfterDelay() {
+  function navigateToWorkspaceAfterDelay() {
     clearPendingNavigation()
     timeoutRef.current = window.setTimeout(() => {
       // @dvnull: Ранее после логина роль жёстко пробрасывалась через query, теперь источник роли — backend profile.
@@ -94,9 +95,9 @@ export function LoginPage() {
       formElement.reset()
       setSubmitState({
         status: 'success',
-        message: 'Вход выполнен успешно. Перенаправляем в preview.',
+        message: 'Вход выполнен успешно. Перенаправляем в рабочее пространство.',
       })
-      navigateToPreviewAfterDelay()
+      navigateToWorkspaceAfterDelay()
     } catch (error) {
       if (isApiError(error) && typeof error.status === 'number') {
         const parsedError = parseLoginServerError(error.status, error.data)
@@ -201,50 +202,11 @@ export function LoginPage() {
             </Button>
           </div>
 
-          <div className="grid gap-3 pt-1">
-            <div className="relative text-center text-xs text-slate-500">
-              <span className="relative z-10 bg-white px-2">или войти через</span>
-              <span className="absolute inset-x-0 top-1/2 -z-0 h-px -translate-y-1/2 bg-slate-200" />
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isLoading}
-                onClick={() => handleSocialLogin('Google')}
-                className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 active:translate-y-px"
-              >
-                Google
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isLoading}
-                onClick={() => handleSocialLogin('VK ID')}
-                className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 active:translate-y-px"
-              >
-                VK ID
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isLoading}
-                onClick={() => handleSocialLogin('Яндекс')}
-                className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 active:translate-y-px"
-              >
-                Яндекс
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isLoading}
-                onClick={() => handleSocialLogin('Mail.ru')}
-                className="h-10 rounded-xl border-slate-200 bg-white text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 active:translate-y-px"
-              >
-                Mail.ru
-              </Button>
-            </div>
-          </div>
+          <AuthSocialButtons
+            isLoading={isLoading}
+            caption="или войти через"
+            onProviderClick={handleSocialLogin}
+          />
         </form>
       </AuthFormShell>
     </AuthSplitLayout>

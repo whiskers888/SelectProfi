@@ -27,7 +27,8 @@ export function useVacancyFormState({
   // @dvnull: Ранее handlers изменения инпутов/селектов были локально в VacanciesPage; вынесены в model-хук без изменения поведения.
   function handleCreateFormChange(
     field: keyof CreateVacancyFormState,
-    event: ChangeEvent<HTMLInputElement>,
+    // @dvnull: Ранее create-вакансия принимала только Input-события; расширено до Textarea для description без изменения структуры state.
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     const nextValue = event.target.value
     setCreateForm((previous) => ({
@@ -77,6 +78,13 @@ export function useVacancyFormState({
     }))
   }
 
+  function handleCreateCandidateResumeRichTextChange(value: string) {
+    setCreateCandidateResumeForm((previous) => ({
+      ...previous,
+      resumeRichTextHtml: value,
+    }))
+  }
+
   return {
     handleCreateFormChange,
     handleCreateOrderSelectChange,
@@ -85,5 +93,6 @@ export function useVacancyFormState({
     handleVacancyEditDescriptionChange,
     handlePipelineStageChange,
     handleCreateCandidateResumeInputChange,
+    handleCreateCandidateResumeRichTextChange,
   }
 }

@@ -3,6 +3,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 type CreateOrderFormState = {
   title: string
@@ -14,7 +15,10 @@ export type OrdersCreateSurfaceProps = {
   isCreatingOrder: boolean
   createForm: CreateOrderFormState
   onCreateOrder: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
-  onCreateInputChange: (field: keyof CreateOrderFormState, event: ChangeEvent<HTMLInputElement>) => void
+  onCreateInputChange: (
+    field: keyof CreateOrderFormState,
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void
 }
 
 export function OrdersCreateSurface({
@@ -36,12 +40,17 @@ export function OrdersCreateSurface({
             value={createForm.title}
             onChange={(event) => onCreateInputChange('title', event)}
             placeholder="Название заказа"
+            required
+            maxLength={200}
             disabled={!canCreateOrder || isCreatingOrder}
           />
-          <Input
+          <Textarea
             value={createForm.description}
             onChange={(event) => onCreateInputChange('description', event)}
             placeholder="Описание заказа"
+            required
+            maxLength={4000}
+            className="min-h-10 md:col-span-2"
             disabled={!canCreateOrder || isCreatingOrder}
           />
           <div>

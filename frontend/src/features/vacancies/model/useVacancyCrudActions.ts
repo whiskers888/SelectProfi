@@ -60,6 +60,9 @@ export function useVacancyCrudActions({
   updateVacancyStatusRequest,
   deleteVacancyRequest,
 }: UseVacancyCrudActionsArgs) {
+  const createVacancyTitleMaxLength = 200
+  const createVacancyDescriptionMaxLength = 4000
+
   async function handleCreateVacancy(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -74,6 +77,15 @@ export function useVacancyCrudActions({
 
     if (!orderId || !title || !description) {
       setSubmitMessage({ status: 'error', text: 'Выберите orderId, заполните title и description.' })
+      return
+    }
+    // @dvnull: Ранее create-вакансия валидировала только обязательность полей; добавлены ограничения длины по backend-контракту.
+    if (title.length > createVacancyTitleMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'Title не должен превышать 200 символов.' })
+      return
+    }
+    if (description.length > createVacancyDescriptionMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'Description не должен превышать 4000 символов.' })
       return
     }
 

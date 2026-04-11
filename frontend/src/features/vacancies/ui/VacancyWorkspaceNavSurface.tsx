@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-export type VacancyWorkspaceNavSection = 'details' | 'pipeline' | 'candidates'
+export type VacancyWorkspaceNavSection = 'details' | 'pipeline' | 'candidates' | 'candidate-create'
 
 export type VacancyWorkspaceNavSurfaceProps = {
   activeSection: VacancyWorkspaceNavSection
@@ -28,6 +28,13 @@ export function VacancyWorkspaceNavSurface({ activeSection, onSectionChange }: V
           onClick={() => onSectionChange('pipeline')}
         >
           Pipeline
+        </Button>
+        <Button
+          type="button"
+          variant={activeSection === 'candidate-create' ? 'default' : 'outline'}
+          onClick={() => onSectionChange('candidate-create')}
+        >
+          Добавление кандидата
         </Button>
         <Button
           type="button"

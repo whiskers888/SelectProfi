@@ -19,7 +19,7 @@ export type CreateCandidateResumeFormState = {
   phone: string
   specialization: string
   resumeTitle: string
-  resumeSummary: string
+  resumeRichTextHtml: string
   resumeSkills: string
   resumeAttachmentLinks: string
 }
@@ -28,4 +28,4 @@ export type PipelineFormState = {
   stage: VacancyCandidateStageContract
 }
 
-export type VacancyWorkspaceSection = 'details' | 'pipeline' | 'candidates'
+export type VacancyWorkspaceSection = 'details' | 'pipeline' | 'candidates' | 'candidate-create'

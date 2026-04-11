@@ -1,6 +1,6 @@
 type ResumeContentInput = {
   resumeSkills: string
-  resumeSummary: string
+  resumeRichTextHtml: string
 }
 
 type ResumeAttachmentsInput = {
@@ -13,10 +13,14 @@ export function buildResumeContentJson(form: ResumeContentInput): string {
     .map((skill) => skill.trim())
     .filter((skill) => skill.length > 0)
 
-  // @dvnull: Ранее `resumeContentJson` строился локально в VacanciesPage; вынесено в feature/lib без изменения структуры payload.
+  const richTextHtml = form.resumeRichTextHtml.trim()
+  const summary = richTextHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+
+  // @dvnull: Ранее `resumeContentJson` содержал только plain-summary и skills; добавлен richTextHtml с сохранением summary для обратной совместимости payload.
   return JSON.stringify({
-    summary: form.resumeSummary.trim(),
+    summary,
     skills,
+    richTextHtml,
   })
 }
 

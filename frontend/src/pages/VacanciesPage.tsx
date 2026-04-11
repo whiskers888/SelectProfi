@@ -1,12 +1,38 @@
-import { type ChangeEvent, type FormEvent, useState } from 'react'
-import { skipToken, type FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { useState } from 'react'
+import { skipToken } from '@reduxjs/toolkit/query'
 import { Link } from 'react-router-dom'
 import { routePaths } from '@/app/routePaths'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { useVacanciesServer } from '@/features/vacancies/model'
+import { Textarea } from '@/components/ui/textarea'
+import { getRequestErrorMessage } from '@/features/vacancies/lib/errors'
+import {
+  canCreateVacancy as canCreateVacancyByRole,
+  canEditVacancy as canEditVacancyByRole,
+  canManagePipeline as canManagePipelineByRole,
+  canReadExecutorContacts as canReadExecutorContactsByRole,
+  canReadSelectedContacts as canReadSelectedContactsByRole,
+  canReadVacancyCandidates as canReadVacancyCandidatesByRole,
+  canSelectCandidate as canSelectCandidateByRole,
+} from '@/features/vacancies/lib/policy'
+import {
+  type CreateCandidateResumeFormState,
+  type CreateVacancyFormState,
+  type PipelineFormState,
+  type SubmitMessage,
+  type VacancyWorkspaceSection,
+  useVacancyContactsActions,
+  useVacancyContextState,
+  useVacanciesQueryState,
+  useVacancyCrudActions,
+  useVacancyPipelineGuards,
+  useVacancyPipelineActions,
+  useVacancyFormReset,
+  useVacancyFormState,
+  useVacanciesServer,
+} from '@/features/vacancies/model'
 import {
   VacanciesListSurface,
   VacancyCandidateDetailsSurface,
@@ -29,205 +55,78 @@ import {
   useUpdateVacancyCandidateStageMutation,
   type ExecutorCandidateContactsResponse,
   type SelectedCandidateContactsResponse,
-  type VacancyCandidateStageContract,
 } from '@/shared/api/candidates'
 import {
   useGetVacancyByIdQuery,
-  type GetVacanciesRequest,
-  type VacancyResponse,
   type VacancyStatusContract,
 } from '@/shared/api/vacancies'
-
-type ProblemDetailsPayload = {
-  code?: string
-  detail?: string
-  title?: string
-}
-
-type SubmitMessage = {
-  status: 'idle' | 'success' | 'error'
-  text: string
-}
-
-type CreateVacancyFormState = {
-  title: string
-  description: string
-}
-
-type PipelineFormState = {
-  stage: VacancyCandidateStageContract
-}
-
-type CreateCandidateResumeFormState = {
-  fullName: string
-  birthDate: string
-  email: string
-  phone: string
-  specialization: string
-  resumeTitle: string
-  resumeSummary: string
-  resumeSkills: string
-  resumeAttachmentLinks: string
-}
-
-type VacancyWorkspaceSection = 'details' | 'pipeline' | 'candidates'
-
-function isProblemDetailsPayload(value: unknown): value is ProblemDetailsPayload {
-  return typeof value === 'object' && value !== null
-}
-
-function isFetchBaseQueryError(error: unknown): error is FetchBaseQueryError {
-  return typeof error === 'object' && error !== null && 'status' in error
-}
-
-function getRequestErrorMessage(error: unknown): string {
-  if (!isFetchBaseQueryError(error)) {
-    return 'Не удалось выполнить запрос.'
-  }
-
-  if (error.status === 'FETCH_ERROR') {
-    return 'Не удалось установить соединение с сервером.'
-  }
-
-  if (error.status === 401) {
-    return 'Требуется авторизация.'
-  }
-
-  if (typeof error.status === 'number' && isProblemDetailsPayload(error.data)) {
-    switch (error.data.code) {
-      case 'order_not_found':
-        return 'Заказ для вакансии не найден.'
-      case 'vacancy_create_forbidden':
-        return 'У вас нет прав создавать вакансию для этого заказа.'
-      case 'vacancy_access_forbidden':
-        return 'У вас нет доступа к этой вакансии.'
-      case 'vacancy_status_forbidden':
-        return 'У вас нет прав менять статус этой вакансии.'
-      case 'vacancy_conflict':
-        return 'Не удалось сохранить вакансию из-за конфликта данных.'
-      case 'vacancy_status_transition_invalid':
-        return 'Недопустимый переход статуса вакансии.'
-      case 'vacancy_status_conflict':
-        return 'Конфликт при обновлении статуса вакансии.'
-      case 'vacancy_not_published':
-        return 'Операция доступна только для опубликованной вакансии.'
-      case 'vacancy_candidates_forbidden':
-        return 'У вас нет доступа к списку кандидатов этой вакансии.'
-      case 'vacancy_base_candidates_forbidden':
-        return 'У вас нет доступа к списку кандидатов из системной базы для этой вакансии.'
-      case 'candidate_resume_create_forbidden':
-        return 'У вас нет прав на ручное добавление кандидата в эту вакансию.'
-      case 'candidate_resume_invalid_input':
-        return 'Проверьте поля формы кандидата и резюме.'
-      case 'candidate_already_exists':
-        return 'Кандидат с такими идентификаторами уже существует.'
-      case 'candidate_resume_conflict':
-        return 'Не удалось добавить кандидата из-за конфликта данных.'
-      case 'candidate_not_found':
-        return 'Кандидат не найден в системной базе.'
-      case 'candidate_link_forbidden':
-      case 'candidate_stage_forbidden':
-        return 'У вас нет доступа к операциям pipeline для этой вакансии.'
-      case 'candidate_link_conflict':
-        return 'Кандидат уже добавлен в pipeline этой вакансии.'
-      case 'vacancy_candidate_not_found':
-        return 'Кандидат не найден в pipeline этой вакансии.'
-      case 'vacancy_candidate_stage_invalid':
-        return 'Некорректная стадия кандидата.'
-      case 'vacancy_candidate_stage_conflict':
-        return 'Не удалось изменить стадию кандидата из-за ограничения процесса.'
-      case 'candidate_select_forbidden':
-        return 'У вас нет прав финального выбора кандидата по этой вакансии.'
-      case 'candidate_not_in_shortlist':
-        return 'Кандидат не находится в shortlist этой вакансии.'
-      case 'candidate_select_conflict':
-        return 'Финальный кандидат уже выбран и не может быть изменен.'
-      case 'selected_candidate_contacts_forbidden':
-        return 'У вас нет доступа к контактам выбранного кандидата.'
-      case 'candidate_not_selected':
-        return 'Финальный кандидат еще не выбран.'
-      case 'selected_candidate_not_found':
-        return 'Выбранный кандидат не найден.'
-      case 'vacancy_candidate_contacts_forbidden':
-        return 'У вас нет доступа к контактам кандидата.'
-      case 'vacancy_candidate_contacts_access_denied':
-        return 'Доступ к контактам кандидата ограничен (owner/TTL).'
-      default:
-        return error.data.detail ?? error.data.title ?? 'Не удалось выполнить запрос.'
-    }
-  }
-
-  return 'Не удалось выполнить запрос.'
-}
-
-function parseNonNegativeInteger(rawValue: string): number | null {
-  const trimmedValue = rawValue.trim()
-  if (!/^\d+$/.test(trimmedValue)) {
-    return null
-  }
-
-  const parsedValue = Number(trimmedValue)
-  if (!Number.isSafeInteger(parsedValue)) {
-    return null
-  }
-
-  return parsedValue
-}
-
-function buildResumeContentJson(form: CreateCandidateResumeFormState): string {
-  const skills = form.resumeSkills
-    .split(',')
-    .map((skill) => skill.trim())
-    .filter((skill) => skill.length > 0)
-
-  // @dvnull: Ранее `resumeContentJson` вводился вручную; переведено на сериализацию structured-полей формы.
-  return JSON.stringify({
-    summary: form.resumeSummary.trim(),
-    skills,
-  })
-}
-
-function buildResumeAttachmentsJson(form: CreateCandidateResumeFormState): string | undefined {
-  const links = form.resumeAttachmentLinks
-    .split('\n')
-    .map((link) => link.trim())
-    .filter((link) => link.length > 0)
-
-  if (links.length === 0) {
-    return undefined
-  }
-
-  return JSON.stringify(links)
-}
-
-function getLifecycleAction(
-  role: string | undefined,
-  vacancy: VacancyResponse,
-): { label: string; status: VacancyStatusContract } | null {
-  if (role === 'Executor' && vacancy.status === 'Draft') {
-    return { label: 'На согласование', status: 'OnApproval' }
-  }
-
-  if (role === 'Executor' && vacancy.status === 'OnApproval') {
-    return { label: 'Вернуть в Draft', status: 'Draft' }
-  }
-
-  if (role === 'Customer' && vacancy.status === 'OnApproval') {
-    return { label: 'Опубликовать', status: 'Published' }
-  }
-
-  return null
-}
 
 export function VacanciesPage() {
   const defaultVacanciesLimit = 20
   const defaultVacanciesOffset = 0
-  const [vacanciesQuery, setVacanciesQuery] = useState<GetVacanciesRequest>({
-    limit: defaultVacanciesLimit,
-    offset: defaultVacanciesOffset,
+  const [submitMessage, setSubmitMessage] = useState<SubmitMessage>({ status: 'idle', text: '' })
+  const [createForm, setCreateForm] = useState<CreateVacancyFormState>({
+    title: '',
+    description: '',
   })
-  const [vacanciesLimitInput, setVacanciesLimitInput] = useState(String(defaultVacanciesLimit))
-  const [vacanciesOffsetInput, setVacanciesOffsetInput] = useState(String(defaultVacanciesOffset))
+  const [selectedCreateOrderId, setSelectedCreateOrderId] = useState('')
+  const [pipelineForm, setPipelineForm] = useState<PipelineFormState>({
+    stage: 'Pool',
+  })
+  const [selectedAddFromBaseCandidateId, setSelectedAddFromBaseCandidateId] = useState('')
+  const [createCandidateResumeForm, setCreateCandidateResumeForm] =
+    useState<CreateCandidateResumeFormState>({
+      fullName: '',
+      birthDate: '',
+      email: '',
+      phone: '',
+      specialization: '',
+      resumeTitle: '',
+      resumeRichTextHtml: '',
+      resumeSkills: '',
+      resumeAttachmentLinks: '',
+    })
+  const [selectedCandidateContacts, setSelectedCandidateContacts] =
+    useState<SelectedCandidateContactsResponse | null>(null)
+  const [executorCandidateContacts, setExecutorCandidateContacts] =
+    useState<ExecutorCandidateContactsResponse | null>(null)
+  const [selectedVacancyId, setSelectedVacancyId] = useState('')
+  const [selectedCandidateId, setSelectedCandidateId] = useState('')
+  const [activeVacancySection, setActiveVacancySection] = useState<VacancyWorkspaceSection>('details')
+  const [vacancyEditTitleInput, setVacancyEditTitleInput] = useState('')
+  const [vacancyEditDescriptionInput, setVacancyEditDescriptionInput] = useState('')
+  const [isVacancyEditTitleDirty, setIsVacancyEditTitleDirty] = useState(false)
+  const [isVacancyEditDescriptionDirty, setIsVacancyEditDescriptionDirty] = useState(false)
+  const { applyVacancyContext } = useVacancyContextState({
+    setSelectedVacancyId,
+    setSelectedCandidateId,
+    setActiveVacancySection,
+    setSelectedAddFromBaseCandidateId,
+    setVacancyEditTitleInput,
+    setVacancyEditDescriptionInput,
+    setIsVacancyEditTitleDirty,
+    setIsVacancyEditDescriptionDirty,
+    setSelectedCandidateContacts,
+    setExecutorCandidateContacts,
+  })
+  const {
+    vacanciesQuery,
+    vacanciesLimitInput,
+    vacanciesOffsetInput,
+    handleVacanciesQueryInputChange,
+    handleApplyVacanciesQuery,
+    handlePreviousVacanciesPage,
+    handleNextVacanciesPage,
+  } = useVacanciesQueryState({
+    defaultLimit: defaultVacanciesLimit,
+    defaultOffset: defaultVacanciesOffset,
+    onApplyQuery: () => {
+      applyVacancyContext('')
+    },
+    onValidationError: (message) => {
+      setSubmitMessage({ status: 'error', text: message })
+    },
+  })
   const {
     data,
     error,
@@ -253,39 +152,6 @@ export function VacanciesPage() {
     useLazyGetSelectedCandidateContactsQuery()
   const [fetchExecutorCandidateContacts, { isFetching: isFetchingExecutorCandidateContacts }] =
     useLazyGetExecutorCandidateContactsQuery()
-  const [submitMessage, setSubmitMessage] = useState<SubmitMessage>({ status: 'idle', text: '' })
-  const [createForm, setCreateForm] = useState<CreateVacancyFormState>({
-    title: '',
-    description: '',
-  })
-  const [selectedCreateOrderId, setSelectedCreateOrderId] = useState('')
-  const [pipelineForm, setPipelineForm] = useState<PipelineFormState>({
-    stage: 'Pool',
-  })
-  const [selectedAddFromBaseCandidateId, setSelectedAddFromBaseCandidateId] = useState('')
-  const [createCandidateResumeForm, setCreateCandidateResumeForm] =
-    useState<CreateCandidateResumeFormState>({
-      fullName: '',
-      birthDate: '',
-      email: '',
-      phone: '',
-      specialization: '',
-      resumeTitle: '',
-      resumeSummary: '',
-      resumeSkills: '',
-      resumeAttachmentLinks: '',
-    })
-  const [selectedCandidateContacts, setSelectedCandidateContacts] =
-    useState<SelectedCandidateContactsResponse | null>(null)
-  const [executorCandidateContacts, setExecutorCandidateContacts] =
-    useState<ExecutorCandidateContactsResponse | null>(null)
-  const [selectedVacancyId, setSelectedVacancyId] = useState('')
-  const [selectedCandidateId, setSelectedCandidateId] = useState('')
-  const [activeVacancySection, setActiveVacancySection] = useState<VacancyWorkspaceSection>('details')
-  const [vacancyEditTitleInput, setVacancyEditTitleInput] = useState('')
-  const [vacancyEditDescriptionInput, setVacancyEditDescriptionInput] = useState('')
-  const [isVacancyEditTitleDirty, setIsVacancyEditTitleDirty] = useState(false)
-  const [isVacancyEditDescriptionDirty, setIsVacancyEditDescriptionDirty] = useState(false)
 
   const vacancies = data?.items ?? []
   const currentVacanciesLimit = data?.limit ?? vacanciesQuery.limit ?? defaultVacanciesLimit
@@ -298,8 +164,9 @@ export function VacanciesPage() {
     isFetching: isVacancyDetailsFetching,
     refetch: refetchVacancyDetails,
   } = useGetVacancyByIdQuery(vacancyDetailsQueryArg)
-  const canCreateVacancy = authMe?.role === 'Executor'
-  const canEditVacancy = authMe?.role === 'Executor'
+  const currentUserRole = authMe?.role
+  const canCreateVacancy = canCreateVacancyByRole(currentUserRole)
+  const canEditVacancy = canEditVacancyByRole(currentUserRole)
   const {
     data: ordersData,
     error: ordersError,
@@ -307,12 +174,11 @@ export function VacanciesPage() {
   } = useGetOrdersQuery(canCreateVacancy ? undefined : skipToken)
   const availableOrders = ordersData?.items ?? []
   const currentCreateOrderId = selectedCreateOrderId || availableOrders[0]?.id || ''
-  const canManagePipeline = authMe?.role === 'Executor'
-  const canSelectCandidate = authMe?.role === 'Customer'
-  const canReadSelectedContacts = authMe?.role === 'Customer'
-  const canReadExecutorContacts = authMe?.role === 'Executor'
-  const canReadVacancyCandidates =
-    authMe?.role === 'Customer' || authMe?.role === 'Executor' || authMe?.role === 'Admin'
+  const canManagePipeline = canManagePipelineByRole(currentUserRole)
+  const canSelectCandidate = canSelectCandidateByRole(currentUserRole)
+  const canReadSelectedContacts = canReadSelectedContactsByRole(currentUserRole)
+  const canReadExecutorContacts = canReadExecutorContactsByRole(currentUserRole)
+  const canReadVacancyCandidates = canReadVacancyCandidatesByRole(currentUserRole)
   const vacancyCandidatesQueryArg =
     canReadVacancyCandidates && currentVacancyId ? { vacancyId: currentVacancyId } : skipToken
   const {
@@ -351,474 +217,136 @@ export function VacanciesPage() {
     : vacancyDetailsData?.description ?? ''
   const currentVacancyStatus: VacancyStatusContract | undefined =
     vacancyDetailsData?.status ?? vacancies.find((vacancy) => vacancy.id === currentVacancyId)?.status
-
-  function ensurePublishedVacancyForPipeline(): boolean {
-    if (currentVacancyStatus === 'Published') {
-      return true
-    }
-
-    setSubmitMessage({ status: 'error', text: 'Операции pipeline доступны только для опубликованной вакансии.' })
-    return false
-  }
-
-  function handleCreateFormChange(
-    field: keyof CreateVacancyFormState,
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
-    const nextValue = event.target.value
-    setCreateForm((previous) => ({
-      ...previous,
-      [field]: nextValue,
-    }))
-  }
-
-  function handleCreateOrderSelectChange(event: ChangeEvent<HTMLSelectElement>) {
-    setSelectedCreateOrderId(event.target.value)
-  }
-
-  function handleAddFromBaseCandidateSelectChange(event: ChangeEvent<HTMLSelectElement>) {
-    setSelectedAddFromBaseCandidateId(event.target.value)
-  }
-
-  function applyVacancyContext(vacancyId: string) {
-    setSelectedVacancyId(vacancyId)
-    setSelectedCandidateId('')
-    setActiveVacancySection('details')
-    setSelectedAddFromBaseCandidateId('')
-    setVacancyEditTitleInput('')
-    setVacancyEditDescriptionInput('')
-    setIsVacancyEditTitleDirty(false)
-    setIsVacancyEditDescriptionDirty(false)
-    setSelectedCandidateContacts(null)
-    setExecutorCandidateContacts(null)
-  }
-
-  function handleSelectVacancy(vacancyId: string) {
-    applyVacancyContext(vacancyId)
-  }
-
-  function handleVacancyEditTitleChange(event: ChangeEvent<HTMLInputElement>) {
-    setVacancyEditTitleInput(event.target.value)
-    setIsVacancyEditTitleDirty(true)
-  }
-
-  function handleVacancyEditDescriptionChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    setVacancyEditDescriptionInput(event.target.value)
-    setIsVacancyEditDescriptionDirty(true)
-  }
-
-  function handlePipelineStageChange(event: ChangeEvent<HTMLSelectElement>) {
-    const nextValue = event.target.value
-    if (nextValue !== 'Pool' && nextValue !== 'Shortlist') {
-      return
-    }
-
-    setPipelineForm((previous) => ({
-      ...previous,
-      stage: nextValue,
-    }))
-  }
-
-  function handleCreateCandidateResumeInputChange(
-    field: keyof CreateCandidateResumeFormState,
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) {
-    const nextValue = event.target.value
-    setCreateCandidateResumeForm((previous) => ({
-      ...previous,
-      [field]: nextValue,
-    }))
-  }
-
-  function applyVacanciesQuery(limit: number, offset: number) {
-    setVacanciesQuery({ limit, offset })
-    setVacanciesLimitInput(String(limit))
-    setVacanciesOffsetInput(String(offset))
-    applyVacancyContext('')
-  }
-
-  function handleVacanciesQueryInputChange(field: 'limit' | 'offset', event: ChangeEvent<HTMLInputElement>) {
-    const nextValue = event.target.value
-    if (field === 'limit') {
-      setVacanciesLimitInput(nextValue)
-      return
-    }
-
-    setVacanciesOffsetInput(nextValue)
-  }
-
-  function handleApplyVacanciesQuery(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const parsedLimit = parseNonNegativeInteger(vacanciesLimitInput)
-    const parsedOffset = parseNonNegativeInteger(vacanciesOffsetInput)
-
-    if (parsedLimit === null || parsedLimit <= 0) {
-      setSubmitMessage({ status: 'error', text: 'limit должен быть целым числом больше 0.' })
-      return
-    }
-
-    if (parsedOffset === null) {
-      setSubmitMessage({ status: 'error', text: 'offset должен быть целым числом от 0.' })
-      return
-    }
-
-    applyVacanciesQuery(parsedLimit, parsedOffset)
-  }
-
-  function handlePreviousVacanciesPage() {
-    if (currentVacanciesOffset <= 0) {
-      return
-    }
-
-    const nextOffset = Math.max(0, currentVacanciesOffset - currentVacanciesLimit)
-    applyVacanciesQuery(currentVacanciesLimit, nextOffset)
-  }
-
-  function handleNextVacanciesPage() {
-    if (vacancies.length < currentVacanciesLimit) {
-      return
-    }
-
-    const nextOffset = currentVacanciesOffset + currentVacanciesLimit
-    applyVacanciesQuery(currentVacanciesLimit, nextOffset)
-  }
-
-  async function handleCreateVacancy(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    if (!canCreateVacancy) {
-      setSubmitMessage({ status: 'error', text: 'Создавать вакансию может только исполнитель.' })
-      return
-    }
-
-    const orderId = currentCreateOrderId.trim()
-    const title = createForm.title.trim()
-    const description = createForm.description.trim()
-
-    if (!orderId || !title || !description) {
-      setSubmitMessage({ status: 'error', text: 'Выберите orderId, заполните title и description.' })
-      return
-    }
-
-    try {
-      await createVacancy({ orderId, title, description }).unwrap()
-      setSubmitMessage({ status: 'success', text: 'Вакансия создана.' })
-      setCreateForm({ title: '', description: '' })
-      await refetch()
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleStatusTransition(vacancy: VacancyResponse) {
-    const nextAction = getLifecycleAction(authMe?.role, vacancy)
-    if (!nextAction) {
-      return
-    }
-
-    try {
-      await updateVacancyStatus({
-        vacancyId: vacancy.id,
-        body: { status: nextAction.status },
-      }).unwrap()
-      setSubmitMessage({ status: 'success', text: `Статус вакансии обновлен: ${nextAction.status}.` })
-      await refetch()
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleUpdateVacancyDetails() {
-    if (!canEditVacancy) {
-      setSubmitMessage({ status: 'error', text: 'Редактирование вакансии доступно только исполнителю.' })
-      return
-    }
-
-    const vacancyId = currentVacancyId.trim()
-    const title = currentVacancyEditTitle.trim()
-    const description = currentVacancyEditDescription.trim()
-
-    if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
-      return
-    }
-
-    if (!title || !description) {
-      setSubmitMessage({ status: 'error', text: 'Заполните title и description для редактирования вакансии.' })
-      return
-    }
-
-    try {
-      await updateVacancy({
-        vacancyId,
-        body: {
-          title,
-          description,
-        },
-      }).unwrap()
-      setVacancyEditTitleInput('')
-      setVacancyEditDescriptionInput('')
-      setIsVacancyEditTitleDirty(false)
-      setIsVacancyEditDescriptionDirty(false)
-      setSubmitMessage({ status: 'success', text: 'Вакансия обновлена.' })
-      await refetch()
-      void refetchVacancyDetails()
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleDeleteVacancy() {
-    if (!canEditVacancy) {
-      setSubmitMessage({ status: 'error', text: 'Удаление вакансии доступно только исполнителю.' })
-      return
-    }
-
-    const vacancyId = currentVacancyId.trim()
-    if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
-      return
-    }
-
-    const confirmed = window.confirm('Удалить выбранную вакансию? Действие необратимо.')
-    if (!confirmed) {
-      return
-    }
-
-    try {
-      await deleteVacancy(vacancyId).unwrap()
-      const nextVacancyId = vacancies.find((vacancy) => vacancy.id !== vacancyId)?.id ?? ''
-      applyVacancyContext(nextVacancyId)
-      setSubmitMessage({ status: 'success', text: 'Вакансия удалена.' })
-      await refetch()
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleCreateCandidateResume(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    if (!canManagePipeline) {
-      setSubmitMessage({ status: 'error', text: 'Ручное добавление кандидата доступно только исполнителю.' })
-      return
-    }
-
-    const vacancyId = currentVacancyId.trim()
-    const fullName = createCandidateResumeForm.fullName.trim()
-    const specialization = createCandidateResumeForm.specialization.trim()
-    const resumeTitle = createCandidateResumeForm.resumeTitle.trim()
-    const resumeSummary = createCandidateResumeForm.resumeSummary.trim()
-
-    if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
-      return
-    }
-    if (!ensurePublishedVacancyForPipeline()) {
-      return
-    }
-
-    if (!fullName || !specialization || !resumeTitle || !resumeSummary) {
-      setSubmitMessage({
-        status: 'error',
-        text: 'Заполните fullName, specialization, resumeTitle и резюме (summary).',
-      })
-      return
-    }
-
-    const resumeContentJson = buildResumeContentJson(createCandidateResumeForm)
-    const resumeAttachmentsJson = buildResumeAttachmentsJson(createCandidateResumeForm)
-
-    try {
-      const result = await createCandidateResume({
-        vacancyId,
-        body: {
-          fullName,
-          birthDate: createCandidateResumeForm.birthDate.trim() || undefined,
-          email: createCandidateResumeForm.email.trim() || undefined,
-          phone: createCandidateResumeForm.phone.trim() || undefined,
-          specialization,
-          resumeTitle,
-          resumeContentJson,
-          resumeAttachmentsJson,
-        },
-      }).unwrap()
-      setSelectedCandidateId(result.candidateId)
-      setSubmitMessage({ status: 'success', text: 'Кандидат с резюме добавлен в pipeline.' })
-      setCreateCandidateResumeForm({
-        fullName: '',
-        birthDate: '',
-        email: '',
-        phone: '',
-        specialization: '',
-        resumeTitle: '',
-        resumeSummary: '',
-        resumeSkills: '',
-        resumeAttachmentLinks: '',
-      })
-      await refetch()
-      void refetchVacancyCandidates()
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleAddCandidateFromBase() {
-    if (!canManagePipeline) {
-      setSubmitMessage({ status: 'error', text: 'Операции pipeline доступны только исполнителю.' })
-      return
-    }
-
-    const vacancyId = currentVacancyId.trim()
-    const candidateId = currentAddFromBaseCandidateId
-
-    if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
-      return
-    }
-    if (!ensurePublishedVacancyForPipeline()) {
-      return
-    }
-
-    if (!candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите кандидата из системной базы.' })
-      return
-    }
-
-    try {
-      const result = await addCandidateFromBase({ vacancyId, candidateId }).unwrap()
-      setSelectedCandidateId(result.candidateId)
-      setSelectedAddFromBaseCandidateId('')
-      setSubmitMessage({ status: 'success', text: 'Кандидат добавлен в pipeline (Pool).' })
-      await refetch()
-      void refetchVacancyCandidates()
-      void refetchVacancyBaseCandidates()
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleUpdateCandidateStage() {
-    if (!canManagePipeline) {
-      setSubmitMessage({ status: 'error', text: 'Операции pipeline доступны только исполнителю.' })
-      return
-    }
-
-    const vacancyId = currentVacancyId.trim()
-    const candidateId = currentCandidateId
-
-    if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
-      return
-    }
-    if (!ensurePublishedVacancyForPipeline()) {
-      return
-    }
-
-    if (!candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите кандидата в таблице вакансии.' })
-      return
-    }
-
-    try {
-      const result = await updateVacancyCandidateStage({
-        vacancyId,
-        candidateId,
-        body: { stage: pipelineForm.stage },
-      }).unwrap()
-      setSelectedCandidateId(result.candidateId)
-      setSubmitMessage({ status: 'success', text: `Стадия кандидата обновлена: ${pipelineForm.stage}.` })
-      await refetch()
-      void refetchVacancyCandidates()
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleSelectCandidate() {
-    if (!canSelectCandidate) {
-      setSubmitMessage({ status: 'error', text: 'Финальный выбор кандидата доступен только заказчику.' })
-      return
-    }
-
-    const vacancyId = currentVacancyId.trim()
-    const candidateId = currentCandidateId
-
-    if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
-      return
-    }
-
-    if (!candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите кандидата в таблице вакансии.' })
-      return
-    }
-
-    try {
-      const result = await selectVacancyCandidate({
-        vacancyId,
-        body: { candidateId },
-      }).unwrap()
-      setSelectedCandidateId(result.selectedCandidateId)
-      setSubmitMessage({ status: 'success', text: 'Финальный кандидат выбран.' })
-      setSelectedCandidateContacts(null)
-      await refetch()
-      void refetchVacancyCandidates()
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleGetSelectedCandidateContacts() {
-    if (!canReadSelectedContacts) {
-      setSubmitMessage({ status: 'error', text: 'Контакты выбранного кандидата доступны только заказчику.' })
-      return
-    }
-
-    const vacancyId = currentVacancyId.trim()
-    if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
-      return
-    }
-
-    try {
-      const contacts = await fetchSelectedCandidateContacts({ vacancyId }).unwrap()
-      setSelectedCandidateContacts(contacts)
-      setSelectedCandidateId(contacts.candidateId)
-      setSubmitMessage({ status: 'success', text: 'Контакты выбранного кандидата загружены.' })
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
-
-  async function handleGetExecutorCandidateContacts() {
-    if (!canReadExecutorContacts) {
-      setSubmitMessage({ status: 'error', text: 'Контакты кандидата в вакансии доступны только исполнителю.' })
-      return
-    }
-
-    const vacancyId = currentVacancyId.trim()
-    const candidateId = currentCandidateId
-    if (!vacancyId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
-      return
-    }
-
-    if (!candidateId) {
-      setSubmitMessage({ status: 'error', text: 'Выберите кандидата в таблице вакансии.' })
-      return
-    }
-
-    try {
-      const contacts = await fetchExecutorCandidateContacts({ vacancyId, candidateId }).unwrap()
-      setExecutorCandidateContacts(contacts)
-      setSelectedCandidateId(contacts.candidateId)
-      setSubmitMessage({ status: 'success', text: 'Контакты кандидата загружены.' })
-    } catch (requestError) {
-      setSubmitMessage({ status: 'error', text: getRequestErrorMessage(requestError) })
-    }
-  }
+  const { ensurePublishedVacancyForPipeline } = useVacancyPipelineGuards({
+    currentVacancyStatus,
+    setSubmitMessage,
+  })
+  const { resetCreateForm, resetVacancyEditState } = useVacancyFormReset({
+    setCreateForm,
+    setVacancyEditTitleInput,
+    setVacancyEditDescriptionInput,
+    setIsVacancyEditTitleDirty,
+    setIsVacancyEditDescriptionDirty,
+  })
+
+  const { handleCreateVacancy, handleStatusTransition, handleUpdateVacancyDetails, handleDeleteVacancy } =
+    useVacancyCrudActions({
+      currentUserRole,
+      canCreateVacancy,
+      canEditVacancy,
+      currentCreateOrderId,
+      createForm,
+      currentVacancyId,
+      currentVacancyEditTitle,
+      currentVacancyEditDescription,
+      vacancies,
+      setSubmitMessage,
+      resetCreateForm,
+      resetVacancyEditState,
+      applyVacancyContext,
+      refetchVacancies: async () => {
+        await refetch()
+      },
+      refetchVacancyDetails: () => {
+        void refetchVacancyDetails()
+      },
+      createVacancyRequest: async (body) => {
+        await createVacancy(body).unwrap()
+      },
+      updateVacancyRequest: async (args) => {
+        await updateVacancy(args).unwrap()
+      },
+      updateVacancyStatusRequest: async (args) => {
+        await updateVacancyStatus(args).unwrap()
+      },
+      deleteVacancyRequest: async (vacancyId) => {
+        await deleteVacancy(vacancyId).unwrap()
+      },
+    })
+  const { handleCreateCandidateResume, handleAddCandidateFromBase, handleUpdateCandidateStage } =
+    useVacancyPipelineActions({
+      canManagePipeline,
+      currentVacancyId,
+      currentAddFromBaseCandidateId,
+      currentCandidateId,
+      pipelineStage: pipelineForm.stage,
+      createCandidateResumeForm,
+      setSubmitMessage,
+      setSelectedCandidateId,
+      clearSelectedAddFromBaseCandidateId: () => {
+        setSelectedAddFromBaseCandidateId('')
+      },
+      resetCreateCandidateResumeForm: () => {
+        setCreateCandidateResumeForm({
+          fullName: '',
+          birthDate: '',
+          email: '',
+          phone: '',
+          specialization: '',
+          resumeTitle: '',
+          resumeRichTextHtml: '',
+          resumeSkills: '',
+          resumeAttachmentLinks: '',
+        })
+      },
+      ensurePublishedVacancyForPipeline,
+      refetchVacancies: async () => {
+        await refetch()
+      },
+      refetchVacancyCandidates: () => {
+        void refetchVacancyCandidates()
+      },
+      refetchVacancyBaseCandidates: () => {
+        void refetchVacancyBaseCandidates()
+      },
+      createCandidateResumeRequest: async (args) => createCandidateResume(args).unwrap(),
+      addCandidateFromBaseRequest: async (args) => addCandidateFromBase(args).unwrap(),
+      updateVacancyCandidateStageRequest: async (args) => updateVacancyCandidateStage(args).unwrap(),
+    })
+  const { handleSelectCandidate, handleGetSelectedCandidateContacts, handleGetExecutorCandidateContacts } =
+    useVacancyContactsActions({
+      canSelectCandidate,
+      canReadSelectedContacts,
+      canReadExecutorContacts,
+      currentVacancyId,
+      currentCandidateId,
+      setSubmitMessage,
+      setSelectedCandidateId,
+      clearSelectedCandidateContacts: () => {
+        setSelectedCandidateContacts(null)
+      },
+      setSelectedCandidateContacts,
+      setExecutorCandidateContacts,
+      refetchVacancies: async () => {
+        await refetch()
+      },
+      refetchVacancyCandidates: () => {
+        void refetchVacancyCandidates()
+      },
+      selectVacancyCandidateRequest: async (args) => selectVacancyCandidate(args).unwrap(),
+      fetchSelectedCandidateContactsRequest: async (args) => fetchSelectedCandidateContacts(args).unwrap(),
+      fetchExecutorCandidateContactsRequest: async (args) => fetchExecutorCandidateContacts(args).unwrap(),
+    })
+  const {
+    handleCreateFormChange,
+    handleCreateOrderSelectChange,
+    handleAddFromBaseCandidateSelectChange,
+    handleVacancyEditTitleChange,
+    handleVacancyEditDescriptionChange,
+    handlePipelineStageChange,
+    handleCreateCandidateResumeInputChange,
+    handleCreateCandidateResumeRichTextChange,
+  } = useVacancyFormState({
+    setCreateForm,
+    setSelectedCreateOrderId,
+    setSelectedAddFromBaseCandidateId,
+    setVacancyEditTitleInput,
+    setIsVacancyEditTitleDirty,
+    setVacancyEditDescriptionInput,
+    setIsVacancyEditDescriptionDirty,
+    setPipelineForm,
+    setCreateCandidateResumeForm,
+  })
 
   return (
     <section className="page profile-page">
@@ -875,7 +403,12 @@ export function VacanciesPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handlePreviousVacanciesPage}
+                    onClick={() =>
+                      handlePreviousVacanciesPage({
+                        currentVacanciesLimit,
+                        currentVacanciesOffset,
+                      })
+                    }
                     disabled={isLoading || currentVacanciesOffset <= 0}
                   >
                     Назад
@@ -883,7 +416,13 @@ export function VacanciesPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handleNextVacanciesPage}
+                    onClick={() =>
+                      handleNextVacanciesPage({
+                        currentVacanciesLimit,
+                        currentVacanciesOffset,
+                        vacanciesLength: vacancies.length,
+                      })
+                    }
                     disabled={isLoading || currentVacanciesLimit <= 0 || vacancies.length < currentVacanciesLimit}
                   >
                     Вперед
@@ -902,7 +441,7 @@ export function VacanciesPage() {
             currentVacanciesOffset={currentVacanciesOffset}
             requesterRole={authMe?.role}
             isUpdatingVacancyStatus={isUpdatingVacancyStatus}
-            onSelectVacancy={handleSelectVacancy}
+            onSelectVacancy={applyVacancyContext}
             onStatusTransition={handleStatusTransition}
           />
 
@@ -966,18 +505,34 @@ export function VacanciesPage() {
                       value={createForm.title}
                       onChange={(event) => handleCreateFormChange('title', event)}
                       placeholder="Название вакансии"
+                      required
+                      maxLength={200}
                       disabled={!canCreateVacancy || isCreatingVacancy}
                     />
-                    <div className="flex gap-2">
-                      <Input
+                    <div className="grid gap-2 md:col-span-3">
+                      <Textarea
                         value={createForm.description}
                         onChange={(event) => handleCreateFormChange('description', event)}
                         placeholder="Описание"
+                        required
+                        maxLength={4000}
+                        className="min-h-24"
                         disabled={!canCreateVacancy || isCreatingVacancy}
                       />
-                      <Button type="submit" disabled={!canCreateVacancy || isCreatingVacancy}>
-                        Создать
-                      </Button>
+                      <div>
+                        <Button
+                          type="submit"
+                          disabled={
+                            !canCreateVacancy ||
+                            isCreatingVacancy ||
+                            !currentCreateOrderId.trim() ||
+                            !createForm.title.trim() ||
+                            !createForm.description.trim()
+                          }
+                        >
+                          Создать
+                        </Button>
+                      </div>
                     </div>
                   </form>
                 </CardContent>
@@ -987,6 +542,7 @@ export function VacanciesPage() {
 
           {activeVacancySection === 'pipeline' ? (
             <VacancyPipelineSurface
+              mode="pipeline"
               canManagePipeline={canManagePipeline}
               isVacancyPublished={currentVacancyStatus === 'Published'}
               currentVacancyId={currentVacancyId}
@@ -1005,6 +561,34 @@ export function VacanciesPage() {
               onAddCandidateFromBase={handleAddCandidateFromBase}
               onUpdateCandidateStage={handleUpdateCandidateStage}
               onCreateCandidateResumeInputChange={handleCreateCandidateResumeInputChange}
+              onCreateCandidateResumeRichTextChange={handleCreateCandidateResumeRichTextChange}
+              onCreateCandidateResume={handleCreateCandidateResume}
+              getRequestErrorMessage={getRequestErrorMessage}
+            />
+          ) : null}
+
+          {activeVacancySection === 'candidate-create' ? (
+            <VacancyPipelineSurface
+              mode="candidate-create"
+              canManagePipeline={canManagePipeline}
+              isVacancyPublished={currentVacancyStatus === 'Published'}
+              currentVacancyId={currentVacancyId}
+              isVacancyBaseCandidatesFetching={isVacancyBaseCandidatesFetching}
+              vacancyBaseCandidatesError={vacancyBaseCandidatesError}
+              vacancyBaseCandidates={vacancyBaseCandidates}
+              currentAddFromBaseCandidateId={currentAddFromBaseCandidateId}
+              pipelineStage={pipelineForm.stage}
+              isAddingCandidateFromBase={isAddingCandidateFromBase}
+              isUpdatingCandidateStage={isUpdatingCandidateStage}
+              currentCandidateId={currentCandidateId}
+              createCandidateResumeForm={createCandidateResumeForm}
+              isCreatingCandidateResume={isCreatingCandidateResume}
+              onAddFromBaseCandidateSelectChange={handleAddFromBaseCandidateSelectChange}
+              onPipelineStageChange={handlePipelineStageChange}
+              onAddCandidateFromBase={handleAddCandidateFromBase}
+              onUpdateCandidateStage={handleUpdateCandidateStage}
+              onCreateCandidateResumeInputChange={handleCreateCandidateResumeInputChange}
+              onCreateCandidateResumeRichTextChange={handleCreateCandidateResumeRichTextChange}
               onCreateCandidateResume={handleCreateCandidateResume}
               getRequestErrorMessage={getRequestErrorMessage}
             />

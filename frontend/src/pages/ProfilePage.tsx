@@ -1,25 +1,46 @@
 import { useState, type FormEvent } from 'react'
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
   useProfileServer,
-  type CustomerLegalForm,
   type ExecutorEmploymentType,
-  type MyProfileResponse,
   type UserRole,
 } from '@/features/profile/model'
+import { ProfileApplicantSection } from '@/features/profile/ui/ProfileApplicantSection'
+import { ProfileCommonSection } from '@/features/profile/ui/ProfileCommonSection'
+import { ProfileCustomerSection } from '@/features/profile/ui/ProfileCustomerSection'
+import { ProfileExecutorSection } from '@/features/profile/ui/ProfileExecutorSection'
+import { ProfileRoleSwitcher } from '@/features/profile/ui/ProfileRoleSwitcher'
+import { getRequestErrorMessage, isFetchBaseQueryError } from '@/features/profile/lib/errors'
+import {
+  normalizeOptional,
+  toDateTimeOrDash,
+  toListOrDash,
+  toTextOrDash,
+} from '@/features/profile/lib/formatters'
+import {
+  toCustomerLegalFormLabel,
+  toEmploymentTypeLabel,
+} from '@/features/profile/lib/enums'
+import {
+  createApplicantProfileFormValues,
+  createCommonProfileFormValues,
+  createCustomerProfileFormValues,
+  createExecutorProfileFormValues,
+} from '@/features/profile/lib/form-state'
+import {
+  buildApplicantUpdatePayload,
+  buildCustomerUpdatePayload,
+  buildExecutorUpdatePayload,
+} from '@/features/profile/lib/payloads'
+import { resolveActiveRole, resolveAvailableRoles, toRoleLabel } from '@/features/profile/lib/roles'
+import {
+  validateApplicantProfileForm,
+  validateCommonProfileForm,
+  validateCustomerProfileForm,
+  validateExecutorProfileForm,
+} from '@/features/profile/lib/validation'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormFieldError, FormStatusMessage } from '@/components/ui/form-feedback'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-
-type ProblemDetailsPayload = {
-  detail?: string
-  title?: string
-}
 
 type DetailItem = {
   label: string
@@ -80,305 +101,6 @@ type ExecutorProfileFormValues = {
 }
 
 type ExecutorProfileFormErrors = Partial<Record<keyof ExecutorProfileFormValues, string>>
-
-const phonePattern = /^\+[1-9]\d{9,14}$/
-const desiredSalaryPattern = /^\d+([.]\d{1,2})?$/
-
-function Details({ items }: { items: DetailItem[] }) {
-  return (
-    <dl className="profile-details">
-      {items.map((item) => (
-        <div key={item.label}>
-          <dt>{item.label}</dt>
-          <dd>{item.value}</dd>
-        </div>
-      ))}
-    </dl>
-  )
-}
-
-function toTextOrDash(value: string | null | undefined): string {
-  const normalized = value?.trim()
-  return normalized ? normalized : '—'
-}
-
-function toListOrDash(values: string[] | null | undefined): string {
-  if (!values || values.length === 0) {
-    return '—'
-  }
-
-  return values.join(', ')
-}
-
-function toCommaSeparated(values: string[] | null | undefined): string {
-  if (!values || values.length === 0) {
-    return ''
-  }
-
-  return values.join(', ')
-}
-
-function fromCommaSeparated(value: string): string[] | undefined {
-  const items = value
-    .split(',')
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0)
-
-  return items.length > 0 ? items : undefined
-}
-
-function normalizeOptional(value: string): string | undefined {
-  const normalized = value.trim()
-  return normalized ? normalized : undefined
-}
-
-function toRoleLabel(role: UserRole): string {
-  switch (role) {
-    case 'Applicant':
-      return 'Соискатель'
-    case 'Executor':
-      return 'Исполнитель'
-    case 'Customer':
-      return 'Заказчик'
-    case 'Admin':
-      return 'Администратор'
-    default:
-      return role
-  }
-}
-
-function isUserRole(value: string): value is UserRole {
-  return value === 'Applicant' || value === 'Executor' || value === 'Customer' || value === 'Admin'
-}
-
-function resolveActiveRole(profile: MyProfileResponse): UserRole {
-  if (profile.activeRole && isUserRole(profile.activeRole)) {
-    return profile.activeRole
-  }
-
-  return profile.role
-}
-
-function resolveAvailableRoles(profile: MyProfileResponse, activeRole: UserRole): UserRole[] {
-  const roleCandidates = profile.roles?.filter(isUserRole) ?? []
-  const uniqueRoles = Array.from(new Set(roleCandidates))
-
-  if (!uniqueRoles.includes(activeRole)) {
-    uniqueRoles.unshift(activeRole)
-  }
-
-  return uniqueRoles.length > 0 ? uniqueRoles : [activeRole]
-}
-
-function toEmploymentTypeLabel(value: ExecutorEmploymentType | null | undefined): string {
-  switch (value) {
-    case 'Fl':
-      return 'Физлицо'
-    case 'Smz':
-      return 'Самозанятый'
-    case 'Ip':
-      return 'ИП'
-    default:
-      return '—'
-  }
-}
-
-function toCustomerLegalFormValue(value: CustomerLegalForm | null | undefined): '' | 'Ooo' | 'Ip' {
-  if (value === 'Ooo' || value === 1) {
-    return 'Ooo'
-  }
-
-  if (value === 'Ip' || value === 2) {
-    return 'Ip'
-  }
-
-  return ''
-}
-
-function toCustomerLegalFormLabel(value: CustomerLegalForm | null | undefined): string {
-  switch (toCustomerLegalFormValue(value)) {
-    case 'Ooo':
-      return 'ООО'
-    case 'Ip':
-      return 'ИП'
-    default:
-      return '—'
-  }
-}
-
-function toCustomerLegalFormPayload(value: '' | 'Ooo' | 'Ip'): 1 | 2 | undefined {
-  if (value === 'Ooo') {
-    return 1
-  }
-
-  if (value === 'Ip') {
-    return 2
-  }
-
-  return undefined
-}
-
-function toDateTimeOrDash(value: string | null | undefined): string {
-  if (!value) {
-    return '—'
-  }
-
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) {
-    return value
-  }
-
-  return parsed.toLocaleString('ru-RU')
-}
-
-function isProblemDetailsPayload(payload: unknown): payload is ProblemDetailsPayload {
-  return typeof payload === 'object' && payload !== null
-}
-
-function isFetchBaseQueryError(error: unknown): error is FetchBaseQueryError {
-  return typeof error === 'object' && error !== null && 'status' in error
-}
-
-function getRequestErrorMessage(error: unknown): string {
-  if (!isFetchBaseQueryError(error)) {
-    return 'Не удалось выполнить запрос.'
-  }
-
-  if (error.status === 'FETCH_ERROR') {
-    return 'Не удалось установить соединение с сервером.'
-  }
-
-  if (error.status === 401) {
-    return 'Требуется авторизация для выполнения действия.'
-  }
-
-  if (typeof error.status === 'number' && isProblemDetailsPayload(error.data)) {
-    return error.data.detail ?? error.data.title ?? 'Не удалось выполнить запрос.'
-  }
-
-  return 'Не удалось выполнить запрос.'
-}
-
-function createCommonProfileFormValues(profile: MyProfileResponse): CommonProfileFormValues {
-  return {
-    firstName: profile.firstName,
-    lastName: profile.lastName,
-    phone: profile.phone ?? '',
-  }
-}
-
-function createApplicantProfileFormValues(profile: MyProfileResponse): ApplicantProfileFormValues {
-  return {
-    resumeTitle: profile.applicantProfile?.resumeTitle ?? '',
-    previousCompanyName: profile.applicantProfile?.previousCompanyName ?? '',
-    workPeriod: profile.applicantProfile?.workPeriod ?? '',
-    experienceSummary: profile.applicantProfile?.experienceSummary ?? '',
-    achievements: profile.applicantProfile?.achievements ?? '',
-    education: profile.applicantProfile?.education ?? '',
-    skills: toCommaSeparated(profile.applicantProfile?.skills),
-    certificates: toCommaSeparated(profile.applicantProfile?.certificates),
-    portfolioUrl: profile.applicantProfile?.portfolioUrl ?? '',
-    about: profile.applicantProfile?.about ?? '',
-    desiredSalary:
-      profile.applicantProfile?.desiredSalary === undefined || profile.applicantProfile?.desiredSalary === null
-        ? ''
-        : String(profile.applicantProfile.desiredSalary),
-  }
-}
-
-function createCustomerProfileFormValues(profile: MyProfileResponse): CustomerProfileFormValues {
-  return {
-    inn: profile.customerProfile?.inn ?? '',
-    legalForm: toCustomerLegalFormValue(profile.customerProfile?.legalForm),
-    egrn: profile.customerProfile?.egrn ?? '',
-    egrnip: profile.customerProfile?.egrnip ?? '',
-    companyName: profile.customerProfile?.companyName ?? '',
-    companyLogoUrl: profile.customerProfile?.companyLogoUrl ?? '',
-    offerAccepted: profile.customerProfile?.offerAccepted ?? false,
-    offerVersion: profile.customerProfile?.offerVersion ?? '',
-  }
-}
-
-function createExecutorProfileFormValues(profile: MyProfileResponse): ExecutorProfileFormValues {
-  return {
-    employmentType: profile.executorProfile?.employmentType ?? '',
-    projectTitle: profile.executorProfile?.projectTitle ?? '',
-    projectCompanyName: profile.executorProfile?.projectCompanyName ?? '',
-    experienceSummary: profile.executorProfile?.experienceSummary ?? '',
-    achievements: profile.executorProfile?.achievements ?? '',
-    certificates: toCommaSeparated(profile.executorProfile?.certificates),
-    grade: profile.executorProfile?.grade ?? '',
-    extraInfo: profile.executorProfile?.extraInfo ?? '',
-  }
-}
-
-function validateCommonProfileForm(values: CommonProfileFormValues): CommonProfileFormErrors {
-  const errors: CommonProfileFormErrors = {}
-  const firstName = values.firstName.trim()
-  const lastName = values.lastName.trim()
-  const phone = values.phone.trim()
-
-  if (!firstName) {
-    errors.firstName = 'Имя обязательно'
-  }
-
-  if (!lastName) {
-    errors.lastName = 'Фамилия обязательна'
-  }
-
-  if (phone && !phonePattern.test(phone)) {
-    errors.phone = 'Телефон должен быть в формате +79991234567'
-  }
-
-  return errors
-}
-
-function validateApplicantProfileForm(values: ApplicantProfileFormValues): ApplicantProfileFormErrors {
-  const errors: ApplicantProfileFormErrors = {}
-  const desiredSalaryRaw = values.desiredSalary.trim()
-
-  if (!desiredSalaryRaw) {
-    return errors
-  }
-
-  if (!desiredSalaryPattern.test(desiredSalaryRaw)) {
-    errors.desiredSalary = 'Зарплата должна быть числом, до 2 знаков после точки'
-    return errors
-  }
-
-  const desiredSalary = Number(desiredSalaryRaw)
-  if (!Number.isFinite(desiredSalary) || desiredSalary < 0) {
-    errors.desiredSalary = 'Некорректное значение зарплаты'
-  }
-
-  return errors
-}
-
-function validateExecutorProfileForm(values: ExecutorProfileFormValues): ExecutorProfileFormErrors {
-  const errors: ExecutorProfileFormErrors = {}
-
-  if (!values.employmentType) {
-    errors.employmentType = 'Формат занятости обязателен'
-  }
-
-  return errors
-}
-
-function validateCustomerProfileForm(values: CustomerProfileFormValues): CustomerProfileFormErrors {
-  const errors: CustomerProfileFormErrors = {}
-  const offerVersion = values.offerVersion.trim()
-
-  if (values.offerAccepted && !offerVersion) {
-    errors.offerVersion = 'Укажите версию оферты'
-    return errors
-  }
-
-  if (!values.offerAccepted && offerVersion) {
-    errors.offerVersion = 'Версия оферты указывается только при согласии'
-  }
-
-  return errors
-}
 
 export function ProfilePage() {
   const {
@@ -636,26 +358,9 @@ export function ProfilePage() {
           return
         }
 
-        const desiredSalary = applicantFormValues.desiredSalary.trim()
-          ? Number(applicantFormValues.desiredSalary.trim())
-          : undefined
-
-        const updatedProfile = await updateMyProfile({
-          ...basePayload,
-          applicantProfile: {
-            resumeTitle: normalizeOptional(applicantFormValues.resumeTitle),
-            previousCompanyName: normalizeOptional(applicantFormValues.previousCompanyName),
-            workPeriod: normalizeOptional(applicantFormValues.workPeriod),
-            experienceSummary: normalizeOptional(applicantFormValues.experienceSummary),
-            achievements: normalizeOptional(applicantFormValues.achievements),
-            education: normalizeOptional(applicantFormValues.education),
-            skills: fromCommaSeparated(applicantFormValues.skills),
-            certificates: fromCommaSeparated(applicantFormValues.certificates),
-            portfolioUrl: normalizeOptional(applicantFormValues.portfolioUrl),
-            about: normalizeOptional(applicantFormValues.about),
-            desiredSalary,
-          },
-        }).unwrap()
+        const updatedProfile = await updateMyProfile(
+          buildApplicantUpdatePayload(basePayload, applicantFormValues),
+        ).unwrap()
 
         setApplicantFormValues(createApplicantProfileFormValues(updatedProfile))
       } else if (activeRole === 'Customer') {
@@ -665,26 +370,14 @@ export function ProfilePage() {
           return
         }
 
-        const currentOfferAccepted = profile.customerProfile?.offerAccepted ?? false
-        const currentOfferVersion = (profile.customerProfile?.offerVersion ?? '').trim()
-        const nextOfferAccepted = customerFormValues.offerAccepted
-        const nextOfferVersion = customerFormValues.offerVersion.trim()
-        const offerChanged =
-          currentOfferAccepted !== nextOfferAccepted || currentOfferVersion !== nextOfferVersion
-
-        const updatedProfile = await updateMyProfile({
-          ...basePayload,
-          customerProfile: {
-            inn: normalizeOptional(customerFormValues.inn),
-            legalForm: toCustomerLegalFormPayload(customerFormValues.legalForm),
-            egrn: normalizeOptional(customerFormValues.egrn),
-            egrnip: normalizeOptional(customerFormValues.egrnip),
-            companyName: normalizeOptional(customerFormValues.companyName),
-            companyLogoUrl: normalizeOptional(customerFormValues.companyLogoUrl),
-            offerAccepted: offerChanged ? customerFormValues.offerAccepted : undefined,
-            offerVersion: offerChanged ? normalizeOptional(customerFormValues.offerVersion) : undefined,
-          },
-        }).unwrap()
+        const updatedProfile = await updateMyProfile(
+          buildCustomerUpdatePayload({
+            basePayload,
+            formValues: customerFormValues,
+            currentOfferAccepted: profile.customerProfile?.offerAccepted ?? false,
+            currentOfferVersion: profile.customerProfile?.offerVersion ?? '',
+          }),
+        ).unwrap()
 
         setCustomerFormValues(createCustomerProfileFormValues(updatedProfile))
       } else if (activeRole === 'Executor') {
@@ -700,19 +393,9 @@ export function ProfilePage() {
           return
         }
 
-        const updatedProfile = await updateMyProfile({
-          ...basePayload,
-          executorProfile: {
-            employmentType,
-            projectTitle: normalizeOptional(executorFormValues.projectTitle),
-            projectCompanyName: normalizeOptional(executorFormValues.projectCompanyName),
-            experienceSummary: normalizeOptional(executorFormValues.experienceSummary),
-            achievements: normalizeOptional(executorFormValues.achievements),
-            certificates: fromCommaSeparated(executorFormValues.certificates),
-            grade: normalizeOptional(executorFormValues.grade),
-            extraInfo: normalizeOptional(executorFormValues.extraInfo),
-          },
-        }).unwrap()
+        const updatedProfile = await updateMyProfile(
+          buildExecutorUpdatePayload(basePayload, executorFormValues, employmentType),
+        ).unwrap()
 
         setExecutorFormValues(createExecutorProfileFormValues(updatedProfile))
       }
@@ -784,697 +467,75 @@ export function ProfilePage() {
     <section className="page profile-page">
       <h2>Профиль</h2>
 
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
-          <CardTitle className="text-xl">Общие данные</CardTitle>
-          {!isEditingCommon ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleStartEditCommon}
-              disabled={isEditingRoleSpecific}
-            >
-              Редактировать
-            </Button>
-          ) : null}
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* @dvnull: Статусы submit-форм приведены к единому form-feedback паттерну. */}
-          {commonSubmitMessage.status !== 'idle' ? (
-            <FormStatusMessage
-              message={commonSubmitMessage.message}
-              status={commonSubmitMessage.status === 'error' ? 'error' : 'success'}
-            />
-          ) : null}
-
-          {/* @dvnull: Для валидируемых полей добавлены aria-связки input/select <-> error message. */}
-          {isEditingCommon ? (
-            <form noValidate onSubmit={handleCommonFormSubmit} className="grid gap-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="profile-common-firstName">Имя</Label>
-                  <Input
-                    id="profile-common-firstName"
-                    value={commonFormValues.firstName}
-                    onChange={(event) =>
-                      setCommonFormValues((previous) => ({ ...previous, firstName: event.target.value }))
-                    }
-                    aria-invalid={Boolean(commonFormErrors.firstName)}
-                    aria-describedby={
-                      commonFormErrors.firstName ? 'profile-common-firstName-error' : undefined
-                    }
-                  />
-                  <FormFieldError id="profile-common-firstName-error">
-                    {commonFormErrors.firstName}
-                  </FormFieldError>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="profile-common-lastName">Фамилия</Label>
-                  <Input
-                    id="profile-common-lastName"
-                    value={commonFormValues.lastName}
-                    onChange={(event) =>
-                      setCommonFormValues((previous) => ({ ...previous, lastName: event.target.value }))
-                    }
-                    aria-invalid={Boolean(commonFormErrors.lastName)}
-                    aria-describedby={commonFormErrors.lastName ? 'profile-common-lastName-error' : undefined}
-                  />
-                  <FormFieldError id="profile-common-lastName-error">
-                    {commonFormErrors.lastName}
-                  </FormFieldError>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="profile-common-phone">Телефон</Label>
-                  <Input
-                    id="profile-common-phone"
-                    placeholder="+79991234567"
-                    value={commonFormValues.phone}
-                    onChange={(event) =>
-                      setCommonFormValues((previous) => ({ ...previous, phone: event.target.value }))
-                    }
-                    aria-invalid={Boolean(commonFormErrors.phone)}
-                    aria-describedby={commonFormErrors.phone ? 'profile-common-phone-error' : undefined}
-                  />
-                  <FormFieldError id="profile-common-phone-error">{commonFormErrors.phone}</FormFieldError>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isUpdatingProfile}>
-                  {isUpdatingProfile ? 'Сохранение...' : 'Сохранить'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancelEditCommon}
-                  disabled={isUpdatingProfile}
-                >
-                  Отмена
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <Details items={commonDetailItems} />
-          )}
-        </CardContent>
-      </Card>
+      <ProfileCommonSection
+        isEditingCommon={isEditingCommon}
+        isEditingRoleSpecific={isEditingRoleSpecific}
+        isUpdatingProfile={isUpdatingProfile}
+        commonFormValues={commonFormValues}
+        commonFormErrors={commonFormErrors}
+        commonSubmitMessage={commonSubmitMessage}
+        commonDetailItems={commonDetailItems}
+        onStartEdit={handleStartEditCommon}
+        onCancelEdit={handleCancelEditCommon}
+        onSubmit={handleCommonFormSubmit}
+        setCommonFormValues={setCommonFormValues}
+      />
 
       {canSwitchApplicantExecutor ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Активная роль</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {roleSwitchMessage.status !== 'idle' ? (
-              <FormStatusMessage
-                message={roleSwitchMessage.message}
-                status={roleSwitchMessage.status === 'error' ? 'error' : 'success'}
-              />
-            ) : null}
-
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                onClick={() => void handleSwitchActiveRole('Applicant')}
-                variant={activeRole === 'Applicant' ? 'default' : 'outline'}
-                disabled={isRoleSwitchDisabled || activeRole === 'Applicant'}
-              >
-                Соискатель
-              </Button>
-              <Button
-                type="button"
-                onClick={() => void handleSwitchActiveRole('Executor')}
-                variant={activeRole === 'Executor' ? 'default' : 'outline'}
-                disabled={isRoleSwitchDisabled || activeRole === 'Executor'}
-              >
-                Исполнитель
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <ProfileRoleSwitcher
+          activeRole={activeRole}
+          isRoleSwitchDisabled={isRoleSwitchDisabled}
+          roleSwitchMessage={roleSwitchMessage}
+          onSwitchRole={(nextRole) => void handleSwitchActiveRole(nextRole)}
+        />
       ) : null}
 
       {activeRole === 'Applicant' ? (
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
-            <CardTitle className="text-xl">Профиль соискателя</CardTitle>
-            {!isEditingRoleSpecific ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleStartEditRoleSpecific}
-                disabled={isEditingCommon}
-              >
-                Редактировать
-              </Button>
-            ) : null}
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            {roleSubmitMessage.status !== 'idle' ? (
-              <FormStatusMessage
-                message={roleSubmitMessage.message}
-                status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
-              />
-            ) : null}
-
-            {isEditingRoleSpecific ? (
-              <form noValidate onSubmit={handleRoleSpecificFormSubmit} className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="applicant-resumeTitle">Желаемая должность</Label>
-                    <Input
-                      id="applicant-resumeTitle"
-                      value={applicantFormValues.resumeTitle}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          resumeTitle: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="applicant-previousCompanyName">Предыдущая компания</Label>
-                    <Input
-                      id="applicant-previousCompanyName"
-                      value={applicantFormValues.previousCompanyName}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          previousCompanyName: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="applicant-workPeriod">Период работы</Label>
-                    <Input
-                      id="applicant-workPeriod"
-                      value={applicantFormValues.workPeriod}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          workPeriod: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="applicant-experienceSummary">Опыт</Label>
-                    <Textarea
-                      id="applicant-experienceSummary"
-                      value={applicantFormValues.experienceSummary}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          experienceSummary: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="applicant-achievements">Достижения</Label>
-                    <Textarea
-                      id="applicant-achievements"
-                      value={applicantFormValues.achievements}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          achievements: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="applicant-education">Образование</Label>
-                    <Textarea
-                      id="applicant-education"
-                      value={applicantFormValues.education}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          education: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="applicant-skills">Навыки (через запятую)</Label>
-                    <Input
-                      id="applicant-skills"
-                      value={applicantFormValues.skills}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          skills: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="applicant-certificates">Сертификаты (через запятую)</Label>
-                    <Input
-                      id="applicant-certificates"
-                      value={applicantFormValues.certificates}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          certificates: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="applicant-portfolioUrl">Портфолио (URL)</Label>
-                    <Input
-                      id="applicant-portfolioUrl"
-                      value={applicantFormValues.portfolioUrl}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          portfolioUrl: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="applicant-about">О себе</Label>
-                    <Textarea
-                      id="applicant-about"
-                      value={applicantFormValues.about}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          about: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="applicant-desiredSalary">Желаемая зарплата</Label>
-                    <Input
-                      id="applicant-desiredSalary"
-                      value={applicantFormValues.desiredSalary}
-                      onChange={(event) =>
-                        setApplicantFormValues((previous) => ({
-                          ...previous,
-                          desiredSalary: event.target.value,
-                        }))
-                      }
-                      aria-invalid={Boolean(applicantFormErrors.desiredSalary)}
-                      aria-describedby={
-                        applicantFormErrors.desiredSalary ? 'applicant-desiredSalary-error' : undefined
-                      }
-                    />
-                    <FormFieldError id="applicant-desiredSalary-error">
-                      {applicantFormErrors.desiredSalary}
-                    </FormFieldError>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={isUpdatingProfile}>
-                    {isUpdatingProfile ? 'Сохранение...' : 'Сохранить'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancelEditRoleSpecific}
-                    disabled={isUpdatingProfile}
-                  >
-                    Отмена
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <Details items={applicantDetailItems} />
-            )}
-          </CardContent>
-        </Card>
+        <ProfileApplicantSection
+          isEditingRoleSpecific={isEditingRoleSpecific}
+          isEditingCommon={isEditingCommon}
+          isUpdatingProfile={isUpdatingProfile}
+          applicantFormValues={applicantFormValues}
+          applicantFormErrors={applicantFormErrors}
+          applicantDetailItems={applicantDetailItems}
+          roleSubmitMessage={roleSubmitMessage}
+          onStartEdit={handleStartEditRoleSpecific}
+          onCancelEdit={handleCancelEditRoleSpecific}
+          onSubmit={handleRoleSpecificFormSubmit}
+          setApplicantFormValues={setApplicantFormValues}
+        />
       ) : null}
 
       {activeRole === 'Customer' ? (
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
-            <CardTitle className="text-xl">Профиль заказчика</CardTitle>
-            {!isEditingRoleSpecific ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleStartEditRoleSpecific}
-                disabled={isEditingCommon}
-              >
-                Редактировать
-              </Button>
-            ) : null}
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            {roleSubmitMessage.status !== 'idle' ? (
-              <FormStatusMessage
-                message={roleSubmitMessage.message}
-                status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
-              />
-            ) : null}
-
-            {isEditingRoleSpecific ? (
-              <form noValidate onSubmit={handleRoleSpecificFormSubmit} className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-inn">ИНН</Label>
-                    <Input
-                      id="customer-inn"
-                      value={customerFormValues.inn}
-                      onChange={(event) =>
-                        setCustomerFormValues((previous) => ({ ...previous, inn: event.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-legalForm">Юрформа</Label>
-                    <Select
-                      value={customerFormValues.legalForm || undefined}
-                      onValueChange={(value) =>
-                        setCustomerFormValues((previous) => ({
-                          ...previous,
-                          legalForm: value as 'Ooo' | 'Ip',
-                        }))
-                      }
-                    >
-                      <SelectTrigger id="customer-legalForm">
-                        <SelectValue placeholder="Выберите юрформу" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Ooo">ООО</SelectItem>
-                        <SelectItem value="Ip">ИП</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-egrn">ЕГРН</Label>
-                    <Input
-                      id="customer-egrn"
-                      value={customerFormValues.egrn}
-                      onChange={(event) =>
-                        setCustomerFormValues((previous) => ({ ...previous, egrn: event.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-egrnip">ЕГРНИП</Label>
-                    <Input
-                      id="customer-egrnip"
-                      value={customerFormValues.egrnip}
-                      onChange={(event) =>
-                        setCustomerFormValues((previous) => ({ ...previous, egrnip: event.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="customer-companyName">Компания</Label>
-                    <Input
-                      id="customer-companyName"
-                      value={customerFormValues.companyName}
-                      onChange={(event) =>
-                        setCustomerFormValues((previous) => ({
-                          ...previous,
-                          companyName: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="customer-companyLogoUrl">Логотип (URL)</Label>
-                    <Input
-                      id="customer-companyLogoUrl"
-                      value={customerFormValues.companyLogoUrl}
-                      onChange={(event) =>
-                        setCustomerFormValues((previous) => ({
-                          ...previous,
-                          companyLogoUrl: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <div className="flex items-center gap-2">
-                      <input
-                        id="customer-offerAccepted"
-                        type="checkbox"
-                        checked={customerFormValues.offerAccepted}
-                        onChange={(event) =>
-                          setCustomerFormValues((previous) => ({
-                            ...previous,
-                            offerAccepted: event.target.checked,
-                            offerVersion: event.target.checked ? previous.offerVersion : '',
-                          }))
-                        }
-                        className="h-4 w-4 rounded border-input"
-                      />
-                      <Label htmlFor="customer-offerAccepted">
-                        Согласен с офертой
-                      </Label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="customer-offerVersion">Версия оферты</Label>
-                    <Input
-                      id="customer-offerVersion"
-                      value={customerFormValues.offerVersion}
-                      onChange={(event) =>
-                        setCustomerFormValues((previous) => ({
-                          ...previous,
-                          offerVersion: event.target.value,
-                        }))
-                      }
-                      disabled={!customerFormValues.offerAccepted}
-                      aria-invalid={Boolean(customerFormErrors.offerVersion)}
-                      aria-describedby={customerFormErrors.offerVersion ? 'customer-offerVersion-error' : undefined}
-                    />
-                    <FormFieldError id="customer-offerVersion-error">
-                      {customerFormErrors.offerVersion}
-                    </FormFieldError>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={isUpdatingProfile}>
-                    {isUpdatingProfile ? 'Сохранение...' : 'Сохранить'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancelEditRoleSpecific}
-                    disabled={isUpdatingProfile}
-                  >
-                    Отмена
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <Details items={customerDetailItems} />
-            )}
-          </CardContent>
-        </Card>
+        <ProfileCustomerSection
+          isEditingRoleSpecific={isEditingRoleSpecific}
+          isEditingCommon={isEditingCommon}
+          isUpdatingProfile={isUpdatingProfile}
+          customerFormValues={customerFormValues}
+          customerFormErrors={customerFormErrors}
+          customerDetailItems={customerDetailItems}
+          roleSubmitMessage={roleSubmitMessage}
+          onStartEdit={handleStartEditRoleSpecific}
+          onCancelEdit={handleCancelEditRoleSpecific}
+          onSubmit={handleRoleSpecificFormSubmit}
+          setCustomerFormValues={setCustomerFormValues}
+        />
       ) : null}
 
       {activeRole === 'Executor' ? (
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
-            <CardTitle className="text-xl">Профиль исполнителя</CardTitle>
-            {!isEditingRoleSpecific ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleStartEditRoleSpecific}
-                disabled={isEditingCommon}
-              >
-                Редактировать
-              </Button>
-            ) : null}
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            {roleSubmitMessage.status !== 'idle' ? (
-              <FormStatusMessage
-                message={roleSubmitMessage.message}
-                status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
-              />
-            ) : null}
-
-            {isEditingRoleSpecific ? (
-              <form noValidate onSubmit={handleRoleSpecificFormSubmit} className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="executor-employmentType">Формат занятости</Label>
-                    <Select
-                      value={executorFormValues.employmentType || undefined}
-                      onValueChange={(value) =>
-                        setExecutorFormValues((previous) => ({
-                          ...previous,
-                          employmentType: value as ExecutorEmploymentType,
-                        }))
-                      }
-                    >
-                      <SelectTrigger
-                        id="executor-employmentType"
-                        aria-invalid={Boolean(executorFormErrors.employmentType)}
-                        aria-describedby={
-                          executorFormErrors.employmentType ? 'executor-employmentType-error' : undefined
-                        }
-                      >
-                        <SelectValue placeholder="Выберите формат" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Fl">Физлицо</SelectItem>
-                        <SelectItem value="Smz">Самозанятый</SelectItem>
-                        <SelectItem value="Ip">ИП</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormFieldError id="executor-employmentType-error">
-                      {executorFormErrors.employmentType}
-                    </FormFieldError>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="executor-projectTitle">Проект</Label>
-                    <Input
-                      id="executor-projectTitle"
-                      value={executorFormValues.projectTitle}
-                      onChange={(event) =>
-                        setExecutorFormValues((previous) => ({
-                          ...previous,
-                          projectTitle: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="executor-projectCompanyName">Компания проекта</Label>
-                    <Input
-                      id="executor-projectCompanyName"
-                      value={executorFormValues.projectCompanyName}
-                      onChange={(event) =>
-                        setExecutorFormValues((previous) => ({
-                          ...previous,
-                          projectCompanyName: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="executor-experienceSummary">Опыт</Label>
-                    <Textarea
-                      id="executor-experienceSummary"
-                      value={executorFormValues.experienceSummary}
-                      onChange={(event) =>
-                        setExecutorFormValues((previous) => ({
-                          ...previous,
-                          experienceSummary: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="executor-achievements">Достижения</Label>
-                    <Textarea
-                      id="executor-achievements"
-                      value={executorFormValues.achievements}
-                      onChange={(event) =>
-                        setExecutorFormValues((previous) => ({
-                          ...previous,
-                          achievements: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="executor-certificates">Сертификаты (через запятую)</Label>
-                    <Input
-                      id="executor-certificates"
-                      value={executorFormValues.certificates}
-                      onChange={(event) =>
-                        setExecutorFormValues((previous) => ({
-                          ...previous,
-                          certificates: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="executor-grade">Грейд</Label>
-                    <Input
-                      id="executor-grade"
-                      value={executorFormValues.grade}
-                      onChange={(event) =>
-                        setExecutorFormValues((previous) => ({
-                          ...previous,
-                          grade: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="executor-extraInfo">Дополнительно</Label>
-                    <Textarea
-                      id="executor-extraInfo"
-                      value={executorFormValues.extraInfo}
-                      onChange={(event) =>
-                        setExecutorFormValues((previous) => ({
-                          ...previous,
-                          extraInfo: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={isUpdatingProfile}>
-                    {isUpdatingProfile ? 'Сохранение...' : 'Сохранить'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancelEditRoleSpecific}
-                    disabled={isUpdatingProfile}
-                  >
-                    Отмена
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <Details items={executorDetailItems} />
-            )}
-          </CardContent>
-        </Card>
+        <ProfileExecutorSection
+          isEditingRoleSpecific={isEditingRoleSpecific}
+          isEditingCommon={isEditingCommon}
+          isUpdatingProfile={isUpdatingProfile}
+          executorFormValues={executorFormValues}
+          executorFormErrors={executorFormErrors}
+          executorDetailItems={executorDetailItems}
+          roleSubmitMessage={roleSubmitMessage}
+          onStartEdit={handleStartEditRoleSpecific}
+          onCancelEdit={handleCancelEditRoleSpecific}
+          onSubmit={handleRoleSpecificFormSubmit}
+          setExecutorFormValues={setExecutorFormValues}
+        />
       ) : null}
 
       {activeRole === 'Admin' ? (

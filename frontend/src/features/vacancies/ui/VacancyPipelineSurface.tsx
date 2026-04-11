@@ -3,6 +3,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Textarea } from '@/components/ui/textarea'
 import type { VacancyCandidateStageContract } from '@/shared/api/candidates'
 
@@ -13,12 +14,13 @@ type CreateCandidateResumeForm = {
   phone: string
   specialization: string
   resumeTitle: string
-  resumeSummary: string
+  resumeRichTextHtml: string
   resumeSkills: string
   resumeAttachmentLinks: string
 }
 
 export type VacancyPipelineSurfaceProps = {
+  mode: 'pipeline' | 'candidate-create'
   canManagePipeline: boolean
   isVacancyPublished: boolean
   currentVacancyId: string
@@ -40,11 +42,13 @@ export type VacancyPipelineSurfaceProps = {
     field: keyof CreateCandidateResumeForm,
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => void
+  onCreateCandidateResumeRichTextChange: (value: string) => void
   onCreateCandidateResume: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
   getRequestErrorMessage: (error: unknown) => string
 }
 
 export function VacancyPipelineSurface({
+  mode,
   canManagePipeline,
   isVacancyPublished,
   currentVacancyId,
@@ -63,182 +67,245 @@ export function VacancyPipelineSurface({
   onAddCandidateFromBase,
   onUpdateCandidateStage,
   onCreateCandidateResumeInputChange,
+  onCreateCandidateResumeRichTextChange,
   onCreateCandidateResume,
   getRequestErrorMessage,
 }: VacancyPipelineSurfaceProps) {
+  function hasVisibleText(html: string): boolean {
+    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().length > 0
+  }
+
+  const isCreateCandidateResumeInvalid =
+    !currentVacancyId.trim() ||
+    !createCandidateResumeForm.fullName.trim() ||
+    !createCandidateResumeForm.specialization.trim() ||
+    !createCandidateResumeForm.resumeTitle.trim() ||
+    !hasVisibleText(createCandidateResumeForm.resumeRichTextHtml)
+  const isCreateMode = mode === 'candidate-create'
+  const isPipelineMode = mode === 'pipeline'
+
   return (
     <>
-      <Card className="border-slate-200 shadow-none">
-        <CardHeader>
-          <CardTitle className="text-base">Pipeline кандидатов</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {!canManagePipeline ? <Alert>Операции pipeline доступны только для роли исполнителя.</Alert> : null}
-          {canManagePipeline && currentVacancyId && !isVacancyPublished ? (
-            <Alert>Операции pipeline доступны только для опубликованной вакансии.</Alert>
-          ) : null}
-          {canManagePipeline && !currentVacancyId ? (
-            <Alert>Выберите вакансию в таблице, чтобы работать с Add from base.</Alert>
-          ) : null}
-          {canManagePipeline && currentVacancyId && isVacancyBaseCandidatesFetching ? (
-            <Alert>Загрузка системных кандидатов...</Alert>
-          ) : null}
-          {canManagePipeline && currentVacancyId && vacancyBaseCandidatesError ? (
-            <Alert variant="destructive">{getRequestErrorMessage(vacancyBaseCandidatesError)}</Alert>
-          ) : null}
-          {canManagePipeline &&
-          currentVacancyId &&
-          !isVacancyBaseCandidatesFetching &&
-          !vacancyBaseCandidatesError &&
-          vacancyBaseCandidates.length === 0 ? (
-            <Alert>Нет доступных кандидатов из системной базы для этой вакансии.</Alert>
-          ) : null}
-          <div className="grid gap-3 md:grid-cols-4">
-            <Input value={currentVacancyId} placeholder="vacancyId из таблицы" readOnly disabled />
-            <select
-              value={currentAddFromBaseCandidateId}
-              onChange={onAddFromBaseCandidateSelectChange}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              disabled={
-                !canManagePipeline ||
-                !isVacancyPublished ||
-                isAddingCandidateFromBase ||
-                isUpdatingCandidateStage ||
-                !currentVacancyId ||
-                isVacancyBaseCandidatesFetching ||
-                Boolean(vacancyBaseCandidatesError) ||
-                vacancyBaseCandidates.length === 0
-              }
-            >
-              <option value="" disabled>
-                Кандидат из базы
-              </option>
-              {vacancyBaseCandidates.map((candidate) => (
-                <option key={candidate.candidateId} value={candidate.candidateId}>
-                  {candidate.publicAlias} ({candidate.candidateId})
-                </option>
-              ))}
-            </select>
-            <select
-              value={pipelineStage}
-              onChange={onPipelineStageChange}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              disabled={!canManagePipeline || !isVacancyPublished || isAddingCandidateFromBase || isUpdatingCandidateStage}
-            >
-              <option value="Pool">Pool</option>
-              <option value="Shortlist">Shortlist</option>
-            </select>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void onAddCandidateFromBase()}
+      {isPipelineMode ? (
+        <Card className="border-slate-200 shadow-none">
+          <CardHeader>
+            <CardTitle className="text-base">Pipeline кандидатов</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!canManagePipeline ? <Alert>Операции pipeline доступны только для роли исполнителя.</Alert> : null}
+            {canManagePipeline && currentVacancyId && !isVacancyPublished ? (
+              <Alert>Операции pipeline доступны только для опубликованной вакансии.</Alert>
+            ) : null}
+            {canManagePipeline && !currentVacancyId ? (
+              <Alert>Выберите вакансию в таблице, чтобы управлять стадиями pipeline.</Alert>
+            ) : null}
+            <div className="grid gap-3 md:grid-cols-4">
+              <Input value={currentVacancyId} placeholder="vacancyId из таблицы" readOnly disabled />
+              <Input value={currentCandidateId} placeholder="candidateId из таблицы кандидатов" readOnly disabled />
+              <select
+                value={pipelineStage}
+                onChange={onPipelineStageChange}
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 disabled={
-                  !canManagePipeline ||
-                  !isVacancyPublished ||
-                  isAddingCandidateFromBase ||
-                  isUpdatingCandidateStage ||
-                  !currentAddFromBaseCandidateId ||
-                  isVacancyBaseCandidatesFetching ||
-                  Boolean(vacancyBaseCandidatesError)
+                  !canManagePipeline || !isVacancyPublished || isAddingCandidateFromBase || isUpdatingCandidateStage
                 }
               >
-                Add from base
-              </Button>
-              <Button
-                type="button"
-                onClick={() => void onUpdateCandidateStage()}
-                disabled={
-                  !canManagePipeline ||
-                  !isVacancyPublished ||
-                  isAddingCandidateFromBase ||
-                  isUpdatingCandidateStage ||
-                  !currentCandidateId
-                }
-              >
-                Update stage
-              </Button>
+                <option value="Pool">Pool</option>
+                <option value="Shortlist">Shortlist</option>
+              </select>
+              <div>
+                <Button
+                  type="button"
+                  onClick={() => void onUpdateCandidateStage()}
+                  disabled={
+                    !canManagePipeline ||
+                    !isVacancyPublished ||
+                    isAddingCandidateFromBase ||
+                    isUpdatingCandidateStage ||
+                    !currentCandidateId
+                  }
+                >
+                  Обновить стадию
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : null}
 
-      <Card className="border-slate-200 shadow-none">
-        <CardHeader>
-          <CardTitle className="text-base">Ручное добавление кандидата с резюме</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {!canManagePipeline ? <Alert>Ручное добавление кандидата доступно только для роли исполнителя.</Alert> : null}
-          <form onSubmit={onCreateCandidateResume} className="grid gap-3">
+      {isCreateMode ? (
+        <Card className="border-slate-200 shadow-none">
+          <CardHeader>
+            <CardTitle className="text-base">Добавить кандидата из базы</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!canManagePipeline ? <Alert>Операции добавления доступны только для роли исполнителя.</Alert> : null}
+            {canManagePipeline && currentVacancyId && !isVacancyPublished ? (
+              <Alert>Добавление доступно только для опубликованной вакансии.</Alert>
+            ) : null}
+            {canManagePipeline && !currentVacancyId ? (
+              <Alert>Выберите вакансию в таблице, чтобы добавлять кандидатов.</Alert>
+            ) : null}
+            {canManagePipeline && currentVacancyId && isVacancyBaseCandidatesFetching ? (
+              <Alert>Загрузка системных кандидатов...</Alert>
+            ) : null}
+            {canManagePipeline && currentVacancyId && vacancyBaseCandidatesError ? (
+              <Alert variant="destructive">{getRequestErrorMessage(vacancyBaseCandidatesError)}</Alert>
+            ) : null}
+            {canManagePipeline &&
+            currentVacancyId &&
+            !isVacancyBaseCandidatesFetching &&
+            !vacancyBaseCandidatesError &&
+            vacancyBaseCandidates.length === 0 ? (
+              <Alert>Нет доступных кандидатов из системной базы для этой вакансии.</Alert>
+            ) : null}
             <div className="grid gap-3 md:grid-cols-3">
               <Input value={currentVacancyId} placeholder="vacancyId из таблицы" readOnly disabled />
-              <Input
-                value={createCandidateResumeForm.fullName}
-                onChange={(event) => onCreateCandidateResumeInputChange('fullName', event)}
-                placeholder="ФИО"
-                disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
-              />
-              <Input
-                value={createCandidateResumeForm.birthDate}
-                onChange={(event) => onCreateCandidateResumeInputChange('birthDate', event)}
-                placeholder="Дата рождения (YYYY-MM-DD)"
-                disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
-              />
+              <select
+                value={currentAddFromBaseCandidateId}
+                onChange={onAddFromBaseCandidateSelectChange}
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                disabled={
+                  !canManagePipeline ||
+                  !isVacancyPublished ||
+                  isAddingCandidateFromBase ||
+                  isUpdatingCandidateStage ||
+                  !currentVacancyId ||
+                  isVacancyBaseCandidatesFetching ||
+                  Boolean(vacancyBaseCandidatesError) ||
+                  vacancyBaseCandidates.length === 0
+                }
+              >
+                <option value="" disabled>
+                  Кандидат из базы
+                </option>
+                {vacancyBaseCandidates.map((candidate) => (
+                  <option key={candidate.candidateId} value={candidate.candidateId}>
+                    {candidate.publicAlias} ({candidate.candidateId})
+                  </option>
+                ))}
+              </select>
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void onAddCandidateFromBase()}
+                  disabled={
+                    !canManagePipeline ||
+                    !isVacancyPublished ||
+                    isAddingCandidateFromBase ||
+                    isUpdatingCandidateStage ||
+                    !currentAddFromBaseCandidateId ||
+                    isVacancyBaseCandidatesFetching ||
+                    Boolean(vacancyBaseCandidatesError)
+                  }
+                >
+                  Добавить из базы
+                </Button>
+              </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              <Input
-                value={createCandidateResumeForm.email}
-                onChange={(event) => onCreateCandidateResumeInputChange('email', event)}
-                placeholder="Email"
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {isCreateMode ? (
+        <Card className="border-slate-200 shadow-none">
+          <CardHeader>
+            <CardTitle className="text-base">Ручное добавление кандидата с резюме</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!canManagePipeline ? (
+              <Alert>Ручное добавление кандидата доступно только для роли исполнителя.</Alert>
+            ) : null}
+            <form onSubmit={onCreateCandidateResume} className="grid gap-3">
+              <div className="grid gap-3 md:grid-cols-3">
+                <Input value={currentVacancyId} placeholder="vacancyId из таблицы" readOnly disabled />
+                <Input
+                  value={createCandidateResumeForm.fullName}
+                  onChange={(event) => onCreateCandidateResumeInputChange('fullName', event)}
+                  placeholder="ФИО"
+                  required
+                  maxLength={200}
+                  disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
+                />
+                <Input
+                  type="date"
+                  value={createCandidateResumeForm.birthDate}
+                  onChange={(event) => onCreateCandidateResumeInputChange('birthDate', event)}
+                  disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
+                />
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <Input
+                  type="email"
+                  value={createCandidateResumeForm.email}
+                  onChange={(event) => onCreateCandidateResumeInputChange('email', event)}
+                  placeholder="Email"
+                  maxLength={254}
+                  disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
+                />
+                <Input
+                  type="tel"
+                  value={createCandidateResumeForm.phone}
+                  onChange={(event) => onCreateCandidateResumeInputChange('phone', event)}
+                  placeholder="Телефон"
+                  maxLength={32}
+                  disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
+                />
+                <Input
+                  value={createCandidateResumeForm.specialization}
+                  onChange={(event) => onCreateCandidateResumeInputChange('specialization', event)}
+                  placeholder="Специализация"
+                  required
+                  maxLength={120}
+                  disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
+                />
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Input
+                  value={createCandidateResumeForm.resumeTitle}
+                  onChange={(event) => onCreateCandidateResumeInputChange('resumeTitle', event)}
+                  placeholder="Заголовок резюме"
+                  required
+                  maxLength={200}
+                  disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
+                />
+                <Input
+                  value={createCandidateResumeForm.resumeSkills}
+                  onChange={(event) => onCreateCandidateResumeInputChange('resumeSkills', event)}
+                  placeholder="Навыки через запятую (optional)"
+                  disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
+                />
+              </div>
+              <RichTextEditor
+                value={createCandidateResumeForm.resumeRichTextHtml}
+                onChange={onCreateCandidateResumeRichTextChange}
+                placeholder="Текст резюме: опыт, достижения, ключевые факты"
                 disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
               />
-              <Input
-                value={createCandidateResumeForm.phone}
-                onChange={(event) => onCreateCandidateResumeInputChange('phone', event)}
-                placeholder="Телефон"
+              <Textarea
+                value={createCandidateResumeForm.resumeAttachmentLinks}
+                onChange={(event) => onCreateCandidateResumeInputChange('resumeAttachmentLinks', event)}
+                placeholder="Ссылки на вложения, по одной на строку (optional)"
                 disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
               />
-              <Input
-                value={createCandidateResumeForm.specialization}
-                onChange={(event) => onCreateCandidateResumeInputChange('specialization', event)}
-                placeholder="Специализация"
-                disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
-              />
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <Input
-                value={createCandidateResumeForm.resumeTitle}
-                onChange={(event) => onCreateCandidateResumeInputChange('resumeTitle', event)}
-                placeholder="Заголовок резюме"
-                disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
-              />
-              <Input
-                value={createCandidateResumeForm.resumeSkills}
-                onChange={(event) => onCreateCandidateResumeInputChange('resumeSkills', event)}
-                placeholder="Навыки через запятую (optional)"
-                disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
-              />
-            </div>
-            <Textarea
-              value={createCandidateResumeForm.resumeSummary}
-              onChange={(event) => onCreateCandidateResumeInputChange('resumeSummary', event)}
-              placeholder="Краткое резюме (summary)"
-              disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
-            />
-            <Textarea
-              value={createCandidateResumeForm.resumeAttachmentLinks}
-              onChange={(event) => onCreateCandidateResumeInputChange('resumeAttachmentLinks', event)}
-              placeholder="Ссылки на вложения, по одной на строку (optional)"
-              disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
-            />
-            <div>
-              <Button type="submit" disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}>
-                Add resume
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+              <div>
+                <Button
+                  type="submit"
+                  disabled={
+                    !canManagePipeline ||
+                    !isVacancyPublished ||
+                    isCreatingCandidateResume ||
+                    isCreateCandidateResumeInvalid
+                  }
+                >
+                  Добавить кандидата
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      ) : null}
     </>
   )
 }

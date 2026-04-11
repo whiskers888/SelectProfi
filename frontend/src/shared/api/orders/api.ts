@@ -1,13 +1,17 @@
 import { api } from '../generated/openapi'
 
+export type OrderStatusContract = 'Active' | 'Paused'
+
 export type OrderResponse = {
   id: string
   customerId: string
   executorId?: string | null
   title: string
   description: string
+  status: OrderStatusContract
   createdAtUtc: string
   updatedAtUtc: string
+  deletedAtUtc?: string | null
 }
 
 export type OrderListResponse = {
@@ -19,6 +23,7 @@ export type OrderListResponse = {
 export type GetOrdersRequest = {
   limit?: number
   offset?: number
+  includeArchived?: boolean
 }
 
 export type OrderExecutorResponse = {
@@ -39,6 +44,7 @@ export type UpdateOrderRequest = {
   title?: string
   description?: string
   executorId?: string
+  status?: OrderStatusContract
 }
 
 const ordersApi = api.injectEndpoints({

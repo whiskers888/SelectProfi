@@ -1,43 +1,23 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useRefreshSessionMutation } from '../shared/api/auth'
 import {
-  clearAuthSession,
-  setAuthSession,
   setAuthSessionBootstrapStatus,
 } from './authSessionSlice'
 import type { AppDispatch, RootState } from './store'
 
 export function AuthSessionBootstrap() {
   const dispatch = useDispatch<AppDispatch>()
-  const [refreshSession] = useRefreshSessionMutation()
   const bootstrapStatus = useSelector((state: RootState) => state.authSession.bootstrapStatus)
-  const refreshToken = useSelector((state: RootState) => state.authSession.session?.refreshToken)
 
   useEffect(() => {
     if (bootstrapStatus !== 'idle') {
       return
     }
 
+    // @dvnull: Ранее bootstrap всегда вызывал refresh и при любой ошибке очищал сессию; переведено в lazy-режим, чтобы не разлогинивать пользователя при reload до первого 401.
     dispatch(setAuthSessionBootstrapStatus('in_progress'))
-
-    if (!refreshToken) {
-      dispatch(setAuthSessionBootstrapStatus('done'))
-      return
-    }
-
-    void refreshSession({ refreshToken })
-      .unwrap()
-      .then((session) => {
-        dispatch(setAuthSession(session))
-      })
-      .catch(() => {
-        dispatch(clearAuthSession())
-      })
-      .finally(() => {
-        dispatch(setAuthSessionBootstrapStatus('done'))
-      })
-  }, [bootstrapStatus, dispatch, refreshSession, refreshToken])
+    dispatch(setAuthSessionBootstrapStatus('done'))
+  }, [bootstrapStatus, dispatch])
 
   return null
 }

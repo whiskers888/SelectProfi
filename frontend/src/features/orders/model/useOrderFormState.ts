@@ -25,7 +25,11 @@ export function useOrderFormState({
     }))
   }
 
-  function handleCreateInputChange(field: 'title' | 'description', event: ChangeEvent<HTMLInputElement>) {
+  // @dvnull: Ранее create-форма принимала только Input-события; расширено до Textarea для description без изменения структуры state.
+  function handleCreateInputChange(
+    field: 'title' | 'description',
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) {
     const nextValue = event.target.value
     setCreateForm((previous) => ({
       ...previous,

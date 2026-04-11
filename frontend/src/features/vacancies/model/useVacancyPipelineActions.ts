@@ -66,6 +66,18 @@ export function useVacancyPipelineActions({
   addCandidateFromBaseRequest,
   updateVacancyCandidateStageRequest,
 }: UseVacancyPipelineActionsArgs) {
+  const fullNameMaxLength = 200
+  const specializationMaxLength = 120
+  const resumeTitleMaxLength = 200
+  const emailMaxLength = 254
+  const phoneMaxLength = 32
+  const birthDatePattern = /^\d{4}-\d{2}-\d{2}$/
+
+  function hasVisibleText(html: string): boolean {
+    const normalized = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    return normalized.length > 0
+  }
+
   async function handleCreateCandidateResume(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -78,7 +90,10 @@ export function useVacancyPipelineActions({
     const fullName = createCandidateResumeForm.fullName.trim()
     const specialization = createCandidateResumeForm.specialization.trim()
     const resumeTitle = createCandidateResumeForm.resumeTitle.trim()
-    const resumeSummary = createCandidateResumeForm.resumeSummary.trim()
+    const resumeRichTextHtml = createCandidateResumeForm.resumeRichTextHtml.trim()
+    const birthDate = createCandidateResumeForm.birthDate.trim()
+    const email = createCandidateResumeForm.email.trim()
+    const phone = createCandidateResumeForm.phone.trim()
 
     if (!vacancyId) {
       setSubmitMessage({ status: 'error', text: 'Выберите вакансию в таблице.' })
@@ -88,11 +103,36 @@ export function useVacancyPipelineActions({
       return
     }
 
-    if (!fullName || !specialization || !resumeTitle || !resumeSummary) {
+    if (!fullName || !specialization || !resumeTitle || !hasVisibleText(resumeRichTextHtml)) {
       setSubmitMessage({
         status: 'error',
-        text: 'Заполните fullName, specialization, resumeTitle и резюме (summary).',
+        text: 'Заполните fullName, specialization, resumeTitle и содержимое резюме.',
       })
+      return
+    }
+    // @dvnull: Ранее ручное добавление кандидата проверяло только обязательные поля; добавлены контрактные ограничения длины/формата до вызова API.
+    if (fullName.length > fullNameMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'FullName не должен превышать 200 символов.' })
+      return
+    }
+    if (specialization.length > specializationMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'Specialization не должен превышать 120 символов.' })
+      return
+    }
+    if (resumeTitle.length > resumeTitleMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'ResumeTitle не должен превышать 200 символов.' })
+      return
+    }
+    if (email && email.length > emailMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'Email не должен превышать 254 символа.' })
+      return
+    }
+    if (phone && phone.length > phoneMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'Phone не должен превышать 32 символа.' })
+      return
+    }
+    if (birthDate && !birthDatePattern.test(birthDate)) {
+      setSubmitMessage({ status: 'error', text: 'Дата рождения должна быть в формате YYYY-MM-DD.' })
       return
     }
 
@@ -104,9 +144,9 @@ export function useVacancyPipelineActions({
         vacancyId,
         body: {
           fullName,
-          birthDate: createCandidateResumeForm.birthDate.trim() || undefined,
-          email: createCandidateResumeForm.email.trim() || undefined,
-          phone: createCandidateResumeForm.phone.trim() || undefined,
+          birthDate: birthDate || undefined,
+          email: email || undefined,
+          phone: phone || undefined,
           specialization,
           resumeTitle,
           resumeContentJson,

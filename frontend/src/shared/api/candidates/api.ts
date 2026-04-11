@@ -37,6 +37,7 @@ export type VacancyCandidatesItemResponse = {
   stage: VacancyCandidateStageContract
   addedAtUtc: string
   updatedAtUtc: string
+  viewedByCustomerAtUtc?: string | null
   isSelected: boolean
 }
 
@@ -141,6 +142,12 @@ const candidatesApi = api.injectEndpoints({
         body,
       }),
     }),
+    markVacancyCandidateViewedByCustomer: build.mutation<void, { vacancyId: string; candidateId: string }>({
+      query: ({ vacancyId, candidateId }) => ({
+        url: `/api/vacancies/${vacancyId}/candidates/${candidateId}/viewed`,
+        method: 'PATCH',
+      }),
+    }),
     getSelectedCandidateContacts: build.query<SelectedCandidateContactsResponse, { vacancyId: string }>({
       query: ({ vacancyId }) => ({
         url: `/api/vacancies/${vacancyId}/selected-candidate/contacts`,
@@ -167,6 +174,7 @@ export const {
   useGetVacancyBaseCandidatesQuery,
   useUpdateVacancyCandidateStageMutation,
   useSelectVacancyCandidateMutation,
+  useMarkVacancyCandidateViewedByCustomerMutation,
   useGetSelectedCandidateContactsQuery,
   useLazyGetSelectedCandidateContactsQuery,
   useGetExecutorCandidateContactsQuery,

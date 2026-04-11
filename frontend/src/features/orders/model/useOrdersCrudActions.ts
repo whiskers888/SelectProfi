@@ -52,6 +52,9 @@ export function useOrdersCrudActions({
   updateOrderRequest,
   deleteOrderRequest,
 }: UseOrdersCrudActionsArgs) {
+  const createOrderTitleMaxLength = 200
+  const createOrderDescriptionMaxLength = 4000
+
   // @dvnull: Ранее CRUD/use-case handlers были локально в OrdersPage; вынесены в model-хук без изменения проверок прав, текстов ошибок и reset/refetch последовательности.
   async function handleCreateOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -66,6 +69,15 @@ export function useOrdersCrudActions({
 
     if (!title || !description) {
       setSubmitMessage({ status: 'error', text: 'Заполните title и description.' })
+      return
+    }
+    // @dvnull: Ранее create-заказ валидировал только заполненность полей; добавлены ограничения длины по backend-контракту для ранней client-side валидации.
+    if (title.length > createOrderTitleMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'Title не должен превышать 200 символов.' })
+      return
+    }
+    if (description.length > createOrderDescriptionMaxLength) {
+      setSubmitMessage({ status: 'error', text: 'Description не должен превышать 4000 символов.' })
       return
     }
 
