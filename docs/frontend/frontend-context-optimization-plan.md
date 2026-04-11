@@ -2,218 +2,288 @@
 
 Last updated: 2026-04-11
 Owner: frontend
-Status: Draft (ready for execution)
+Status: In progress
 
-## 1. Цель и границы
+## 1. Цель
 
-### 1.1 Цель
-Снизить контекстную стоимость frontend-кода для разработки с AI-агентами и ручной поддержки, сохранив текущее поведение UI/бизнес-логики.
+Снизить контекстную стоимость frontend-кода и сделать `pages/*` тонкими orchestration-слоями.
 
-### 1.2 Измеримый результат
-- Уменьшить размер ключевых page-файлов до управляемого объёма.
-- Перевести тяжёлую логику из `pages/*` в `features/*` (ui/model/lib).
-- Сделать страницы тонкими композициями, которые легко читать и менять изолированно.
+Ключевой критерий:
+- `pages/*` не содержат доменные хелперы, парсинг ошибок, маппинг payload, сложные роли/policy-ветки.
+- Всё это уходит в `features/*` (`lib/model/ui`).
 
-### 1.3 Out of scope
-- Изменение backend-контрактов.
-- Изменение бизнес-функционала.
-- Редизайн интерфейса.
+## 2. Актуальный аудит всех pages
 
-## 2. Исходное состояние (baseline)
+Текущее состояние (`wc -l`, 2026-04-11):
+- `frontend/src/pages/VacanciesPage.tsx` — 1055
+- `frontend/src/pages/ProfilePage.tsx` — 806
+- `frontend/src/pages/RegisterPage.tsx` — 592
+- `frontend/src/pages/AuthPage.tsx` — 519
+- `frontend/src/pages/OrdersPage.tsx` — 437
+- `frontend/src/pages/LoginPage.tsx` — 252
+- `frontend/src/pages/WorkspacePage.tsx` — 6
 
-Состояние на 2026-04-11:
-- `frontend/src/pages/ProfilePage.tsx` — 1492 строк.
-- `frontend/src/pages/RegisterPage.tsx` — 592 строки.
-- `frontend/src/pages/VacanciesPage.tsx` — 1055 строк.
+Тесты (`pages/*.test.tsx`) в текущий scope минимизации не входят.
 
-Проблемы:
-- В одном файле смешаны UI, валидации, маппинги payload, политики ролей, обработка ошибок, submit-сценарии.
-- Высокая когнитивная нагрузка при изменениях.
-- Быстрое выгорание токен-контекста при чтении страницы целиком.
+## 3. Целевые бюджеты строк
 
-## 3. Архитектурные принципы выполнения
+Жёсткие целевые лимиты для `pages/*`:
+- `WorkspacePage`: `<= 20` (уже ок)
+- `LoginPage`: `<= 180`
+- `OrdersPage`: `<= 220`
+- `RegisterPage`: `<= 220`
+- `ProfilePage`: `<= 220`
+- `VacanciesPage`: `<= 260`
+- `AuthPage`: `<= 80` или удаление/архивация (предпочтительно)
 
-1. Сохраняем текущий функционал и API-контракты без изменений.
-2. Разделяем по ответственности, а не только по визуальным блокам.
-3. `pages/*` содержат только композицию экрана и wiring между feature-модулями.
-4. Доменные/ролевые правила выносятся в `lib/policy` или `model`, а не дублируются в UI.
-5. Один маленький шаг = один законченный инкремент с проверкой линтера.
-6. Любой шаг должен быть безопасно продолжен в новом чате по этому документу.
+Принцип: если страница вышла за бюджет, логика выносится в `features/*` в следующем инкременте.
 
-## 4. Целевая структура (ориентир)
+## 4. Архитектурная модель для всех страниц
 
-## 4.1 Profile
-Цель: декомпозиция по слоям + ролевые секции.
+## 4.1 Что остаётся в `pages/*`
+- Загрузка данных для экрана.
+- Компоновка секций/поверхностей.
+- Передача props в feature-компоненты.
+- Переходы/роутинг.
 
-Планируемые зоны:
-- `frontend/src/features/profile/lib/`
-  - `formatters.ts` (toTextOrDash, labels и др.)
-  - `validation.ts` (валидации common/applicant/customer/executor)
-  - `mappers.ts` (payload-мэппинг для update)
-  - `errors.ts` (request error mapping)
-  - `roles.ts` (resolveActiveRole, resolveAvailableRoles, role helpers)
-- `frontend/src/features/profile/ui/`
-  - `ProfileCommonFormSection.tsx`
-  - `ProfileApplicantSection.tsx`
-  - `ProfileCustomerSection.tsx`
-  - `ProfileExecutorSection.tsx`
-  - `ProfileAdminSection.tsx`
+## 4.2 Что выносится из `pages/*`
+- Парсинг/маппинг API-ошибок.
+- Валидации.
+- Конвертеры enums/labels.
+- Маппинг form state -> API payload.
+- use-case handlers и permission/policy матрицы.
+- Объёмные role-specific JSX формы.
+
+## 4.3 Папочная конвенция
+- `frontend/src/features/<domain>/lib/*` — чистые функции и мапперы.
+- `frontend/src/features/<domain>/model/*` — hooks/use-cases/policy.
+- `frontend/src/features/<domain>/ui/*` — секции экрана.
+
+## 5. Детальный план по каждой странице
+
+## 5.1 ProfilePage (высокий приоритет)
+
+Сделано:
+- Вынесены `errors.ts`, `roles.ts`, `formatters.ts`, `validation.ts`.
+- Вынесены UI-секции: `ProfileApplicantSection`, `ProfileCustomerSection`, `ProfileExecutorSection`.
+
+Осталось вынести:
+- Enum helpers (по твоему запросу):
+  - `toCustomerLegalFormValue`
+  - `toCustomerLegalFormLabel`
+  - `toEmploymentTypeLabel`
+  - `toCustomerLegalFormPayload`
+  - Целевой файл: `frontend/src/features/profile/lib/enums.ts`
+- Form-state builders:
+  - `createCommonProfileFormValues`
+  - `createApplicantProfileFormValues`
+  - `createCustomerProfileFormValues`
+  - `createExecutorProfileFormValues`
+  - Целевой файл: `frontend/src/features/profile/lib/form-state.ts`
+- Payload builders:
+  - `buildApplicantUpdatePayload`
+  - `buildCustomerUpdatePayload`
+  - `buildExecutorUpdatePayload`
+  - Целевой файл: `frontend/src/features/profile/lib/payloads.ts`
+- UI секции:
+  - `ProfileCommonSection.tsx`
   - `ProfileRoleSwitcher.tsx`
-  - `ProfileDetails.tsx`
-- `frontend/src/pages/ProfilePage.tsx`
-  - orchestration-only (загрузка данных, режимы редактирования, вызов секций).
+  - `ProfileAdminSection.tsx`
+  - `ProfileDetails.tsx` (общий)
 
-## 4.2 Register
-Цель: разделить submit-логику, роль-логику и UI секции.
+Цель:
+- `ProfilePage.tsx` до `<= 220` строк.
 
-Планируемые зоны:
+## 5.2 RegisterPage (высокий приоритет)
+
+Проблема:
+- В одном файле смешаны role-анимация, сбор formData, payload mapping, customer-поля, UI.
+
+План:
 - `frontend/src/features/auth/lib/registration/`
-  - `constants.ts` (локальные для register-page константы)
-  - `role-animation.ts` (чистая логика направления анимации)
-  - `submission.ts` (сбор `RegistrationFormValues` из FormData и payload mapping)
+  - `constants.ts` (offer/version/input styles и т.д.)
+  - `role-animation.ts` (вычисление направления анимации роли)
+  - `submission.ts` (FormData -> values, values -> payload)
 - `frontend/src/features/auth/ui/register/`
   - `RegisterRoleSelector.tsx`
   - `RegisterCustomerFields.tsx`
   - `RegisterCommonFields.tsx`
-  - `RegisterSubmitStatus.tsx` (если нужно)
-- `frontend/src/pages/RegisterPage.tsx`
-  - orchestration-only.
+  - `RegisterSocialButtons.tsx`
 
-## 4.3 Vacancies
-Критерий разбиения: не по ролям, а по use-case сценариям.
+Цель:
+- `RegisterPage.tsx` до `<= 220` строк.
 
-Планируемые зоны:
+## 5.3 VacanciesPage (критический приоритет)
+
+Проблема:
+- Самый тяжёлый файл, много mixed-responsibility и role-policy в одной странице.
+
+Критерий разбиения:
+- Не по ролям, а по use-case сценариям.
+
+План:
 - `frontend/src/features/vacancies/lib/`
-  - `errors.ts` (request error mapping)
-  - `policy.ts` (матрица прав/доступов по роли и статусу)
-  - `resume.ts` (buildResumeContentJson/buildResumeAttachmentsJson)
-  - `pagination.ts` (parseNonNegativeInteger и related helpers)
-  - `lifecycle.ts` (getLifecycleAction)
+  - `errors.ts`
+  - `policy.ts` (canCreate/canEdit/canManagePipeline/canSelect...)
+  - `lifecycle.ts` (`getLifecycleAction`)
+  - `pagination.ts` (`parseNonNegativeInteger` и related)
+  - `resume.ts` (resume json builders)
 - `frontend/src/features/vacancies/model/`
-  - `useVacanciesPermissions.ts`
   - `useVacanciesQueryState.ts`
+  - `useVacancyCrudActions.ts`
   - `useVacancyPipelineActions.ts`
-- `frontend/src/pages/VacanciesPage.tsx`
-  - orchestration-only + компоновка существующих `...Surface`.
+  - `useVacancyContactsActions.ts`
 
-## 5. Стратегия выполнения по этапам
+Цель:
+- `VacanciesPage.tsx` до `<= 260` строк.
 
-## Этап A. Подготовка и контроль метрик
-Задачи:
-- Зафиксировать baseline (строки ключевых файлов, список функций для выноса).
-- Зафиксировать критерии Done для каждого этапа.
+## 5.4 OrdersPage (средний приоритет)
 
-Done:
-- Обновлён раздел `Progress log` в этом файле.
-- Есть чек-лист на ближайший этап.
+Проблема:
+- Повторяет анти-паттерны `VacanciesPage`: local error parser, pagination parser, policy checks в page.
 
-## Этап B. ProfilePage refactor
-Задачи:
-- Вынести утилиты/валидации/ошибки/role helpers в `features/profile/lib`.
-- Вынести ролевые формы в `features/profile/ui`.
-- Уменьшить `ProfilePage.tsx` до orchestration-композиции.
+План:
+- `frontend/src/features/orders/lib/`
+  - `errors.ts`
+  - `pagination.ts`
+  - `policy.ts`
+- `frontend/src/features/orders/model/`
+  - `useOrdersQueryState.ts`
+  - `useOrdersCrudActions.ts`
+  - `useOrderExecutorsActions.ts`
 
-Done:
-- Функционально эквивалентное поведение.
-- `eslint` без ошибок.
-- Размер `ProfilePage.tsx` существенно ниже baseline.
+Цель:
+- `OrdersPage.tsx` до `<= 220` строк.
 
-## Этап C. RegisterPage refactor
-Задачи:
-- Вынести submit mapping и role animation logic.
-- Вынести секции формы.
-- Сохранить текущие сценарии ошибок и редирект после регистрации.
+## 5.5 LoginPage (средний приоритет)
 
-Done:
-- `eslint` без ошибок.
-- Размер `RegisterPage.tsx` существенно ниже baseline.
+Проблема:
+- Страница небольшая, но содержит повторяющиеся элементы с Register (соц-кнопки, input style constants, delayed navigate pattern).
 
-## Этап D. VacanciesPage refactor
-Задачи:
-- Вынести error mapping, lifecycle/policy, pagination/resume helpers.
-- Вынести action hooks/use-cases из страницы.
-- Свести страницу к orchestration и binding UI-компонентов.
+План:
+- Вынести общий auth-ui/shared:
+  - `useDelayedNavigation.ts`
+  - `AuthSocialButtons.tsx`
+  - `authInputStyles.ts`
+- Сохранить существующий UX без изменения сценариев входа.
 
-Done:
-- `eslint` без ошибок.
-- Размер `VacanciesPage.tsx` существенно ниже baseline.
+Цель:
+- `LoginPage.tsx` до `<= 180` строк.
 
-## Этап E. Финальная проверка и документация
-Задачи:
-- Повторно проверить размеры файлов и наличие дублирования.
-- Обновить `Progress log` и итоговые метрики.
-- Зафиксировать последующие точки улучшения (если нужны).
+## 5.6 AuthPage (отдельное решение)
 
-Done:
-- Документ актуален для продолжения работы из нового чата.
+Факт:
+- `AuthPage.tsx` сейчас не используется в роутинге (router ведёт на `LoginPage` и `RegisterPage`).
 
-## 6. Технические риски и контроль
+План:
+- Вариант A (предпочтительный): удалить `AuthPage.tsx` и тесты после подтверждения, что legacy-путь не нужен.
+- Вариант B: перенести в `frontend/src/legacy/pages/AuthPage.legacy.tsx` и исключить из рабочего контекста.
 
-Риск 1: Поведенческая регрессия при выносе валидаций.
-- Контроль: перенос без изменения сигнатур и текстов ошибок; поэтапная проверка.
+Цель:
+- Не тратить контекст на мёртвый код.
 
-Риск 2: Нарушение связей между role-specific формами и payload.
-- Контроль: выносить сначала чистые функции в `lib`, потом UI.
+## 5.7 WorkspacePage
 
-Риск 3: Разрастание количества мелких файлов без структуры.
-- Контроль: строгая группировка только по `lib/model/ui`, без лишней вложенности.
+Состояние:
+- Уже тонкая страница-обёртка, изменений не требуется.
 
-Риск 4: Потеря контекста между чатами.
-- Контроль: вести `Progress log` и `Next exact step` после каждого инкремента.
+## 6. Общие инженерные правила минимизации
 
-## 7. Правила исполнения шага (операционный стандарт)
+1. Один инкремент = один переносимый блок.
+2. `eslint` после каждого инкремента.
+3. Никаких изменений backend-контрактов.
+4. Никаких изменений UX/бизнес-правил без отдельной задачи.
+5. Сначала `lib/model`, затем `ui`, потом чистка `page`.
 
-Для каждого шага:
-1. Выполняем только один логический инкремент.
-2. Не трогаем функционал за пределами текущего инкремента.
-3. После правок запускаем линтер для затронутой зоны.
-4. Обновляем `Progress log` (что сделано, какие файлы, что проверено).
-5. Фиксируем `Next exact step` (одна конкретная следующая задача).
+## 7. Порядок выполнения (обновлённый)
 
-## 8. Чек-лист качества для каждого PR/шага
+1. Profile: вынести enum helpers в `lib/enums.ts`.
+2. Profile: вынести form-state builders в `lib/form-state.ts`.
+3. Profile: вынести role payload builders в `lib/payloads.ts`.
+4. Profile: вынести `ProfileCommonSection`.
+5. Profile: вынести `ProfileRoleSwitcher`, `ProfileAdminSection`, общий `ProfileDetails`.
+6. Register: разделить `submission/role-animation/customer-fields`.
+7. Vacancies: вынести `errors/policy/lifecycle/pagination/resume`.
+8. Vacancies: вынести use-case hooks и почистить page до orchestration.
+9. Orders: вынести `errors/policy/pagination` и action hooks.
+10. Login: вынести shared auth-блоки.
+11. AuthPage: удалить или архивировать после подтверждения.
+12. Финальный аудит строк по всем pages.
 
-- Нет изменений API-контрактов.
-- Нет изменения бизнес-правил.
-- Нет `any` в TypeScript (кроме строго обоснованных случаев).
-- Нет дублирования логики ролей между компонентами.
-- Ролевые проверки централизованы.
-- `pages/*` не содержат громоздких helper-функций.
-- `eslint` проходит.
+## 8. Definition of Done
 
-## 9. Конкретный порядок работ (минимальные инкременты)
+Шаг считается завершённым, если:
+- Целевой блок вынесен в `features/*`.
+- `page` использует импорт вместо локальной логики.
+- `npm run lint` проходит.
+- В `Progress log` зафиксированы файлы и результат.
+- Обновлён `Next exact step`.
 
-1. Profile: вынести `errors.ts` и подключить обратно.
-2. Profile: вынести `roles.ts` и formatters.
-3. Profile: вынести `validation.ts`.
-4. Profile: вынести `ProfileApplicantSection`.
-5. Profile: вынести `ProfileCustomerSection`.
-6. Profile: вынести `ProfileExecutorSection`.
-7. Profile: вынести common/admin/switcher секции и почистить страницу.
-8. Register: вынести `submission.ts`.
-9. Register: вынести role selector + customer fields.
-10. Register: финальная чистка страницы.
-11. Vacancies: вынести `errors.ts`.
-12. Vacancies: вынести `policy.ts` + `lifecycle.ts`.
-13. Vacancies: вынести `resume.ts` + `pagination.ts`.
-14. Vacancies: вынести hooks use-case и финальная чистка страницы.
-15. Финальные метрики и update документа.
-
-## 10. Progress log
+## 9. Progress log
 
 ### 2026-04-11
 - Создан файл плана `docs/frontend/frontend-context-optimization-plan.md`.
-- Зафиксированы baseline-метрики:
-  - `ProfilePage.tsx` — 1492
-  - `RegisterPage.tsx` — 592
-  - `VacanciesPage.tsx` — 1055
-- Зафиксирована целевая стратегия и пошаговая дорожная карта.
+- Зафиксированы baseline-метрики по крупным страницам (`Profile/Register/Vacancies`).
+- Выполнен Profile step 1: `features/profile/lib/errors.ts`.
+- Выполнен Profile step 2: `features/profile/lib/roles.ts`.
+- Выполнен Profile step 3: `features/profile/lib/formatters.ts`.
+- Выполнен Profile step 4: `features/profile/lib/validation.ts`.
+- Выполнен Profile step 5: `features/profile/ui/ProfileApplicantSection.tsx`.
+- Выполнен Profile step 6: `features/profile/ui/ProfileCustomerSection.tsx`.
+- Выполнен Profile step 7: `features/profile/ui/ProfileExecutorSection.tsx`.
+- Выполнен Profile step 8: enum helpers вынесены в `frontend/src/features/profile/lib/enums.ts`, `frontend/src/pages/ProfilePage.tsx` переведён на импорт (`toCustomerLegalFormValue`, `toCustomerLegalFormLabel`, `toEmploymentTypeLabel`, `toCustomerLegalFormPayload`), `npm run lint` (frontend) проходит.
+- Выполнен Profile step 9: form-state builders вынесены в `frontend/src/features/profile/lib/form-state.ts`, `frontend/src/pages/ProfilePage.tsx` переведён на импорт (`createCommonProfileFormValues`, `createApplicantProfileFormValues`, `createCustomerProfileFormValues`, `createExecutorProfileFormValues`), `npm run lint` (frontend) проходит.
+- Выполнен Profile step 10: payload builders вынесены в `frontend/src/features/profile/lib/payloads.ts`, `frontend/src/pages/ProfilePage.tsx` переведён на импорт (`buildApplicantUpdatePayload`, `buildCustomerUpdatePayload`, `buildExecutorUpdatePayload`), `npm run lint` (frontend) проходит.
+- Выполнен Profile step 11: секция общих данных вынесена в `frontend/src/features/profile/ui/ProfileCommonSection.tsx`, `frontend/src/pages/ProfilePage.tsx` переведён на использование `ProfileCommonSection`, `npm run lint` (frontend) проходит.
+- Выполнен Profile step 12: блок переключения активной роли вынесен в `frontend/src/features/profile/ui/ProfileRoleSwitcher.tsx`, `frontend/src/pages/ProfilePage.tsx` переведён на использование `ProfileRoleSwitcher`, `npm run lint` (frontend) проходит.
+- Выполнен Profile step 13: блок роли администратора вынесен в `frontend/src/features/profile/ui/ProfileAdminSection.tsx`, `frontend/src/pages/ProfilePage.tsx` переведён на использование `ProfileAdminSection`, `npm run lint` (frontend) проходит.
+- Выполнен Profile step 14: общий `Details`-рендерер вынесен в `frontend/src/features/profile/ui/ProfileDetails.tsx` и подключён в `ProfileCommonSection`, `ProfileApplicantSection`, `ProfileCustomerSection`, `ProfileExecutorSection`, `npm run lint` (frontend) проходит.
+- Выполнен Register step 1: логика role animation вынесена в `frontend/src/features/auth/lib/registration/role-animation.ts`, `frontend/src/pages/RegisterPage.tsx` переведён на `getRoleAnimationDirection/getRoleAnimationClassName`, `npm run lint` (frontend) проходит.
+- Выполнен Register step 2: submission mapping вынесен в `frontend/src/features/auth/lib/registration/submission.ts` (`FormData -> RegistrationFormValues`, `RegistrationFormValues -> executeRegister payload`), `frontend/src/pages/RegisterPage.tsx` переведён на `buildRegistrationValuesFromFormData/buildRegisterPayload`, `npm run lint` (frontend) проходит.
+- Выполнен Register step 3: registration constants вынесены в `frontend/src/features/auth/lib/registration/constants.ts` (`customerLegalFormOptions`, `defaultCustomerLegalForm`, `offerLink`, `currentOfferVersion`, `authInputClassName`), `frontend/src/pages/RegisterPage.tsx` переведён на импорт, `npm run lint` (frontend) проходит.
+- Выполнен Register step 4: блок выбора роли (mobile `Select` + desktop `Tabs` + описание роли) вынесен в `frontend/src/features/auth/ui/register/RegisterRoleSelector.tsx`, `frontend/src/pages/RegisterPage.tsx` переведён на использование `RegisterRoleSelector`, `npm run lint` (frontend) проходит.
+- Выполнен Register step 5: customer-specific блок вынесен в `frontend/src/features/auth/ui/register/RegisterCustomerFields.tsx` (tabs `customerLegalForm`, поля `companyName/customerInn/customerEgrn/customerEgrnip`, блок `offerAccepted` c ссылкой на оферту), `frontend/src/pages/RegisterPage.tsx` переведён на `RegisterCustomerFields` (`section="fields"` и `section="offer"`), `npm run lint` (frontend) проходит.
+- Выполнен Register step 6: общий блок полей регистрации вынесен в `frontend/src/features/auth/ui/register/RegisterCommonFields.tsx` (`fullName`, `phone`, `email`, `password`), `frontend/src/pages/RegisterPage.tsx` переведён на `RegisterCommonFields`, `npm run lint` (frontend) проходит.
+- Выполнен Register step 7: social-блок регистрации (разделитель + кнопки `Google/VK ID/Яндекс/Mail.ru`) вынесен в `frontend/src/features/auth/ui/register/RegisterSocialButtons.tsx`, `frontend/src/pages/RegisterPage.tsx` переведён на `RegisterSocialButtons`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 1: локальный parser ошибок вынесен в `frontend/src/features/vacancies/lib/errors.ts` (`getRequestErrorMessage` + type guards/problem-details mapping), `frontend/src/pages/VacanciesPage.tsx` переведён на импорт из `features/vacancies/lib/errors`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 2: parser пагинации `parseNonNegativeInteger` вынесен в `frontend/src/features/vacancies/lib/pagination.ts`, `frontend/src/pages/VacanciesPage.tsx` переведён на импорт из `features/vacancies/lib/pagination`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 3: lifecycle helper `getLifecycleAction` вынесен в `frontend/src/features/vacancies/lib/lifecycle.ts`, `frontend/src/pages/VacanciesPage.tsx` переведён на импорт из `features/vacancies/lib/lifecycle`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 4: resume helpers `buildResumeContentJson` и `buildResumeAttachmentsJson` вынесены в `frontend/src/features/vacancies/lib/resume.ts`, `frontend/src/pages/VacanciesPage.tsx` переведён на импорт из `features/vacancies/lib/resume`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 5: role/policy checks вынесены в `frontend/src/features/vacancies/lib/policy.ts` (`canCreateVacancy`, `canEditVacancy`, `canManagePipeline`, `canSelectCandidate`, `canReadSelectedContacts`, `canReadExecutorContacts`, `canReadVacancyCandidates`), `frontend/src/pages/VacanciesPage.tsx` переведён на импорт policy-функций, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 6: состояние и handlers пагинации вынесены в `frontend/src/features/vacancies/model/useVacanciesQueryState.ts` (`vacanciesQuery`, `vacanciesLimitInput`, `vacanciesOffsetInput`, `applyVacanciesQuery`, `handleVacanciesQueryInputChange`, `handleApplyVacanciesQuery`, `handlePreviousVacanciesPage`, `handleNextVacanciesPage`), `frontend/src/pages/VacanciesPage.tsx` переведён на `useVacanciesQueryState`, экспорт добавлен в `frontend/src/features/vacancies/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 7: CRUD-actions вакансии вынесены в `frontend/src/features/vacancies/model/useVacancyCrudActions.ts` (`handleCreateVacancy`, `handleUpdateVacancyDetails`, `handleDeleteVacancy`, `handleStatusTransition`), `frontend/src/pages/VacanciesPage.tsx` переведён на `useVacancyCrudActions` с сохранением сообщений/валидаций и `unwrap`-сценариев, экспорт добавлен в `frontend/src/features/vacancies/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 8: pipeline-actions вынесены в `frontend/src/features/vacancies/model/useVacancyPipelineActions.ts` (`handleCreateCandidateResume`, `handleAddCandidateFromBase`, `handleUpdateCandidateStage`), `frontend/src/pages/VacanciesPage.tsx` переведён на `useVacancyPipelineActions` с сохранением guard-проверок, reset/refetch-последовательности и `unwrap`-сценариев, экспорт добавлен в `frontend/src/features/vacancies/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 9: contacts/selection actions вынесены в `frontend/src/features/vacancies/model/useVacancyContactsActions.ts` (`handleSelectCandidate`, `handleGetSelectedCandidateContacts`, `handleGetExecutorCandidateContacts`), `frontend/src/pages/VacanciesPage.tsx` переведён на `useVacancyContactsActions` с сохранением guard-проверок, сообщений и `unwrap`-сценариев, экспорт добавлен в `frontend/src/features/vacancies/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 10: локальный тип `CreateCandidateResumeFormState` вынесен в `frontend/src/features/vacancies/model/types.ts` и переиспользован в `frontend/src/features/vacancies/model/useVacancyPipelineActions.ts` и `frontend/src/pages/VacanciesPage.tsx` (через `frontend/src/features/vacancies/model/index.ts`), `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 11: локальный тип `CreateVacancyFormState` вынесен в `frontend/src/features/vacancies/model/types.ts` и переиспользован в `frontend/src/features/vacancies/model/useVacancyCrudActions.ts` и `frontend/src/pages/VacanciesPage.tsx` (через `frontend/src/features/vacancies/model/index.ts`), `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 12: локальный тип `SubmitMessage` вынесен в `frontend/src/features/vacancies/model/types.ts` (вместе с `SubmitMessageStatus`) и переиспользован в `frontend/src/features/vacancies/model/useVacancyCrudActions.ts`, `frontend/src/features/vacancies/model/useVacancyPipelineActions.ts`, `frontend/src/features/vacancies/model/useVacancyContactsActions.ts` и `frontend/src/pages/VacanciesPage.tsx` (через `frontend/src/features/vacancies/model/index.ts`), `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 13: локальный тип `PipelineFormState` вынесен в `frontend/src/features/vacancies/model/types.ts` и переиспользован в `frontend/src/pages/VacanciesPage.tsx` (через `frontend/src/features/vacancies/model/index.ts`), `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 14: локальный тип `VacancyWorkspaceSection` вынесен в `frontend/src/features/vacancies/model/types.ts` и переиспользован в `frontend/src/pages/VacanciesPage.tsx` (через `frontend/src/features/vacancies/model/index.ts`), `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 15: локальный guard helper `ensurePublishedVacancyForPipeline` переведён на policy helper `isPublishedVacancyStatus`, который вынесен в `frontend/src/features/vacancies/lib/policy.ts`, `frontend/src/pages/VacanciesPage.tsx` обновлён на импорт policy helper, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 16: локальные handlers редактирования инпутов вынесены в `frontend/src/features/vacancies/model/useVacancyFormState.ts` (`handleCreateFormChange`, `handleCreateOrderSelectChange`, `handleAddFromBaseCandidateSelectChange`, `handleVacancyEditTitleChange`, `handleVacancyEditDescriptionChange`, `handlePipelineStageChange`, `handleCreateCandidateResumeInputChange`), `frontend/src/pages/VacanciesPage.tsx` переведён на `useVacancyFormState`, экспорт добавлен в `frontend/src/features/vacancies/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 17: локальный helper контекста `applyVacancyContext` вынесен в `frontend/src/features/vacancies/model/useVacancyContextState.ts` (с сохранением текущей последовательности reset-полей), `frontend/src/pages/VacanciesPage.tsx` переведён на `useVacancyContextState`, экспорт добавлен в `frontend/src/features/vacancies/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 18: локальный guard helper `ensurePublishedVacancyForPipeline` вынесен в `frontend/src/features/vacancies/model/useVacancyPipelineGuards.ts` (с сохранением проверки через `isPublishedVacancyStatus` и текущего текста ошибки), `frontend/src/pages/VacanciesPage.tsx` переведён на `useVacancyPipelineGuards`, экспорт добавлен в `frontend/src/features/vacancies/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 19: удалён локальный wrapper `handleSelectVacancy` в `frontend/src/pages/VacanciesPage.tsx`, `applyVacancyContext` передан напрямую в `VacanciesListSurface.onSelectVacancy`, `npm run lint` (frontend) проходит.
+- Выполнен Vacancies step 20: локальные reset-callbacks `resetCreateForm` и `resetVacancyEditState` вынесены в `frontend/src/features/vacancies/model/useVacancyFormReset.ts`, `frontend/src/pages/VacanciesPage.tsx` переведён на `useVacancyFormReset`, экспорт добавлен в `frontend/src/features/vacancies/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен AuthPage cleanup step 1: удалены неиспользуемые legacy-файлы `frontend/src/pages/AuthPage.tsx` и `frontend/src/pages/AuthPage.test.tsx` (роутинг уже использовал `LoginPage/RegisterPage`), `npm run lint` (frontend) проходит.
+- Выполнен Orders step 1: локальный parser ошибок `getRequestErrorMessage` (вместе с type guards `isProblemDetailsPayload` и `isFetchBaseQueryError`) вынесен в `frontend/src/features/orders/lib/errors.ts`, `frontend/src/pages/OrdersPage.tsx` переведён на импорт parser-а, `npm run lint` (frontend) проходит.
+- Выполнен Orders step 2: локальный parser пагинации `parseNonNegativeInteger` вынесен в `frontend/src/features/orders/lib/pagination.ts`, `frontend/src/pages/OrdersPage.tsx` переведён на импорт parser-а, `npm run lint` (frontend) проходит.
+- Выполнен Orders step 3: локальные role/policy вычисления (`canCreateOrder`, `canEditOrder`, `canDeleteOrder`, `canAssignExecutor`) вынесены в `frontend/src/features/orders/lib/policy.ts`, `frontend/src/pages/OrdersPage.tsx` переведён на импорт policy-функций, `npm run lint` (frontend) проходит.
+- Выполнен Orders step 4: состояние и handlers пагинации (`ordersQuery`, `ordersLimitInput`, `ordersOffsetInput`, `applyOrdersQuery`, `handleOrdersQueryInputChange`, `handleApplyOrdersQuery`, `handlePreviousOrdersPage`, `handleNextOrdersPage`) вынесены в `frontend/src/features/orders/model/useOrdersQueryState.ts`, `frontend/src/pages/OrdersPage.tsx` переведён на `useOrdersQueryState`, экспорт добавлен в `frontend/src/features/orders/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Orders step 5: локальные handlers формы/таблицы (`handleExecutorSelectChange`, `handleCreateInputChange`, `handleOrderEditInputChange`) вынесены в `frontend/src/features/orders/model/useOrderFormState.ts`, `frontend/src/pages/OrdersPage.tsx` переведён на `useOrderFormState`, экспорт добавлен в `frontend/src/features/orders/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Orders step 6: use-case handlers мутаций заказа (`handleCreateOrder`, `handleAssignExecutor`, `handleUpdateOrderDetails`, `handleDeleteOrder`) вынесены в `frontend/src/features/orders/model/useOrdersCrudActions.ts`, `frontend/src/pages/OrdersPage.tsx` переведён на `useOrdersCrudActions`, экспорт добавлен в `frontend/src/features/orders/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Orders step 7: локальный handler загрузки деталей заказа `handleLoadOrderDetails` вынесен в `frontend/src/features/orders/model/useOrderDetailsActions.ts`, `frontend/src/pages/OrdersPage.tsx` переведён на `useOrderDetailsActions`, экспорт добавлен в `frontend/src/features/orders/model/index.ts`, `npm run lint` (frontend) проходит.
+- Выполнен Login step 1: social-блок входа (разделитель + кнопки `Google/VK ID/Яндекс/Mail.ru`) вынесен в `frontend/src/features/auth/ui/AuthSocialButtons.tsx`, `frontend/src/pages/LoginPage.tsx` переведён на `AuthSocialButtons`, `npm run lint` (frontend) проходит.
+- Дополнительно проведён полный аудит всех файлов `frontend/src/pages/*`.
+- План расширен до полного coverage по всем страницам с целевыми лимитами строк.
 
-## 11. Next exact step
+## 10. Next exact step
 
-Вынести из `ProfilePage.tsx` функцию обработки API-ошибок в `frontend/src/features/profile/lib/errors.ts` с полным сохранением сообщений и типов, затем подключить её обратно в страницу и прогнать `eslint` по frontend.
+Продолжить `Login`-оптимизацию: вынести локальные константы `authInputClassName` и `authInputStyle`
+из `frontend/src/pages/LoginPage.tsx` в `frontend/src/features/auth/lib/authInputStyles.ts`,
+подключить импорт в страницу и прогнать `eslint` по frontend.
 
-## 12. Шаблон продолжения в новом чате
+## 11. Шаблон продолжения в новом чате
 
-Использовать этот шаблон запроса:
-
-"Продолжаем по `docs/frontend/frontend-context-optimization-plan.md` с шага из раздела `Next exact step`. Сначала выполни только этот шаг, затем обнови `Progress log` и `Next exact step` в документе."
+"Продолжаем по `docs/frontend/frontend-context-optimization-plan.md` с шага из `Next exact step`.
+Сначала выполни только этот шаг, затем обнови `Progress log` и `Next exact step`."
