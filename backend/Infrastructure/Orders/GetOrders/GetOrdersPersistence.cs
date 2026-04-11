@@ -8,16 +8,22 @@ namespace SelectProfi.backend.Infrastructure.Orders.GetOrders;
 
 public sealed class GetOrdersPersistence(AppDbContext dbContext) : IGetOrdersPersistence
 {
-    public async Task<IReadOnlyList<Order>> FindVisibleActiveOrdersAsync(
+    public async Task<IReadOnlyList<Order>> FindVisibleOrdersAsync(
         Guid requesterUserId,
         UserRole requesterRole,
+        bool includeArchived,
         int limit,
         int offset,
         CancellationToken cancellationToken)
     {
         var query = dbContext.Orders
-            .AsNoTracking()
-            .Where(order => order.DeletedAtUtc == null);
+            .AsNoTracking();
+
+        // @dvnull: Список заказов расширен параметром includeArchived для отображения soft-deleted сущностей в архиве.
+        if (!includeArchived)
+        {
+            query = query.Where(order => order.DeletedAtUtc == null);
+        }
 
         query = requesterRole switch
         {

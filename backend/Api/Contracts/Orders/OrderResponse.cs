@@ -12,7 +12,11 @@ public sealed class OrderResponse
 
     public string Description { get; init; } = string.Empty;
 
+    public OrderStatusContract Status { get; init; } = OrderStatusContract.Active;
+
     public DateTime CreatedAtUtc { get; init; }
 
     public DateTime UpdatedAtUtc { get; init; }
+
+    public DateTime? DeletedAtUtc { get; init; }
 }

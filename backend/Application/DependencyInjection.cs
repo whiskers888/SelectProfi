@@ -4,6 +4,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForE
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
+using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Application.Auth.Login;
@@ -11,6 +12,8 @@ using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
+using SelectProfi.backend.Application.Dashboard.GetCustomerDashboardStats;
+using SelectProfi.backend.Application.Dashboard.GetExecutorDashboardStats;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
@@ -47,6 +50,8 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateVacancyCandidateStageCommand, UpdateVacancyCandidateStageResult>, UpdateVacancyCandidateStageCommandHandler>();
         // @dvnull: Добавлен command финального выбора кандидата заказчиком только из shortlist.
         services.AddScoped<ICommandHandler<SelectVacancyCandidateCommand, SelectVacancyCandidateResult>, SelectVacancyCandidateCommandHandler>();
+        // @dvnull: Добавлен command фиксации просмотра кандидата заказчиком для расчета счетчика новых профилей.
+        services.AddScoped<ICommandHandler<MarkVacancyCandidateViewedByCustomerCommand, MarkVacancyCandidateViewedByCustomerResult>, MarkVacancyCandidateViewedByCustomerCommandHandler>();
         // @dvnull: Ранее application-слой не содержал command для ручного заведения кандидата и резюме; добавлено для первого этапа Candidate/Resume flow.
         services.AddScoped<ICommandHandler<CreateCandidateResumeCommand, CreateCandidateResumeResult>, CreateCandidateResumeCommandHandler>();
         services.AddScoped<ICommandHandler<CreateVacancyCommand, CreateVacancyResult>, CreateVacancyCommandHandler>();
@@ -57,6 +62,10 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetOrderByIdQuery, GetOrderByIdResult>, GetOrderByIdQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrderExecutorsQuery, GetOrderExecutorsResult>, GetOrderExecutorsQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrdersQuery, GetOrdersResult>, GetOrdersQueryHandler>();
+        // @dvnull: Добавлен query-handler серверной агрегации dashboard-метрик заказчика для отдельного frontend-запроса статистики.
+        services.AddScoped<IQueryHandler<GetCustomerDashboardStatsQuery, GetCustomerDashboardStatsResult>, GetCustomerDashboardStatsQueryHandler>();
+        // @dvnull: Добавлен query-handler серверной агрегации dashboard-метрик исполнителя для отдельного frontend-запроса статистики.
+        services.AddScoped<IQueryHandler<GetExecutorDashboardStatsQuery, GetExecutorDashboardStatsResult>, GetExecutorDashboardStatsQueryHandler>();
         services.AddScoped<IQueryHandler<GetVacancyByIdQuery, GetVacancyByIdResult>, GetVacancyByIdQueryHandler>();
         services.AddScoped<IQueryHandler<GetVacanciesQuery, GetVacanciesResult>, GetVacanciesQueryHandler>();
         // @dvnull: Добавлен query получения контактов кандидата для назначенного рекрутера с проверкой owner+TTL.

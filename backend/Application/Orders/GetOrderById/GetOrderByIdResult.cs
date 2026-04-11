@@ -1,5 +1,7 @@
 namespace SelectProfi.backend.Application.Orders.GetOrderById;
 
+using SelectProfi.backend.Domain.Orders;
+
 public sealed class GetOrderByIdResult
 {
     public GetOrderByIdErrorCode ErrorCode { get; init; } = GetOrderByIdErrorCode.None;
@@ -13,6 +15,8 @@ public sealed class GetOrderByIdResult
     public string Title { get; init; } = string.Empty;
 
     public string Description { get; init; } = string.Empty;
+
+    public OrderStatus Status { get; init; } = OrderStatus.Active;
 
     public DateTime CreatedAtUtc { get; init; }
 

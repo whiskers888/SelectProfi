@@ -7,6 +7,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForE
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
+using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Application.Cqrs;
@@ -254,6 +255,26 @@ public sealed class VacanciesController(
     {
         var result = await queryDispatcher.DispatchAsync<GetVacancyCandidatesQuery, GetVacancyCandidatesResult>(
             vacancyId.ToGetVacancyCandidatesQuery(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpPatch("{vacancyId:guid}/candidates/{candidateId:guid}/viewed")]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOnly)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesForbiddenProblem]
+    [ProducesConflictProblem]
+    // @dvnull: Добавлен endpoint фиксации просмотра кандидата заказчиком для расчета счетчика новых кандидатов.
+    public async Task<IActionResult> MarkCandidateViewedByCustomer(
+        Guid vacancyId,
+        Guid candidateId,
+        CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<
+            MarkVacancyCandidateViewedByCustomerCommand,
+            MarkVacancyCandidateViewedByCustomerResult>(
+            candidateId.ToMarkViewedByCustomerCommand(vacancyId, RequesterUserId, RequesterRole),
             cancellationToken);
 
         return result.ToActionResult(this);

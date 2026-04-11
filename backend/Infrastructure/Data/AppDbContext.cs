@@ -89,6 +89,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         {
             builder.HasKey(order => order.Id);
 
+            // @dvnull: Добавлен статус жизненного цикла заказа для бизнес-действий "active/paused".
+            builder.Property(order => order.Status)
+                .HasConversion<string>()
+                .HasMaxLength(32)
+                .HasDefaultValue(OrderStatus.Active)
+                .IsRequired();
+
             builder.HasOne(order => order.Customer)
                 .WithMany()
                 .HasForeignKey(order => order.CustomerId)
@@ -101,6 +108,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
             builder.HasIndex(order => new { order.CustomerId, order.DeletedAtUtc });
             builder.HasIndex(order => new { order.ExecutorId, order.DeletedAtUtc });
+            builder.HasIndex(order => new { order.Status, order.DeletedAtUtc });
         });
 
         modelBuilder.Entity<Vacancy>(builder =>

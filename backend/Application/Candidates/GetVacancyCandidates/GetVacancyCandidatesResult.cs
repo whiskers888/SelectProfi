@@ -27,5 +27,7 @@ public sealed class GetVacancyCandidatesItemResult
 
     public DateTime UpdatedAtUtc { get; init; }
 
+    public DateTime? ViewedByCustomerAtUtc { get; init; }
+
     public bool IsSelected { get; init; }
 }

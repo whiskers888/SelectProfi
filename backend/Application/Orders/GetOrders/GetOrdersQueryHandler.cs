@@ -12,9 +12,10 @@ public sealed class GetOrdersQueryHandler(IGetOrdersPersistence persistence)
         if (!OrderAccessRules.CanReadOrders(query.RequesterRole))
             return new GetOrdersResult { ErrorCode = GetOrdersErrorCode.Forbidden };
 
-        var orders = await persistence.FindVisibleActiveOrdersAsync(
+        var orders = await persistence.FindVisibleOrdersAsync(
             query.RequesterUserId,
             query.RequesterRole,
+            query.IncludeArchived,
             query.Limit,
             query.Offset,
             cancellationToken);
@@ -26,8 +27,10 @@ public sealed class GetOrdersQueryHandler(IGetOrdersPersistence persistence)
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            Status = order.Status,
             CreatedAtUtc = order.CreatedAtUtc,
-            UpdatedAtUtc = order.UpdatedAtUtc
+            UpdatedAtUtc = order.UpdatedAtUtc,
+            DeletedAtUtc = order.DeletedAtUtc
         }).ToArray();
 
         return new GetOrdersResult

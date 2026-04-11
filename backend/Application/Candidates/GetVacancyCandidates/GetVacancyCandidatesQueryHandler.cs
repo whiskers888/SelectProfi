@@ -42,6 +42,7 @@ public sealed class GetVacancyCandidatesQueryHandler(IGetVacancyCandidatesPersis
                 Stage = vacancyCandidate.Stage,
                 AddedAtUtc = vacancyCandidate.AddedAtUtc,
                 UpdatedAtUtc = vacancyCandidate.UpdatedAtUtc,
+                ViewedByCustomerAtUtc = vacancyCandidate.ViewedByCustomerAtUtc,
                 IsSelected = selectedCandidateId == vacancyCandidate.CandidateId
             })
             .ToArray();

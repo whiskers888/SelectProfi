@@ -9,4 +9,6 @@ public sealed class GetOrdersRequest
 
     [Range(0, int.MaxValue)]
     public int Offset { get; init; }
+
+    public bool IncludeArchived { get; init; }
 }

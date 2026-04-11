@@ -4,6 +4,7 @@ using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Contracts.Orders;
 using SelectProfi.backend.Domain.Users;
 
@@ -36,12 +37,14 @@ public static class OrderRequestMapper
         Guid requesterUserId,
         UserRole requesterRole)
     {
+        // @dvnull: Пробрасываем includeArchived, чтобы фронт мог запросить активные + архивные заказы одним вызовом.
         return new GetOrdersQuery
         {
             RequesterUserId = requesterUserId,
             RequesterRole = requesterRole,
             Limit = request.Limit,
-            Offset = request.Offset
+            Offset = request.Offset,
+            IncludeArchived = request.IncludeArchived
         };
     }
 
@@ -67,7 +70,8 @@ public static class OrderRequestMapper
             RequesterRole = requesterRole,
             Title = request.Title,
             Description = request.Description,
-            ExecutorId = request.ExecutorId
+            ExecutorId = request.ExecutorId,
+            Status = request.Status is null ? null : MapStatus(request.Status.Value)
         };
     }
 
@@ -78,6 +82,16 @@ public static class OrderRequestMapper
             OrderId = orderId,
             RequesterUserId = requesterUserId,
             RequesterRole = requesterRole
+        };
+    }
+
+    private static OrderStatus MapStatus(OrderStatusContract status)
+    {
+        return status switch
+        {
+            OrderStatusContract.Active => OrderStatus.Active,
+            OrderStatusContract.Paused => OrderStatus.Paused,
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported order status.")
         };
     }
 }

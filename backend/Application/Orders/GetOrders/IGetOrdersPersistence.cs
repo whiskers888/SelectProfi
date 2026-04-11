@@ -5,9 +5,10 @@ namespace SelectProfi.backend.Application.Orders.GetOrders;
 
 public interface IGetOrdersPersistence
 {
-    Task<IReadOnlyList<Order>> FindVisibleActiveOrdersAsync(
+    Task<IReadOnlyList<Order>> FindVisibleOrdersAsync(
         Guid requesterUserId,
         UserRole requesterRole,
+        bool includeArchived,
         int limit,
         int offset,
         CancellationToken cancellationToken);

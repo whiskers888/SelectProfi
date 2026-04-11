@@ -4,7 +4,7 @@ namespace SelectProfi.backend.Application.Orders.UpdateOrder;
 
 public interface IUpdateOrderPersistence
 {
-    Task<Order?> FindActiveByIdAsync(Guid orderId, CancellationToken cancellationToken);
+    Task<Order?> FindByIdAsync(Guid orderId, CancellationToken cancellationToken);
 
     Task<bool> ExecutorExistsAsync(Guid executorId, CancellationToken cancellationToken);
 

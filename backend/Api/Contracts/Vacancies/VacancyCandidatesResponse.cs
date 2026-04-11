@@ -23,5 +23,7 @@ public sealed class VacancyCandidatesItemResponse
 
     public DateTime UpdatedAtUtc { get; init; }
 
+    public DateTime? ViewedByCustomerAtUtc { get; init; }
+
     public bool IsSelected { get; init; }
 }

@@ -190,6 +190,7 @@ public static class VacancyResponseMapper
                 Stage = item.Stage.ToString(),
                 AddedAtUtc = item.AddedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc,
+                ViewedByCustomerAtUtc = item.ViewedByCustomerAtUtc,
                 IsSelected = item.IsSelected
             }).ToArray()
         };

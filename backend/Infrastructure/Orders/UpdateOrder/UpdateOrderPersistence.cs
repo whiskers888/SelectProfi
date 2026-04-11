@@ -8,11 +8,9 @@ namespace SelectProfi.backend.Infrastructure.Orders.UpdateOrder;
 
 public sealed class UpdateOrderPersistence(AppDbContext dbContext) : IUpdateOrderPersistence
 {
-    public Task<Order?> FindActiveByIdAsync(Guid orderId, CancellationToken cancellationToken)
+    public Task<Order?> FindByIdAsync(Guid orderId, CancellationToken cancellationToken)
     {
-        return dbContext.Orders.FirstOrDefaultAsync(
-            order => order.Id == orderId && order.DeletedAtUtc == null,
-            cancellationToken);
+        return dbContext.Orders.FirstOrDefaultAsync(order => order.Id == orderId, cancellationToken);
     }
 
     public Task<bool> ExecutorExistsAsync(Guid executorId, CancellationToken cancellationToken)

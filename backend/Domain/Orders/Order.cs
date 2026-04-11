@@ -26,6 +26,9 @@ public sealed class Order
     [MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 
+    // @dvnull: Добавлен lifecycle-статус заказа для операций "На паузу/Активировать" без удаления сущности.
+    public OrderStatus Status { get; set; } = OrderStatus.Active;
+
     public DateTime CreatedAtUtc { get; set; }
 
     public DateTime UpdatedAtUtc { get; set; }

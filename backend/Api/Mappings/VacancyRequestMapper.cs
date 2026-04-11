@@ -10,6 +10,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForE
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
+using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Contracts.Vacancies;
@@ -167,6 +168,21 @@ public static class VacancyRequestMapper
         {
             VacancyId = vacancyId,
             CandidateId = request.CandidateId,
+            RequesterUserId = requesterUserId,
+            RequesterRole = requesterRole
+        };
+    }
+
+    public static MarkVacancyCandidateViewedByCustomerCommand ToMarkViewedByCustomerCommand(
+        this Guid candidateId,
+        Guid vacancyId,
+        Guid requesterUserId,
+        UserRole requesterRole)
+    {
+        return new MarkVacancyCandidateViewedByCustomerCommand
+        {
+            VacancyId = vacancyId,
+            CandidateId = candidateId,
             RequesterUserId = requesterUserId,
             RequesterRole = requesterRole
         };

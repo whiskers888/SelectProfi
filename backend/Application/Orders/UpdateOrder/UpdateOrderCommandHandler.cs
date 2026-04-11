@@ -9,12 +9,21 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
 {
     public async Task<UpdateOrderResult> HandleAsync(UpdateOrderCommand command, CancellationToken cancellationToken)
     {
-        var order = await persistence.FindActiveByIdAsync(command.OrderId, cancellationToken);
+        var order = await persistence.FindByIdAsync(command.OrderId, cancellationToken);
         if (order is null)
             return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.NotFound };
 
         if (!OrderAccessRules.CanManageOrder(command.RequesterRole, command.RequesterUserId, order.CustomerId))
             return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.Forbidden };
+
+        // @dvnull: Ранее PATCH обновлял только активные заказы; теперь статусный PATCH разрешает восстановление soft-deleted заказа из архива.
+        if (order.DeletedAtUtc is not null)
+        {
+            if (!command.Status.HasValue)
+                return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.NotFound };
+
+            order.DeletedAtUtc = null;
+        }
 
         if (command.Title is not null)
             order.Title = command.Title.Trim();
@@ -31,6 +40,9 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             order.ExecutorId = command.ExecutorId.Value;
         }
 
+        if (command.Status.HasValue)
+            order.Status = command.Status.Value;
+
         order.UpdatedAtUtc = DateTime.UtcNow;
 
         var saveResult = await persistence.SaveChangesAsync(cancellationToken);
@@ -45,6 +57,7 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            Status = order.Status,
             CreatedAtUtc = order.CreatedAtUtc,
             UpdatedAtUtc = order.UpdatedAtUtc
         };

@@ -24,6 +24,7 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            Status = order.Status,
             CreatedAtUtc = order.CreatedAtUtc,
             UpdatedAtUtc = order.UpdatedAtUtc
         };

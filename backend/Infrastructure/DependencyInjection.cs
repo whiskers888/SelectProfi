@@ -6,12 +6,15 @@ using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForE
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
+using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
+using SelectProfi.backend.Application.Dashboard.GetCustomerDashboardStats;
+using SelectProfi.backend.Application.Dashboard.GetExecutorDashboardStats;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
@@ -37,9 +40,12 @@ using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidateContactsF
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetSelectedCandidateContacts;
+using SelectProfi.backend.Infrastructure.Candidates.MarkVacancyCandidateViewedByCustomer;
 using SelectProfi.backend.Infrastructure.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Infrastructure.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Infrastructure.Data;
+using SelectProfi.backend.Infrastructure.Dashboard.GetCustomerDashboardStats;
+using SelectProfi.backend.Infrastructure.Dashboard.GetExecutorDashboardStats;
 using SelectProfi.backend.Infrastructure.Orders.CreateOrder;
 using SelectProfi.backend.Infrastructure.Orders.DeleteOrder;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderById;
@@ -77,6 +83,10 @@ public static class DependencyInjection
         services.AddScoped<IGetOrderByIdPersistence, GetOrderByIdPersistence>();
         services.AddScoped<IGetOrderExecutorsPersistence, GetOrderExecutorsPersistence>();
         services.AddScoped<IGetOrdersPersistence, GetOrdersPersistence>();
+        // @dvnull: Добавлена persistence-агрегация dashboard-статистики заказчика для endpoint /api/dashboard/customer-stats.
+        services.AddScoped<IGetCustomerDashboardStatsPersistence, GetCustomerDashboardStatsPersistence>();
+        // @dvnull: Добавлена persistence-агрегация dashboard-статистики исполнителя для endpoint /api/dashboard/executor-stats.
+        services.AddScoped<IGetExecutorDashboardStatsPersistence, GetExecutorDashboardStatsPersistence>();
         services.AddScoped<IUpdateOrderPersistence, UpdateOrderPersistence>();
         services.AddScoped<IDeleteOrderPersistence, DeleteOrderPersistence>();
         // @dvnull: Добавлена persistence-реализация для привязки кандидата из системной базы в pipeline вакансии.
@@ -85,6 +95,8 @@ public static class DependencyInjection
         services.AddScoped<IUpdateVacancyCandidateStagePersistence, UpdateVacancyCandidateStagePersistence>();
         // @dvnull: Добавлена persistence-реализация для финального выбора кандидата заказчиком.
         services.AddScoped<ISelectVacancyCandidatePersistence, SelectVacancyCandidatePersistence>();
+        // @dvnull: Добавлена persistence-реализация фиксации просмотра кандидата заказчиком для бейджа новых профилей.
+        services.AddScoped<IMarkVacancyCandidateViewedByCustomerPersistence, MarkVacancyCandidateViewedByCustomerPersistence>();
         // @dvnull: Добавлена persistence-реализация чтения контактов кандидата для рекрутера с проверкой owner/TTL.
         services.AddScoped<IGetVacancyCandidateContactsForExecutorPersistence, GetVacancyCandidateContactsForExecutorPersistence>();
         // @dvnull: Добавлена persistence-реализация чтения обезличенного списка кандидатов вакансии.

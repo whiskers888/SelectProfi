@@ -19,6 +19,7 @@ public sealed class CreateOrderCommandHandler(ICreateOrderPersistence persistenc
             ExecutorId = null,
             Title = command.Title.Trim(),
             Description = command.Description.Trim(),
+            Status = OrderStatus.Active,
             CreatedAtUtc = utcNow,
             UpdatedAtUtc = utcNow
         };
@@ -35,6 +36,7 @@ public sealed class CreateOrderCommandHandler(ICreateOrderPersistence persistenc
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            Status = order.Status,
             CreatedAtUtc = order.CreatedAtUtc,
             UpdatedAtUtc = order.UpdatedAtUtc
         };

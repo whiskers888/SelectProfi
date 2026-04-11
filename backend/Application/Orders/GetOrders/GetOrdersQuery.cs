@@ -12,4 +12,6 @@ public sealed class GetOrdersQuery : IQuery<GetOrdersResult>
     public int Limit { get; init; }
 
     public int Offset { get; init; }
+
+    public bool IncludeArchived { get; init; }
 }

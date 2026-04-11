@@ -10,6 +10,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForE
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
+using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 
@@ -209,6 +210,18 @@ public static class VacanciesProblemMap
         "vacancy_candidates_forbidden",
         "У вас нет доступа к списку кандидатов этой вакансии.");
 
+    private static readonly ApiProblemDescriptor VacancyCandidateViewedForbidden = new(
+        StatusCodes.Status403Forbidden,
+        "Доступ запрещен",
+        "vacancy_candidate_viewed_forbidden",
+        "У вас нет доступа к фиксации просмотра кандидата в этой вакансии.");
+
+    private static readonly ApiProblemDescriptor VacancyCandidateViewedConflict = new(
+        StatusCodes.Status409Conflict,
+        "Конфликт",
+        "vacancy_candidate_viewed_conflict",
+        "Не удалось обновить статус просмотра кандидата из-за конфликта данных.");
+
     private static readonly ApiProblemDescriptor VacancyBaseCandidatesReadForbidden = new(
         StatusCodes.Status403Forbidden,
         "Доступ запрещен",
@@ -354,6 +367,17 @@ public static class VacanciesProblemMap
         {
             GetVacancyCandidatesErrorCode.VacancyNotFound => VacancyNotFound,
             _ => VacancyCandidatesReadForbidden
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(MarkVacancyCandidateViewedByCustomerErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            MarkVacancyCandidateViewedByCustomerErrorCode.VacancyNotFound => VacancyNotFound,
+            MarkVacancyCandidateViewedByCustomerErrorCode.CandidateLinkNotFound => CandidateLinkNotFound,
+            MarkVacancyCandidateViewedByCustomerErrorCode.Forbidden => VacancyCandidateViewedForbidden,
+            _ => VacancyCandidateViewedConflict
         };
     }
 

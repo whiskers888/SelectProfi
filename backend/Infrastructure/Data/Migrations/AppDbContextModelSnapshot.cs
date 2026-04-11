@@ -180,6 +180,9 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid>("VacancyId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ViewedByCustomerAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AddedByExecutorId");
@@ -217,6 +220,13 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid?>("ExecutorId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Active");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -230,6 +240,8 @@ namespace SelectProfi.backend.Migrations
                     b.HasIndex("CustomerId", "DeletedAtUtc");
 
                     b.HasIndex("ExecutorId", "DeletedAtUtc");
+
+                    b.HasIndex("Status", "DeletedAtUtc");
 
                     b.ToTable("Orders");
                 });
