@@ -8,6 +8,7 @@ export type OrderResponse = {
   executorId?: string | null
   title: string
   description: string
+  requestedCandidatesCount: number
   status: OrderStatusContract
   createdAtUtc: string
   updatedAtUtc: string
@@ -69,6 +70,7 @@ export type MyOrderResponseResponse = {
 export type CreateOrderRequest = {
   title: string
   description: string
+  requestedCandidatesCount: number
 }
 
 export type UpdateOrderRequest = {

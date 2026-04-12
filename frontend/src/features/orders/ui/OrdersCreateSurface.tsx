@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 type CreateOrderFormState = {
   title: string
   description: string
+  requestedCandidatesCount: string
 }
 
 export type OrdersCreateSurfaceProps = {
@@ -51,6 +52,16 @@ export function OrdersCreateSurface({
             required
             maxLength={4000}
             className="min-h-10 md:col-span-2"
+            disabled={!canCreateOrder || isCreatingOrder}
+          />
+          <Input
+            type="number"
+            min={3}
+            step={1}
+            value={createForm.requestedCandidatesCount}
+            onChange={(event) => onCreateInputChange('requestedCandidatesCount', event)}
+            placeholder="Требуемое количество кандидатов (минимум 3)"
+            required
             disabled={!canCreateOrder || isCreatingOrder}
           />
           <div>

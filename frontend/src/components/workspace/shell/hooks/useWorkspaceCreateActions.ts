@@ -7,6 +7,7 @@ type OrderCreateFormValues = {
   title: string
   organization: string
   note: string
+  requestedCandidatesCount: string
 }
 
 type CandidateCreateFormValues = {
@@ -31,7 +32,14 @@ type MutationTrigger<TArgs, TResult> = (args: TArgs) => UnwrappableMutationResul
 type WorkspaceCreateActionsDependencies = {
   createApplicantResponseFormValues: ApplicantResumeFormValues
   createCandidateFormValues: CandidateCreateFormValues
-  createOrder: MutationTrigger<{ description: string; title: string }, { id: string }>
+  createOrder: MutationTrigger<
+    {
+      description: string
+      title: string
+      requestedCandidatesCount: number
+    },
+    { id: string }
+  >
   createOrderFormValues: OrderCreateFormValues
   filteredOrders: WorkspaceOrder[]
   getRequestErrorMessage: (error: unknown) => string
@@ -101,7 +109,7 @@ export function useWorkspaceCreateActions({
   setPreferredOrderId,
 }: WorkspaceCreateActionsDependencies) {
   const handleCreateOrderFormFieldChange = useCallback(
-    (field: 'title' | 'organization' | 'note', value: string) => {
+    (field: 'title' | 'organization' | 'note' | 'requestedCandidatesCount', value: string) => {
       setCreateOrderFormValues((previousValues) => ({
         ...previousValues,
         [field]: value,
@@ -117,11 +125,20 @@ export function useWorkspaceCreateActions({
       const title = createOrderFormValues.title.trim()
       const organization = createOrderFormValues.organization.trim()
       const note = createOrderFormValues.note.trim()
+      const requestedCandidatesCount = Number.parseInt(createOrderFormValues.requestedCandidatesCount.trim(), 10)
 
       if (!title || !organization) {
         setBanner({
           variant: 'destructive',
           message: 'Заполните обязательные поля формы.',
+        })
+        return
+      }
+      // @dvnull: Ранее workspace create-order отправлял только title/description; добавлен requestedCandidatesCount с минимальным client guard (>=3) под backend-контракт.
+      if (!Number.isFinite(requestedCandidatesCount) || requestedCandidatesCount < 3) {
+        setBanner({
+          variant: 'destructive',
+          message: 'Укажите количество кандидатов не меньше 3.',
         })
         return
       }
@@ -132,12 +149,14 @@ export function useWorkspaceCreateActions({
         const createdOrder = await createOrder({
           title,
           description,
+          requestedCandidatesCount,
         }).unwrap()
         setPreferredOrderId(createdOrder.id)
         setCreateOrderFormValues({
           title: '',
           organization: '',
           note: '',
+          requestedCandidatesCount: '3',
         })
         await refetchOrders()
         setIsCreateOrderPageOpen(false)
@@ -157,6 +176,7 @@ export function useWorkspaceCreateActions({
       createOrder,
       createOrderFormValues.note,
       createOrderFormValues.organization,
+      createOrderFormValues.requestedCandidatesCount,
       createOrderFormValues.title,
       getRequestErrorMessage,
       refetchOrders,

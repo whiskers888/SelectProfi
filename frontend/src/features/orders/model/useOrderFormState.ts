@@ -3,6 +3,7 @@ import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
 type OrderEditState = {
   title: string
   description: string
+  requestedCandidatesCount: string
 }
 
 type UseOrderFormStateArgs = {
@@ -27,7 +28,7 @@ export function useOrderFormState({
 
   // @dvnull: Ранее create-форма принимала только Input-события; расширено до Textarea для description без изменения структуры state.
   function handleCreateInputChange(
-    field: 'title' | 'description',
+    field: 'title' | 'description' | 'requestedCandidatesCount',
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     const nextValue = event.target.value

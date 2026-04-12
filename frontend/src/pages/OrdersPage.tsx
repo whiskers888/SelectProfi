@@ -73,7 +73,11 @@ export function OrdersPage() {
     useLazyGetOrderByIdQuery()
   const [selectedExecutorIdsByOrder, setSelectedExecutorIdsByOrder] = useState<Record<string, string>>({})
   const [orderEditsById, setOrderEditsById] = useState<Record<string, { title: string; description: string }>>({})
-  const [createForm, setCreateForm] = useState({ title: '', description: '' })
+  const [createForm, setCreateForm] = useState({
+    title: '',
+    description: '',
+    requestedCandidatesCount: '3',
+  })
   const { handleExecutorSelectChange, handleCreateInputChange, handleOrderEditInputChange } = useOrderFormState({
     setSelectedExecutorIdsByOrder,
     setCreateForm,
@@ -108,7 +112,11 @@ export function OrdersPage() {
       orderEditsById,
       setSubmitMessage,
       resetCreateForm: () => {
-        setCreateForm({ title: '', description: '' })
+        setCreateForm({
+          title: '',
+          description: '',
+          requestedCandidatesCount: '3',
+        })
       },
       clearOrderEdit: (orderId) => {
         setOrderEditsById((previous) => {

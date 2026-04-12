@@ -38,6 +38,7 @@ export function OrderDetailsSurface({
             <p>ExecutorId: {orderDetail.executorId ?? '—'}</p>
             <p>Title: {orderDetail.title}</p>
             <p>Description: {orderDetail.description}</p>
+            <p>RequestedCandidatesCount: {orderDetail.requestedCandidatesCount}</p>
             <p>CreatedAtUtc: {orderDetail.createdAtUtc}</p>
             <p>UpdatedAtUtc: {orderDetail.updatedAtUtc}</p>
           </>

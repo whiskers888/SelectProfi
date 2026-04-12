@@ -10,10 +10,14 @@ type OrderCreatePagePanelProps = {
     title: string
     organization: string
     note: string
+    requestedCandidatesCount: string
   }
   isCreatingOrder: boolean
   onBack: () => void
-  onFieldChange: (field: 'title' | 'organization' | 'note', value: string) => void
+  onFieldChange: (
+    field: 'title' | 'organization' | 'note' | 'requestedCandidatesCount',
+    value: string,
+  ) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
 }
 
@@ -24,7 +28,12 @@ export function OrderCreatePagePanel({
   onFieldChange,
   onSubmit,
 }: OrderCreatePagePanelProps) {
-  const isFormInvalid = !formValues.title.trim() || !formValues.organization.trim()
+  const parsedRequestedCandidatesCount = Number.parseInt(formValues.requestedCandidatesCount.trim(), 10)
+  const isFormInvalid =
+    !formValues.title.trim() ||
+    !formValues.organization.trim() ||
+    !Number.isFinite(parsedRequestedCandidatesCount) ||
+    parsedRequestedCandidatesCount < 3
 
   return (
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
@@ -74,6 +83,23 @@ export function OrderCreatePagePanel({
             placeholder="Ключевые детали, сроки и пожелания по вакансии."
             maxLength={3800}
             className="min-h-[120px] rounded-xl border-slate-200 text-slate-900"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600" htmlFor="workspace-order-requested-candidates-count">
+            Требуемое количество кандидатов
+          </Label>
+          <Input
+            id="workspace-order-requested-candidates-count"
+            type="number"
+            min={3}
+            step={1}
+            value={formValues.requestedCandidatesCount}
+            onChange={(event) => onFieldChange('requestedCandidatesCount', event.target.value)}
+            placeholder="Минимум 3"
+            required
+            className="h-11 rounded-xl border-slate-200 text-slate-900"
           />
         </div>
 

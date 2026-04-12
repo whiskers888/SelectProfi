@@ -174,6 +174,7 @@ export function useWorkspaceShellController() {
     title: '',
     organization: '',
     note: '',
+    requestedCandidatesCount: '3',
   })
   const [createCandidateFormValues, setCreateCandidateFormValues] = useState({
     fullName: '',

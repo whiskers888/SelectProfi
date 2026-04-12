@@ -4,6 +4,7 @@ import { getRequestErrorMessage } from '@/features/orders/lib/errors'
 type OrderFormState = {
   title: string
   description: string
+  requestedCandidatesCount: string
 }
 
 type SubmitMessage = {
@@ -30,7 +31,11 @@ type UseOrdersCrudActionsArgs = {
   clearOrderEdit: (orderId: string) => void
   clearSelectedExecutor: (orderId: string) => void
   refetchOrders: () => Promise<unknown>
-  createOrderRequest: (body: { title: string; description: string }) => Promise<unknown>
+  createOrderRequest: (body: {
+    title: string
+    description: string
+    requestedCandidatesCount: number
+  }) => Promise<unknown>
   updateOrderRequest: (args: { orderId: string; body: UpdateOrderRequestBody }) => Promise<unknown>
   deleteOrderRequest: (orderId: string) => Promise<unknown>
 }
@@ -54,6 +59,7 @@ export function useOrdersCrudActions({
 }: UseOrdersCrudActionsArgs) {
   const createOrderTitleMaxLength = 200
   const createOrderDescriptionMaxLength = 4000
+  const minRequestedCandidatesCount = 3
 
   // @dvnull: Ранее CRUD/use-case handlers были локально в OrdersPage; вынесены в model-хук без изменения проверок прав, текстов ошибок и reset/refetch последовательности.
   async function handleCreateOrder(event: FormEvent<HTMLFormElement>) {
@@ -66,9 +72,18 @@ export function useOrdersCrudActions({
 
     const title = createForm.title.trim()
     const description = createForm.description.trim()
+    const requestedCandidatesCount = Number.parseInt(createForm.requestedCandidatesCount.trim(), 10)
 
     if (!title || !description) {
       setSubmitMessage({ status: 'error', text: 'Заполните title и description.' })
+      return
+    }
+    // @dvnull: Ранее create-order не требовал явного target-count кандидатов; добавлен client guard под backend-контракт requestedCandidatesCount.
+    if (!Number.isFinite(requestedCandidatesCount) || requestedCandidatesCount < minRequestedCandidatesCount) {
+      setSubmitMessage({
+        status: 'error',
+        text: `Укажите requestedCandidatesCount не меньше ${minRequestedCandidatesCount}.`,
+      })
       return
     }
     // @dvnull: Ранее create-заказ валидировал только заполненность полей; добавлены ограничения длины по backend-контракту для ранней client-side валидации.
@@ -82,7 +97,7 @@ export function useOrdersCrudActions({
     }
 
     try {
-      await createOrderRequest({ title, description })
+      await createOrderRequest({ title, description, requestedCandidatesCount })
       setSubmitMessage({ status: 'success', text: 'Заказ создан.' })
       resetCreateForm()
       await refetchOrders()
