@@ -86,6 +86,7 @@ export function MainFeedPanelView({
   orderDataScope,
   orderResponses = [],
   orders,
+  role = 'Executor',
   selectedDashboardOrder,
   selectedOrderDetails = null,
   selectedOrderExecutorName = null,
@@ -106,11 +107,15 @@ export function MainFeedPanelView({
     return renderLoading()
   }
 
+  const isApplicantRole = role === 'Applicant'
+
   if (view === 'dashboard') {
     if (!selectedDashboardOrder || orders.length === 0) {
       return renderEmptyState(
-        'Нет данных по заказам',
-        'Создайте новый заказ или снимите фильтры, чтобы увидеть активные вакансии.',
+        isApplicantRole ? 'Нет данных по вакансиям' : 'Нет данных по заказам',
+        isApplicantRole
+          ? 'Сейчас нет доступных вакансий. Попробуйте обновить страницу позже.'
+          : 'Создайте новый заказ или снимите фильтры, чтобы увидеть активные вакансии.',
       )
     }
 
@@ -118,8 +123,12 @@ export function MainFeedPanelView({
       <section className="preview11-card">
         <div className="preview11-orders-top">
           <div>
-            <h3 className="preview11-panel-title">Заказы в работе</h3>
-            <p className="preview11-panel-subtitle">Выберите заказ, чтобы открыть детали.</p>
+            <h3 className="preview11-panel-title">
+              {isApplicantRole ? 'Вакансии' : 'Заказы в работе'}
+            </h3>
+            <p className="preview11-panel-subtitle">
+              {isApplicantRole ? 'Выберите вакансию, чтобы открыть детали.' : 'Выберите заказ, чтобы открыть детали.'}
+            </p>
           </div>
           <div className="preview11-orders-controls">
             <select
