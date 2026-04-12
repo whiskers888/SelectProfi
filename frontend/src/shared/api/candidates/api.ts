@@ -34,6 +34,10 @@ export type VacancyCandidatesItemResponse = {
   vacancyCandidateId: string
   candidateId: string
   publicAlias: string
+  displayName: string
+  source: 'AddedByExecutor' | 'RegisteredUser'
+  isOwnedByRequester: boolean
+  isAnonymized: boolean
   stage: VacancyCandidateStageContract
   addedAtUtc: string
   updatedAtUtc: string
@@ -50,6 +54,10 @@ export type VacancyCandidatesResponse = {
 export type VacancyBaseCandidatesItemResponse = {
   candidateId: string
   publicAlias: string
+  displayName: string
+  source: 'AddedByExecutor' | 'RegisteredUser'
+  isOwnedByRequester: boolean
+  isAnonymized: boolean
   updatedAtUtc: string
 }
 
@@ -171,7 +179,9 @@ export const {
   useCreateCandidateResumeMutation,
   useAddCandidateFromBaseMutation,
   useGetVacancyCandidatesQuery,
+  useLazyGetVacancyCandidatesQuery,
   useGetVacancyBaseCandidatesQuery,
+  useLazyGetVacancyBaseCandidatesQuery,
   useUpdateVacancyCandidateStageMutation,
   useSelectVacancyCandidateMutation,
   useMarkVacancyCandidateViewedByCustomerMutation,

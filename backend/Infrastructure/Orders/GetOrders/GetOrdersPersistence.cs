@@ -29,7 +29,8 @@ public sealed class GetOrdersPersistence(AppDbContext dbContext) : IGetOrdersPer
         {
             UserRole.Admin => query,
             UserRole.Customer => query.Where(order => order.CustomerId == requesterUserId),
-            UserRole.Executor => query.Where(order => order.ExecutorId == null || order.ExecutorId == requesterUserId),
+            // @dvnull: Для разделения "Мои заказы/Биржа заказов" Executor должен видеть и свои, и незакрепленные заказы.
+            UserRole.Executor => query.Where(order => order.ExecutorId == requesterUserId || order.ExecutorId == null),
             _ => query.Where(_ => false)
         };
 

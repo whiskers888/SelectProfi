@@ -13,5 +13,13 @@ public sealed class VacancyBaseCandidatesItemResponse
 
     public string PublicAlias { get; init; } = string.Empty;
 
+    public string DisplayName { get; init; } = string.Empty;
+
+    public string Source { get; init; } = string.Empty;
+
+    public bool IsOwnedByRequester { get; init; }
+
+    public bool IsAnonymized { get; init; }
+
     public DateTime UpdatedAtUtc { get; init; }
 }

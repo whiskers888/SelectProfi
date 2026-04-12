@@ -196,7 +196,10 @@ export function VacanciesPage() {
     refetch: refetchVacancyBaseCandidates,
   } = useGetVacancyBaseCandidatesQuery(vacancyBaseCandidatesQueryArg)
   const vacancyCandidates = vacancyCandidatesData?.items ?? []
-  const vacancyBaseCandidates = vacancyBaseCandidatesData?.items ?? []
+  const linkedVacancyCandidateIds = new Set(vacancyCandidates.map((candidate) => candidate.candidateId))
+  const vacancyBaseCandidates =
+    vacancyBaseCandidatesData?.items.filter((candidate) => !linkedVacancyCandidateIds.has(candidate.candidateId)) ??
+    []
   const hasSelectedAddFromBaseCandidate = vacancyBaseCandidates.some(
     (candidate) => candidate.candidateId === selectedAddFromBaseCandidateId,
   )

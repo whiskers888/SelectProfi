@@ -10,6 +10,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
     // @dvnull: Добавлен отдельный контур Order как источник требований и назначений исполнителя.
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderExecutorResponse> OrderExecutorResponses => Set<OrderExecutorResponse>();
 
     public DbSet<Candidate> Candidates => Set<Candidate>();
 
@@ -109,6 +110,32 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             builder.HasIndex(order => new { order.CustomerId, order.DeletedAtUtc });
             builder.HasIndex(order => new { order.ExecutorId, order.DeletedAtUtc });
             builder.HasIndex(order => new { order.Status, order.DeletedAtUtc });
+        });
+
+        modelBuilder.Entity<OrderExecutorResponse>(builder =>
+        {
+            builder.HasKey(orderResponse => orderResponse.Id);
+
+            builder.Property(orderResponse => orderResponse.Status)
+                .HasConversion<string>()
+                .HasMaxLength(32)
+                .HasDefaultValue(OrderResponseStatus.Pending)
+                .IsRequired();
+
+            builder.HasOne(orderResponse => orderResponse.Order)
+                .WithMany()
+                .HasForeignKey(orderResponse => orderResponse.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(orderResponse => orderResponse.Executor)
+                .WithMany()
+                .HasForeignKey(orderResponse => orderResponse.ExecutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(orderResponse => new { orderResponse.OrderId, orderResponse.ExecutorId })
+                .IsUnique();
+            builder.HasIndex(orderResponse => new { orderResponse.OrderId, orderResponse.Status });
+            builder.HasIndex(orderResponse => new { orderResponse.ExecutorId, orderResponse.Status });
         });
 
         modelBuilder.Entity<Vacancy>(builder =>

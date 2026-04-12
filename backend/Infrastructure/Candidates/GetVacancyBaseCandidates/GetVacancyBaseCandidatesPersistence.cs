@@ -15,19 +15,12 @@ public sealed class GetVacancyBaseCandidatesPersistence(AppDbContext dbContext) 
             .FirstOrDefaultAsync(vacancy => vacancy.Id == vacancyId && vacancy.DeletedAtUtc == null, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Candidate>> FindAvailableBaseCandidatesAsync(
-        Guid vacancyId,
+    public async Task<IReadOnlyList<Candidate>> FindGlobalBaseCandidatesAsync(
         CancellationToken cancellationToken)
     {
         return await dbContext.Candidates
             .AsNoTracking()
-            .Where(candidate => candidate.DeletedAtUtc == null
-                                && candidate.Source == CandidateSource.RegisteredUser
-                                && candidate.UserId != null
-                                && !dbContext.VacancyCandidates.Any(vacancyCandidate =>
-                                    vacancyCandidate.VacancyId == vacancyId
-                                    && vacancyCandidate.CandidateId == candidate.Id
-                                    && vacancyCandidate.DeletedAtUtc == null))
+            .Where(candidate => candidate.DeletedAtUtc == null)
             .OrderByDescending(candidate => candidate.UpdatedAtUtc)
             .ToArrayAsync(cancellationToken);
     }

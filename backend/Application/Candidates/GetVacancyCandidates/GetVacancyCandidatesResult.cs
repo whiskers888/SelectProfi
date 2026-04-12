@@ -21,6 +21,14 @@ public sealed class GetVacancyCandidatesItemResult
 
     public string PublicAlias { get; init; } = string.Empty;
 
+    public string DisplayName { get; init; } = string.Empty;
+
+    public CandidateSource Source { get; init; } = CandidateSource.RegisteredUser;
+
+    public bool IsOwnedByRequester { get; init; }
+
+    public bool IsAnonymized { get; init; }
+
     public VacancyCandidateStage Stage { get; init; } = VacancyCandidateStage.Pool;
 
     public DateTime AddedAtUtc { get; init; }

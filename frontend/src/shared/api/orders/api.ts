@@ -35,6 +35,37 @@ export type OrderExecutorListResponse = {
   items: OrderExecutorResponse[]
 }
 
+export type OrderExecutorResponseStatusContract = 'Pending' | 'Withdrawn' | 'Accepted' | 'Rejected'
+
+export type OrderExecutorResponseItemResponse = {
+  executorId: string
+  executorFullName: string
+  executorGrade?: string | null
+  executorProjectTitle?: string | null
+  executorProjectCompanyName?: string | null
+  executorExperienceSummary?: string | null
+  status: OrderExecutorResponseStatusContract
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export type OrderExecutorResponsesResponse = {
+  items: OrderExecutorResponseItemResponse[]
+}
+
+export type SelectOrderResponseExecutorResponse = {
+  orderId: string
+  executorId: string
+  updatedAtUtc: string
+}
+
+export type MyOrderResponseResponse = {
+  orderId: string
+  hasResponse: boolean
+  status?: OrderExecutorResponseStatusContract | null
+  updatedAtUtc?: string | null
+}
+
 export type CreateOrderRequest = {
   title: string
   description: string
@@ -68,6 +99,18 @@ const ordersApi = api.injectEndpoints({
         method: 'GET',
       }),
     }),
+    getMyOrderResponse: build.query<MyOrderResponseResponse, string>({
+      query: (orderId) => ({
+        url: `/api/orders/${orderId}/my-response`,
+        method: 'GET',
+      }),
+    }),
+    getOrderResponses: build.query<OrderExecutorResponsesResponse, string>({
+      query: (orderId) => ({
+        url: `/api/orders/${orderId}/responses`,
+        method: 'GET',
+      }),
+    }),
     createOrder: build.mutation<OrderResponse, CreateOrderRequest>({
       query: (body) => ({
         url: '/api/orders',
@@ -88,6 +131,33 @@ const ordersApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
+    respondToOrder: build.mutation<OrderExecutorResponseItemResponse, string>({
+      query: (orderId) => ({
+        url: `/api/orders/${orderId}/respond`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Order'],
+    }),
+    selectOrderResponseExecutor: build.mutation<
+      SelectOrderResponseExecutorResponse,
+      { executorId: string; orderId: string }
+    >({
+      query: ({ executorId, orderId }) => ({
+        url: `/api/orders/${orderId}/responses/${executorId}/select`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Order'],
+    }),
+    rejectOrderResponseExecutor: build.mutation<
+      OrderExecutorResponseItemResponse,
+      { executorId: string; orderId: string }
+    >({
+      query: ({ executorId, orderId }) => ({
+        url: `/api/orders/${orderId}/responses/${executorId}/reject`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Order'],
+    }),
   }),
   overrideExisting: false,
 })
@@ -97,7 +167,12 @@ export const {
   useGetOrderByIdQuery,
   useLazyGetOrderByIdQuery,
   useGetOrderExecutorsQuery,
+  useGetMyOrderResponseQuery,
+  useGetOrderResponsesQuery,
   useCreateOrderMutation,
   useUpdateOrderMutation,
   useDeleteOrderMutation,
+  useRespondToOrderMutation,
+  useSelectOrderResponseExecutorMutation,
+  useRejectOrderResponseExecutorMutation,
 } = ordersApi

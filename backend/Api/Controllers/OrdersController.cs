@@ -6,8 +6,14 @@ using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
+using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
+using SelectProfi.backend.Application.Orders.GetOrderResponses;
+using SelectProfi.backend.Application.Orders.RejectOrderResponse;
+using SelectProfi.backend.Application.Orders.RespondToOrder;
+using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Contracts.Orders;
 using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Errors;
@@ -114,6 +120,94 @@ public sealed class OrdersController(
     {
         var result = await commandDispatcher.DispatchAsync<DeleteOrderCommand, DeleteOrderResult>(
             orderId.ToDeleteOrderCommand(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{orderId:guid}/respond")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    [ProducesResponseType(typeof(OrderExecutorResponseItemResponse), StatusCodes.Status201Created)]
+    [ProducesForbiddenProblem]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Respond(Guid orderId, CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<RespondToOrderCommand, RespondToOrderResult>(
+            orderId.ToRespondToOrderCommand(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpDelete("{orderId:guid}/respond")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    [ProducesResponseType(typeof(OrderExecutorResponseItemResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> WithdrawResponse(Guid orderId, CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<WithdrawOrderResponseCommand, WithdrawOrderResponseResult>(
+            orderId.ToWithdrawOrderResponseCommand(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("{orderId:guid}/responses")]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOrAdmin)]
+    [ProducesResponseType(typeof(OrderExecutorResponsesResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    public async Task<IActionResult> GetResponses(Guid orderId, CancellationToken cancellationToken)
+    {
+        var result = await queryDispatcher.DispatchAsync<GetOrderResponsesQuery, GetOrderResponsesResult>(
+            orderId.ToGetOrderResponsesQuery(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("{orderId:guid}/my-response")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    [ProducesResponseType(typeof(MyOrderResponseResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    public async Task<IActionResult> GetMyResponse(Guid orderId, CancellationToken cancellationToken)
+    {
+        var result = await queryDispatcher.DispatchAsync<GetMyOrderResponseQuery, GetMyOrderResponseResult>(
+            orderId.ToGetMyOrderResponseQuery(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{orderId:guid}/responses/{executorId:guid}/select")]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOrAdmin)]
+    [ProducesResponseType(typeof(SelectOrderResponseExecutorResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SelectResponseExecutor(
+        Guid orderId,
+        Guid executorId,
+        CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<SelectOrderResponseExecutorCommand, SelectOrderResponseExecutorResult>(
+            (orderId, executorId).ToSelectOrderResponseExecutorCommand(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{orderId:guid}/responses/{executorId:guid}/reject")]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOrAdmin)]
+    [ProducesResponseType(typeof(OrderExecutorResponseItemResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RejectResponseExecutor(
+        Guid orderId,
+        Guid executorId,
+        CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<RejectOrderResponseCommand, RejectOrderResponseResult>(
+            (orderId, executorId).ToRejectOrderResponseCommand(RequesterUserId, RequesterRole),
             cancellationToken);
 
         return result.ToActionResult(this);

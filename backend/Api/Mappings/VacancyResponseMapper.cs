@@ -187,6 +187,10 @@ public static class VacancyResponseMapper
                 VacancyCandidateId = item.VacancyCandidateId,
                 CandidateId = item.CandidateId,
                 PublicAlias = item.PublicAlias,
+                DisplayName = item.DisplayName,
+                Source = item.Source.ToString(),
+                IsOwnedByRequester = item.IsOwnedByRequester,
+                IsAnonymized = item.IsAnonymized,
                 Stage = item.Stage.ToString(),
                 AddedAtUtc = item.AddedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc,
@@ -205,6 +209,10 @@ public static class VacancyResponseMapper
             {
                 CandidateId = item.CandidateId,
                 PublicAlias = item.PublicAlias,
+                DisplayName = item.DisplayName,
+                Source = item.Source.ToString(),
+                IsOwnedByRequester = item.IsOwnedByRequester,
+                IsAnonymized = item.IsAnonymized,
                 UpdatedAtUtc = item.UpdatedAtUtc
             }).ToArray()
         };

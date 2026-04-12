@@ -7,7 +7,6 @@ public interface IGetVacancyBaseCandidatesPersistence
 {
     Task<Vacancy?> FindActiveVacancyByIdAsync(Guid vacancyId, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Candidate>> FindAvailableBaseCandidatesAsync(
-        Guid vacancyId,
+    Task<IReadOnlyList<Candidate>> FindGlobalBaseCandidatesAsync(
         CancellationToken cancellationToken);
 }

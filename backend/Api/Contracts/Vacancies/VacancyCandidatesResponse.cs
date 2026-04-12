@@ -17,6 +17,14 @@ public sealed class VacancyCandidatesItemResponse
 
     public string PublicAlias { get; init; } = string.Empty;
 
+    public string DisplayName { get; init; } = string.Empty;
+
+    public string Source { get; init; } = string.Empty;
+
+    public bool IsOwnedByRequester { get; init; }
+
+    public bool IsAnonymized { get; init; }
+
     public string Stage { get; init; } = string.Empty;
 
     public DateTime AddedAtUtc { get; init; }

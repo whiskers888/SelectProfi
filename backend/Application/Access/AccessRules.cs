@@ -39,6 +39,21 @@ public static class OrderAccessRules
     {
         return requesterRole is UserRole.Customer or UserRole.Admin;
     }
+
+    public static bool CanRespondToOrder(UserRole requesterRole)
+    {
+        return requesterRole == UserRole.Executor;
+    }
+
+    public static bool CanWithdrawOrderResponse(UserRole requesterRole)
+    {
+        return requesterRole == UserRole.Executor;
+    }
+
+    public static bool CanManageOrderResponses(UserRole requesterRole, Guid requesterUserId, Guid orderCustomerId)
+    {
+        return CanManageOrder(requesterRole, requesterUserId, orderCustomerId);
+    }
 }
 
 public static class VacancyAccessRules

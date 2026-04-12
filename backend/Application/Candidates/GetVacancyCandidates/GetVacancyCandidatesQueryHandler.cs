@@ -39,6 +39,10 @@ public sealed class GetVacancyCandidatesQueryHandler(IGetVacancyCandidatesPersis
                 VacancyCandidateId = vacancyCandidate.Id,
                 CandidateId = vacancyCandidate.CandidateId,
                 PublicAlias = vacancyCandidate.Candidate.PublicAlias,
+                DisplayName = ResolveDisplayName(vacancyCandidate.Candidate, query.RequesterUserId),
+                Source = vacancyCandidate.Candidate.Source,
+                IsOwnedByRequester = IsOwnedByRequester(vacancyCandidate.Candidate, query.RequesterUserId),
+                IsAnonymized = IsAnonymized(vacancyCandidate.Candidate, query.RequesterUserId),
                 Stage = vacancyCandidate.Stage,
                 AddedAtUtc = vacancyCandidate.AddedAtUtc,
                 UpdatedAtUtc = vacancyCandidate.UpdatedAtUtc,
@@ -54,5 +58,26 @@ public sealed class GetVacancyCandidatesQueryHandler(IGetVacancyCandidatesPersis
             SelectedCandidateId = selectedCandidateId,
             Items = items
         };
+    }
+
+    private static bool IsOwnedByRequester(Domain.Candidates.Candidate candidate, Guid requesterUserId)
+    {
+        return candidate.CreatedByExecutorId == requesterUserId
+               || candidate.ContactsOwnerExecutorId == requesterUserId;
+    }
+
+    private static bool IsAnonymized(Domain.Candidates.Candidate candidate, Guid requesterUserId)
+    {
+        if (candidate.Source == Domain.Candidates.CandidateSource.RegisteredUser)
+        {
+            return false;
+        }
+
+        return !IsOwnedByRequester(candidate, requesterUserId);
+    }
+
+    private static string ResolveDisplayName(Domain.Candidates.Candidate candidate, Guid requesterUserId)
+    {
+        return IsAnonymized(candidate, requesterUserId) ? candidate.PublicAlias : candidate.FullName;
     }
 }

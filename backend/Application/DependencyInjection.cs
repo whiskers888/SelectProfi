@@ -18,8 +18,14 @@ using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
+using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
+using SelectProfi.backend.Application.Orders.GetOrderResponses;
+using SelectProfi.backend.Application.Orders.RejectOrderResponse;
+using SelectProfi.backend.Application.Orders.RespondToOrder;
+using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
 using SelectProfi.backend.Application.Profile.SwitchMyActiveRole;
 using SelectProfi.backend.Application.Profile.UpdateMyProfile;
@@ -42,6 +48,10 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<LoginUserCommand, LoginUserResult>, LoginUserCommandHandler>();
         services.AddScoped<ICommandHandler<RefreshAuthSessionCommand, RefreshAuthSessionResult>, RefreshAuthSessionCommandHandler>();
         services.AddScoped<ICommandHandler<CreateOrderCommand, CreateOrderResult>, CreateOrderCommandHandler>();
+        services.AddScoped<ICommandHandler<RejectOrderResponseCommand, RejectOrderResponseResult>, RejectOrderResponseCommandHandler>();
+        services.AddScoped<ICommandHandler<RespondToOrderCommand, RespondToOrderResult>, RespondToOrderCommandHandler>();
+        services.AddScoped<ICommandHandler<WithdrawOrderResponseCommand, WithdrawOrderResponseResult>, WithdrawOrderResponseCommandHandler>();
+        services.AddScoped<ICommandHandler<SelectOrderResponseExecutorCommand, SelectOrderResponseExecutorResult>, SelectOrderResponseExecutorCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateOrderCommand, UpdateOrderResult>, UpdateOrderCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteOrderCommand, DeleteOrderResult>, DeleteOrderCommandHandler>();
         // @dvnull: Добавлен отдельный command для привязки существующего кандидата из базы к вакансии без создания нового резюме.
@@ -61,7 +71,9 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<DeleteVacancyCommand, DeleteVacancyResult>, DeleteVacancyCommandHandler>();
         services.AddScoped<IQueryHandler<GetOrderByIdQuery, GetOrderByIdResult>, GetOrderByIdQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrderExecutorsQuery, GetOrderExecutorsResult>, GetOrderExecutorsQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMyOrderResponseQuery, GetMyOrderResponseResult>, GetMyOrderResponseQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrdersQuery, GetOrdersResult>, GetOrdersQueryHandler>();
+        services.AddScoped<IQueryHandler<GetOrderResponsesQuery, GetOrderResponsesResult>, GetOrderResponsesQueryHandler>();
         // @dvnull: Добавлен query-handler серверной агрегации dashboard-метрик заказчика для отдельного frontend-запроса статистики.
         services.AddScoped<IQueryHandler<GetCustomerDashboardStatsQuery, GetCustomerDashboardStatsResult>, GetCustomerDashboardStatsQueryHandler>();
         // @dvnull: Добавлен query-handler серверной агрегации dashboard-метрик исполнителя для отдельного frontend-запроса статистики.

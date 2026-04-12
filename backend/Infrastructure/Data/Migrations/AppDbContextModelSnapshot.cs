@@ -246,6 +246,42 @@ namespace SelectProfi.backend.Migrations
                     b.ToTable("Orders");
                 });
 
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderExecutorResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ExecutorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExecutorId", "Status");
+
+                    b.HasIndex("OrderId", "ExecutorId")
+                        .IsUnique();
+
+                    b.HasIndex("OrderId", "Status");
+
+                    b.ToTable("OrderExecutorResponses");
+                });
+
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.RefreshSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -596,6 +632,25 @@ namespace SelectProfi.backend.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Executor");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderExecutorResponse", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
+                        .WithMany()
+                        .HasForeignKey("ExecutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SelectProfi.backend.Domain.Orders.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Executor");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.RefreshSession", b =>

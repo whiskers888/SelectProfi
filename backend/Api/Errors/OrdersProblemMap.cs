@@ -2,8 +2,14 @@ using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
+using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
+using SelectProfi.backend.Application.Orders.GetOrderResponses;
+using SelectProfi.backend.Application.Orders.RejectOrderResponse;
+using SelectProfi.backend.Application.Orders.RespondToOrder;
+using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 
 namespace SelectProfi.backend.Errors;
 
@@ -69,6 +75,42 @@ public static class OrdersProblemMap
         "order_conflict",
         "Не удалось удалить заказ из-за конфликта данных.");
 
+    private static readonly ApiProblemDescriptor OrderResponseAlreadyExists = new(
+        StatusCodes.Status409Conflict,
+        "Конфликт",
+        "order_response_already_exists",
+        "Вы уже откликались на этот заказ.");
+
+    private static readonly ApiProblemDescriptor OrderResponseNotAvailable = new(
+        StatusCodes.Status409Conflict,
+        "Конфликт",
+        "order_response_not_available",
+        "Заказ недоступен для отклика.");
+
+    private static readonly ApiProblemDescriptor OrderResponseCannotWithdraw = new(
+        StatusCodes.Status409Conflict,
+        "Конфликт",
+        "order_response_cannot_withdraw",
+        "Отклик нельзя отменить в текущем статусе.");
+
+    private static readonly ApiProblemDescriptor OrderResponseCannotReject = new(
+        StatusCodes.Status409Conflict,
+        "Конфликт",
+        "order_response_cannot_reject",
+        "Отклик нельзя отклонить в текущем статусе.");
+
+    private static readonly ApiProblemDescriptor OrderResponseNotFound = new(
+        StatusCodes.Status404NotFound,
+        "Не найдено",
+        "order_response_not_found",
+        "Отклик не найден.");
+
+    private static readonly ApiProblemDescriptor OrderResponsesAccessForbidden = new(
+        StatusCodes.Status403Forbidden,
+        "Доступ запрещен",
+        "order_responses_access_forbidden",
+        "У вас нет доступа к откликам этого заказа.");
+
     public static ApiProblemDescriptor Resolve(CreateOrderErrorCode errorCode)
     {
         return errorCode switch
@@ -124,6 +166,74 @@ public static class OrdersProblemMap
             DeleteOrderErrorCode.Forbidden => OrderAccessForbidden,
             DeleteOrderErrorCode.HasActiveVacancy => OrderHasActiveVacancy,
             _ => DeleteOrderConflict
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(RespondToOrderErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            RespondToOrderErrorCode.NotFound => OrderNotFound,
+            RespondToOrderErrorCode.Forbidden => OrderAccessForbidden,
+            RespondToOrderErrorCode.NotAvailable => OrderResponseNotAvailable,
+            RespondToOrderErrorCode.AlreadyResponded => OrderResponseAlreadyExists,
+            _ => UpdateOrderConflict
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(RejectOrderResponseErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            RejectOrderResponseErrorCode.NotFound => OrderNotFound,
+            RejectOrderResponseErrorCode.Forbidden => OrderResponsesAccessForbidden,
+            RejectOrderResponseErrorCode.ResponseNotFound => OrderResponseNotFound,
+            RejectOrderResponseErrorCode.NotAvailable => OrderResponseNotAvailable,
+            RejectOrderResponseErrorCode.CannotReject => OrderResponseCannotReject,
+            _ => UpdateOrderConflict
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(WithdrawOrderResponseErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            WithdrawOrderResponseErrorCode.NotFound => OrderResponseNotFound,
+            WithdrawOrderResponseErrorCode.Forbidden => OrderAccessForbidden,
+            WithdrawOrderResponseErrorCode.CannotWithdraw => OrderResponseCannotWithdraw,
+            _ => UpdateOrderConflict
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(GetOrderResponsesErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            GetOrderResponsesErrorCode.NotFound => OrderNotFound,
+            GetOrderResponsesErrorCode.Forbidden => OrderResponsesAccessForbidden,
+            _ => OrderResponsesAccessForbidden
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(GetMyOrderResponseErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            GetMyOrderResponseErrorCode.NotFound => OrderNotFound,
+            GetMyOrderResponseErrorCode.Forbidden => OrderAccessForbidden,
+            _ => OrderAccessForbidden
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(SelectOrderResponseExecutorErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            SelectOrderResponseExecutorErrorCode.NotFound => OrderNotFound,
+            SelectOrderResponseExecutorErrorCode.Forbidden => OrderResponsesAccessForbidden,
+            SelectOrderResponseExecutorErrorCode.ResponseNotFound => OrderResponseNotFound,
+            SelectOrderResponseExecutorErrorCode.NotAvailable => OrderResponseNotAvailable,
+            _ => UpdateOrderConflict
         };
     }
 }
