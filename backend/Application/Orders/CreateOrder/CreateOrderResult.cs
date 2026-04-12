@@ -16,6 +16,8 @@ public sealed class CreateOrderResult
 
     public string Description { get; init; } = string.Empty;
 
+    public int RequestedCandidatesCount { get; init; }
+
     public OrderStatus Status { get; init; } = OrderStatus.Active;
 
     public DateTime CreatedAtUtc { get; init; }

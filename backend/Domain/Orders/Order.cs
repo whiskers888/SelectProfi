@@ -26,6 +26,9 @@ public sealed class Order
     [MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 
+    // @dvnull: Ранее модель заказа не хранила целевое число кандидатов; добавлено поле для контроля shortlist-обязательств.
+    public int RequestedCandidatesCount { get; set; } = 3;
+
     // @dvnull: Добавлен lifecycle-статус заказа для операций "На паузу/Активировать" без удаления сущности.
     public OrderStatus Status { get; set; } = OrderStatus.Active;
 

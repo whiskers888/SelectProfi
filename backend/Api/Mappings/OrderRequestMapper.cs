@@ -24,7 +24,8 @@ public static class OrderRequestMapper
         {
             CustomerId = customerId,
             Title = request.Title,
-            Description = request.Description
+            Description = request.Description,
+            RequestedCandidatesCount = request.RequestedCandidatesCount
         };
     }
 

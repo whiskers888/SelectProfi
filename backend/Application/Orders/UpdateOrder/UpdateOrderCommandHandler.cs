@@ -57,6 +57,7 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            RequestedCandidatesCount = order.RequestedCandidatesCount,
             Status = order.Status,
             CreatedAtUtc = order.CreatedAtUtc,
             UpdatedAtUtc = order.UpdatedAtUtc

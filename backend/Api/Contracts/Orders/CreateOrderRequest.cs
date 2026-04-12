@@ -13,4 +13,8 @@ public sealed class CreateOrderRequest
     [MinLength(1)]
     [MaxLength(4000)]
     public string Description { get; init; } = string.Empty;
+
+    [Range(1, int.MaxValue)]
+    // @dvnull: Ранее заказ не содержал параметр требуемого количества кандидатов; добавлено поле для явного запроса заказчика.
+    public int RequestedCandidatesCount { get; init; }
 }

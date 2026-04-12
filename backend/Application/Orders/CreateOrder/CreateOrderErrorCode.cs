@@ -4,5 +4,6 @@ public enum CreateOrderErrorCode
 {
     None = 0,
     CustomerNotFound = 1,
-    Conflict = 2
+    Conflict = 2,
+    RequestedCandidatesCountTooLow = 3
 }

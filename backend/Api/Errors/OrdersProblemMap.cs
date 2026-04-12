@@ -63,6 +63,12 @@ public static class OrdersProblemMap
         "order_conflict",
         "Не удалось создать заказ из-за конфликта данных.");
 
+    private static readonly ApiProblemDescriptor RequestedCandidatesCountTooLow = new(
+        StatusCodes.Status400BadRequest,
+        "Ошибка валидации",
+        "order_requested_candidates_count_too_low",
+        "Запрошенное количество кандидатов меньше минимально допустимого.");
+
     private static readonly ApiProblemDescriptor UpdateOrderConflict = new(
         StatusCodes.Status409Conflict,
         "Конфликт",
@@ -116,6 +122,7 @@ public static class OrdersProblemMap
         return errorCode switch
         {
             CreateOrderErrorCode.CustomerNotFound => CustomerNotFound,
+            CreateOrderErrorCode.RequestedCandidatesCountTooLow => RequestedCandidatesCountTooLow,
             _ => CreateOrderConflict
         };
     }

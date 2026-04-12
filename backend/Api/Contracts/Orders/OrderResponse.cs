@@ -12,6 +12,8 @@ public sealed class OrderResponse
 
     public string Description { get; init; } = string.Empty;
 
+    public int RequestedCandidatesCount { get; init; }
+
     public OrderStatusContract Status { get; init; } = OrderStatusContract.Active;
 
     public DateTime CreatedAtUtc { get; init; }

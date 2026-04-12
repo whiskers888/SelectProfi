@@ -89,6 +89,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.Entity<Order>(builder =>
         {
             builder.HasKey(order => order.Id);
+            builder.Property(order => order.RequestedCandidatesCount)
+                .HasDefaultValue(3)
+                .IsRequired();
 
             // @dvnull: Добавлен статус жизненного цикла заказа для бизнес-действий "active/paused".
             builder.Property(order => order.Status)
