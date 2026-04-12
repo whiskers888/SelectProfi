@@ -12,6 +12,8 @@ public interface IUpdateVacancyCandidateStagePersistence
         Guid candidateId,
         CancellationToken cancellationToken);
 
+    Task<int> CountShortlistCandidatesAsync(Guid vacancyId, CancellationToken cancellationToken);
+
     Task<UpdateVacancyCandidateStagePersistenceResult> SaveChangesAsync(CancellationToken cancellationToken);
 }
 

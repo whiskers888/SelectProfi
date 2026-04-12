@@ -45,11 +45,31 @@ public sealed class UpdateVacancyCandidateStageCommandHandler(IUpdateVacancyCand
         if (vacancy.SelectedCandidateId == vacancyCandidate.CandidateId && targetStage != VacancyCandidateStage.Shortlist)
             return new UpdateVacancyCandidateStageResult { ErrorCode = UpdateVacancyCandidateStageErrorCode.Conflict };
 
+        var shouldSaveVacancy = false;
+        var previousStage = vacancyCandidate.Stage;
         if (vacancyCandidate.Stage != targetStage)
         {
             vacancyCandidate.Stage = targetStage;
             vacancyCandidate.UpdatedAtUtc = DateTime.UtcNow;
+            shouldSaveVacancy = true;
+        }
 
+        // @dvnull: Ранее shortlist не имел серверной фиксации факта авто-отправки заказчику; добавлена отметка при достижении порога заказа.
+        if (targetStage == VacancyCandidateStage.Shortlist && vacancy.ShortlistSentToCustomerAtUtc is null)
+        {
+            var shortlistCandidatesCount = await persistence.CountShortlistCandidatesAsync(command.VacancyId, cancellationToken);
+            if (previousStage != VacancyCandidateStage.Shortlist && targetStage == VacancyCandidateStage.Shortlist)
+                shortlistCandidatesCount += 1;
+            if (shortlistCandidatesCount >= vacancy.Order.RequestedCandidatesCount)
+            {
+                vacancy.ShortlistSentToCustomerAtUtc = DateTime.UtcNow;
+                vacancy.UpdatedAtUtc = DateTime.UtcNow;
+                shouldSaveVacancy = true;
+            }
+        }
+
+        if (shouldSaveVacancy)
+        {
             var saveResult = await persistence.SaveChangesAsync(cancellationToken);
             if (saveResult == UpdateVacancyCandidateStagePersistenceResult.Conflict)
                 return new UpdateVacancyCandidateStageResult { ErrorCode = UpdateVacancyCandidateStageErrorCode.Conflict };

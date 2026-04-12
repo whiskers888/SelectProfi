@@ -29,7 +29,8 @@ public sealed class GetVacanciesQueryHandler(IGetVacanciesPersistence persistenc
             Description = vacancy.Description,
             Status = vacancy.Status,
             CreatedAtUtc = vacancy.CreatedAtUtc,
-            UpdatedAtUtc = vacancy.UpdatedAtUtc
+            UpdatedAtUtc = vacancy.UpdatedAtUtc,
+            ShortlistSentToCustomerAtUtc = vacancy.ShortlistSentToCustomerAtUtc
         }).ToArray();
 
         return new GetVacanciesResult

@@ -32,4 +32,6 @@ public sealed class GetVacanciesItemResult
     public DateTime CreatedAtUtc { get; init; }
 
     public DateTime UpdatedAtUtc { get; init; }
+
+    public DateTime? ShortlistSentToCustomerAtUtc { get; init; }
 }

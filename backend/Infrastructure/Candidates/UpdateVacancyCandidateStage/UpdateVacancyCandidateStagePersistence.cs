@@ -12,7 +12,7 @@ public sealed class UpdateVacancyCandidateStagePersistence(AppDbContext dbContex
     public Task<Vacancy?> FindActiveVacancyByIdAsync(Guid vacancyId, CancellationToken cancellationToken)
     {
         return dbContext.Vacancies
-            .AsNoTracking()
+            .Include(vacancy => vacancy.Order)
             .FirstOrDefaultAsync(vacancy => vacancy.Id == vacancyId && vacancy.DeletedAtUtc == null, cancellationToken);
     }
 
@@ -26,6 +26,17 @@ public sealed class UpdateVacancyCandidateStagePersistence(AppDbContext dbContex
                 vacancyCandidate => vacancyCandidate.VacancyId == vacancyId
                                     && vacancyCandidate.CandidateId == candidateId
                                     && vacancyCandidate.DeletedAtUtc == null,
+                cancellationToken);
+    }
+
+    public Task<int> CountShortlistCandidatesAsync(Guid vacancyId, CancellationToken cancellationToken)
+    {
+        return dbContext.VacancyCandidates
+            .AsNoTracking()
+            .CountAsync(
+                vacancyCandidate => vacancyCandidate.VacancyId == vacancyId
+                                    && vacancyCandidate.DeletedAtUtc == null
+                                    && vacancyCandidate.Stage == VacancyCandidateStage.Shortlist,
                 cancellationToken);
     }
 

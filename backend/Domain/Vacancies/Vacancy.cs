@@ -46,6 +46,9 @@ public sealed class Vacancy
 
     public DateTime UpdatedAtUtc { get; set; }
 
+    // @dvnull: Ранее не было технической отметки авто-отправки shortlist заказчику; добавлено поле фиксации момента первой отправки.
+    public DateTime? ShortlistSentToCustomerAtUtc { get; set; }
+
     public DateTime? DeletedAtUtc { get; set; }
 
     public ICollection<VacancyCandidate> VacancyCandidates { get; set; } = new List<VacancyCandidate>();
