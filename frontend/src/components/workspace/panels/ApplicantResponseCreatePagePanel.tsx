@@ -3,16 +3,33 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Textarea } from '@/components/ui/textarea'
 
 type ApplicantResponseCreatePagePanelProps = {
   formValues: {
-    vacancy: string
-    company: string
-    note: string
+    fullName: string
+    birthDate: string
+    email: string
+    phone: string
+    specialization: string
+    resumeTitle: string
+    resumeRichTextHtml: string
+    resumeAttachmentLinks: string
   }
   onBack: () => void
-  onFieldChange: (field: 'vacancy' | 'company' | 'note', value: string) => void
+  onFieldChange: (
+    field:
+      | 'fullName'
+      | 'birthDate'
+      | 'email'
+      | 'phone'
+      | 'specialization'
+      | 'resumeTitle'
+      | 'resumeRichTextHtml'
+      | 'resumeAttachmentLinks',
+    value: string,
+  ) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
 }
 
@@ -22,7 +39,12 @@ export function ApplicantResponseCreatePagePanel({
   onFieldChange,
   onSubmit,
 }: ApplicantResponseCreatePagePanelProps) {
-  const isFormInvalid = !formValues.vacancy.trim() || !formValues.company.trim()
+  const hasVisibleResumeText = formValues.resumeRichTextHtml.replace(/<[^>]*>/g, ' ').trim().length > 0
+  const isFormInvalid =
+    !formValues.fullName.trim() ||
+    !formValues.specialization.trim() ||
+    !formValues.resumeTitle.trim() ||
+    !hasVisibleResumeText
 
   return (
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
@@ -33,14 +55,86 @@ export function ApplicantResponseCreatePagePanel({
 
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-response-vacancy">
-            Вакансия
+          <Label className="text-slate-600" htmlFor="workspace-applicant-full-name">
+            ФИО
           </Label>
           <Input
-            id="workspace-response-vacancy"
-            value={formValues.vacancy}
-            onChange={(event) => onFieldChange('vacancy', event.target.value)}
-            placeholder="Например, Senior React Developer"
+            id="workspace-applicant-full-name"
+            value={formValues.fullName}
+            onChange={(event) => onFieldChange('fullName', event.target.value)}
+            placeholder="Например, Елена Петрова"
+            maxLength={200}
+            required
+            className="h-11 rounded-xl border-slate-200 text-slate-900"
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label className="text-slate-600" htmlFor="workspace-applicant-birth-date">
+              Дата рождения
+            </Label>
+            <Input
+              id="workspace-applicant-birth-date"
+              type="date"
+              value={formValues.birthDate}
+              onChange={(event) => onFieldChange('birthDate', event.target.value)}
+              className="h-11 rounded-xl border-slate-200 text-slate-900"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-slate-600" htmlFor="workspace-applicant-email">
+              Email
+            </Label>
+            <Input
+              id="workspace-applicant-email"
+              type="email"
+              value={formValues.email}
+              onChange={(event) => onFieldChange('email', event.target.value)}
+              placeholder="candidate@example.com"
+              maxLength={254}
+              className="h-11 rounded-xl border-slate-200 text-slate-900"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-slate-600" htmlFor="workspace-applicant-phone">
+              Телефон
+            </Label>
+            <Input
+              id="workspace-applicant-phone"
+              value={formValues.phone}
+              onChange={(event) => onFieldChange('phone', event.target.value)}
+              placeholder="+7 999 000-00-00"
+              maxLength={32}
+              className="h-11 rounded-xl border-slate-200 text-slate-900"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600" htmlFor="workspace-applicant-specialization">
+            Специализация
+          </Label>
+          <Input
+            id="workspace-applicant-specialization"
+            value={formValues.specialization}
+            onChange={(event) => onFieldChange('specialization', event.target.value)}
+            placeholder="Senior Frontend Developer"
+            maxLength={120}
+            required
+            className="h-11 rounded-xl border-slate-200 text-slate-900"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600" htmlFor="workspace-applicant-resume-title">
+            Заголовок резюме
+          </Label>
+          <Input
+            id="workspace-applicant-resume-title"
+            value={formValues.resumeTitle}
+            onChange={(event) => onFieldChange('resumeTitle', event.target.value)}
+            placeholder="Senior Frontend Developer"
             maxLength={200}
             required
             className="h-11 rounded-xl border-slate-200 text-slate-900"
@@ -48,31 +142,25 @@ export function ApplicantResponseCreatePagePanel({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-response-company">
-            Компания
-          </Label>
-          <Input
-            id="workspace-response-company"
-            value={formValues.company}
-            onChange={(event) => onFieldChange('company', event.target.value)}
-            placeholder="ООО Альфа"
-            maxLength={200}
-            required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+          <Label className="text-slate-600">Содержимое резюме</Label>
+          <RichTextEditor
+            value={formValues.resumeRichTextHtml}
+            onChange={(value) => onFieldChange('resumeRichTextHtml', value)}
+            placeholder="Опишите опыт, стек, достижения."
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-response-note">
-            Комментарий
+          <Label className="text-slate-600" htmlFor="workspace-applicant-resume-attachments">
+            Ссылки на вложения
           </Label>
           <Textarea
-            id="workspace-response-note"
-            value={formValues.note}
-            onChange={(event) => onFieldChange('note', event.target.value)}
-            placeholder="Краткое сопроводительное сообщение."
+            id="workspace-applicant-resume-attachments"
+            value={formValues.resumeAttachmentLinks}
+            onChange={(event) => onFieldChange('resumeAttachmentLinks', event.target.value)}
+            placeholder="Одна ссылка на строку (облако, портфолио, pdf)."
             maxLength={2000}
-            className="min-h-[120px] rounded-xl border-slate-200 text-slate-900"
+            className="min-h-[100px] rounded-xl border-slate-200 text-slate-900"
           />
         </div>
 
