@@ -37,6 +37,19 @@ export function VacancyDetailsSurface({
   onDeleteVacancy,
   getRequestErrorMessage,
 }: VacancyDetailsSurfaceProps) {
+  function formatShortlistSentAt(value: string | null | undefined): string {
+    if (!value) {
+      return 'Не отправлено'
+    }
+
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) {
+      return value
+    }
+
+    return parsed.toLocaleString('ru-RU')
+  }
+
   return (
     <Card className="border-slate-200 shadow-none">
       <CardHeader>
@@ -57,6 +70,8 @@ export function VacancyDetailsSurface({
               <p>CustomerId: {vacancyDetailsData.customerId}</p>
               <p>ExecutorId: {vacancyDetailsData.executorId}</p>
               <p>UpdatedAtUtc: {vacancyDetailsData.updatedAtUtc}</p>
+              {/* @dvnull: Ранее карточка вакансии не показывала серверный факт авто-отправки shortlist; добавлен явный статус отправки заказчику. */}
+              <p>Shortlist to customer: {formatShortlistSentAt(vacancyDetailsData.shortlistSentToCustomerAtUtc)}</p>
             </div>
             {!canEditVacancy ? <Alert>Редактирование вакансии доступно только для роли исполнителя.</Alert> : null}
             <div className="grid gap-3">

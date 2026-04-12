@@ -12,6 +12,7 @@ export type VacancyResponse = {
   status: VacancyStatusContract
   createdAtUtc: string
   updatedAtUtc: string
+  shortlistSentToCustomerAtUtc?: string | null
 }
 
 export type VacancyListResponse = {

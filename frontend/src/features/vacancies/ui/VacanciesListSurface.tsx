@@ -42,6 +42,19 @@ export function VacanciesListSurface({
   onSelectVacancy,
   onStatusTransition,
 }: VacanciesListSurfaceProps) {
+  function formatShortlistStatus(shortlistSentToCustomerAtUtc: string | null | undefined): string {
+    if (!shortlistSentToCustomerAtUtc) {
+      return 'Не отправлен'
+    }
+
+    const parsed = new Date(shortlistSentToCustomerAtUtc)
+    if (Number.isNaN(parsed.getTime())) {
+      return `Отправлен (${shortlistSentToCustomerAtUtc})`
+    }
+
+    return `Отправлен (${parsed.toLocaleString('ru-RU')})`
+  }
+
   return (
     <Card className="border-slate-200 shadow-none">
       <CardHeader>
@@ -62,6 +75,7 @@ export function VacanciesListSurface({
                 <TableHead>Название</TableHead>
                 <TableHead>OrderId</TableHead>
                 <TableHead>Статус</TableHead>
+                <TableHead>Shortlist</TableHead>
                 <TableHead className="w-[140px]">Контекст</TableHead>
                 <TableHead className="w-[220px]">Lifecycle</TableHead>
               </TableRow>
@@ -74,6 +88,8 @@ export function VacanciesListSurface({
                     <TableCell>{vacancy.title}</TableCell>
                     <TableCell>{vacancy.orderId}</TableCell>
                     <TableCell>{vacancy.status}</TableCell>
+                    {/* @dvnull: Ранее таблица вакансий не отражала состояние авто-отправки shortlist; добавлен статус на уровне списка. */}
+                    <TableCell>{formatShortlistStatus(vacancy.shortlistSentToCustomerAtUtc)}</TableCell>
                     <TableCell>
                       <Button
                         type="button"
