@@ -47,6 +47,34 @@
   padding: 16px;
 }
 
+.preview11-sidebar-collapsed {
+  width: 82px;
+  padding: 16px 10px;
+}
+
+.preview11-sidebar-collapsed .preview11-brand-copy,
+.preview11-sidebar-collapsed .preview11-nav-label,
+.preview11-sidebar-collapsed .preview11-footer {
+  display: none;
+}
+
+.preview11-sidebar-collapsed .preview11-nav-btn {
+  justify-content: center;
+  padding: 0;
+}
+
+.preview11-sidebar-collapsed .preview11-nav-left {
+  justify-content: center;
+}
+
+.preview11-sidebar-collapsed .preview11-nav-icon {
+  width: auto;
+}
+
+.preview11-sidebar-collapsed .preview11-badge {
+  display: none;
+}
+
 .preview11-brand {
   display: flex;
   align-items: center;
@@ -97,6 +125,38 @@
 .preview11-side-btn:hover {
   background: var(--sub);
   color: var(--text);
+}
+
+.preview11-side-btn,
+.preview11-nav-btn,
+.preview11-btn,
+.preview11-context-tab,
+.preview11-state-btn,
+.preview11-mini-btn,
+.preview11-role-option {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.preview11-side-btn:focus-visible,
+.preview11-nav-btn:focus-visible,
+.preview11-btn:focus-visible,
+.preview11-context-tab:focus-visible,
+.preview11-state-btn:focus-visible,
+.preview11-mini-btn:focus-visible,
+.preview11-role-option:focus-visible {
+  border-color: var(--p-border);
+  box-shadow: 0 0 0 3px rgb(15 118 110 / 16%);
+}
+
+.preview11-side-btn:active,
+.preview11-nav-btn:active,
+.preview11-btn:active,
+.preview11-context-tab:active,
+.preview11-state-btn:active,
+.preview11-mini-btn:active,
+.preview11-role-option:active {
+  transform: translateY(1px);
 }
 
 .preview11-role-card {
@@ -316,15 +376,21 @@
 
 .preview11-profile-chip {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  height: 40px;
+  min-height: 52px;
   min-width: 168px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 14px;
   background: var(--surface);
   box-shadow: var(--sh);
-  padding: 0 10px 0 12px;
+  padding: 8px 10px 8px 12px;
+}
+
+.preview11-profile-meta {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
 }
 
 .preview11-profile-name {
@@ -333,6 +399,14 @@
   font-size: 13px;
   font-weight: 700;
   line-height: 1.1;
+}
+
+.preview11-profile-role,
+.preview11-profile-email {
+  display: block;
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .preview11-avatar {

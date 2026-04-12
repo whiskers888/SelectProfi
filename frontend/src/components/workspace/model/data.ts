@@ -14,6 +14,8 @@ export type WorkspaceStat = {
 
 export type WorkspaceOrder = {
   id: string
+  customerId?: string
+  executorId?: string | null
   title: string
   company: string
   location: string
@@ -32,6 +34,9 @@ export type WorkspaceCandidate = {
   position: string
   orderId: string
   source: string
+  sourceType?: 'AddedByExecutor' | 'RegisteredUser'
+  isOwnedByRequester?: boolean
+  isAnonymized?: boolean
   rating: string
   statusLabel: string
   statusTone: WorkspaceTone

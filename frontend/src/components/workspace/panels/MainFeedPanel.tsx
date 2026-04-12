@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
   Table,
@@ -11,32 +10,109 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import type { OrderExecutorResponseItemResponse } from '@/shared/api/orders'
 import {
   workspaceToneToBadgeVariant,
   type WorkspaceCandidate,
   type WorkspaceOrder,
   type WorkspaceTone,
 } from '../model/data'
+import { OrderDetailsPagePanel } from './OrderDetailsPagePanel'
 
 type MainFeedPanelProps = {
+  baseCandidates: WorkspaceCandidate[]
+  canManageOrderResponses?: boolean
+  canRespondToOrder?: boolean
+  hasRespondedToOrder?: boolean
   candidates: WorkspaceCandidate[]
   canManageOrders?: boolean
+  canViewBaseCandidates?: boolean
   isLoading: boolean
   isOrdersArchiving?: boolean
+  isRejectingOrderExecutor?: boolean
   isOrdersStateUpdating?: boolean
   onActivateOrders?: (orderIds: string[]) => void | Promise<void>
   onArchiveOrders?: (orderIds: string[]) => void | Promise<void>
   onPauseOrders?: (orderIds: string[]) => void | Promise<void>
   onOpenCandidate: (candidate: WorkspaceCandidate) => void
+  onCloseOrderDetails?: () => void
   onOpenOrder: (order: WorkspaceOrder) => void
+  onRejectOrderExecutor?: (orderId: string, executorId: string) => void | Promise<void>
+  onRespondToOrder?: (orderId: string) => void | Promise<void>
+  onSelectOrderExecutor?: (orderId: string, executorId: string) => void | Promise<void>
   onSelectOrder: (orderId: string) => void
+  orderResponses?: OrderExecutorResponseItemResponse[]
   orders: WorkspaceOrder[]
+  requesterUserId?: string
+  selectedOrderDetails?: WorkspaceOrder | null
+  selectedOrderExecutorName?: string | null
   selectedOrderId: string | null
   view: 'dashboard' | 'orders' | 'candidates'
+  isOrderResponsesLoading?: boolean
+  isRespondingToOrder?: boolean
+  isSelectingOrderExecutor?: boolean
 }
 
 type DashboardSort = 'updated' | 'responses' | 'priority'
 type DashboardState = 'active' | 'paused' | 'archive'
+type CandidateSourceFilter = 'all' | 'registered' | 'recruiter'
+type CandidateStageFilter = 'all' | 'pool' | 'shortlist' | 'selected' | 'no_stage'
+
+const candidatesFiltersStorageKey = 'workspace-candidates-filters-v1'
+
+function readInitialCandidateSourceFilter(): CandidateSourceFilter {
+  if (typeof window === 'undefined') {
+    return 'all'
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(candidatesFiltersStorageKey)
+    if (!rawValue) {
+      return 'all'
+    }
+
+    const parsedValue = JSON.parse(rawValue) as { source?: CandidateSourceFilter }
+    if (
+      parsedValue.source === 'all' ||
+      parsedValue.source === 'registered' ||
+      parsedValue.source === 'recruiter'
+    ) {
+      return parsedValue.source
+    }
+  } catch {
+    return 'all'
+  }
+
+  return 'all'
+}
+
+function readInitialCandidateStageFilter(): CandidateStageFilter {
+  if (typeof window === 'undefined') {
+    return 'all'
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(candidatesFiltersStorageKey)
+    if (!rawValue) {
+      return 'all'
+    }
+
+    const parsedValue = JSON.parse(rawValue) as { stage?: CandidateStageFilter }
+    if (
+      parsedValue.stage === 'all' ||
+      parsedValue.stage === 'pool' ||
+      parsedValue.stage === 'shortlist' ||
+      parsedValue.stage === 'selected' ||
+      parsedValue.stage === 'no_stage'
+    ) {
+      return parsedValue.stage
+    }
+  } catch {
+    return 'all'
+  }
+
+  return 'all'
+}
 
 function renderLoading() {
   return (
@@ -75,24 +151,57 @@ function toneClassName(tone: WorkspaceTone): string {
 }
 
 export function MainFeedPanel({
+  baseCandidates,
+  canManageOrderResponses = false,
+  canRespondToOrder = false,
+  hasRespondedToOrder = false,
   candidates,
   canManageOrders = false,
+  canViewBaseCandidates = false,
   isLoading,
   isOrdersArchiving = false,
+  isRejectingOrderExecutor = false,
   isOrdersStateUpdating = false,
   onActivateOrders,
   onArchiveOrders,
   onPauseOrders,
   onOpenCandidate,
+  onCloseOrderDetails,
   onOpenOrder,
+  onRejectOrderExecutor,
+  onRespondToOrder,
+  onSelectOrderExecutor,
   onSelectOrder,
+  orderResponses = [],
   orders,
+  requesterUserId,
+  selectedOrderDetails = null,
+  selectedOrderExecutorName = null,
   selectedOrderId,
   view,
+  isOrderResponsesLoading = false,
+  isRespondingToOrder = false,
+  isSelectingOrderExecutor = false,
 }: MainFeedPanelProps) {
   const [dashboardSort, setDashboardSort] = useState<DashboardSort>('updated')
   const [dashboardState, setDashboardState] = useState<DashboardState>('active')
   const [checkedOrderIds, setCheckedOrderIds] = useState<string[]>([])
+  const [candidateDataScope, setCandidateDataScope] = useState<'mine' | 'base'>('mine')
+  const [candidateSourceFilter, setCandidateSourceFilter] = useState<CandidateSourceFilter>(
+    readInitialCandidateSourceFilter,
+  )
+  const [candidateStageFilter, setCandidateStageFilter] = useState<CandidateStageFilter>(
+    readInitialCandidateStageFilter,
+  )
+  const [isCandidateFiltersMenuOpen, setIsCandidateFiltersMenuOpen] = useState(false)
+  const [orderDataScope, setOrderDataScope] = useState<'mine' | 'exchange'>('mine')
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      candidatesFiltersStorageKey,
+      JSON.stringify({ source: candidateSourceFilter, stage: candidateStageFilter }),
+    )
+  }, [candidateSourceFilter, candidateStageFilter])
 
   if (isLoading) {
     return renderLoading()
@@ -335,160 +444,369 @@ export function MainFeedPanel({
   }
 
   if (view === 'orders') {
-    if (orders.length === 0) {
-      return renderEmptyState(
-        'Заказы не найдены',
-        'По текущему фильтру нет заказов. Измените фильтр или очистите поиск.',
-      )
-    }
+    const isOrderDetailsOpen = Boolean(selectedOrderDetails)
+    const filteredOrders = orders.filter((order) => {
+      if (orderDataScope === 'exchange') {
+        return !order.executorId
+      }
+
+      if (!requesterUserId) {
+        return true
+      }
+
+      return order.executorId === requesterUserId || order.customerId === requesterUserId
+    })
 
     return (
-      <Card className="rounded-xl border-slate-200 p-4 shadow-none">
-        <h3 className="mb-3 text-base font-semibold text-slate-900">Список заказов</h3>
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Вакансия</TableHead>
-              <TableHead>Компания</TableHead>
-              <TableHead>Локация</TableHead>
-              <TableHead>Приоритет</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead className="text-right">Действия</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow
-                key={order.id}
+      <div className="space-y-4 lg:flex lg:items-start lg:gap-4 lg:space-y-0">
+        <Card
+          className={cn(
+            'rounded-xl border-slate-200 p-4 shadow-none transition-all duration-300 ease-out lg:flex-shrink-0',
+            selectedOrderDetails ? 'lg:w-1/3' : 'lg:w-full',
+          )}
+        >
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-base font-semibold text-slate-900">Список заказов</h3>
+            {/* @dvnull: Добавлен UX-переключатель "Мои заказы/Биржа заказов" вместо единого плоского списка. */}
+            <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+              <button
                 className={cn(
-                  'cursor-pointer',
-                  selectedOrderId === order.id && 'bg-blue-50/70',
+                  'h-8 rounded-md px-3 text-xs font-medium',
+                  orderDataScope === 'mine'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-700 hover:bg-slate-100',
                 )}
-                onClick={() => onSelectOrder(order.id)}
+                onClick={() => setOrderDataScope('mine')}
+                type="button"
               >
-                <TableCell className="font-medium">{order.title}</TableCell>
-                <TableCell>{order.company}</TableCell>
-                <TableCell>{order.location}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      order.priority === 'high'
-                        ? 'destructive'
-                        : order.priority === 'medium'
-                          ? 'default'
-                          : 'neutral'
-                    }
-                  >
-                    {order.priority === 'high'
-                      ? 'Высокий'
-                      : order.priority === 'medium'
-                        ? 'Средний'
-                        : 'Низкий'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={workspaceToneToBadgeVariant(order.statusTone)}>
-                    {order.statusLabel}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    className="h-8 rounded-lg border-slate-200 text-slate-700"
-                    onClick={(event) => {
-                      event.stopPropagation()
+                Мои заказы
+              </button>
+              <button
+                className={cn(
+                  'h-8 rounded-md px-3 text-xs font-medium',
+                  orderDataScope === 'exchange'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-700 hover:bg-slate-100',
+                )}
+                onClick={() => setOrderDataScope('exchange')}
+                type="button"
+              >
+                Биржа заказов
+              </button>
+            </div>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Вакансия</TableHead>
+                {!isOrderDetailsOpen ? <TableHead>Компания</TableHead> : null}
+                {!isOrderDetailsOpen ? <TableHead>Локация</TableHead> : null}
+                {!isOrderDetailsOpen ? <TableHead>Приоритет</TableHead> : null}
+                {!isOrderDetailsOpen ? <TableHead>Статус</TableHead> : null}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell className="py-8 text-center text-sm text-slate-500" colSpan={isOrderDetailsOpen ? 1 : 5}>
+                    {orderDataScope === 'mine'
+                      ? 'В разделе "Мои заказы" пока нет записей.'
+                      : 'В разделе "Биржа заказов" пока нет доступных заказов.'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredOrders.map((order) => (
+                  <TableRow
+                    key={order.id}
+                    className={cn(
+                      'cursor-pointer',
+                      selectedOrderId === order.id && 'bg-blue-50/70',
+                    )}
+                    onClick={() => {
+                      // @dvnull: В режиме "Заказы" список теперь сжимается до 1/3, а справа выезжают детали выбранного заказа на 2/3.
+                      onSelectOrder(order.id)
                       onOpenOrder(order)
                     }}
-                    type="button"
-                    variant="outline"
                   >
-                    Детали
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+                    <TableCell className="font-medium">{order.title}</TableCell>
+                    {!isOrderDetailsOpen ? <TableCell>{order.company}</TableCell> : null}
+                    {!isOrderDetailsOpen ? <TableCell>{order.location}</TableCell> : null}
+                    {!isOrderDetailsOpen ? (
+                      <TableCell>
+                        <Badge
+                          variant={
+                            order.priority === 'high'
+                              ? 'destructive'
+                              : order.priority === 'medium'
+                                ? 'default'
+                                : 'neutral'
+                          }
+                        >
+                          {order.priority === 'high'
+                            ? 'Высокий'
+                            : order.priority === 'medium'
+                              ? 'Средний'
+                              : 'Низкий'}
+                        </Badge>
+                      </TableCell>
+                    ) : null}
+                    {!isOrderDetailsOpen ? (
+                      <TableCell>
+                        <Badge variant={workspaceToneToBadgeVariant(order.statusTone)}>
+                          {order.statusLabel}
+                        </Badge>
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+
+        <div
+          className={cn(
+            'transition-all duration-300 ease-out lg:w-2/3',
+            selectedOrderDetails
+              ? 'translate-x-0 opacity-100'
+              : 'pointer-events-none translate-x-10 opacity-0 lg:w-0 lg:overflow-hidden',
+          )}
+        >
+          {selectedOrderDetails ? (
+            <OrderDetailsPagePanel
+              key={`${selectedOrderDetails.id}:${selectedOrderDetails.executorId ?? 'none'}`}
+              canManageOrderResponses={canManageOrderResponses}
+              canRespondToOrder={canRespondToOrder}
+              hasRespondedToOrder={hasRespondedToOrder}
+              isOrderResponsesLoading={isOrderResponsesLoading}
+              isRejectingOrderExecutor={isRejectingOrderExecutor}
+              isRespondingToOrder={isRespondingToOrder}
+              isSelectingOrderExecutor={isSelectingOrderExecutor}
+              onBack={onCloseOrderDetails ?? (() => {})}
+              onRespondToOrder={() => {
+                if (!onRespondToOrder) {
+                  return
+                }
+                void onRespondToOrder(selectedOrderDetails.id)
+              }}
+              onRejectOrderExecutor={(executorId) => {
+                if (!onRejectOrderExecutor) {
+                  return
+                }
+                void onRejectOrderExecutor(selectedOrderDetails.id, executorId)
+              }}
+              onSelectOrderExecutor={(executorId) => {
+                if (!onSelectOrderExecutor) {
+                  return
+                }
+                void onSelectOrderExecutor(selectedOrderDetails.id, executorId)
+              }}
+              order={selectedOrderDetails}
+              assignedExecutorName={selectedOrderExecutorName}
+              orderResponses={orderResponses}
+            />
+          ) : null}
+        </div>
+      </div>
     )
   }
 
-  const candidateOrderOptions = orders.filter((order) => !order.isArchived)
-  const candidateScopeOrderId =
-    selectedOrderId && candidateOrderOptions.some((order) => order.id === selectedOrderId)
-      ? selectedOrderId
-      : candidateOrderOptions[0]?.id ?? ''
-  const scopedCandidates = candidateScopeOrderId
-    ? candidates.filter((candidate) => candidate.orderId === candidateScopeOrderId)
-    : candidates
+  const scopedCandidates = candidates
+  const scopedBaseCandidates = baseCandidates
+  const candidateRows =
+    candidateDataScope === 'base' && canViewBaseCandidates
+      ? scopedBaseCandidates
+      : scopedCandidates
+  const filteredCandidateRows = candidateRows.filter((candidate) => {
+    const matchesSource =
+      candidateSourceFilter === 'all'
+        ? true
+        : candidateSourceFilter === 'registered'
+          ? candidate.sourceType === 'RegisteredUser'
+          : candidate.sourceType === 'AddedByExecutor'
+
+    if (!matchesSource) {
+      return false
+    }
+
+    const normalizedStatus = candidate.statusLabel.trim().toLowerCase()
+    if (candidateStageFilter === 'all') {
+      return true
+    }
+    if (candidateStageFilter === 'no_stage') {
+      return normalizedStatus.length === 0
+    }
+    if (candidateStageFilter === 'pool') {
+      return normalizedStatus === 'pool'
+    }
+    if (candidateStageFilter === 'shortlist') {
+      return normalizedStatus === 'shortlist'
+    }
+    return normalizedStatus === 'выбран'
+  })
+  const isBaseScope = canViewBaseCandidates && candidateDataScope === 'base'
+  const hasActiveCandidateFilters =
+    candidateSourceFilter !== 'all' || candidateStageFilter !== 'all'
 
   return (
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-base font-semibold text-slate-900">Кандидаты и этапы</h3>
-        <div className="flex items-center gap-2">
-          {/* @dvnull: Добавлен выбор заказа в секции кандидатов, чтобы пользователь менял контекст без перехода в другие вкладки. */}
-          <select
-            className="h-9 min-w-[240px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
-            disabled={candidateOrderOptions.length === 0}
-            onChange={(event) => {
-              const nextOrderId = event.target.value
-              if (nextOrderId) {
-                onSelectOrder(nextOrderId)
-              }
-            }}
-            value={candidateScopeOrderId}
-          >
-            {candidateOrderOptions.length === 0 ? (
-              <option value="">Нет доступных заказов</option>
-            ) : (
-              candidateOrderOptions.map((order) => (
-                <option key={order.id} value={order.id}>
-                  {order.title}
-                </option>
-              ))
+        <div className="relative flex flex-wrap items-center gap-2">
+          {/* @dvnull: Ранее в разделе кандидатов был только один список; добавлен UX-переключатель "Мои кандидаты/База кандидатов" для явного выбора источника. */}
+          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+            <button
+              className={cn(
+                'h-8 rounded-md px-3 text-xs font-medium',
+                candidateDataScope === 'mine'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-700 hover:bg-slate-100',
+              )}
+              onClick={() => setCandidateDataScope('mine')}
+              type="button"
+            >
+              Мои кандидаты
+            </button>
+            {canViewBaseCandidates ? (
+              <button
+                className={cn(
+                  'h-8 rounded-md px-3 text-xs font-medium',
+                  candidateDataScope === 'base'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-700 hover:bg-slate-100',
+                )}
+                onClick={() => setCandidateDataScope('base')}
+                type="button"
+              >
+                База кандидатов
+              </button>
+            ) : null}
+          </div>
+          {/* @dvnull: Инлайн-select фильтров заменены на отдельную кнопку с выезжающим меню и сохранением выбранных значений. */}
+          <button
+            className={cn(
+              'h-9 rounded-lg border px-3 text-sm',
+              hasActiveCandidateFilters
+                ? 'border-blue-300 bg-blue-50 text-blue-700'
+                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
             )}
-          </select>
-          <Badge variant="neutral">{scopedCandidates.length}</Badge>
+            onClick={() => setIsCandidateFiltersMenuOpen((previousValue) => !previousValue)}
+            type="button"
+          >
+            Фильтры
+          </button>
+          <div
+            className={cn(
+              'absolute right-0 top-full z-20 mt-2 w-[280px] rounded-xl border border-slate-200 bg-white p-3 shadow-lg transition-all duration-200',
+              isCandidateFiltersMenuOpen
+                ? 'translate-x-0 opacity-100'
+                : 'pointer-events-none translate-x-3 opacity-0',
+            )}
+          >
+            <div className="space-y-3">
+              <div>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.04em] text-slate-500">
+                  Кандидаты
+                </p>
+                <select
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
+                  onChange={(event) => {
+                    const value = event.target.value
+                    if (value === 'all' || value === 'registered' || value === 'recruiter') {
+                      setCandidateSourceFilter(value)
+                    }
+                  }}
+                  value={candidateSourceFilter}
+                >
+                  <option value="all">Все</option>
+                  <option value="registered">Зарегистрированные</option>
+                  <option value="recruiter">Рекрутерские</option>
+                </select>
+              </div>
+              <div>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.04em] text-slate-500">Этапы</p>
+                <select
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
+                  onChange={(event) => {
+                    const value = event.target.value
+                    if (
+                      value === 'all' ||
+                      value === 'pool' ||
+                      value === 'shortlist' ||
+                      value === 'selected' ||
+                      value === 'no_stage'
+                    ) {
+                      setCandidateStageFilter(value)
+                    }
+                  }}
+                  value={candidateStageFilter}
+                >
+                  <option value="all">Все</option>
+                  <option value="pool">Pool</option>
+                  <option value="shortlist">Shortlist</option>
+                  <option value="selected">Выбран</option>
+                  <option value="no_stage">Без этапа</option>
+                </select>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  className="h-8 rounded-lg border border-slate-200 px-2 text-xs text-slate-700 hover:bg-slate-50"
+                  onClick={() => {
+                    setCandidateSourceFilter('all')
+                    setCandidateStageFilter('all')
+                  }}
+                  type="button"
+                >
+                  Сбросить
+                </button>
+                <button
+                  className="h-8 rounded-lg bg-slate-900 px-3 text-xs text-white hover:bg-slate-700"
+                  onClick={() => setIsCandidateFiltersMenuOpen(false)}
+                  type="button"
+                >
+                  Применить
+                </button>
+              </div>
+            </div>
+          </div>
+          <Badge variant="neutral">{filteredCandidateRows.length}</Badge>
         </div>
       </div>
-      {scopedCandidates.length === 0 ? (
+      {filteredCandidateRows.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
-          По выбранному заказу кандидаты не найдены.
+          Кандидаты по текущим фильтрам не найдены.
         </div>
       ) : (
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>Кандидат</TableHead>
-              <TableHead>Позиция</TableHead>
-              <TableHead>Источник</TableHead>
+              {!isBaseScope ? <TableHead>Источник</TableHead> : null}
               <TableHead>Рейтинг</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead className="text-right">Действия</TableHead>
+              {!isBaseScope ? <TableHead>Статус</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {scopedCandidates.map((candidate) => (
-              <TableRow key={candidate.id}>
+            {filteredCandidateRows.map((candidate) => (
+              <TableRow
+                key={candidate.id}
+                className="cursor-pointer"
+                onClick={() => onOpenCandidate(candidate)}
+              >
                 <TableCell className="font-medium">{candidate.name}</TableCell>
-                <TableCell>{candidate.position}</TableCell>
-                <TableCell>{candidate.source}</TableCell>
+                {!isBaseScope ? <TableCell>{candidate.source}</TableCell> : null}
                 <TableCell>{candidate.rating}</TableCell>
-                <TableCell>
-                  <Badge variant={workspaceToneToBadgeVariant(candidate.statusTone)}>
-                    {candidate.statusLabel}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    className="h-8 rounded-lg border-slate-200 text-slate-700"
-                    onClick={() => onOpenCandidate(candidate)}
-                    type="button"
-                    variant="outline"
-                  >
-                    Профиль
-                  </Button>
-                </TableCell>
+                {!isBaseScope ? (
+                  <TableCell>
+                    {candidate.statusLabel.trim() ? (
+                      <Badge variant={workspaceToneToBadgeVariant(candidate.statusTone)}>
+                        {candidate.statusLabel}
+                      </Badge>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </TableCell>
+                ) : null}
               </TableRow>
             ))}
           </TableBody>

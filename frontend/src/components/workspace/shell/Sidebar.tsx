@@ -2,7 +2,9 @@ import { workspaceViewOptions, type WorkspaceRole, type WorkspaceView } from '..
 
 type SidebarProps = {
   activeView: WorkspaceView
+  collapsed: boolean
   counters: Partial<Record<WorkspaceView, number>>
+  onToggleCollapse: () => void
   onViewChange: (view: WorkspaceView) => void
   role: WorkspaceRole
 }
@@ -22,28 +24,66 @@ const roleHintMap: Record<WorkspaceRole, string> = {
   Applicant: 'Отслеживайте статусы откликов и поддерживайте связь с рекрутерами.',
 }
 
+function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
+  if (role === 'Applicant' && view === 'orders') {
+    return 'Вакансии'
+  }
+
+  if (role === 'Applicant' && view === 'candidates') {
+    return 'Мои резюме'
+  }
+
+  return workspaceViewOptions.find((option) => option.value === view)?.label ?? view
+}
+
+function toViewIcon(view: WorkspaceView, role: WorkspaceRole): string {
+  if (role === 'Applicant' && view === 'orders') {
+    return '💼'
+  }
+
+  if (role === 'Applicant' && view === 'candidates') {
+    return '📄'
+  }
+
+  return navIconMap[view]
+}
+
 export function Sidebar({
   activeView,
+  collapsed,
   counters,
+  onToggleCollapse,
   onViewChange,
   role,
 }: SidebarProps) {
+  const visibleViewOptions =
+    role === 'Customer'
+      ? workspaceViewOptions.filter(
+          (view) => view.value !== 'orders' && view.value !== 'candidates',
+        )
+      : workspaceViewOptions
+
   // @dvnull: Ранее sidebar был собран на blue-tailwind карточках, перевел shell на HTML-паттерн макета.
   return (
-    <aside className="preview11-sidebar">
+    <aside className={`preview11-sidebar${collapsed ? ' preview11-sidebar-collapsed' : ''}`}>
       <div className="preview11-brand">
         <div className="preview11-mark">SP</div>
         <div className="preview11-brand-copy">
           <div className="preview11-brand-title">SelectProfi</div>
           <div className="preview11-muted">Платформа подбора специалистов</div>
         </div>
-        <button aria-label="Свернуть навигацию" className="preview11-side-btn" type="button">
-          ⇤
+        <button
+          aria-label={collapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}
+          className="preview11-side-btn"
+          onClick={onToggleCollapse}
+          type="button"
+        >
+          {collapsed ? '⇥' : '⇤'}
         </button>
       </div>
 
       <nav aria-label="Основные разделы" className="preview11-nav">
-        {workspaceViewOptions.map((view) => {
+        {visibleViewOptions.map((view) => {
           const isActive = activeView === view.value
           const counter = counters[view.value] ?? 0
 
@@ -55,8 +95,8 @@ export function Sidebar({
               type="button"
             >
               <span className="preview11-nav-left">
-                <span className="preview11-nav-icon">{navIconMap[view.value]}</span>
-                <span className="preview11-nav-label">{view.label}</span>
+                <span className="preview11-nav-icon">{toViewIcon(view.value, role)}</span>
+                <span className="preview11-nav-label">{toViewLabel(view.value, role)}</span>
               </span>
               {counter > 0 ? <span className="preview11-badge">{counter}</span> : null}
             </button>

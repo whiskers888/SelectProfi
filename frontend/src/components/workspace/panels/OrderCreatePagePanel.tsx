@@ -1,5 +1,4 @@
 import { type FormEvent } from 'react'
-import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -31,12 +30,8 @@ export function OrderCreatePagePanel({
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-slate-900">Создание заказа</h3>
-        <p className="text-sm text-slate-600">
-          Новый заказ создается сразу в API и становится доступным в списке.
-        </p>
+        <p className="text-sm text-slate-600">Новый заказ создается сразу в API и появляется в общем списке.</p>
       </div>
-
-      <Alert className="mt-4">После сохранения заказ автоматически откроется в общем списке.</Alert>
 
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">

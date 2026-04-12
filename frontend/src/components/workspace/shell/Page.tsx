@@ -1,13 +1,15 @@
 import { skipToken } from '@reduxjs/toolkit/query'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import '../styles/shell.css'
 import { ApplicantResponseCreatePagePanel } from '../panels/ApplicantResponseCreatePagePanel'
 import { CalendarPanel } from '../panels/CalendarPanel'
+import { CandidateDetailsPagePanel } from '../panels/CandidateDetailsPagePanel'
 import { CandidateCreatePagePanel } from '../panels/CandidateCreatePagePanel'
 import { MainFeedPanel } from '../panels/MainFeedPanel'
 import { OrderCreatePagePanel } from '../panels/OrderCreatePagePanel'
+import { OrderDetailsPagePanel } from '../panels/OrderDetailsPagePanel'
 import { PipelinePanel } from '../panels/PipelinePanel'
 import { StatsGrid } from '../panels/StatsGrid'
 import { Alert } from '@/components/ui/alert'
@@ -15,7 +17,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Modal } from '@/components/ui/modal'
 import { cn } from '@/lib/utils'
 import { clearAuthSession } from '@/app/authSessionSlice'
 import { routePaths } from '@/app/routePaths'
@@ -23,14 +24,23 @@ import type { AppDispatch } from '@/app/store'
 import { useGetMyAuthInfoQuery } from '@/shared/api/auth'
 import { useGetCustomerDashboardStatsQuery, useGetExecutorDashboardStatsQuery } from '@/shared/api/dashboard'
 import {
+  useGetVacancyBaseCandidatesQuery,
   useGetVacancyCandidatesQuery,
+  useLazyGetVacancyBaseCandidatesQuery,
+  useLazyGetVacancyCandidatesQuery,
   useMarkVacancyCandidateViewedByCustomerMutation,
+  type VacancyBaseCandidatesItemResponse,
   type VacancyCandidatesItemResponse,
 } from '@/shared/api/candidates'
 import {
   useCreateOrderMutation,
   useDeleteOrderMutation,
+  useGetOrderResponsesQuery,
   useGetOrdersQuery,
+  useGetMyOrderResponseQuery,
+  useRejectOrderResponseExecutorMutation,
+  useRespondToOrderMutation,
+  useSelectOrderResponseExecutorMutation,
   useUpdateOrderMutation,
   type OrderStatusContract,
   type OrderResponse,
@@ -46,7 +56,6 @@ import {
   defaultWorkspaceRole,
   defaultWorkspaceView,
   workspaceDataByRole,
-  workspaceToneToBadgeVariant,
   type WorkspaceCandidate,
   type WorkspaceChatThread,
   type WorkspaceOrder,
@@ -85,7 +94,7 @@ function createActionLabel(role: WorkspaceRole): string {
   }
 
   if (role === 'Applicant') {
-    return 'Добавить отклик'
+    return 'Добавить резюме'
   }
 
   return 'Создать заказ'
@@ -150,6 +159,8 @@ function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
 
   return {
     id: order.id,
+    customerId: order.customerId,
+    executorId: order.executorId ?? null,
     title: order.title,
     company: toOrderCompanyLabel(order.description),
     location: 'Локация не указана',
@@ -166,6 +177,27 @@ function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
     updatedAt: toOrderUpdatedAtLabel(order.updatedAtUtc),
     isArchived,
     isPaused,
+  }
+}
+
+function toWorkspaceOrderFromVacancy(vacancy: VacancyResponse): WorkspaceOrder {
+  const isPublished = vacancy.status === 'Published'
+  const isOnApproval = vacancy.status === 'OnApproval'
+
+  return {
+    id: vacancy.orderId,
+    customerId: vacancy.customerId,
+    executorId: vacancy.executorId,
+    title: vacancy.title,
+    company: toOrderCompanyLabel(vacancy.description),
+    location: 'Локация не указана',
+    priority: isPublished ? 'medium' : 'high',
+    responses: 0,
+    statusLabel: isPublished ? 'Опубликована' : isOnApproval ? 'На согласовании' : 'Черновик',
+    statusTone: isPublished ? 'success' : isOnApproval ? 'warning' : 'neutral',
+    updatedAt: toOrderUpdatedAtLabel(vacancy.updatedAtUtc),
+    isArchived: false,
+    isPaused: false,
   }
 }
 
@@ -194,14 +226,37 @@ function toWorkspaceCandidate(
 ): WorkspaceCandidate {
   return {
     id: item.candidateId,
-    name: item.publicAlias,
+    name: item.displayName || item.publicAlias,
     position: vacancy.title,
     orderId: vacancy.orderId,
     source: `Vacancy ${vacancy.id.slice(0, 8)}`,
+    sourceType: item.source,
+    isOwnedByRequester: item.isOwnedByRequester,
+    isAnonymized: item.isAnonymized,
     rating: '—',
     statusLabel: toCandidateStatusLabel(item.stage, item.isSelected),
     statusTone: toCandidateStatusTone(item.stage, item.isSelected),
     comment: `Обновлено ${new Date(item.updatedAtUtc).toLocaleString('ru-RU')}`,
+  }
+}
+
+function toWorkspaceBaseCandidate(
+  candidate: VacancyBaseCandidatesItemResponse,
+  vacancy: VacancyResponse,
+): WorkspaceCandidate {
+  return {
+    id: candidate.candidateId,
+    name: candidate.displayName || candidate.publicAlias,
+    position: vacancy.title,
+    orderId: vacancy.orderId,
+    source: `База Vacancy ${vacancy.id.slice(0, 8)}`,
+    sourceType: candidate.source,
+    isOwnedByRequester: candidate.isOwnedByRequester,
+    isAnonymized: candidate.isAnonymized,
+    rating: '—',
+    statusLabel: '',
+    statusTone: 'neutral',
+    comment: `Обновлено ${new Date(candidate.updatedAtUtc).toLocaleString('ru-RU')}`,
   }
 }
 
@@ -233,12 +288,20 @@ function getRequestErrorMessage(error: unknown): string {
 export function ShellPage() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { data: profile } = useGetMyProfileQuery()
   const { data: authMe } = useGetMyAuthInfoQuery()
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
   const [updateOrder, { isLoading: isOrderStatusUpdating }] = useUpdateOrderMutation()
   const [deleteOrder, { isLoading: isDeletingOrder }] = useDeleteOrderMutation()
+  const [respondToOrder, { isLoading: isRespondingToOrder }] = useRespondToOrderMutation()
+  const [rejectOrderResponseExecutor, { isLoading: isRejectingOrderExecutor }] =
+    useRejectOrderResponseExecutorMutation()
+  const [selectOrderResponseExecutor, { isLoading: isSelectingOrderExecutor }] =
+    useSelectOrderResponseExecutorMutation()
   const [markVacancyCandidateViewedByCustomer] = useMarkVacancyCandidateViewedByCustomerMutation()
+  const [loadVacancyCandidates] = useLazyGetVacancyCandidatesQuery()
+  const [loadVacancyBaseCandidates] = useLazyGetVacancyBaseCandidatesQuery()
   const [preferredOrderId, setPreferredOrderId] = useState<string | null>(null)
   // @dvnull: Раньше роль бралась из query-параметра, теперь primary source — профиль с бэкенда.
   const role = toWorkspaceRole(profile?.activeRole ?? profile?.role) ?? defaultWorkspaceRole
@@ -247,6 +310,8 @@ export function ShellPage() {
   const profileEmail = profile?.email ?? authMe?.email ?? '—'
   const profileRoleLabel = toRoleLabel(role)
   const canManageOrder = authMe?.role === 'Customer' || authMe?.role === 'Admin'
+  const dashboardRole =
+    authMe?.role === 'Customer' || authMe?.role === 'Executor' ? authMe.role : null
   const dataset = workspaceDataByRole[role]
   // @dvnull: Ранее список заказов в рабочем пространстве формировался только из локального датасета, теперь источник — /api/orders с fallback.
   const canLoadServerOrders = role !== 'Applicant'
@@ -258,20 +323,36 @@ export function ShellPage() {
   } = useGetOrdersQuery(
     canLoadServerOrders
       ? {
+          // @dvnull: Ранее workspace забирал только дефолтный page-size backend (20), из-за чего статистика считалась по всем заказам, а в UI была видна лишь часть.
+          // @dvnull: Для согласованности со счетчиками расширяем лимит выборки в workspace.
+          limit: 100,
           // @dvnull: Для вкладки "Архив" запрашиваем и soft-deleted заказы, которые раньше скрывались на уровне API.
           includeArchived: true,
         }
       : skipToken,
   )
   const { data: executorDashboardStats } = useGetExecutorDashboardStatsQuery(
-    role === 'Executor' ? undefined : skipToken,
+    dashboardRole === 'Executor' ? undefined : skipToken,
   )
   const { data: customerDashboardStats } = useGetCustomerDashboardStatsQuery(
-    role === 'Customer' ? undefined : skipToken,
+    dashboardRole === 'Customer' ? undefined : skipToken,
   )
+  const canLoadServerVacancies = true
+  const canLoadServerCandidates = role !== 'Applicant'
+  const canLoadExecutorBaseCandidates = role === 'Executor'
+  // @dvnull: Раньше Applicant не получал вакансии в workspace и вкладка была пустой; теперь vacancies загружаются для всех ролей.
+  const { data: vacanciesResponse } = useGetVacanciesQuery(canLoadServerVacancies ? undefined : skipToken)
+  const applicantVacancyOrders =
+    role === 'Applicant' && vacanciesResponse
+      ? vacanciesResponse.items.map(toWorkspaceOrderFromVacancy)
+      : []
   const serverOrders = ordersResponse?.items.map(toWorkspaceOrder) ?? []
   const baseOrders =
-    canLoadServerOrders && ordersResponse ? serverOrders : dataset.orders
+    role === 'Applicant'
+      ? applicantVacancyOrders
+      : canLoadServerOrders && ordersResponse
+        ? serverOrders
+        : dataset.orders
   const candidateScopeOrderId =
     baseOrders.find((order) => order.id === preferredOrderId && !order.isArchived)?.id ??
     baseOrders.find((order) => !order.isArchived)?.id ??
@@ -279,8 +360,6 @@ export function ShellPage() {
     baseOrders[0]?.id ??
     null
   // @dvnull: Ранее кандидаты подгружались по первой вакансии из списка; теперь источник кандидатов привязан к выбранному заказу.
-  const canLoadServerCandidates = role !== 'Applicant'
-  const { data: vacanciesResponse } = useGetVacanciesQuery(canLoadServerCandidates ? undefined : skipToken)
   const candidateSourceVacancy =
     candidateScopeOrderId && vacanciesResponse
       ? vacanciesResponse.items.find((vacancy) => vacancy.orderId === candidateScopeOrderId) ?? null
@@ -295,9 +374,15 @@ export function ShellPage() {
       ? { vacancyId: candidateSourceVacancy.id }
       : skipToken,
   )
+  const { data: vacancyBaseCandidatesResponse } = useGetVacancyBaseCandidatesQuery(
+    canLoadExecutorBaseCandidates && candidateSourceVacancy
+      ? { vacancyId: candidateSourceVacancy.id }
+      : skipToken,
+  )
 
   const [activeView, setActiveView] = useState<WorkspaceView>(defaultWorkspaceView)
   const [searchValue, setSearchValue] = useState('')
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [orderFilter] = useState<OrderFilter>('all')
   const [isViewLoading, setIsViewLoading] = useState(false)
   const [banner, setBanner] = useState<PageBanner | null>(null)
@@ -311,16 +396,19 @@ export function ShellPage() {
   })
   const [createCandidateFormValues, setCreateCandidateFormValues] = useState({
     fullName: '',
+    birthDate: '',
+    email: '',
+    phone: '',
     specialization: '',
-    note: '',
+    resumeTitle: '',
+    resumeRichTextHtml: '',
+    resumeAttachmentLinks: '',
   })
   const [createApplicantResponseFormValues, setCreateApplicantResponseFormValues] = useState({
     vacancy: '',
     company: '',
     note: '',
   })
-  const [selectedOrder, setSelectedOrder] = useState<WorkspaceOrder | null>(null)
-  const [selectedCandidate, setSelectedCandidate] = useState<WorkspaceCandidate | null>(null)
   const [chatDraft, setChatDraft] = useState('')
   const [preferredChatId, setPreferredChatId] = useState<string | null>(null)
 
@@ -343,6 +431,9 @@ export function ShellPage() {
     Executor: false,
     Applicant: false,
   })
+  const [purchasedCandidateIds, setPurchasedCandidateIds] = useState<string[]>([])
+  const [executorGlobalCandidates, setExecutorGlobalCandidates] = useState<WorkspaceCandidate[]>([])
+  const [executorGlobalBaseCandidates, setExecutorGlobalBaseCandidates] = useState<WorkspaceCandidate[]>([])
 
   const transitionTimeoutRef = useRef<number | null>(null)
   const viewedCandidateRequestKeyRef = useRef<string | null>(null)
@@ -371,6 +462,282 @@ export function ShellPage() {
       window.clearTimeout(timeoutId)
     }
   }, [banner])
+
+  const executorVacancyIdsSignature =
+    role === 'Executor' && vacanciesResponse
+      ? vacanciesResponse.items
+          .map((vacancy) => vacancy.id)
+          .sort((left, right) => left.localeCompare(right))
+          .join('|')
+      : ''
+
+  useEffect(() => {
+    if (role !== 'Executor' || !vacanciesResponse) {
+      return
+    }
+
+    const vacancies = vacanciesResponse.items
+    if (vacancies.length === 0) {
+      return
+    }
+
+    let cancelled = false
+    void Promise.all(
+      vacancies.map(async (vacancy) => {
+        const [vacancyCandidatesResponseResult, vacancyBaseCandidatesResponseResult] = await Promise.all([
+          loadVacancyCandidates({ vacancyId: vacancy.id }).unwrap(),
+          loadVacancyBaseCandidates({ vacancyId: vacancy.id }).unwrap(),
+        ])
+
+        return {
+          vacancy,
+          vacancyCandidates: vacancyCandidatesResponseResult.items,
+          vacancyBaseCandidates: vacancyBaseCandidatesResponseResult.items,
+        }
+      }),
+    )
+      .then((results) => {
+        if (cancelled) {
+          return
+        }
+
+        const globalCandidatesMap = new Map<string, WorkspaceCandidate>()
+        const globalCandidatesUpdatedAt = new Map<string, number>()
+        const globalBaseCandidatesMap = new Map<string, WorkspaceCandidate>()
+        const globalBaseCandidatesUpdatedAt = new Map<string, number>()
+
+        for (const result of results) {
+          for (const item of result.vacancyCandidates) {
+            const mappedCandidate = toWorkspaceCandidate(item, result.vacancy)
+            const nextUpdatedAt = new Date(item.updatedAtUtc).getTime()
+            const currentUpdatedAt = globalCandidatesUpdatedAt.get(item.candidateId) ?? Number.NEGATIVE_INFINITY
+
+            if (nextUpdatedAt > currentUpdatedAt) {
+              globalCandidatesMap.set(item.candidateId, mappedCandidate)
+              globalCandidatesUpdatedAt.set(item.candidateId, nextUpdatedAt)
+            }
+          }
+
+          for (const item of result.vacancyBaseCandidates) {
+            const mappedBaseCandidate = toWorkspaceBaseCandidate(item, result.vacancy)
+            const nextUpdatedAt = new Date(item.updatedAtUtc).getTime()
+            const currentUpdatedAt =
+              globalBaseCandidatesUpdatedAt.get(item.candidateId) ?? Number.NEGATIVE_INFINITY
+
+            if (nextUpdatedAt > currentUpdatedAt) {
+              globalBaseCandidatesMap.set(item.candidateId, mappedBaseCandidate)
+              globalBaseCandidatesUpdatedAt.set(item.candidateId, nextUpdatedAt)
+            }
+          }
+        }
+
+        setExecutorGlobalCandidates(Array.from(globalCandidatesMap.values()))
+        setExecutorGlobalBaseCandidates(Array.from(globalBaseCandidatesMap.values()))
+      })
+      .catch(() => {
+        if (cancelled) {
+          return
+        }
+
+        setExecutorGlobalCandidates([])
+        setExecutorGlobalBaseCandidates([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    executorVacancyIdsSignature,
+    loadVacancyBaseCandidates,
+    loadVacancyCandidates,
+    role,
+    vacanciesResponse,
+  ])
+
+  function startViewTransition() {
+    if (transitionTimeoutRef.current) {
+      window.clearTimeout(transitionTimeoutRef.current)
+    }
+
+    setIsViewLoading(true)
+    transitionTimeoutRef.current = window.setTimeout(() => {
+      setIsViewLoading(false)
+      transitionTimeoutRef.current = null
+    }, 280)
+  }
+
+  const threads = threadsByRole[role]
+  const manualCandidates = manualCandidatesByRole[role]
+  const analyticsError = analyticsRecoveredByRole[role] ? null : dataset.analyticsError ?? null
+  const serverCandidates =
+    candidateSourceVacancy && vacancyCandidatesResponse
+      ? vacancyCandidatesResponse.items.map((item) => toWorkspaceCandidate(item, candidateSourceVacancy))
+      : []
+  const serverBaseCandidates =
+    candidateSourceVacancy && vacancyBaseCandidatesResponse
+      ? vacancyBaseCandidatesResponse.items.map((item) =>
+          toWorkspaceBaseCandidate(item, candidateSourceVacancy),
+        )
+      : []
+  const hasExecutorVacancies = role === 'Executor' && Boolean(vacanciesResponse?.items.length)
+  const executorCandidatesForUi = hasExecutorVacancies ? executorGlobalCandidates : []
+  const executorBaseCandidatesForUi = hasExecutorVacancies ? executorGlobalBaseCandidates : []
+  const baseCandidates =
+    role === 'Executor'
+      ? vacanciesResponse
+        ? executorCandidatesForUi
+        : dataset.candidates
+      : !canLoadServerCandidates
+        ? dataset.candidates
+        : !vacanciesResponse
+          ? dataset.candidates
+          : !candidateSourceVacancy
+            ? []
+            : vacancyCandidatesResponse
+              ? serverCandidates
+              : isVacancyCandidatesError
+                ? dataset.candidates
+                : []
+  const isOrdersApiLoading = canLoadServerOrders && !ordersResponse && isOrdersFetching
+  const isCandidatesApiLoading =
+    role === 'Executor'
+      ? false
+      : canLoadServerCandidates && !vacancyCandidatesResponse && isVacancyCandidatesFetching
+
+  const allOrders = baseOrders
+  const allCandidates = [...manualCandidates, ...baseCandidates]
+  const allBaseCandidates =
+    role === 'Executor'
+      ? executorBaseCandidatesForUi
+      : canLoadExecutorBaseCandidates
+        ? serverBaseCandidates
+        : []
+  const normalizedSearch = searchValue.trim().toLowerCase()
+
+  const filteredOrders = allOrders.filter((order) => {
+    if (activeView !== 'dashboard' && order.isArchived) {
+      return false
+    }
+
+    const matchesFilter =
+      orderFilter === 'all' ||
+      (orderFilter === 'active' && order.statusTone !== 'danger') ||
+      (orderFilter === 'paused' && order.statusTone === 'danger')
+
+    if (!matchesFilter) {
+      return false
+    }
+
+    if (!normalizedSearch) {
+      return true
+    }
+
+    return (
+      order.title.toLowerCase().includes(normalizedSearch) ||
+      order.company.toLowerCase().includes(normalizedSearch) ||
+      order.location.toLowerCase().includes(normalizedSearch)
+    )
+  })
+
+  const orderTitleById = new Map(allOrders.map((order) => [order.id, order.title]))
+
+  const filteredCandidates = allCandidates.filter((candidate) => {
+    if (!normalizedSearch) {
+      return true
+    }
+
+    return (
+      candidate.name.toLowerCase().includes(normalizedSearch) ||
+      candidate.position.toLowerCase().includes(normalizedSearch) ||
+      candidate.source.toLowerCase().includes(normalizedSearch) ||
+      (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
+    )
+  })
+  const filteredBaseCandidates = allBaseCandidates.filter((candidate) => {
+    if (!normalizedSearch) {
+      return true
+    }
+
+    return (
+      candidate.name.toLowerCase().includes(normalizedSearch) ||
+      candidate.position.toLowerCase().includes(normalizedSearch) ||
+      candidate.source.toLowerCase().includes(normalizedSearch) ||
+      (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
+    )
+  })
+  const executorMyCandidates = filteredCandidates.filter(
+    (candidate) =>
+      candidate.isOwnedByRequester === true || purchasedCandidateIds.includes(candidate.id),
+  )
+  const executorBaseCandidates = filteredBaseCandidates.filter(
+    (candidate) =>
+      candidate.isOwnedByRequester !== true && !purchasedCandidateIds.includes(candidate.id),
+  )
+
+  const selectedOrderId =
+    filteredOrders.find((order) => order.id === preferredOrderId)?.id ??
+    filteredOrders[0]?.id ??
+    null
+  const detailParams = new URLSearchParams(location.search)
+  const selectedOrderIdFromUrl = detailParams.get('orderId')
+  const selectedCandidateIdFromUrl = detailParams.get('candidateId')
+  const selectedOrder = allOrders.find((order) => order.id === selectedOrderIdFromUrl) ?? null
+  const canRespondToSelectedOrder =
+    role === 'Executor' &&
+    Boolean(
+      selectedOrder &&
+        !selectedOrder.isArchived &&
+        !selectedOrder.isPaused &&
+        !selectedOrder.executorId,
+    )
+  const { data: myOrderResponse } = useGetMyOrderResponseQuery(
+    role === 'Executor' && selectedOrder ? selectedOrder.id : skipToken,
+  )
+  const hasRespondedToSelectedOrder = myOrderResponse?.hasResponse === true
+  const canManageOrderResponses = authMe?.role === 'Customer' || authMe?.role === 'Admin'
+  const {
+    data: orderResponsesResponse,
+    isFetching: isOrderResponsesFetching,
+    refetch: refetchOrderResponses,
+  } = useGetOrderResponsesQuery(
+    canManageOrderResponses && selectedOrder ? selectedOrder.id : skipToken,
+  )
+  const orderResponses = orderResponsesResponse?.items ?? []
+  const selectedOrderExecutorName =
+    selectedOrder?.executorId
+      ? orderResponses.find((response) => response.executorId === selectedOrder.executorId)?.executorFullName ??
+        null
+      : null
+  const selectedOrderWithResponses = selectedOrder
+    ? {
+        ...selectedOrder,
+        responses: canManageOrderResponses ? orderResponses.length : selectedOrder.responses,
+      }
+    : null
+  const knownCandidates = [...allCandidates, ...allBaseCandidates]
+  const selectedCandidate =
+    knownCandidates.find((candidate) => candidate.id === selectedCandidateIdFromUrl) ?? null
+  const isSelectedCandidatePurchased =
+    selectedCandidate ? purchasedCandidateIds.includes(selectedCandidate.id) : false
+  const candidateViewOrders = allOrders.filter((order) => !order.isArchived)
+  const candidateViewSelectedOrderId =
+    candidateViewOrders.find((order) => order.id === preferredOrderId)?.id ??
+    candidateViewOrders[0]?.id ??
+    null
+
+  const filteredThreads = threads.filter((thread) => {
+    if (!normalizedSearch) {
+      return true
+    }
+
+    return (
+      thread.participant.toLowerCase().includes(normalizedSearch) ||
+      thread.preview.toLowerCase().includes(normalizedSearch)
+    )
+  })
+
+  const activeThread =
+    filteredThreads.find((thread) => thread.id === preferredChatId) ?? filteredThreads[0] ?? null
 
   useEffect(() => {
     if (role !== 'Customer' || !selectedCandidate || !vacanciesResponse || !vacancyCandidatesResponse) {
@@ -417,109 +784,6 @@ export function ShellPage() {
     vacanciesResponse,
     vacancyCandidatesResponse,
   ])
-
-  function startViewTransition() {
-    if (transitionTimeoutRef.current) {
-      window.clearTimeout(transitionTimeoutRef.current)
-    }
-
-    setIsViewLoading(true)
-    transitionTimeoutRef.current = window.setTimeout(() => {
-      setIsViewLoading(false)
-      transitionTimeoutRef.current = null
-    }, 280)
-  }
-
-  const threads = threadsByRole[role]
-  const manualCandidates = manualCandidatesByRole[role]
-  const analyticsError = analyticsRecoveredByRole[role] ? null : dataset.analyticsError ?? null
-  const serverCandidates =
-    candidateSourceVacancy && vacancyCandidatesResponse
-      ? vacancyCandidatesResponse.items.map((item) => toWorkspaceCandidate(item, candidateSourceVacancy))
-      : []
-  const baseCandidates =
-    !canLoadServerCandidates
-      ? dataset.candidates
-      : !vacanciesResponse
-        ? dataset.candidates
-        : !candidateSourceVacancy
-          ? []
-          : vacancyCandidatesResponse
-            ? serverCandidates
-            : isVacancyCandidatesError
-              ? dataset.candidates
-              : []
-  const isOrdersApiLoading = canLoadServerOrders && !ordersResponse && isOrdersFetching
-  const isCandidatesApiLoading =
-    canLoadServerCandidates && !vacancyCandidatesResponse && isVacancyCandidatesFetching
-
-  const allOrders = baseOrders
-  const allCandidates = [...manualCandidates, ...baseCandidates]
-  const normalizedSearch = searchValue.trim().toLowerCase()
-
-  const filteredOrders = allOrders.filter((order) => {
-    if (activeView !== 'dashboard' && order.isArchived) {
-      return false
-    }
-
-    const matchesFilter =
-      orderFilter === 'all' ||
-      (orderFilter === 'active' && order.statusTone !== 'danger') ||
-      (orderFilter === 'paused' && order.statusTone === 'danger')
-
-    if (!matchesFilter) {
-      return false
-    }
-
-    if (!normalizedSearch) {
-      return true
-    }
-
-    return (
-      order.title.toLowerCase().includes(normalizedSearch) ||
-      order.company.toLowerCase().includes(normalizedSearch) ||
-      order.location.toLowerCase().includes(normalizedSearch)
-    )
-  })
-
-  const orderTitleById = new Map(allOrders.map((order) => [order.id, order.title]))
-
-  const filteredCandidates = allCandidates.filter((candidate) => {
-    if (!normalizedSearch) {
-      return true
-    }
-
-    return (
-      candidate.name.toLowerCase().includes(normalizedSearch) ||
-      candidate.position.toLowerCase().includes(normalizedSearch) ||
-      candidate.source.toLowerCase().includes(normalizedSearch) ||
-      (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
-    )
-  })
-
-  const selectedOrderId =
-    filteredOrders.find((order) => order.id === preferredOrderId)?.id ??
-    filteredOrders[0]?.id ??
-    null
-  const candidateViewOrders = allOrders.filter((order) => !order.isArchived)
-  const candidateViewSelectedOrderId =
-    candidateViewOrders.find((order) => order.id === preferredOrderId)?.id ??
-    candidateViewOrders[0]?.id ??
-    null
-
-  const filteredThreads = threads.filter((thread) => {
-    if (!normalizedSearch) {
-      return true
-    }
-
-    return (
-      thread.participant.toLowerCase().includes(normalizedSearch) ||
-      thread.preview.toLowerCase().includes(normalizedSearch)
-    )
-  })
-
-  const activeThread =
-    filteredThreads.find((thread) => thread.id === preferredChatId) ?? filteredThreads[0] ?? null
   // @dvnull: Счетчик раздела "Кандидаты" для заказчика переключен на количество непросмотренных кандидатов по выбранному заказу.
   const candidatesCounter =
     role === 'Customer' && candidateSourceVacancy && vacancyCandidatesResponse
@@ -547,14 +811,14 @@ export function ShellPage() {
             id: 'pipeline',
             label: 'Кандидаты в пайплайне',
             value: String(executorDashboardStats?.pipelineCandidatesCount ?? 0),
-            note: 'Считается на бэке',
+            note: '',
             tone: 'warning',
           },
           {
             id: 'shortlist',
             label: 'Отправлено в short-list',
             value: String(executorDashboardStats?.shortlistCandidatesCount ?? 0),
-            note: 'Считается на бэке',
+            note: '',
             tone: 'success',
           },
         ]
@@ -571,25 +835,143 @@ export function ShellPage() {
               id: 'pipeline',
               label: 'Кандидаты в пайплайне',
               value: String(customerDashboardStats?.pipelineCandidatesCount ?? 0),
-              note: 'Считается на бэке',
+              note: '',
               tone: 'warning',
             },
             {
               id: 'shortlist',
               label: 'Отправлено в short-list',
               value: String(customerDashboardStats?.shortlistCandidatesCount ?? 0),
-              note: 'Считается на бэке',
+              note: '',
               tone: 'success',
             },
-          ]
+        ]
       : dataset.stats
+  const isStandaloneOrderDetailsOpen = Boolean(selectedOrder) && activeView !== 'orders'
+  const isDetailsPageOpen = Boolean(selectedCandidate) || isStandaloneOrderDetailsOpen
+
+  function setDetailsInUrl(
+    values: { orderId?: string | null; candidateId?: string | null },
+    replace = false,
+  ) {
+    const searchParams = new URLSearchParams(location.search)
+
+    if (values.orderId !== undefined) {
+      if (values.orderId) {
+        searchParams.set('orderId', values.orderId)
+      } else {
+        searchParams.delete('orderId')
+      }
+    }
+
+    if (values.candidateId !== undefined) {
+      if (values.candidateId) {
+        searchParams.set('candidateId', values.candidateId)
+      } else {
+        searchParams.delete('candidateId')
+      }
+    }
+
+    const nextSearch = searchParams.toString()
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : '',
+      },
+      { replace },
+    )
+  }
 
   function handleViewChange(nextView: WorkspaceView) {
-    setActiveView(nextView)
+    if (role === 'Customer' && (nextView === 'orders' || nextView === 'candidates')) {
+      setActiveView('dashboard')
+    } else {
+      setActiveView(nextView)
+    }
     setIsCreateOrderPageOpen(false)
     setIsCreateCandidatePageOpen(false)
     setIsCreateApplicantResponsePageOpen(false)
+    setDetailsInUrl({ orderId: null, candidateId: null }, true)
     startViewTransition()
+  }
+
+  function handleOpenOrderDetails(order: WorkspaceOrder) {
+    // @dvnull: Ранее выбранный заказ хранился только в локальном state и не попадал в историю браузера; добавлен query-параметр orderId для корректного back-flow.
+    setDetailsInUrl({ orderId: order.id, candidateId: null })
+    setPreferredOrderId(order.id)
+  }
+
+  function handleOpenCandidateDetails(candidate: WorkspaceCandidate) {
+    // @dvnull: Ранее выбранный кандидат хранился только в локальном state и не попадал в историю браузера; добавлен query-параметр candidateId для корректного back-flow.
+    setDetailsInUrl({ orderId: null, candidateId: candidate.id })
+  }
+
+  async function handleRespondToOrder(orderId: string) {
+    try {
+      await respondToOrder(orderId).unwrap()
+      setBanner({
+        variant: 'success',
+        message: 'Отклик на заказ отправлен.',
+      })
+      await refetchOrders()
+    } catch (error) {
+      setBanner({
+        variant: 'destructive',
+        message: getRequestErrorMessage(error),
+      })
+    }
+  }
+
+  async function handleSelectOrderExecutor(orderId: string, executorId: string) {
+    try {
+      await selectOrderResponseExecutor({ orderId, executorId }).unwrap()
+      setBanner({
+        variant: 'success',
+        message: 'Исполнитель выбран.',
+      })
+      await refetchOrders()
+      if (canManageOrderResponses && selectedOrder?.id === orderId) {
+        await refetchOrderResponses()
+      }
+    } catch (error) {
+      setBanner({
+        variant: 'destructive',
+        message: getRequestErrorMessage(error),
+      })
+    }
+  }
+
+  async function handleRejectOrderExecutor(orderId: string, executorId: string) {
+    try {
+      await rejectOrderResponseExecutor({ orderId, executorId }).unwrap()
+      setBanner({
+        variant: 'success',
+        message: 'Отклик исполнителя отклонен.',
+      })
+      if (canManageOrderResponses && selectedOrder?.id === orderId) {
+        await refetchOrderResponses()
+      }
+    } catch (error) {
+      setBanner({
+        variant: 'destructive',
+        message: getRequestErrorMessage(error),
+      })
+    }
+  }
+
+  function handlePurchaseCandidate(candidate: WorkspaceCandidate) {
+    if (purchasedCandidateIds.includes(candidate.id)) {
+      return
+    }
+
+    setPurchasedCandidateIds((previousPurchasedCandidateIds) => [
+      ...previousPurchasedCandidateIds,
+      candidate.id,
+    ])
+    setBanner({
+      variant: 'success',
+      message: 'Доступ к комментариям кандидата открыт.',
+    })
   }
 
   function handleSendMessage() {
@@ -677,7 +1059,7 @@ export function ShellPage() {
       })
       await refetchOrders()
       setIsCreateOrderPageOpen(false)
-      setActiveView('orders')
+      setActiveView('dashboard')
       setBanner({
         variant: 'success',
         message: 'Заказ создан и сохранен в системе.',
@@ -691,7 +1073,15 @@ export function ShellPage() {
   }
 
   function handleCreateCandidateFormFieldChange(
-    field: 'fullName' | 'specialization' | 'note',
+    field:
+      | 'fullName'
+      | 'birthDate'
+      | 'email'
+      | 'phone'
+      | 'specialization'
+      | 'resumeTitle'
+      | 'resumeRichTextHtml'
+      | 'resumeAttachmentLinks',
     value: string,
   ) {
     setCreateCandidateFormValues((previousValues) => ({
@@ -705,12 +1095,13 @@ export function ShellPage() {
 
     const fullName = createCandidateFormValues.fullName.trim()
     const specialization = createCandidateFormValues.specialization.trim()
-    const note = createCandidateFormValues.note.trim()
+    const resumeTitle = createCandidateFormValues.resumeTitle.trim()
+    const resumeSummary = createCandidateFormValues.resumeRichTextHtml.replace(/<[^>]*>/g, ' ').trim()
 
-    if (!fullName || !specialization) {
+    if (!fullName || !specialization || !resumeTitle || !resumeSummary) {
       setBanner({
         variant: 'destructive',
-        message: 'Заполните обязательные поля формы.',
+        message: 'Заполните ФИО, специализацию, заголовок и содержимое резюме.',
       })
       return
     }
@@ -730,7 +1121,7 @@ export function ShellPage() {
       orderId: filteredOrders.find((order) => !order.isArchived)?.id ?? filteredOrders[0]?.id ?? 'local-order',
       statusLabel: 'Новый',
       statusTone: 'warning',
-      comment: note || 'Новый профиль добавлен исполнителем.',
+      comment: resumeSummary || 'Новый профиль добавлен исполнителем.',
     }
 
     // @dvnull: Ранее добавление кандидата для исполнителя было только в modal-форме; переведено на отдельную page-форму в shell без изменения источника данных списка.
@@ -740,8 +1131,13 @@ export function ShellPage() {
     }))
     setCreateCandidateFormValues({
       fullName: '',
+      birthDate: '',
+      email: '',
+      phone: '',
       specialization: '',
-      note: '',
+      resumeTitle: '',
+      resumeRichTextHtml: '',
+      resumeAttachmentLinks: '',
     })
     setIsCreateCandidatePageOpen(false)
     setActiveView('candidates')
@@ -889,9 +1285,9 @@ export function ShellPage() {
       setPreferredOrderId((previousOrderId) =>
         previousOrderId && orderIds.includes(previousOrderId) ? null : previousOrderId,
       )
-      setSelectedOrder((previousOrder) =>
-        previousOrder && orderIds.includes(previousOrder.id) ? null : previousOrder,
-      )
+      if (selectedOrder?.id && orderIds.includes(selectedOrder.id)) {
+        setDetailsInUrl({ orderId: null }, true)
+      }
       if (failedResults.length === 0) {
         setBanner({
           variant: 'success',
@@ -922,7 +1318,9 @@ export function ShellPage() {
       <div className="preview11-app">
         <Sidebar
           activeView={activeView}
+          collapsed={isSidebarCollapsed}
           counters={counters}
+          onToggleCollapse={() => setIsSidebarCollapsed((previousValue) => !previousValue)}
           onViewChange={handleViewChange}
           role={role}
         />
@@ -934,11 +1332,13 @@ export function ShellPage() {
             meetingsCount={dataset.meetings.length}
             notificationsCount={counters.chats ?? 0}
             onCreateAction={() => {
+              // @dvnull: Ранее при открытых деталях заказа/кандидата create-форма открывалась поверх них; теперь детали закрываются перед переходом в создание.
+              setDetailsInUrl({ orderId: null, candidateId: null }, true)
+
               if (role === 'Customer') {
                 setIsCreateOrderPageOpen(true)
                 setIsCreateCandidatePageOpen(false)
                 setIsCreateApplicantResponsePageOpen(false)
-                setActiveView('orders')
                 return
               }
 
@@ -985,6 +1385,36 @@ export function ShellPage() {
           />
 
           <main className="preview11-content flex-1 space-y-4">
+            {selectedOrder && activeView !== 'orders' ? (
+              // @dvnull: Ранее по клику на заказ открывалась модалка; переведено на page-панель деталей внутри shell с сохранением sidebar/header.
+              <OrderDetailsPagePanel
+                key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}
+                assignedExecutorName={selectedOrderExecutorName}
+                canManageOrderResponses={canManageOrderResponses}
+                isOrderResponsesLoading={isOrderResponsesFetching}
+                isRejectingOrderExecutor={isRejectingOrderExecutor}
+                isSelectingOrderExecutor={isSelectingOrderExecutor}
+                onBack={() => {
+                  setDetailsInUrl({ orderId: null })
+                }}
+                onRejectOrderExecutor={(executorId) => handleRejectOrderExecutor(selectedOrder.id, executorId)}
+                onSelectOrderExecutor={(executorId) => handleSelectOrderExecutor(selectedOrder.id, executorId)}
+                order={selectedOrderWithResponses ?? selectedOrder}
+                orderResponses={orderResponses}
+              />
+            ) : null}
+
+            {selectedCandidate ? (
+              // @dvnull: Ранее по клику на кандидата открывалась модалка; переведено на page-панель профиля внутри shell с сохранением sidebar/header.
+              <CandidateDetailsPagePanel
+                candidate={selectedCandidate}
+                canPurchase={selectedCandidate.isOwnedByRequester !== true}
+                isPurchased={isSelectedCandidatePurchased}
+                onBack={() => setDetailsInUrl({ candidateId: null })}
+                onPurchase={() => handlePurchaseCandidate(selectedCandidate)}
+              />
+            ) : null}
+
             {role === 'Executor' && isCreateCandidatePageOpen ? (
               <CandidateCreatePagePanel
                 formValues={createCandidateFormValues}
@@ -1007,7 +1437,10 @@ export function ShellPage() {
               <OrderCreatePagePanel
                 formValues={createOrderFormValues}
                 isCreatingOrder={isCreatingOrder}
-                onBack={() => setIsCreateOrderPageOpen(false)}
+                onBack={() => {
+                  setIsCreateOrderPageOpen(false)
+                  setActiveView('dashboard')
+                }}
                 onFieldChange={handleCreateOrderFormFieldChange}
                 onSubmit={handleCreateOrderFromPage}
               />
@@ -1015,7 +1448,8 @@ export function ShellPage() {
 
             {(role === 'Customer' && isCreateOrderPageOpen) ||
             (role === 'Executor' && isCreateCandidatePageOpen) ||
-            (role === 'Applicant' && isCreateApplicantResponsePageOpen) ? null : (
+            (role === 'Applicant' && isCreateApplicantResponsePageOpen) ||
+            isDetailsPageOpen ? null : (
               <>
             {canLoadServerOrders && isOrdersError ? (
               <Alert variant="destructive">
@@ -1037,18 +1471,35 @@ export function ShellPage() {
                 {/* @dvnull: Ранее статистические баджи брались только из mock-датасета; для Executor переведено на расчет из runtime API-данных без карточек "сегодня/подтверждены". */}
                 <StatsGrid stats={runtimeStats} />
                 <MainFeedPanel
-                  candidates={filteredCandidates}
+                  baseCandidates={role === 'Executor' ? executorBaseCandidates : filteredBaseCandidates}
+                  canManageOrderResponses={canManageOrderResponses}
+                  canRespondToOrder={canRespondToSelectedOrder}
+                  hasRespondedToOrder={hasRespondedToSelectedOrder}
+                  candidates={role === 'Executor' ? executorMyCandidates : filteredCandidates}
                   canManageOrders={canManageOrder}
+                  canViewBaseCandidates={canLoadExecutorBaseCandidates}
                   isLoading={isViewLoading || isOrdersApiLoading || isCandidatesApiLoading}
                   isOrdersArchiving={isDeletingOrder}
+                  isOrderResponsesLoading={isOrderResponsesFetching}
+                  isRejectingOrderExecutor={isRejectingOrderExecutor}
+                  isRespondingToOrder={isRespondingToOrder}
+                  isSelectingOrderExecutor={isSelectingOrderExecutor}
                   isOrdersStateUpdating={isOrderStatusUpdating}
                   onActivateOrders={handleActivateOrders}
                   onArchiveOrders={handleArchiveOrders}
                   onPauseOrders={handlePauseOrders}
-                  onOpenCandidate={setSelectedCandidate}
-                  onOpenOrder={setSelectedOrder}
+                  onOpenCandidate={handleOpenCandidateDetails}
+                  onCloseOrderDetails={() => setDetailsInUrl({ orderId: null })}
+                  onOpenOrder={handleOpenOrderDetails}
+                  onRejectOrderExecutor={handleRejectOrderExecutor}
+                  onRespondToOrder={handleRespondToOrder}
+                  onSelectOrderExecutor={handleSelectOrderExecutor}
+                  orderResponses={orderResponses}
                   onSelectOrder={setPreferredOrderId}
                   orders={activeView === 'candidates' ? candidateViewOrders : filteredOrders}
+                  requesterUserId={authMe?.userId}
+                  selectedOrderDetails={selectedOrderWithResponses ?? selectedOrder}
+                  selectedOrderExecutorName={selectedOrderExecutorName}
                   selectedOrderId={activeView === 'candidates' ? candidateViewSelectedOrderId : selectedOrderId}
                   view={activeView === 'dashboard' ? 'dashboard' : activeView}
                 />
@@ -1172,108 +1623,6 @@ export function ShellPage() {
           </main>
         </div>
       </div>
-
-      <Modal
-        description={selectedOrder?.updatedAt}
-        footer={
-          <div className="flex w-full flex-wrap justify-end gap-2">
-            <Button
-              className="h-10 rounded-xl border-slate-200 text-slate-700"
-              onClick={() => setSelectedOrder(null)}
-              type="button"
-              variant="outline"
-            >
-              Закрыть
-            </Button>
-          </div>
-        }
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedOrder(null)
-          }
-        }}
-        open={Boolean(selectedOrder)}
-        title={selectedOrder?.title ?? 'Детали заказа'}
-      >
-        {selectedOrder ? (
-          <dl className="grid gap-3">
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
-                Компания
-              </dt>
-              <dd className="mt-1 text-sm text-slate-900">{selectedOrder.company}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
-                Локация
-              </dt>
-              <dd className="mt-1 text-sm text-slate-900">{selectedOrder.location}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
-                Отклики
-              </dt>
-              <dd className="mt-1 text-sm text-slate-900">{selectedOrder.responses}</dd>
-            </div>
-            <div className="pt-1">
-              <Badge variant={workspaceToneToBadgeVariant(selectedOrder.statusTone)}>
-                {selectedOrder.statusLabel}
-              </Badge>
-            </div>
-          </dl>
-        ) : null}
-      </Modal>
-
-      <Modal
-        description={selectedCandidate?.comment}
-        footer={
-          <div className="flex justify-end">
-            <Button
-              className="h-10 rounded-xl border-slate-200 text-slate-700"
-              onClick={() => setSelectedCandidate(null)}
-              type="button"
-              variant="outline"
-            >
-              Закрыть
-            </Button>
-          </div>
-        }
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedCandidate(null)
-          }
-        }}
-        open={Boolean(selectedCandidate)}
-        title={selectedCandidate?.name ?? 'Профиль кандидата'}
-      >
-        {selectedCandidate ? (
-          <dl className="grid gap-3">
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
-                Позиция
-              </dt>
-              <dd className="mt-1 text-sm text-slate-900">{selectedCandidate.position}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
-                Источник
-              </dt>
-              <dd className="mt-1 text-sm text-slate-900">{selectedCandidate.source}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
-                Рейтинг
-              </dt>
-              <dd className="mt-1 text-sm text-slate-900">{selectedCandidate.rating}</dd>
-            </div>
-            <div className="pt-1">
-              <Badge variant={workspaceToneToBadgeVariant(selectedCandidate.statusTone)}>
-                {selectedCandidate.statusLabel}
-              </Badge>
-            </div>
-          </dl>
-        ) : null}
-      </Modal>
     </div>
   )
 }

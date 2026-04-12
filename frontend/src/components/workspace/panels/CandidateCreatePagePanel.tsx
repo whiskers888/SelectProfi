@@ -1,19 +1,35 @@
 import { type FormEvent } from 'react'
-import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Textarea } from '@/components/ui/textarea'
 
 type CandidateCreatePagePanelProps = {
   formValues: {
     fullName: string
+    birthDate: string
+    email: string
+    phone: string
     specialization: string
-    note: string
+    resumeTitle: string
+    resumeRichTextHtml: string
+    resumeAttachmentLinks: string
   }
   onBack: () => void
-  onFieldChange: (field: 'fullName' | 'specialization' | 'note', value: string) => void
+  onFieldChange: (
+    field:
+      | 'fullName'
+      | 'birthDate'
+      | 'email'
+      | 'phone'
+      | 'specialization'
+      | 'resumeTitle'
+      | 'resumeRichTextHtml'
+      | 'resumeAttachmentLinks',
+    value: string,
+  ) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
 }
 
@@ -23,18 +39,19 @@ export function CandidateCreatePagePanel({
   onFieldChange,
   onSubmit,
 }: CandidateCreatePagePanelProps) {
-  const isFormInvalid = !formValues.fullName.trim() || !formValues.specialization.trim()
+  const hasVisibleResumeText = formValues.resumeRichTextHtml.replace(/<[^>]*>/g, ' ').trim().length > 0
+  const isFormInvalid =
+    !formValues.fullName.trim() ||
+    !formValues.specialization.trim() ||
+    !formValues.resumeTitle.trim() ||
+    !hasVisibleResumeText
 
   return (
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-slate-900">Добавление кандидата</h3>
-        <p className="text-sm text-slate-600">
-          Новый кандидат появится в текущем рабочем списке и будет доступен в разделе кандидатов.
-        </p>
+        <p className="text-sm text-slate-600">Заполните профиль кандидата и данные резюме.</p>
       </div>
-
-      <Alert className="mt-4">Форма открыта как отдельная страница внутри рабочего пространства.</Alert>
 
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">
@@ -50,6 +67,48 @@ export function CandidateCreatePagePanel({
             required
             className="h-11 rounded-xl border-slate-200 text-slate-900"
           />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label className="text-slate-600" htmlFor="workspace-candidate-birth-date">
+              Дата рождения
+            </Label>
+            <Input
+              id="workspace-candidate-birth-date"
+              type="date"
+              value={formValues.birthDate}
+              onChange={(event) => onFieldChange('birthDate', event.target.value)}
+              className="h-11 rounded-xl border-slate-200 text-slate-900"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-slate-600" htmlFor="workspace-candidate-email">
+              Email
+            </Label>
+            <Input
+              id="workspace-candidate-email"
+              type="email"
+              value={formValues.email}
+              onChange={(event) => onFieldChange('email', event.target.value)}
+              placeholder="candidate@example.com"
+              maxLength={254}
+              className="h-11 rounded-xl border-slate-200 text-slate-900"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-slate-600" htmlFor="workspace-candidate-phone">
+              Телефон
+            </Label>
+            <Input
+              id="workspace-candidate-phone"
+              value={formValues.phone}
+              onChange={(event) => onFieldChange('phone', event.target.value)}
+              placeholder="+7 999 000-00-00"
+              maxLength={32}
+              className="h-11 rounded-xl border-slate-200 text-slate-900"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -68,16 +127,40 @@ export function CandidateCreatePagePanel({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-candidate-note">
-            Комментарий
+          <Label className="text-slate-600" htmlFor="workspace-candidate-resume-title">
+            Заголовок резюме
+          </Label>
+          <Input
+            id="workspace-candidate-resume-title"
+            value={formValues.resumeTitle}
+            onChange={(event) => onFieldChange('resumeTitle', event.target.value)}
+            placeholder="Senior Frontend Developer"
+            maxLength={200}
+            required
+            className="h-11 rounded-xl border-slate-200 text-slate-900"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600">Содержимое резюме</Label>
+          <RichTextEditor
+            value={formValues.resumeRichTextHtml}
+            onChange={(value) => onFieldChange('resumeRichTextHtml', value)}
+            placeholder="Опишите опыт, стек, достижения."
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600" htmlFor="workspace-candidate-resume-attachments">
+            Ссылки на вложения
           </Label>
           <Textarea
-            id="workspace-candidate-note"
-            value={formValues.note}
-            onChange={(event) => onFieldChange('note', event.target.value)}
-            placeholder="Ключевые навыки, ожидания и комментарий по кандидату."
+            id="workspace-candidate-resume-attachments"
+            value={formValues.resumeAttachmentLinks}
+            onChange={(event) => onFieldChange('resumeAttachmentLinks', event.target.value)}
+            placeholder="Одна ссылка на строку (облако, портфолио, pdf)."
             maxLength={2000}
-            className="min-h-[120px] rounded-xl border-slate-200 text-slate-900"
+            className="min-h-[100px] rounded-xl border-slate-200 text-slate-900"
           />
         </div>
 

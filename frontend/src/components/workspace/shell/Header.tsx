@@ -110,11 +110,12 @@ export function Header({
           }}
           trigger={
             <span className="preview11-profile-chip">
-              <span>
+              <span className="preview11-profile-meta">
                 {/* @dvnull: Ранее имя/роль в хедере были статическими от demo-role, переведено на данные профиля backend. */}
                 <span className="preview11-profile-name">{profileDisplayName}</span>
-                <span className="preview11-muted">{profileRoleLabel}</span>
-                <span className="preview11-muted">{profileEmail}</span>
+                {/* @dvnull: Роль и email в профиле хедера были в одном текстовом блоке; разнесено по отдельным строкам для читаемости. */}
+                <span className="preview11-profile-role">{profileRoleLabel}</span>
+                <span className="preview11-profile-email">{profileEmail}</span>
               </span>
               <span className="preview11-avatar">{profileInitials(profileDisplayName)}</span>
             </span>

@@ -1,5 +1,4 @@
 import { type FormEvent } from 'react'
-import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -28,13 +27,9 @@ export function ApplicantResponseCreatePagePanel({
   return (
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-slate-900">Создание отклика</h3>
-        <p className="text-sm text-slate-600">
-          Добавьте информацию по отклику в отдельной странице внутри рабочего пространства.
-        </p>
+        <h3 className="text-base font-semibold text-slate-900">Добавление резюме</h3>
+        <p className="text-sm text-slate-600">Заполните данные резюме для сохранения в рабочем пространстве.</p>
       </div>
-
-      <Alert className="mt-4">Форма открыта из кнопки хедера без использования модалки.</Alert>
 
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">
@@ -95,7 +90,7 @@ export function ApplicantResponseCreatePagePanel({
             type="submit"
             disabled={isFormInvalid}
           >
-            Создать отклик
+            Добавить резюме
           </Button>
         </div>
       </form>
