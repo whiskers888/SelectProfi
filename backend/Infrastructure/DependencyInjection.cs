@@ -7,6 +7,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
+using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Application.Auth.Login;
@@ -47,6 +48,7 @@ using SelectProfi.backend.Infrastructure.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Infrastructure.Candidates.MarkVacancyCandidateViewedByCustomer;
+using SelectProfi.backend.Infrastructure.Candidates.RespondToVacancy;
 using SelectProfi.backend.Infrastructure.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Infrastructure.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Infrastructure.Data;
@@ -107,6 +109,8 @@ public static class DependencyInjection
         services.AddScoped<IGetExecutorDashboardStatsPersistence, GetExecutorDashboardStatsPersistence>();
         services.AddScoped<IUpdateOrderPersistence, UpdateOrderPersistence>();
         services.AddScoped<IDeleteOrderPersistence, DeleteOrderPersistence>();
+        // @dvnull: Добавлена persistence-реализация backend-отклика соискателя на вакансию с привязкой в VacancyCandidates.
+        services.AddScoped<IRespondToVacancyPersistence, RespondToVacancyPersistence>();
         // @dvnull: Добавлена persistence-реализация для привязки кандидата из системной базы в pipeline вакансии.
         services.AddScoped<IAddCandidateFromBasePersistence, AddCandidateFromBasePersistence>();
         // @dvnull: Добавлена persistence-реализация для смены стадии кандидата в vacancy pipeline.

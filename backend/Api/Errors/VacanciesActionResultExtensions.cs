@@ -6,6 +6,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
+using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Application.Vacancies.CreateVacancy;
@@ -79,6 +80,16 @@ public static class VacanciesActionResultExtensions
     public static IActionResult ToActionResult(this AddCandidateFromBaseResult result, ControllerBase controller)
     {
         if (result.ErrorCode == AddCandidateFromBaseErrorCode.None)
+            return controller.Created(
+                $"/api/vacancies/{result.VacancyId}/candidates/{result.CandidateId}",
+                result.ToResponse());
+
+        return controller.ToProblem(VacanciesProblemMap.Resolve(result.ErrorCode));
+    }
+
+    public static IActionResult ToActionResult(this RespondToVacancyResult result, ControllerBase controller)
+    {
+        if (result.ErrorCode == RespondToVacancyErrorCode.None)
             return controller.Created(
                 $"/api/vacancies/{result.VacancyId}/candidates/{result.CandidateId}",
                 result.ToResponse());

@@ -11,6 +11,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
+using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 
@@ -131,6 +132,24 @@ public static class VacanciesProblemMap
         "Конфликт",
         "candidate_link_conflict",
         "Не удалось добавить кандидата в вакансию из-за конфликта данных.");
+
+    private static readonly ApiProblemDescriptor VacancyRespondForbidden = new(
+        StatusCodes.Status403Forbidden,
+        "Доступ запрещен",
+        "vacancy_respond_forbidden",
+        "У вас нет доступа к отклику на эту вакансию.");
+
+    private static readonly ApiProblemDescriptor ApplicantNotFound = new(
+        StatusCodes.Status404NotFound,
+        "Не найдено",
+        "applicant_not_found",
+        "Профиль соискателя не найден.");
+
+    private static readonly ApiProblemDescriptor VacancyAlreadyResponded = new(
+        StatusCodes.Status409Conflict,
+        "Конфликт",
+        "vacancy_already_responded",
+        "Вы уже откликнулись на эту вакансию.");
 
     private static readonly ApiProblemDescriptor CandidateStageForbidden = new(
         StatusCodes.Status403Forbidden,
@@ -308,6 +327,19 @@ public static class VacanciesProblemMap
             AddCandidateFromBaseErrorCode.CandidateNotFound => CandidateNotFound,
             AddCandidateFromBaseErrorCode.Forbidden => CandidateLinkForbidden,
             AddCandidateFromBaseErrorCode.VacancyNotPublished => VacancyNotPublished,
+            _ => CandidateLinkConflict
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(RespondToVacancyErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            RespondToVacancyErrorCode.VacancyNotFound => VacancyNotFound,
+            RespondToVacancyErrorCode.Forbidden => VacancyRespondForbidden,
+            RespondToVacancyErrorCode.ApplicantNotFound => ApplicantNotFound,
+            RespondToVacancyErrorCode.AlreadyResponded => VacancyAlreadyResponded,
+            RespondToVacancyErrorCode.VacancyNotPublished => VacancyNotPublished,
             _ => CandidateLinkConflict
         };
     }

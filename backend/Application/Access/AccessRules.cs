@@ -124,6 +124,11 @@ public static class VacancyAccessRules
 
 public static class CandidateAccessRules
 {
+    public static bool CanRespondToVacancyByApplicant(UserRole requesterRole)
+    {
+        return requesterRole == UserRole.Applicant;
+    }
+
     public static bool CanMutateVacancyCandidatePipeline(VacancyStatus vacancyStatus)
     {
         return vacancyStatus == VacancyStatus.Published;

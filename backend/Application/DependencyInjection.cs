@@ -5,6 +5,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
+using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Application.Auth.Login;
@@ -54,6 +55,8 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<SelectOrderResponseExecutorCommand, SelectOrderResponseExecutorResult>, SelectOrderResponseExecutorCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateOrderCommand, UpdateOrderResult>, UpdateOrderCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteOrderCommand, DeleteOrderResult>, DeleteOrderCommandHandler>();
+        // @dvnull: Добавлен command отклика соискателя на опубликованную вакансию с автопривязкой registered candidate в pipeline.
+        services.AddScoped<ICommandHandler<RespondToVacancyCommand, RespondToVacancyResult>, RespondToVacancyCommandHandler>();
         // @dvnull: Добавлен отдельный command для привязки существующего кандидата из базы к вакансии без создания нового резюме.
         services.AddScoped<ICommandHandler<AddCandidateFromBaseCommand, AddCandidateFromBaseResult>, AddCandidateFromBaseCommandHandler>();
         // @dvnull: Добавлен command смены стадии кандидата в vacancy pipeline с инвариантом selectedCandidate.

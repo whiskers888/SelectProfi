@@ -9,6 +9,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForE
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
+using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Domain.Vacancies;
@@ -46,7 +47,8 @@ public static class VacancyResponseMapper
             Description = result.Description,
             Status = MapStatus(result.Status),
             CreatedAtUtc = result.CreatedAtUtc,
-            UpdatedAtUtc = result.UpdatedAtUtc
+            UpdatedAtUtc = result.UpdatedAtUtc,
+            ShortlistSentToCustomerAtUtc = result.ShortlistSentToCustomerAtUtc
         };
     }
 
@@ -80,7 +82,8 @@ public static class VacancyResponseMapper
                 Description = item.Description,
                 Status = MapStatus(item.Status),
                 CreatedAtUtc = item.CreatedAtUtc,
-                UpdatedAtUtc = item.UpdatedAtUtc
+                UpdatedAtUtc = item.UpdatedAtUtc,
+                ShortlistSentToCustomerAtUtc = item.ShortlistSentToCustomerAtUtc
             }).ToArray(),
             Limit = result.Limit,
             Offset = result.Offset
@@ -100,6 +103,19 @@ public static class VacancyResponseMapper
     }
 
     public static VacancyCandidateResponse ToResponse(this AddCandidateFromBaseResult result)
+    {
+        return new VacancyCandidateResponse
+        {
+            VacancyCandidateId = result.VacancyCandidateId,
+            VacancyId = result.VacancyId,
+            CandidateId = result.CandidateId,
+            Stage = result.Stage.ToString(),
+            AddedAtUtc = result.AddedAtUtc,
+            UpdatedAtUtc = result.UpdatedAtUtc
+        };
+    }
+
+    public static VacancyCandidateResponse ToResponse(this RespondToVacancyResult result)
     {
         return new VacancyCandidateResponse
         {

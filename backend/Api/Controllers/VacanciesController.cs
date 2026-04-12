@@ -8,6 +8,7 @@ using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
+using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Application.Cqrs;
@@ -144,6 +145,21 @@ public sealed class VacanciesController(
     {
         var result = await commandDispatcher.DispatchAsync<CreateCandidateResumeCommand, CreateCandidateResumeResult>(
             request.ToCommand(vacancyId, RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{vacancyId:guid}/respond")]
+    [Authorize(Policy = AuthorizationPolicies.ApplicantOnly)]
+    [ProducesResponseType(typeof(VacancyCandidateResponse), StatusCodes.Status201Created)]
+    [ProducesForbiddenProblem]
+    [ProducesConflictProblem]
+    // @dvnull: Ранее у роли Applicant не было backend-отклика на вакансию; добавлен endpoint с автопривязкой registered candidate в pipeline.
+    public async Task<IActionResult> RespondToVacancy(Guid vacancyId, CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<RespondToVacancyCommand, RespondToVacancyResult>(
+            vacancyId.ToRespondToVacancyCommand(RequesterUserId, RequesterRole),
             cancellationToken);
 
         return result.ToActionResult(this);
