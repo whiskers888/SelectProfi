@@ -118,6 +118,12 @@ const candidatesApi = api.injectEndpoints({
         method: 'POST',
       }),
     }),
+    respondToVacancy: build.mutation<VacancyCandidateResponse, { vacancyId: string }>({
+      query: ({ vacancyId }) => ({
+        url: `/api/vacancies/${vacancyId}/respond`,
+        method: 'POST',
+      }),
+    }),
     getVacancyCandidates: build.query<VacancyCandidatesResponse, { vacancyId: string }>({
       query: ({ vacancyId }) => ({
         url: `/api/vacancies/${vacancyId}/candidates`,
@@ -178,6 +184,7 @@ const candidatesApi = api.injectEndpoints({
 export const {
   useCreateCandidateResumeMutation,
   useAddCandidateFromBaseMutation,
+  useRespondToVacancyMutation,
   useGetVacancyCandidatesQuery,
   useLazyGetVacancyCandidatesQuery,
   useGetVacancyBaseCandidatesQuery,

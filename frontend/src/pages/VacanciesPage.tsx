@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { getRequestErrorMessage } from '@/features/vacancies/lib/errors'
 import {
+  canRespondToVacancy as canRespondToVacancyByRole,
   canCreateVacancy as canCreateVacancyByRole,
   canEditVacancy as canEditVacancyByRole,
   canManagePipeline as canManagePipelineByRole,
@@ -23,6 +24,7 @@ import {
   type PipelineFormState,
   type SubmitMessage,
   type VacancyWorkspaceSection,
+  useVacancyRespondActions,
   useVacancyContactsActions,
   useVacancyContextState,
   useVacanciesQueryState,
@@ -51,6 +53,7 @@ import {
   useGetVacancyCandidatesQuery,
   useLazyGetExecutorCandidateContactsQuery,
   useLazyGetSelectedCandidateContactsQuery,
+  useRespondToVacancyMutation,
   useSelectVacancyCandidateMutation,
   useUpdateVacancyCandidateStageMutation,
   type ExecutorCandidateContactsResponse,
@@ -147,6 +150,7 @@ export function VacanciesPage() {
   const [addCandidateFromBase, { isLoading: isAddingCandidateFromBase }] = useAddCandidateFromBaseMutation()
   const [updateVacancyCandidateStage, { isLoading: isUpdatingCandidateStage }] =
     useUpdateVacancyCandidateStageMutation()
+  const [respondToVacancy, { isLoading: isRespondingToVacancy }] = useRespondToVacancyMutation()
   const [selectVacancyCandidate, { isLoading: isSelectingCandidate }] = useSelectVacancyCandidateMutation()
   const [fetchSelectedCandidateContacts, { isFetching: isFetchingSelectedCandidateContacts }] =
     useLazyGetSelectedCandidateContactsQuery()
@@ -175,6 +179,7 @@ export function VacanciesPage() {
   const availableOrders = ordersData?.items ?? []
   const currentCreateOrderId = selectedCreateOrderId || availableOrders[0]?.id || ''
   const canManagePipeline = canManagePipelineByRole(currentUserRole)
+  const canRespondToVacancy = canRespondToVacancyByRole(currentUserRole)
   const canSelectCandidate = canSelectCandidateByRole(currentUserRole)
   const canReadSelectedContacts = canReadSelectedContactsByRole(currentUserRole)
   const canReadExecutorContacts = canReadExecutorContactsByRole(currentUserRole)
@@ -330,6 +335,16 @@ export function VacanciesPage() {
       fetchSelectedCandidateContactsRequest: async (args) => fetchSelectedCandidateContacts(args).unwrap(),
       fetchExecutorCandidateContactsRequest: async (args) => fetchExecutorCandidateContacts(args).unwrap(),
     })
+  const { handleRespondToVacancy } = useVacancyRespondActions({
+    canRespondToVacancy,
+    currentVacancyId,
+    setSubmitMessage,
+    setSelectedCandidateId,
+    refetchVacancies: async () => {
+      await refetch()
+    },
+    respondToVacancyRequest: async (args) => respondToVacancy(args).unwrap(),
+  })
   const {
     handleCreateFormChange,
     handleCreateOrderSelectChange,
@@ -461,6 +476,8 @@ export function VacanciesPage() {
                 vacancyDetailsError={vacancyDetailsError}
                 vacancyDetailsData={vacancyDetailsData}
                 canEditVacancy={canEditVacancy}
+                canRespondToVacancy={canRespondToVacancy}
+                isRespondingToVacancy={isRespondingToVacancy}
                 currentVacancyEditTitle={currentVacancyEditTitle}
                 currentVacancyEditDescription={currentVacancyEditDescription}
                 isVacancyEditActionLoading={isVacancyEditActionLoading}
@@ -468,6 +485,7 @@ export function VacanciesPage() {
                 onVacancyEditDescriptionChange={handleVacancyEditDescriptionChange}
                 onUpdateVacancyDetails={handleUpdateVacancyDetails}
                 onDeleteVacancy={handleDeleteVacancy}
+                onRespondToVacancy={handleRespondToVacancy}
                 getRequestErrorMessage={getRequestErrorMessage}
               />
 

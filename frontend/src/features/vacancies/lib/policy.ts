@@ -15,6 +15,10 @@ export function canManagePipeline(role: AuthRole): boolean {
   return role === 'Executor'
 }
 
+export function canRespondToVacancy(role: AuthRole): boolean {
+  return role === 'Applicant'
+}
+
 export function canSelectCandidate(role: AuthRole): boolean {
   return role === 'Customer'
 }

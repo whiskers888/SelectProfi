@@ -12,6 +12,8 @@ export type VacancyDetailsSurfaceProps = {
   vacancyDetailsError: unknown
   vacancyDetailsData: VacancyResponse | undefined
   canEditVacancy: boolean
+  canRespondToVacancy: boolean
+  isRespondingToVacancy: boolean
   currentVacancyEditTitle: string
   currentVacancyEditDescription: string
   isVacancyEditActionLoading: boolean
@@ -19,6 +21,7 @@ export type VacancyDetailsSurfaceProps = {
   onVacancyEditDescriptionChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
   onUpdateVacancyDetails: () => void | Promise<void>
   onDeleteVacancy: () => void | Promise<void>
+  onRespondToVacancy: () => void | Promise<void>
   getRequestErrorMessage: (error: unknown) => string
 }
 
@@ -28,6 +31,8 @@ export function VacancyDetailsSurface({
   vacancyDetailsError,
   vacancyDetailsData,
   canEditVacancy,
+  canRespondToVacancy,
+  isRespondingToVacancy,
   currentVacancyEditTitle,
   currentVacancyEditDescription,
   isVacancyEditActionLoading,
@@ -35,6 +40,7 @@ export function VacancyDetailsSurface({
   onVacancyEditDescriptionChange,
   onUpdateVacancyDetails,
   onDeleteVacancy,
+  onRespondToVacancy,
   getRequestErrorMessage,
 }: VacancyDetailsSurfaceProps) {
   function formatShortlistSentAt(value: string | null | undefined): string {
@@ -73,6 +79,20 @@ export function VacancyDetailsSurface({
               {/* @dvnull: Ранее карточка вакансии не показывала серверный факт авто-отправки shortlist; добавлен явный статус отправки заказчику. */}
               <p>Shortlist to customer: {formatShortlistSentAt(vacancyDetailsData.shortlistSentToCustomerAtUtc)}</p>
             </div>
+            {canRespondToVacancy ? (
+              <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="flex-1 text-sm text-slate-700">
+                  Для соискателя отклик доступен только по опубликованной вакансии.
+                </p>
+                <Button
+                  type="button"
+                  onClick={() => void onRespondToVacancy()}
+                  disabled={isRespondingToVacancy || vacancyDetailsData.status !== 'Published'}
+                >
+                  {isRespondingToVacancy ? 'Отправляем отклик...' : 'Откликнуться'}
+                </Button>
+              </div>
+            ) : null}
             {!canEditVacancy ? <Alert>Редактирование вакансии доступно только для роли исполнителя.</Alert> : null}
             <div className="grid gap-3">
               <Input
