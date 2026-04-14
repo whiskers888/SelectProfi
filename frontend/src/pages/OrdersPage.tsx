@@ -3,6 +3,7 @@ import { skipToken } from '@reduxjs/toolkit/query'
 import { routePaths } from '@/app/routePaths'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useNotifications } from '@/components/ui/useNotifications'
 import { getRequestErrorMessage } from '@/features/orders/lib/errors'
 import {
   canAssignExecutor as canAssignExecutorByRole,
@@ -27,13 +28,12 @@ import {
 } from '@/features/orders/ui'
 import { useGetMyAuthInfoQuery } from '@/shared/api/auth'
 import { useGetOrderExecutorsQuery, useLazyGetOrderByIdQuery } from '@/shared/api/orders'
+import { useGetMyProfileQuery } from '@/shared/api/profile'
 
 export function OrdersPage() {
+  const { notify } = useNotifications()
   const defaultOrdersLimit = 20
   const defaultOrdersOffset = 0
-  const [submitMessage, setSubmitMessage] = useState<{ status: 'idle' | 'success' | 'error'; text: string }>(
-    { status: 'idle', text: '' },
-  )
   const [selectedOrderId, setSelectedOrderId] = useState('')
   // @dvnull: Ранее создание и список заказов рендерились одновременно; добавлено секционное page-представление без изменения CRUD-цепочек.
   const [activeOrdersSection, setActiveOrdersSection] = useState<'list' | 'create'>('list')
@@ -52,7 +52,7 @@ export function OrdersPage() {
       setSelectedOrderId('')
     },
     onValidationError: (message) => {
-      setSubmitMessage({ status: 'error', text: message })
+      notify({ variant: 'destructive', message })
     },
   })
   const {
@@ -69,6 +69,7 @@ export function OrdersPage() {
     updateOrder,
   } = useOrdersServer(ordersQuery)
   const { data: authMe } = useGetMyAuthInfoQuery()
+  const { data: profile } = useGetMyProfileQuery()
   const [fetchOrderById, { data: orderDetail, error: orderDetailError, isFetching: isOrderDetailLoading }] =
     useLazyGetOrderByIdQuery()
   const [selectedExecutorIdsByOrder, setSelectedExecutorIdsByOrder] = useState<Record<string, string>>({})
@@ -91,6 +92,7 @@ export function OrdersPage() {
   const canDeleteOrder = canDeleteOrderByRole(currentUserRole)
   const canAssignExecutor = canAssignExecutorByRole(currentUserRole)
   const isOrderMutationLoading = isUpdatingOrder || isDeletingOrder
+  const customerCompanyName = profile?.customerProfile?.companyName?.trim() ?? ''
   const {
     data: executorsData,
     error: executorsError,
@@ -107,10 +109,13 @@ export function OrdersPage() {
       canEditOrder,
       canDeleteOrder,
       canAssignExecutor,
+      customerCompanyName,
       createForm,
       selectedExecutorIdsByOrder,
       orderEditsById,
-      setSubmitMessage,
+      setSubmitMessage: ({ status, text }) => {
+        notify({ variant: status === 'error' ? 'destructive' : 'success', message: text })
+      },
       resetCreateForm: () => {
         setCreateForm({
           title: '',
@@ -155,7 +160,9 @@ export function OrdersPage() {
     })
   const { handleLoadOrderDetails } = useOrderDetailsActions({
     setSelectedOrderId,
-    setSubmitMessage,
+    setSubmitMessage: ({ status, text }) => {
+      notify({ variant: status === 'error' ? 'destructive' : 'success', message: text })
+    },
     fetchOrderByIdRequest: async (orderId) => fetchOrderById(orderId).unwrap(),
   })
 
@@ -168,7 +175,6 @@ export function OrdersPage() {
             isLoading={isLoading}
             isError={isError}
             error={error}
-            submitMessage={submitMessage}
             canAssignExecutor={canAssignExecutor}
             isExecutorsLoading={isExecutorsLoading}
             executorsError={executorsError}
@@ -201,6 +207,7 @@ export function OrdersPage() {
             <OrdersCreateSurface
               canCreateOrder={canCreateOrder}
               isCreatingOrder={isCreatingOrder}
+              customerCompanyName={customerCompanyName}
               createForm={createForm}
               onCreateOrder={handleCreateOrder}
               onCreateInputChange={handleCreateInputChange}

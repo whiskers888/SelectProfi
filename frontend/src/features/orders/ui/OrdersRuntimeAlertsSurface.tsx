@@ -1,15 +1,9 @@
 import { Alert } from '@/components/ui/alert'
 
-type SubmitMessage = {
-  status: 'idle' | 'success' | 'error'
-  text: string
-}
-
 export type OrdersRuntimeAlertsSurfaceProps = {
   isLoading: boolean
   isError: boolean
   error: unknown
-  submitMessage: SubmitMessage
   canAssignExecutor: boolean
   isExecutorsLoading: boolean
   executorsError: unknown
@@ -23,7 +17,6 @@ export function OrdersRuntimeAlertsSurface({
   isLoading,
   isError,
   error,
-  submitMessage,
   canAssignExecutor,
   isExecutorsLoading,
   executorsError,
@@ -36,9 +29,6 @@ export function OrdersRuntimeAlertsSurface({
     <>
       {isLoading ? <Alert>Загрузка заказов...</Alert> : null}
       {isError ? <Alert variant="destructive">{getRequestErrorMessage(error)}</Alert> : null}
-      {submitMessage.status !== 'idle' ? (
-        <Alert variant={submitMessage.status === 'error' ? 'destructive' : 'success'}>{submitMessage.text}</Alert>
-      ) : null}
       {!isLoading && !isError && !canAssignExecutor ? (
         <Alert>Назначение рекрутера доступно только для роли заказчика.</Alert>
       ) : null}
