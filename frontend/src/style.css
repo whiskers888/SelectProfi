@@ -218,6 +218,51 @@ body {
   animation-delay: 90ms;
 }
 
+@keyframes notification-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+.notifications-viewport {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1400;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  width: min(360px, calc(100vw - 24px));
+  pointer-events: none;
+}
+
+.notification-toast {
+  border-radius: 12px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  box-shadow: 0 12px 24px rgb(15 23 42 / 14%);
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.35;
+  animation: notification-slide-in 220ms ease-out both;
+}
+
+.notification-toast-success {
+  border-color: hsl(var(--success));
+  background: hsl(var(--success) / 0.12);
+}
+
+.notification-toast-destructive {
+  border-color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.12);
+}
+
 .preview-stagger-3 {
   animation-delay: 140ms;
 }

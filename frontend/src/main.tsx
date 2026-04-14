@@ -5,14 +5,17 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from './app/router'
 import { store } from './app/store'
 import { AuthSessionBootstrap } from './app/AuthSessionBootstrap'
+import { NotificationsProvider } from './components/ui/notifications'
 import './design/tokens.css'
 import './style.css'
 
 ReactDOM.createRoot(document.getElementById('app')!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <AuthSessionBootstrap />
-      <RouterProvider router={router} />
+      <NotificationsProvider>
+        <AuthSessionBootstrap />
+        <RouterProvider router={router} />
+      </NotificationsProvider>
     </Provider>
   </React.StrictMode>,
 )
