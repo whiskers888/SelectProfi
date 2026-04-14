@@ -2,7 +2,7 @@ import type { Dispatch, FormEventHandler, SetStateAction } from 'react'
 import type { ExecutorEmploymentType } from '@/features/profile/model'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormFieldError, FormStatusMessage } from '@/components/ui/form-feedback'
+import { FormFieldError } from '@/components/ui/form-feedback'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -28,11 +28,6 @@ type ExecutorProfileFormValues = {
 
 type ExecutorProfileFormErrors = Partial<Record<keyof ExecutorProfileFormValues, string>>
 
-type RoleSubmitMessageState = {
-  status: 'idle' | 'success' | 'error'
-  message: string
-}
-
 type Props = {
   isEditingRoleSpecific: boolean
   isEditingCommon: boolean
@@ -40,7 +35,6 @@ type Props = {
   executorFormValues: ExecutorProfileFormValues
   executorFormErrors: ExecutorProfileFormErrors
   executorDetailItems: DetailItem[]
-  roleSubmitMessage: RoleSubmitMessageState
   onStartEdit: () => void
   onCancelEdit: () => void
   onSubmit: FormEventHandler<HTMLFormElement>
@@ -54,7 +48,6 @@ export function ProfileExecutorSection({
   executorFormValues,
   executorFormErrors,
   executorDetailItems,
-  roleSubmitMessage,
   onStartEdit,
   onCancelEdit,
   onSubmit,
@@ -72,13 +65,6 @@ export function ProfileExecutorSection({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {roleSubmitMessage.status !== 'idle' ? (
-          <FormStatusMessage
-            message={roleSubmitMessage.message}
-            status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
-          />
-        ) : null}
-
         {isEditingRoleSpecific ? (
           <form noValidate onSubmit={onSubmit} className="grid gap-4">
             <div className="grid gap-4 md:grid-cols-2">

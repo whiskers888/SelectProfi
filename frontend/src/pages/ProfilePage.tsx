@@ -12,7 +12,6 @@ import { ProfileRoleSwitcher } from '@/features/profile/ui/ProfileRoleSwitcher'
 import { getRequestErrorMessage, isFetchBaseQueryError } from '@/features/profile/lib/errors'
 import {
   normalizeOptional,
-  toDateTimeOrDash,
   toListOrDash,
   toTextOrDash,
 } from '@/features/profile/lib/formatters'
@@ -41,15 +40,11 @@ import {
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useNotifications } from '@/components/ui/useNotifications'
 
 type DetailItem = {
   label: string
   value: string | number
-}
-
-type SubmitMessageState = {
-  status: 'idle' | 'success' | 'error'
-  message: string
 }
 
 type CommonProfileFormValues = {
@@ -83,11 +78,7 @@ type CustomerProfileFormValues = {
   egrnip: string
   companyName: string
   companyLogoUrl: string
-  offerAccepted: boolean
-  offerVersion: string
 }
-
-type CustomerProfileFormErrors = Partial<Record<'offerVersion', string>>
 
 type ExecutorProfileFormValues = {
   employmentType: '' | ExecutorEmploymentType
@@ -103,6 +94,7 @@ type ExecutorProfileFormValues = {
 type ExecutorProfileFormErrors = Partial<Record<keyof ExecutorProfileFormValues, string>>
 
 export function ProfilePage() {
+  const { notify } = useNotifications()
   const {
     data,
     isLoading,
@@ -122,10 +114,6 @@ export function ProfilePage() {
     phone: '',
   })
   const [commonFormErrors, setCommonFormErrors] = useState<CommonProfileFormErrors>({})
-  const [commonSubmitMessage, setCommonSubmitMessage] = useState<SubmitMessageState>({
-    status: 'idle',
-    message: '',
-  })
 
   const [isEditingRoleSpecific, setIsEditingRoleSpecific] = useState(false)
   const [applicantFormValues, setApplicantFormValues] = useState<ApplicantProfileFormValues>({
@@ -148,8 +136,6 @@ export function ProfilePage() {
     egrnip: '',
     companyName: '',
     companyLogoUrl: '',
-    offerAccepted: false,
-    offerVersion: '',
   })
   const [executorFormValues, setExecutorFormValues] = useState<ExecutorProfileFormValues>({
     employmentType: '',
@@ -162,16 +148,7 @@ export function ProfilePage() {
     extraInfo: '',
   })
   const [applicantFormErrors, setApplicantFormErrors] = useState<ApplicantProfileFormErrors>({})
-  const [customerFormErrors, setCustomerFormErrors] = useState<CustomerProfileFormErrors>({})
   const [executorFormErrors, setExecutorFormErrors] = useState<ExecutorProfileFormErrors>({})
-  const [roleSubmitMessage, setRoleSubmitMessage] = useState<SubmitMessageState>({
-    status: 'idle',
-    message: '',
-  })
-  const [roleSwitchMessage, setRoleSwitchMessage] = useState<SubmitMessageState>({
-    status: 'idle',
-    message: '',
-  })
 
   // @dvnull: Ветки loading/error/empty переведены на единый UX-шаблон состояний с явным retry.
   if (isLoading) {
@@ -238,7 +215,6 @@ export function ProfilePage() {
 
   function resetRoleFormErrors() {
     setApplicantFormErrors({})
-    setCustomerFormErrors({})
     setExecutorFormErrors({})
   }
 
@@ -249,8 +225,8 @@ export function ProfilePage() {
 
     try {
       await switchMyActiveRole({ activeRole: nextRole }).unwrap()
-      setRoleSwitchMessage({
-        status: 'success',
+      notify({
+        variant: 'success',
         message: `Активная роль изменена на «${nextRole === 'Applicant' ? 'Соискатель' : 'Исполнитель'}».`,
       })
       void refetch()
@@ -259,7 +235,7 @@ export function ProfilePage() {
         ? getRequestErrorMessage(switchError)
         : 'Не удалось переключить роль.'
 
-      setRoleSwitchMessage({ status: 'error', message })
+      notify({ variant: 'destructive', message })
     }
   }
 
@@ -270,14 +246,12 @@ export function ProfilePage() {
 
     setIsEditingCommon(true)
     setCommonFormErrors({})
-    setCommonSubmitMessage({ status: 'idle', message: '' })
     setCommonFormValues(createCommonProfileFormValues(profile))
   }
 
   function handleCancelEditCommon() {
     setIsEditingCommon(false)
     setCommonFormErrors({})
-    setCommonSubmitMessage({ status: 'idle', message: '' })
     setCommonFormValues(createCommonProfileFormValues(profile))
   }
 
@@ -299,14 +273,14 @@ export function ProfilePage() {
       setCommonFormValues(createCommonProfileFormValues(updatedProfile))
       setCommonFormErrors({})
       setIsEditingCommon(false)
-      setCommonSubmitMessage({ status: 'success', message: 'Профиль обновлён.' })
+      notify({ variant: 'success', message: 'Профиль обновлён.' })
       void refetch()
     } catch (submitError) {
       const message = isFetchBaseQueryError(submitError)
         ? getRequestErrorMessage(submitError)
         : 'Не удалось сохранить профиль.'
 
-      setCommonSubmitMessage({ status: 'error', message })
+      notify({ variant: 'destructive', message })
     }
   }
 
@@ -316,7 +290,6 @@ export function ProfilePage() {
     }
 
     setIsEditingRoleSpecific(true)
-    setRoleSubmitMessage({ status: 'idle', message: '' })
     resetRoleFormErrors()
 
     if (activeRole === 'Applicant') {
@@ -336,13 +309,11 @@ export function ProfilePage() {
 
   function handleCancelEditRoleSpecific() {
     setIsEditingRoleSpecific(false)
-    setRoleSubmitMessage({ status: 'idle', message: '' })
     resetRoleFormErrors()
   }
 
   async function handleRoleSpecificFormSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setRoleSubmitMessage({ status: 'idle', message: '' })
 
     const basePayload = {
       firstName: profile.firstName,
@@ -364,18 +335,12 @@ export function ProfilePage() {
 
         setApplicantFormValues(createApplicantProfileFormValues(updatedProfile))
       } else if (activeRole === 'Customer') {
-        const nextErrors = validateCustomerProfileForm(customerFormValues)
-        if (Object.keys(nextErrors).length > 0) {
-          setCustomerFormErrors(nextErrors)
-          return
-        }
+        validateCustomerProfileForm()
 
         const updatedProfile = await updateMyProfile(
           buildCustomerUpdatePayload({
             basePayload,
             formValues: customerFormValues,
-            currentOfferAccepted: profile.customerProfile?.offerAccepted ?? false,
-            currentOfferVersion: profile.customerProfile?.offerVersion ?? '',
           }),
         ).unwrap()
 
@@ -402,14 +367,14 @@ export function ProfilePage() {
 
       setIsEditingRoleSpecific(false)
       resetRoleFormErrors()
-      setRoleSubmitMessage({ status: 'success', message: 'Профиль обновлён.' })
+      notify({ variant: 'success', message: 'Профиль обновлён.' })
       void refetch()
     } catch (submitError) {
       const message = isFetchBaseQueryError(submitError)
         ? getRequestErrorMessage(submitError)
         : 'Не удалось сохранить профиль.'
 
-      setRoleSubmitMessage({ status: 'error', message })
+      notify({ variant: 'destructive', message })
     }
   }
 
@@ -445,9 +410,6 @@ export function ProfilePage() {
     { label: 'ЕГРНИП', value: toTextOrDash(profile.customerProfile?.egrnip) },
     { label: 'Компания', value: toTextOrDash(profile.customerProfile?.companyName) },
     { label: 'Логотип', value: toTextOrDash(profile.customerProfile?.companyLogoUrl) },
-    { label: 'Согласие с офертой', value: profile.customerProfile?.offerAccepted ? 'Да' : 'Нет' },
-    { label: 'Версия оферты', value: toTextOrDash(profile.customerProfile?.offerVersion) },
-    { label: 'Дата акцепта', value: toDateTimeOrDash(profile.customerProfile?.offerAcceptedAtUtc) },
   ]
 
   const executorDetailItems: DetailItem[] = [
@@ -467,16 +429,15 @@ export function ProfilePage() {
     <section className="page profile-page">
       <h2>Профиль</h2>
 
-      <ProfileCommonSection
-        isEditingCommon={isEditingCommon}
-        isEditingRoleSpecific={isEditingRoleSpecific}
-        isUpdatingProfile={isUpdatingProfile}
-        commonFormValues={commonFormValues}
-        commonFormErrors={commonFormErrors}
-        commonSubmitMessage={commonSubmitMessage}
-        commonDetailItems={commonDetailItems}
-        onStartEdit={handleStartEditCommon}
-        onCancelEdit={handleCancelEditCommon}
+        <ProfileCommonSection
+          isEditingCommon={isEditingCommon}
+          isEditingRoleSpecific={isEditingRoleSpecific}
+          isUpdatingProfile={isUpdatingProfile}
+          commonFormValues={commonFormValues}
+          commonFormErrors={commonFormErrors}
+          commonDetailItems={commonDetailItems}
+          onStartEdit={handleStartEditCommon}
+          onCancelEdit={handleCancelEditCommon}
         onSubmit={handleCommonFormSubmit}
         setCommonFormValues={setCommonFormValues}
       />
@@ -485,7 +446,6 @@ export function ProfilePage() {
         <ProfileRoleSwitcher
           activeRole={activeRole}
           isRoleSwitchDisabled={isRoleSwitchDisabled}
-          roleSwitchMessage={roleSwitchMessage}
           onSwitchRole={(nextRole) => void handleSwitchActiveRole(nextRole)}
         />
       ) : null}
@@ -498,7 +458,6 @@ export function ProfilePage() {
           applicantFormValues={applicantFormValues}
           applicantFormErrors={applicantFormErrors}
           applicantDetailItems={applicantDetailItems}
-          roleSubmitMessage={roleSubmitMessage}
           onStartEdit={handleStartEditRoleSpecific}
           onCancelEdit={handleCancelEditRoleSpecific}
           onSubmit={handleRoleSpecificFormSubmit}
@@ -512,9 +471,7 @@ export function ProfilePage() {
           isEditingCommon={isEditingCommon}
           isUpdatingProfile={isUpdatingProfile}
           customerFormValues={customerFormValues}
-          customerFormErrors={customerFormErrors}
           customerDetailItems={customerDetailItems}
-          roleSubmitMessage={roleSubmitMessage}
           onStartEdit={handleStartEditRoleSpecific}
           onCancelEdit={handleCancelEditRoleSpecific}
           onSubmit={handleRoleSpecificFormSubmit}
@@ -530,7 +487,6 @@ export function ProfilePage() {
           executorFormValues={executorFormValues}
           executorFormErrors={executorFormErrors}
           executorDetailItems={executorDetailItems}
-          roleSubmitMessage={roleSubmitMessage}
           onStartEdit={handleStartEditRoleSpecific}
           onCancelEdit={handleCancelEditRoleSpecific}
           onSubmit={handleRoleSpecificFormSubmit}

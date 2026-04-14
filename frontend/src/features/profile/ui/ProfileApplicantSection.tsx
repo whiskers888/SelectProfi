@@ -1,7 +1,7 @@
 import type { Dispatch, FormEventHandler, SetStateAction } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormFieldError, FormStatusMessage } from '@/components/ui/form-feedback'
+import { FormFieldError } from '@/components/ui/form-feedback'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,11 +28,6 @@ type ApplicantProfileFormValues = {
 
 type ApplicantProfileFormErrors = Partial<Record<keyof ApplicantProfileFormValues, string>>
 
-type RoleSubmitMessageState = {
-  status: 'idle' | 'success' | 'error'
-  message: string
-}
-
 type Props = {
   isEditingRoleSpecific: boolean
   isEditingCommon: boolean
@@ -40,7 +35,6 @@ type Props = {
   applicantFormValues: ApplicantProfileFormValues
   applicantFormErrors: ApplicantProfileFormErrors
   applicantDetailItems: DetailItem[]
-  roleSubmitMessage: RoleSubmitMessageState
   onStartEdit: () => void
   onCancelEdit: () => void
   onSubmit: FormEventHandler<HTMLFormElement>
@@ -54,7 +48,6 @@ export function ProfileApplicantSection({
   applicantFormValues,
   applicantFormErrors,
   applicantDetailItems,
-  roleSubmitMessage,
   onStartEdit,
   onCancelEdit,
   onSubmit,
@@ -72,13 +65,6 @@ export function ProfileApplicantSection({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {roleSubmitMessage.status !== 'idle' ? (
-          <FormStatusMessage
-            message={roleSubmitMessage.message}
-            status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
-          />
-        ) : null}
-
         {isEditingRoleSpecific ? (
           <form noValidate onSubmit={onSubmit} className="grid gap-4">
             <div className="grid gap-4 md:grid-cols-2">

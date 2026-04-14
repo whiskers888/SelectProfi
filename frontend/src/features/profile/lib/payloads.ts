@@ -25,8 +25,6 @@ type CustomerFormValues = {
   egrnip: string
   companyName: string
   companyLogoUrl: string
-  offerAccepted: boolean
-  offerVersion: string
 }
 
 type ExecutorFormValues = {
@@ -66,20 +64,12 @@ export function buildApplicantUpdatePayload(
 type BuildCustomerUpdatePayloadArgs = {
   basePayload: BaseProfilePayload
   formValues: CustomerFormValues
-  currentOfferAccepted: boolean
-  currentOfferVersion: string
 }
 
 export function buildCustomerUpdatePayload({
   basePayload,
   formValues,
-  currentOfferAccepted,
-  currentOfferVersion,
 }: BuildCustomerUpdatePayloadArgs): UpdateMyProfileRequest {
-  const nextOfferVersion = formValues.offerVersion.trim()
-  const offerChanged =
-    currentOfferAccepted !== formValues.offerAccepted || currentOfferVersion.trim() !== nextOfferVersion
-
   return {
     ...basePayload,
     customerProfile: {
@@ -89,8 +79,6 @@ export function buildCustomerUpdatePayload({
       egrnip: normalizeOptional(formValues.egrnip),
       companyName: normalizeOptional(formValues.companyName),
       companyLogoUrl: normalizeOptional(formValues.companyLogoUrl),
-      offerAccepted: offerChanged ? formValues.offerAccepted : undefined,
-      offerVersion: offerChanged ? normalizeOptional(formValues.offerVersion) : undefined,
     },
   }
 }

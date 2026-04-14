@@ -1,7 +1,7 @@
 import type { Dispatch, FormEventHandler, SetStateAction } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormFieldError, FormStatusMessage } from '@/components/ui/form-feedback'
+import { FormFieldError } from '@/components/ui/form-feedback'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ProfileDetails } from '@/features/profile/ui/ProfileDetails'
@@ -19,18 +19,12 @@ type CommonProfileFormValues = {
 
 type CommonProfileFormErrors = Partial<Record<keyof CommonProfileFormValues, string>>
 
-type SubmitMessageState = {
-  status: 'idle' | 'success' | 'error'
-  message: string
-}
-
 type Props = {
   isEditingCommon: boolean
   isEditingRoleSpecific: boolean
   isUpdatingProfile: boolean
   commonFormValues: CommonProfileFormValues
   commonFormErrors: CommonProfileFormErrors
-  commonSubmitMessage: SubmitMessageState
   commonDetailItems: DetailItem[]
   onStartEdit: () => void
   onCancelEdit: () => void
@@ -44,7 +38,6 @@ export function ProfileCommonSection({
   isUpdatingProfile,
   commonFormValues,
   commonFormErrors,
-  commonSubmitMessage,
   commonDetailItems,
   onStartEdit,
   onCancelEdit,
@@ -63,14 +56,6 @@ export function ProfileCommonSection({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* @dvnull: Inline-блок общих данных вынесен из ProfilePage для дальнейшей декомпозиции страницы без изменения submit-flow. */}
-        {commonSubmitMessage.status !== 'idle' ? (
-          <FormStatusMessage
-            message={commonSubmitMessage.message}
-            status={commonSubmitMessage.status === 'error' ? 'error' : 'success'}
-          />
-        ) : null}
-
         {isEditingCommon ? (
           <form noValidate onSubmit={onSubmit} className="grid gap-4">
             <div className="grid gap-4 md:grid-cols-2">

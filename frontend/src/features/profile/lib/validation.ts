@@ -21,12 +21,7 @@ type ExecutorProfileValues = {
 
 type ExecutorProfileErrors = Partial<Record<keyof ExecutorProfileValues, string>>
 
-type CustomerProfileValues = {
-  offerAccepted: boolean
-  offerVersion: string
-}
-
-type CustomerProfileErrors = Partial<Record<'offerVersion', string>>
+type CustomerProfileErrors = Record<string, never>
 
 export function validateCommonProfileForm(values: CommonProfileValues): CommonProfileErrors {
   const errors: CommonProfileErrors = {}
@@ -80,18 +75,6 @@ export function validateExecutorProfileForm(values: ExecutorProfileValues): Exec
   return errors
 }
 
-export function validateCustomerProfileForm(values: CustomerProfileValues): CustomerProfileErrors {
-  const errors: CustomerProfileErrors = {}
-  const offerVersion = values.offerVersion.trim()
-
-  if (values.offerAccepted && !offerVersion) {
-    errors.offerVersion = 'Укажите версию оферты'
-    return errors
-  }
-
-  if (!values.offerAccepted && offerVersion) {
-    errors.offerVersion = 'Версия оферты указывается только при согласии'
-  }
-
-  return errors
+export function validateCustomerProfileForm(): CustomerProfileErrors {
+  return {}
 }

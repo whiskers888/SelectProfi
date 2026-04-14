@@ -1,7 +1,6 @@
 import type { Dispatch, FormEventHandler, SetStateAction } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormFieldError, FormStatusMessage } from '@/components/ui/form-feedback'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -20,15 +19,6 @@ type CustomerProfileFormValues = {
   egrnip: string
   companyName: string
   companyLogoUrl: string
-  offerAccepted: boolean
-  offerVersion: string
-}
-
-type CustomerProfileFormErrors = Partial<Record<'offerVersion', string>>
-
-type RoleSubmitMessageState = {
-  status: 'idle' | 'success' | 'error'
-  message: string
 }
 
 type Props = {
@@ -36,9 +26,7 @@ type Props = {
   isEditingCommon: boolean
   isUpdatingProfile: boolean
   customerFormValues: CustomerProfileFormValues
-  customerFormErrors: CustomerProfileFormErrors
   customerDetailItems: DetailItem[]
-  roleSubmitMessage: RoleSubmitMessageState
   onStartEdit: () => void
   onCancelEdit: () => void
   onSubmit: FormEventHandler<HTMLFormElement>
@@ -50,9 +38,7 @@ export function ProfileCustomerSection({
   isEditingCommon,
   isUpdatingProfile,
   customerFormValues,
-  customerFormErrors,
   customerDetailItems,
-  roleSubmitMessage,
   onStartEdit,
   onCancelEdit,
   onSubmit,
@@ -70,13 +56,6 @@ export function ProfileCustomerSection({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {roleSubmitMessage.status !== 'idle' ? (
-          <FormStatusMessage
-            message={roleSubmitMessage.message}
-            status={roleSubmitMessage.status === 'error' ? 'error' : 'success'}
-          />
-        ) : null}
-
         {isEditingRoleSpecific ? (
           <form noValidate onSubmit={onSubmit} className="grid gap-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -162,42 +141,6 @@ export function ProfileCustomerSection({
                 />
               </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="customer-offerAccepted"
-                    type="checkbox"
-                    checked={customerFormValues.offerAccepted}
-                    onChange={(event) =>
-                      setCustomerFormValues((previous) => ({
-                        ...previous,
-                        offerAccepted: event.target.checked,
-                        offerVersion: event.target.checked ? previous.offerVersion : '',
-                      }))
-                    }
-                    className="h-4 w-4 rounded border-input"
-                  />
-                  <Label htmlFor="customer-offerAccepted">Согласен с офертой</Label>
-                </div>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="customer-offerVersion">Версия оферты</Label>
-                <Input
-                  id="customer-offerVersion"
-                  value={customerFormValues.offerVersion}
-                  onChange={(event) =>
-                    setCustomerFormValues((previous) => ({
-                      ...previous,
-                      offerVersion: event.target.value,
-                    }))
-                  }
-                  disabled={!customerFormValues.offerAccepted}
-                  aria-invalid={Boolean(customerFormErrors.offerVersion)}
-                  aria-describedby={customerFormErrors.offerVersion ? 'customer-offerVersion-error' : undefined}
-                />
-                <FormFieldError id="customer-offerVersion-error">{customerFormErrors.offerVersion}</FormFieldError>
-              </div>
             </div>
 
             <div className="flex gap-2">

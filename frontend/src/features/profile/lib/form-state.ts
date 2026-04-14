@@ -37,8 +37,6 @@ export function createCustomerProfileFormValues(profile: MyProfileResponse) {
     egrnip: profile.customerProfile?.egrnip ?? '',
     companyName: profile.customerProfile?.companyName ?? '',
     companyLogoUrl: profile.customerProfile?.companyLogoUrl ?? '',
-    offerAccepted: profile.customerProfile?.offerAccepted ?? false,
-    offerVersion: profile.customerProfile?.offerVersion ?? '',
   }
 }
 
