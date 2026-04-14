@@ -7,12 +7,14 @@ import { OrderCreatePagePanel } from '../panels/OrderCreatePagePanel'
 import { OrderDetailsPagePanel } from '../panels/OrderDetailsPagePanel'
 import { PipelinePanel } from '../panels/PipelinePanel'
 import { StatsGrid } from '../panels/StatsGrid'
+import { VacancyCreatePagePanel } from '../panels/VacancyCreatePagePanel'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { ProfilePage } from '@/pages/ProfilePage'
 import { Header } from './Header'
 import { useWorkspaceShellController } from './hooks/useWorkspaceShellController'
 import { Sidebar } from './Sidebar'
@@ -25,12 +27,15 @@ export function WorkspaceShellView({
   activeView,
   analyticsError,
   authMe,
-  banner,
+  applicantRespondedOrderIds,
   canLoadExecutorBaseCandidates,
   canLoadServerCandidates,
   canLoadServerOrders,
   canManageOrder,
   canManageOrderResponses,
+  canCreateVacancyFromSelectedOrder,
+  canPublishVacancyForSelectedOrder,
+  hasCreateVacancyDraftForSelectedOrder,
   canRespondToSelectedOrder,
   candidateViewOrders,
   candidateViewSelectedOrderId,
@@ -39,11 +44,13 @@ export function WorkspaceShellView({
   closeCreateApplicantResponsePage,
   closeCreateCandidatePage,
   closeCreateOrderPage,
+  closeCreateVacancyPage,
   closeOrderDetails,
   counters,
   createApplicantResponseFormValues,
   createCandidateFormValues,
   createOrderFormValues,
+  createVacancyFormValues,
   dataset,
   executorBaseCandidates,
   executorMyCandidates,
@@ -59,6 +66,11 @@ export function WorkspaceShellView({
   handleCreateCandidateFromPage,
   handleCreateOrderFormFieldChange,
   handleCreateOrderFromPage,
+  handleCreateVacancyAndSendToCustomerFromPage,
+  handleCreateVacancyFormFieldChange,
+  handleCreateVacancyFromPage,
+  handleCreateVacancyFromOrder,
+  handlePublishVacancyForSelectedOrder,
   handleHeaderCreateAction,
   handleHeaderMenuAction,
   handleOpenCandidateDetails,
@@ -67,6 +79,8 @@ export function WorkspaceShellView({
   handlePurchaseCandidate,
   handleRejectOrderExecutor,
   handleRespondToOrder,
+  handleRespondToSelectedVacancy,
+  handleSetApplicantResponderStage,
   handleRetryAnalytics,
   handleSelectOrderExecutor,
   handleSendMessage,
@@ -76,7 +90,11 @@ export function WorkspaceShellView({
   isCreateApplicantResponsePageOpen,
   isCreateCandidatePageOpen,
   isCreateOrderPageOpen,
+  isCreateVacancyPageOpen,
   isCreatingOrder,
+  isCreatingVacancy,
+  isPublishingVacancyForCustomer,
+  isSendingVacancyToCustomer,
   isDeletingOrder,
   isDetailsPageOpen,
   isOrderResponsesFetching,
@@ -85,6 +103,7 @@ export function WorkspaceShellView({
   isOrdersError,
   isRejectingOrderExecutor,
   isRespondingToOrder,
+  isUpdatingApplicantResponderStage,
   isSelectedCandidatePurchased,
   isSelectingOrderExecutor,
   isSidebarCollapsed,
@@ -97,10 +116,13 @@ export function WorkspaceShellView({
   role,
   runtimeStats,
   searchValue,
+  linkedCreateVacancyOrder,
   selectedCandidate,
   selectedOrder,
   selectedOrderExecutorName,
   selectedOrderId,
+  selectedOrderApplicantResponders,
+  selectedOrderVacancyPreview,
   selectedOrderWithResponses,
   setChatDraft,
   setPreferredChatId,
@@ -134,25 +156,49 @@ export function WorkspaceShellView({
             profileDisplayName={profileDisplayName}
             profileEmail={profileEmail}
             profileRoleLabel={profileRoleLabel}
+            role={role}
             searchValue={searchValue}
-            subtitle={dataset.headerSubtitle}
-            title={createHeaderTitle(role)}
+            subtitle={activeView === 'profile' ? 'Личные данные и настройки роли' : dataset.headerSubtitle}
+            title={activeView === 'profile' ? 'Мой профиль' : createHeaderTitle(role)}
           />
 
           <main className="preview11-content flex-1 space-y-4">
-            {selectedOrder && activeView !== 'orders' ? (
+            {selectedOrder && activeView !== 'orders' && !isCreateVacancyPageOpen ? (
               <OrderDetailsPagePanel
                 key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}
                 assignedExecutorName={selectedOrderExecutorName}
+                canCreateVacancyFromOrder={canCreateVacancyFromSelectedOrder}
+                canPublishVacancyForCustomer={canPublishVacancyForSelectedOrder}
+                hasCreateVacancyDraft={hasCreateVacancyDraftForSelectedOrder}
                 canManageOrderResponses={canManageOrderResponses}
                 isOrderResponsesLoading={isOrderResponsesFetching}
+                isPublishingVacancyForCustomer={isPublishingVacancyForCustomer}
                 isRejectingOrderExecutor={isRejectingOrderExecutor}
                 isSelectingOrderExecutor={isSelectingOrderExecutor}
                 onBack={closeOrderDetails}
+                onCreateVacancyFromOrder={() => handleCreateVacancyFromOrder(selectedOrder.id)}
+                onPublishVacancyForCustomer={handlePublishVacancyForSelectedOrder}
+                onRespondToOrder={() => {
+                  if (role === 'Applicant') {
+                    void handleRespondToSelectedVacancy(selectedOrder.id)
+                    return
+                  }
+                  void handleRespondToOrder(selectedOrder.id)
+                }}
+                onOpenApplicantResponder={handleOpenCandidateDetails}
+                onMoveApplicantResponderToShortlist={(candidateId) =>
+                  handleSetApplicantResponderStage(selectedOrder.id, candidateId, 'Shortlist')
+                }
+                onRejectApplicantResponder={(candidateId) =>
+                  handleSetApplicantResponderStage(selectedOrder.id, candidateId, 'Pool')
+                }
                 onRejectOrderExecutor={(executorId) => handleRejectOrderExecutor(selectedOrder.id, executorId)}
                 onSelectOrderExecutor={(executorId) => handleSelectOrderExecutor(selectedOrder.id, executorId)}
+                isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
                 order={selectedOrderWithResponses ?? selectedOrder}
                 orderResponses={orderResponses}
+                applicantResponders={selectedOrderApplicantResponders}
+                vacancyPreview={selectedOrderVacancyPreview}
               />
             ) : null}
 
@@ -193,15 +239,36 @@ export function WorkspaceShellView({
                 onSubmit={handleCreateOrderFromPage}
               />
             ) : null}
+            {role === 'Executor' && isCreateVacancyPageOpen && linkedCreateVacancyOrder ? (
+              <VacancyCreatePagePanel
+                formValues={createVacancyFormValues}
+                isCreatingVacancy={isCreatingVacancy}
+                isSendingVacancyToCustomer={isSendingVacancyToCustomer}
+                linkedOrder={{
+                  id: linkedCreateVacancyOrder.id,
+                  title: linkedCreateVacancyOrder.title,
+                }}
+                onBack={closeCreateVacancyPage}
+                onFieldChange={handleCreateVacancyFormFieldChange}
+                hasDraftIndicator={hasCreateVacancyDraftForSelectedOrder}
+                onSubmitDraft={handleCreateVacancyFromPage}
+                onSendToCustomer={handleCreateVacancyAndSendToCustomerFromPage}
+              />
+            ) : null}
 
-            {(role === 'Customer' && isCreateOrderPageOpen) ||
+            {activeView === 'profile' ? (
+              <ProfilePage />
+            ) : (role === 'Customer' && isCreateOrderPageOpen) ||
             (role === 'Executor' && isCreateCandidatePageOpen) ||
+            (role === 'Executor' && isCreateVacancyPageOpen) ||
             (role === 'Applicant' && isCreateApplicantResponsePageOpen) ||
             isDetailsPageOpen ? null : (
               <>
                 {canLoadServerOrders && isOrdersError ? (
                   <Alert variant="destructive">
-                    Не удалось загрузить заказы из API. Временно показаны локальные данные.
+                    {role === 'Executor'
+                      ? 'Не удалось загрузить проекты из API. Временно показаны локальные данные.'
+                      : 'Не удалось загрузить заказы из API. Временно показаны локальные данные.'}
                   </Alert>
                 ) : null}
                 {canLoadServerCandidates && isVacancyCandidatesError ? (
@@ -210,14 +277,14 @@ export function WorkspaceShellView({
                   </Alert>
                 ) : null}
 
-                {banner ? <Alert variant={banner.variant}>{banner.message}</Alert> : null}
-
                 {(activeView === 'dashboard' || activeView === 'orders' || activeView === 'candidates') && (
                   <>
-                    <StatsGrid stats={runtimeStats} />
+                    {activeView !== 'candidates' ? <StatsGrid stats={runtimeStats} /> : null}
                     <MainFeedPanel
                       baseCandidates={role === 'Executor' ? executorBaseCandidates : filteredBaseCandidates}
+                      applicantRespondedOrderIds={applicantRespondedOrderIds}
                       canManageOrderResponses={canManageOrderResponses}
+                      canPublishVacancyForCustomer={canPublishVacancyForSelectedOrder}
                       canManageOrders={canManageOrder}
                       canRespondToOrder={canRespondToSelectedOrder}
                       canViewBaseCandidates={canLoadExecutorBaseCandidates}
@@ -227,17 +294,31 @@ export function WorkspaceShellView({
                       isOrderResponsesLoading={isOrderResponsesFetching}
                       isOrdersArchiving={isDeletingOrder}
                       isOrdersStateUpdating={isOrderStatusUpdating}
+                      isPublishingVacancyForCustomer={isPublishingVacancyForCustomer}
                       isRejectingOrderExecutor={isRejectingOrderExecutor}
                       isRespondingToOrder={isRespondingToOrder}
                       isSelectingOrderExecutor={isSelectingOrderExecutor}
                       onActivateOrders={handleActivateOrders}
                       onArchiveOrders={handleArchiveOrders}
+                      onCreateVacancyFromOrder={handleCreateVacancyFromOrder}
                       onCloseOrderDetails={closeOrderDetails}
                       onOpenCandidate={handleOpenCandidateDetails}
                       onOpenOrder={handleOpenOrderDetails}
                       onPauseOrders={handlePauseOrders}
+                      onPublishVacancyForCustomer={handlePublishVacancyForSelectedOrder}
+                      onMoveApplicantResponderToShortlist={(orderId, candidateId) =>
+                        handleSetApplicantResponderStage(orderId, candidateId, 'Shortlist')
+                      }
+                      onRejectApplicantResponder={(orderId, candidateId) =>
+                        handleSetApplicantResponderStage(orderId, candidateId, 'Pool')
+                      }
                       onRejectOrderExecutor={handleRejectOrderExecutor}
-                      onRespondToOrder={handleRespondToOrder}
+                      onRespondToOrder={(orderId) => {
+                        if (role === 'Applicant') {
+                          return handleRespondToSelectedVacancy(orderId)
+                        }
+                        return handleRespondToOrder(orderId)
+                      }}
                       onSelectOrder={setPreferredOrderId}
                       onSelectOrderExecutor={handleSelectOrderExecutor}
                       orderResponses={orderResponses}
@@ -245,8 +326,11 @@ export function WorkspaceShellView({
                       requesterUserId={authMe?.userId}
                       role={role}
                       selectedOrderDetails={selectedOrderWithResponses ?? selectedOrder}
+                      selectedOrderApplicantResponders={selectedOrderApplicantResponders}
                       selectedOrderExecutorName={selectedOrderExecutorName}
                       selectedOrderId={activeView === 'candidates' ? candidateViewSelectedOrderId : selectedOrderId}
+                      selectedOrderVacancyPreview={selectedOrderVacancyPreview}
+                      isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
                       view={activeView === 'dashboard' ? 'dashboard' : activeView}
                     />
                   </>
