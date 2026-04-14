@@ -57,6 +57,7 @@ export function OrdersListSurface({
         <TableRow>
           <TableHead>Заголовок</TableHead>
           <TableHead>Описание</TableHead>
+          <TableHead>Компания заказчика</TableHead>
           <TableHead className="w-[160px]">Редактирование</TableHead>
           <TableHead>ExecutorId</TableHead>
           <TableHead className="w-[300px]">Назначение</TableHead>
@@ -89,6 +90,7 @@ export function OrdersListSurface({
                   disabled={!canEditOrder || isOrderMutationLoading}
                 />
               </TableCell>
+              <TableCell>{order.customerCompanyName ?? '—'}</TableCell>
               <TableCell>
                 <Button
                   type="button"

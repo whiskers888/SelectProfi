@@ -1,10 +1,15 @@
 import type { FormEvent } from 'react'
 import { getRequestErrorMessage } from '@/features/orders/lib/errors'
 
-type OrderFormState = {
+type OrderCreateFormState = {
   title: string
   description: string
   requestedCandidatesCount: string
+}
+
+type OrderEditFormState = {
+  title: string
+  description: string
 }
 
 type SubmitMessage = {
@@ -23,9 +28,10 @@ type UseOrdersCrudActionsArgs = {
   canEditOrder: boolean
   canDeleteOrder: boolean
   canAssignExecutor: boolean
-  createForm: OrderFormState
+  customerCompanyName: string
+  createForm: OrderCreateFormState
   selectedExecutorIdsByOrder: Record<string, string>
-  orderEditsById: Record<string, OrderFormState>
+  orderEditsById: Record<string, OrderEditFormState>
   setSubmitMessage: (message: SubmitMessage) => void
   resetCreateForm: () => void
   clearOrderEdit: (orderId: string) => void
@@ -45,6 +51,7 @@ export function useOrdersCrudActions({
   canEditOrder,
   canDeleteOrder,
   canAssignExecutor,
+  customerCompanyName,
   createForm,
   selectedExecutorIdsByOrder,
   orderEditsById,
@@ -76,6 +83,10 @@ export function useOrdersCrudActions({
 
     if (!title || !description) {
       setSubmitMessage({ status: 'error', text: 'Заполните title и description.' })
+      return
+    }
+    if (!customerCompanyName.trim()) {
+      setSubmitMessage({ status: 'error', text: 'Заполните компанию в профиле заказчика.' })
       return
     }
     // @dvnull: Ранее create-order не требовал явного target-count кандидатов; добавлен client guard под backend-контракт requestedCandidatesCount.

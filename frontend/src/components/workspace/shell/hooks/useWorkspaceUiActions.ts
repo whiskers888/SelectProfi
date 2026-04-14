@@ -8,10 +8,31 @@ type HeaderMenuAction = 'profile' | 'settings' | 'logout'
 type UseWorkspaceUiActionsDependencies = {
   activeThread: WorkspaceChatThread | null
   chatDraft: string
+  customerCompanyName: string
   role: WorkspaceRole
   setActiveView: (view: WorkspaceView) => void
   setBanner: (banner: { message: string; variant: BannerVariant }) => void
   setChatDraft: (value: string) => void
+  setCreateOrderFormValues: (
+    value:
+      | {
+          title: string
+          organization: string
+          note: string
+          requestedCandidatesCount: string
+        }
+      | ((previousValues: {
+          title: string
+          organization: string
+          note: string
+          requestedCandidatesCount: string
+        }) => {
+          title: string
+          organization: string
+          note: string
+          requestedCandidatesCount: string
+        }),
+  ) => void
   setDetailsInUrl: (
     values: { orderId?: string | null; candidateId?: string | null },
     replace?: boolean,
@@ -27,22 +48,28 @@ type UseWorkspaceUiActionsDependencies = {
         ) => Record<WorkspaceRole, WorkspaceChatThread[]>),
   ) => void
   todayTimeLabel: () => string
+  onOpenWorkspace: () => void
+  onOpenProfile: () => void
   onLogout: () => void
 }
 
 export function useWorkspaceUiActions({
   activeThread,
   chatDraft,
+  customerCompanyName,
   role,
   setActiveView,
   setBanner,
   setChatDraft,
+  setCreateOrderFormValues,
   setDetailsInUrl,
   setIsCreateApplicantResponsePageOpen,
   setIsCreateCandidatePageOpen,
   setIsCreateOrderPageOpen,
   setThreadsByRole,
   todayTimeLabel,
+  onOpenWorkspace,
+  onOpenProfile,
   onLogout,
 }: UseWorkspaceUiActionsDependencies) {
   const handleSendMessage = useCallback(() => {
@@ -93,9 +120,21 @@ export function useWorkspaceUiActions({
   }, [activeThread, chatDraft, role, setBanner, setChatDraft, setThreadsByRole, todayTimeLabel])
 
   const handleHeaderCreateAction = useCallback(() => {
+    onOpenWorkspace()
     setDetailsInUrl({ orderId: null, candidateId: null }, true)
+    setActiveView('dashboard')
 
     if (role === 'Customer') {
+      setCreateOrderFormValues((previousValues) => {
+        if (previousValues.organization.trim() || !customerCompanyName.trim()) {
+          return previousValues
+        }
+
+        return {
+          ...previousValues,
+          organization: customerCompanyName,
+        }
+      })
       setIsCreateOrderPageOpen(true)
       setIsCreateCandidatePageOpen(false)
       setIsCreateApplicantResponsePageOpen(false)
@@ -116,15 +155,23 @@ export function useWorkspaceUiActions({
     setActiveView('dashboard')
   }, [
     role,
+    customerCompanyName,
+    onOpenWorkspace,
     setActiveView,
     setDetailsInUrl,
     setIsCreateApplicantResponsePageOpen,
     setIsCreateCandidatePageOpen,
     setIsCreateOrderPageOpen,
+    setCreateOrderFormValues,
   ])
 
   const handleHeaderMenuAction = useCallback(
     (action: HeaderMenuAction) => {
+      if (action === 'profile') {
+        onOpenProfile()
+        return
+      }
+
       if (action === 'logout') {
         onLogout()
         return
@@ -133,14 +180,12 @@ export function useWorkspaceUiActions({
       setBanner({
         variant: 'default',
         message:
-          action === 'profile'
-            ? 'Профиль откроется в следующей итерации.'
-            : action === 'settings'
-              ? 'Настройки аккаунта скоро будут доступны.'
-              : 'Действие недоступно.',
+          action === 'settings'
+            ? 'Настройки аккаунта скоро будут доступны.'
+            : 'Действие недоступно.',
       })
     },
-    [onLogout, setBanner],
+    [onLogout, onOpenProfile, setBanner],
   )
 
   return {

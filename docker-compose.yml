@@ -9,6 +9,8 @@ services:
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=selectprofi;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres};SSL Mode=Disable
       ConnectionStrings__Redis: redis:6379
       ConnectionStrings__RabbitMq: amqp://guest:guest@rabbitmq:5672/
+      # @dvnull: Фиксируем минимум кандидатов через env, чтобы исключить падение API при дрейфе конфигов.
+      OrderCandidateRequirements__MinRequestedCandidatesCount: "3"
     ports:
       - "${BACKEND_PORT:-5268}:8080"
     depends_on:
@@ -34,6 +36,24 @@ services:
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     depends_on:
+      app:
+        condition: service_started
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./infra/archlinux.tail2006cc.ts.net.crt:/etc/caddy/certs/archlinux.tail2006cc.ts.net.crt:ro
+      - ./infra/archlinux.tail2006cc.ts.net.key:/etc/caddy/certs/archlinux.tail2006cc.ts.net.key:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_started
       app:
         condition: service_started
     restart: unless-stopped
@@ -75,3 +95,5 @@ volumes:
   postgres_data:
   redis_data:
   frontend_node_modules:
+  caddy_data:
+  caddy_config:

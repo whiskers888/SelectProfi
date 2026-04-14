@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import type { Location, NavigateFunction } from 'react-router-dom'
+import { routePaths } from '@/app/routePaths'
 import type { WorkspaceCandidate, WorkspaceOrder, WorkspaceRole, WorkspaceView } from '../../model/data'
 
 type UseWorkspaceNavigationDependencies = {
@@ -10,6 +11,7 @@ type UseWorkspaceNavigationDependencies = {
   setIsCreateApplicantResponsePageOpen: (value: boolean) => void
   setIsCreateCandidatePageOpen: (value: boolean) => void
   setIsCreateOrderPageOpen: (value: boolean) => void
+  setIsCreateVacancyPageOpen: (value: boolean) => void
   setPreferredOrderId: (value: string | null) => void
   startViewTransition: () => void
 }
@@ -22,6 +24,7 @@ export function useWorkspaceNavigation({
   setIsCreateApplicantResponsePageOpen,
   setIsCreateCandidatePageOpen,
   setIsCreateOrderPageOpen,
+  setIsCreateVacancyPageOpen,
   setPreferredOrderId,
   startViewTransition,
 }: UseWorkspaceNavigationDependencies) {
@@ -62,7 +65,9 @@ export function useWorkspaceNavigation({
 
   const handleViewChange = useCallback(
     (nextView: WorkspaceView) => {
-      if (role === 'Customer' && (nextView === 'orders' || nextView === 'candidates')) {
+      const isProfileRoute = location.pathname === routePaths.profile
+
+      if (role === 'Customer' && nextView === 'orders') {
         setActiveView('dashboard')
       } else {
         setActiveView(nextView)
@@ -70,16 +75,24 @@ export function useWorkspaceNavigation({
       setIsCreateOrderPageOpen(false)
       setIsCreateCandidatePageOpen(false)
       setIsCreateApplicantResponsePageOpen(false)
-      setDetailsInUrl({ orderId: null, candidateId: null }, true)
+      setIsCreateVacancyPageOpen(false)
+      if (isProfileRoute) {
+        navigate(routePaths.app, { replace: true })
+      } else {
+        setDetailsInUrl({ orderId: null, candidateId: null }, true)
+      }
       startViewTransition()
     },
     [
+      location.pathname,
+      navigate,
       role,
       setActiveView,
       setDetailsInUrl,
       setIsCreateApplicantResponsePageOpen,
       setIsCreateCandidatePageOpen,
       setIsCreateOrderPageOpen,
+      setIsCreateVacancyPageOpen,
       startViewTransition,
     ],
   )

@@ -60,15 +60,17 @@ export function OrderCreatePagePanel({
 
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-order-organization">
-            Компания / отдел
+            Компания
           </Label>
           <Input
             id="workspace-order-organization"
             value={formValues.organization}
-            onChange={(event) => onFieldChange('organization', event.target.value)}
-            placeholder="ООО Альфа, digital-направление"
+            onMouseDown={(event) => event.preventDefault()}
+            placeholder="ООО Альфа"
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            readOnly
+            tabIndex={-1}
+            className="h-11 select-none rounded-xl border-slate-200 caret-transparent text-slate-900"
           />
         </div>
 
@@ -93,11 +95,11 @@ export function OrderCreatePagePanel({
           <Input
             id="workspace-order-requested-candidates-count"
             type="number"
-            min={3}
+            min={0}
             step={1}
             value={formValues.requestedCandidatesCount}
             onChange={(event) => onFieldChange('requestedCandidatesCount', event.target.value)}
-            placeholder="Минимум 3"
+            placeholder="Минимум 1"
             required
             className="h-11 rounded-xl border-slate-200 text-slate-900"
           />

@@ -89,6 +89,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.Entity<Order>(builder =>
         {
             builder.HasKey(order => order.Id);
+            builder.Property(order => order.CustomerCompanyName)
+                .HasMaxLength(255);
             builder.Property(order => order.RequestedCandidatesCount)
                 .HasDefaultValue(3)
                 .IsRequired();

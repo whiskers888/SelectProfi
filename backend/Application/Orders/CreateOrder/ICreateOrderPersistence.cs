@@ -4,9 +4,16 @@ namespace SelectProfi.backend.Application.Orders.CreateOrder;
 
 public interface ICreateOrderPersistence
 {
-    Task<bool> CustomerExistsAsync(Guid customerId, CancellationToken cancellationToken);
+    Task<CreateOrderCustomerSnapshot?> FindCustomerSnapshotAsync(Guid customerId, CancellationToken cancellationToken);
 
     Task<CreateOrderPersistenceResult> CreateAsync(Order order, CancellationToken cancellationToken);
+}
+
+public sealed class CreateOrderCustomerSnapshot
+{
+    public Guid CustomerId { get; init; }
+
+    public string? CompanyName { get; init; }
 }
 
 public enum CreateOrderPersistenceResult

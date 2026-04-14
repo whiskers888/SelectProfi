@@ -26,6 +26,9 @@ public sealed class Order
     [MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 
+    [MaxLength(255)]
+    public string? CustomerCompanyName { get; set; }
+
     // @dvnull: Ранее модель заказа не хранила целевое число кандидатов; добавлено поле для контроля shortlist-обязательств.
     public int RequestedCandidatesCount { get; set; } = 3;
 

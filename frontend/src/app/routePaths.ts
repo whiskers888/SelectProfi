@@ -8,6 +8,7 @@ export const routePaths = {
   legacyRegister: '/register',
   orders: '/orders',
   profile: '/profile',
+  serviceUnavailable: '/service-unavailable',
   vacancies: '/vacancies',
   root: '/',
 } as const

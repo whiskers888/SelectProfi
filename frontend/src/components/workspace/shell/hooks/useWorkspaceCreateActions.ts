@@ -22,6 +22,15 @@ type CandidateCreateFormValues = {
 }
 
 type ApplicantResumeFormValues = CandidateCreateFormValues
+type VacancyCreateFormValues = {
+  title: string
+  description: string
+}
+type VacancyStatusContract = 'Draft' | 'OnApproval' | 'Published'
+type ExistingVacancySummary = {
+  id: string
+  status: VacancyStatusContract
+}
 
 type UnwrappableMutationResult<TResult> = {
   unwrap: () => Promise<TResult>
@@ -40,12 +49,42 @@ type WorkspaceCreateActionsDependencies = {
     },
     { id: string }
   >
+  createVacancy: MutationTrigger<
+    {
+      orderId: string
+      title: string
+      description: string
+    },
+    { id: string; status: VacancyStatusContract }
+  >
+  updateVacancy: MutationTrigger<
+    {
+      vacancyId: string
+      body: {
+        title: string
+        description: string
+      }
+    },
+    { id: string; status: VacancyStatusContract }
+  >
+  updateVacancyStatus: MutationTrigger<
+    {
+      vacancyId: string
+      body: { status: 'OnApproval' }
+    },
+    unknown
+  >
   createOrderFormValues: OrderCreateFormValues
+  createVacancyFormValues: VacancyCreateFormValues
+  createVacancyOrderId: string | null
+  getExistingVacancyByOrderId: (orderId: string) => ExistingVacancySummary | null
   filteredOrders: WorkspaceOrder[]
   getRequestErrorMessage: (error: unknown) => string
   manualCandidatesByRole: Record<WorkspaceRole, WorkspaceCandidate[]>
   refetchOrders: () => Promise<unknown>
+  refetchVacancies: () => Promise<unknown>
   role: WorkspaceRole
+  clearCreateVacancyDraft: (orderId: string) => void
   setActiveView: (view: WorkspaceView) => void
   setBanner: (banner: { message: string; variant: BannerVariant }) => void
   setCreateApplicantResponseFormValues: (
@@ -59,9 +98,13 @@ type WorkspaceCreateActionsDependencies = {
   setCreateOrderFormValues: (
     value: OrderCreateFormValues | ((previousValues: OrderCreateFormValues) => OrderCreateFormValues),
   ) => void
+  setCreateVacancyFormValues: (
+    value: VacancyCreateFormValues | ((previousValues: VacancyCreateFormValues) => VacancyCreateFormValues),
+  ) => void
   setIsCreateApplicantResponsePageOpen: (value: boolean) => void
   setIsCreateCandidatePageOpen: (value: boolean) => void
   setIsCreateOrderPageOpen: (value: boolean) => void
+  setIsCreateVacancyPageOpen: (value: boolean) => void
   setManualCandidatesByRole: (
     value:
       | Record<WorkspaceRole, WorkspaceCandidate[]>
@@ -87,24 +130,38 @@ function toResumeSummary(resumeRichTextHtml: string): string {
   return resumeRichTextHtml.replace(/<[^>]*>/g, ' ').trim()
 }
 
+function hasVisibleRichText(value: string): boolean {
+  return value.replace(/<[^>]*>/g, ' ').trim().length > 0
+}
+
 export function useWorkspaceCreateActions({
   createApplicantResponseFormValues,
   createCandidateFormValues,
   createOrder,
+  createVacancy,
+  updateVacancy,
+  updateVacancyStatus,
   createOrderFormValues,
+  createVacancyFormValues,
+  createVacancyOrderId,
+  getExistingVacancyByOrderId,
   filteredOrders,
   getRequestErrorMessage,
   manualCandidatesByRole,
   refetchOrders,
+  refetchVacancies,
   role,
+  clearCreateVacancyDraft,
   setActiveView,
   setBanner,
   setCreateApplicantResponseFormValues,
   setCreateCandidateFormValues,
   setCreateOrderFormValues,
+  setCreateVacancyFormValues,
   setIsCreateApplicantResponsePageOpen,
   setIsCreateCandidatePageOpen,
   setIsCreateOrderPageOpen,
+  setIsCreateVacancyPageOpen,
   setManualCandidatesByRole,
   setPreferredOrderId,
 }: WorkspaceCreateActionsDependencies) {
@@ -187,6 +244,198 @@ export function useWorkspaceCreateActions({
       setPreferredOrderId,
     ],
   )
+
+  const handleCreateVacancyFormFieldChange = useCallback(
+    (field: 'title' | 'description', value: string) => {
+      setCreateVacancyFormValues((previousValues) => ({
+        ...previousValues,
+        [field]: value,
+      }))
+    },
+    [setCreateVacancyFormValues],
+  )
+
+  const upsertVacancyForOrder = useCallback(
+    async (orderId: string, title: string, description: string): Promise<{ id: string; status: VacancyStatusContract }> => {
+      const existingVacancy = getExistingVacancyByOrderId(orderId)
+      if (existingVacancy) {
+        const updatedVacancy = await updateVacancy({
+          vacancyId: existingVacancy.id,
+          body: { title, description },
+        }).unwrap()
+
+        return {
+          id: updatedVacancy.id,
+          status: updatedVacancy.status,
+        }
+      }
+
+      const createdVacancy = await createVacancy({ orderId, title, description }).unwrap()
+      return {
+        id: createdVacancy.id,
+        status: createdVacancy.status,
+      }
+    },
+    [createVacancy, getExistingVacancyByOrderId, updateVacancy],
+  )
+
+  const handleCreateVacancyFromPage = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+
+      const orderId = createVacancyOrderId?.trim() ?? ''
+      const title = createVacancyFormValues.title.trim()
+      const description = createVacancyFormValues.description.trim()
+      const hasVisibleDescription = hasVisibleRichText(description)
+
+      if (!orderId || !title || !hasVisibleDescription) {
+        setBanner({
+          variant: 'destructive',
+          message: 'Заполните название и содержимое описания вакансии.',
+        })
+        return
+      }
+
+      try {
+        // @dvnull: Ранее при повторном сохранении для уже созданной вакансии выполнялся create и возникал 409 из-за дубликата orderId.
+        await upsertVacancyForOrder(orderId, title, description)
+        clearCreateVacancyDraft(orderId)
+        setCreateVacancyFormValues({
+          title: '',
+          description: '',
+        })
+        setIsCreateVacancyPageOpen(false)
+        await Promise.all([refetchOrders(), refetchVacancies()])
+        setActiveView('dashboard')
+        setBanner({
+          variant: 'success',
+          message: 'Вакансия создана в статусе Draft.',
+        })
+      } catch (error) {
+        setBanner({
+          variant: 'destructive',
+          message: getRequestErrorMessage(error),
+        })
+      }
+    },
+    [
+      createVacancyFormValues.description,
+      createVacancyFormValues.title,
+      createVacancyOrderId,
+      clearCreateVacancyDraft,
+      getRequestErrorMessage,
+      refetchOrders,
+      refetchVacancies,
+      setActiveView,
+      setBanner,
+      setCreateVacancyFormValues,
+      setIsCreateVacancyPageOpen,
+      upsertVacancyForOrder,
+    ],
+  )
+
+  const handleCreateVacancyAndSendToCustomerFromPage = useCallback(async () => {
+    const orderId = createVacancyOrderId?.trim() ?? ''
+    const title = createVacancyFormValues.title.trim()
+    const description = createVacancyFormValues.description.trim()
+    const hasVisibleDescription = hasVisibleRichText(description)
+
+    if (!orderId || !title || !hasVisibleDescription) {
+      setBanner({
+        variant: 'destructive',
+        message: 'Заполните название и содержимое описания вакансии.',
+      })
+      return
+    }
+
+    try {
+      const vacancy = await upsertVacancyForOrder(orderId, title, description)
+      if (vacancy.status === 'OnApproval') {
+        clearCreateVacancyDraft(orderId)
+        setCreateVacancyFormValues({
+          title: '',
+          description: '',
+        })
+        setIsCreateVacancyPageOpen(false)
+        await Promise.all([refetchOrders(), refetchVacancies()])
+        setActiveView('dashboard')
+        setBanner({
+          variant: 'success',
+          message: 'Вакансия уже находится на согласовании у заказчика.',
+        })
+        return
+      }
+
+      if (vacancy.status === 'Published') {
+        clearCreateVacancyDraft(orderId)
+        setCreateVacancyFormValues({
+          title: '',
+          description: '',
+        })
+        setIsCreateVacancyPageOpen(false)
+        await Promise.all([refetchOrders(), refetchVacancies()])
+        setActiveView('dashboard')
+        setBanner({
+          variant: 'success',
+          message: 'Вакансия уже опубликована.',
+        })
+        return
+      }
+
+      try {
+        await updateVacancyStatus({
+          vacancyId: vacancy.id,
+          body: { status: 'OnApproval' },
+        }).unwrap()
+      } catch (statusError) {
+        clearCreateVacancyDraft(orderId)
+        setCreateVacancyFormValues({
+          title: '',
+          description: '',
+        })
+        setIsCreateVacancyPageOpen(false)
+        await Promise.all([refetchOrders(), refetchVacancies()])
+        setActiveView('dashboard')
+        setBanner({
+          variant: 'destructive',
+          message: `Вакансия создана как Draft, но не отправлена заказчику. ${getRequestErrorMessage(statusError)}`,
+        })
+        return
+      }
+
+      clearCreateVacancyDraft(orderId)
+      setCreateVacancyFormValues({
+        title: '',
+        description: '',
+      })
+      setIsCreateVacancyPageOpen(false)
+      await Promise.all([refetchOrders(), refetchVacancies()])
+      setActiveView('dashboard')
+      setBanner({
+        variant: 'success',
+        message: 'Вакансия отправлена заказчику на согласование.',
+      })
+    } catch (error) {
+      setBanner({
+        variant: 'destructive',
+        message: getRequestErrorMessage(error),
+      })
+    }
+  }, [
+    clearCreateVacancyDraft,
+    createVacancyFormValues.description,
+    createVacancyFormValues.title,
+    createVacancyOrderId,
+    getRequestErrorMessage,
+    refetchOrders,
+    refetchVacancies,
+    setActiveView,
+    setBanner,
+    setCreateVacancyFormValues,
+    setIsCreateVacancyPageOpen,
+    upsertVacancyForOrder,
+    updateVacancyStatus,
+  ])
 
   const handleCreateCandidateFormFieldChange = useCallback(
     (
@@ -375,5 +624,8 @@ export function useWorkspaceCreateActions({
     handleCreateCandidateFromPage,
     handleCreateOrderFormFieldChange,
     handleCreateOrderFromPage,
+    handleCreateVacancyAndSendToCustomerFromPage,
+    handleCreateVacancyFormFieldChange,
+    handleCreateVacancyFromPage,
   }
 }

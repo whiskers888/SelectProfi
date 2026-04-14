@@ -3,6 +3,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
 type CreateOrderFormState = {
@@ -14,6 +15,7 @@ type CreateOrderFormState = {
 export type OrdersCreateSurfaceProps = {
   canCreateOrder: boolean
   isCreatingOrder: boolean
+  customerCompanyName: string
   createForm: CreateOrderFormState
   onCreateOrder: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
   onCreateInputChange: (
@@ -25,6 +27,7 @@ export type OrdersCreateSurfaceProps = {
 export function OrdersCreateSurface({
   canCreateOrder,
   isCreatingOrder,
+  customerCompanyName,
   createForm,
   onCreateOrder,
   onCreateInputChange,
@@ -36,7 +39,19 @@ export function OrdersCreateSurface({
       </CardHeader>
       <CardContent>
         {!canCreateOrder ? <Alert>Создавать заказ может только роль заказчика.</Alert> : null}
+        {canCreateOrder && !customerCompanyName.trim() ? (
+          <Alert variant="destructive">В профиле заказчика не заполнено название компании.</Alert>
+        ) : null}
         <form onSubmit={onCreateOrder} className="grid gap-3 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="order-customer-company-name">Компания заказчика</Label>
+            <Input
+              id="order-customer-company-name"
+              value={customerCompanyName}
+              placeholder="Название компании из профиля"
+              readOnly
+            />
+          </div>
           <Input
             value={createForm.title}
             onChange={(event) => onCreateInputChange('title', event)}

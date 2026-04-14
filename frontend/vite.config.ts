@@ -13,6 +13,8 @@ export default defineConfig({
     host: '0.0.0.0',
     port: frontendPort,
     strictPort: true,
+    // @dvnull: Разрешаем доступ через Caddy-домены, иначе dev-сервер возвращает 403 по Host header.
+    allowedHosts: ['archlinux.tail2006cc.ts.net'],
     proxy: {
       '/api': {
         target: proxyTarget,

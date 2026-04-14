@@ -1,5 +1,6 @@
 import * as React from 'react'
 import * as SelectPrimitive from '@radix-ui/react-select'
+import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const Select = SelectPrimitive.Root
@@ -20,7 +21,7 @@ const SelectTrigger = React.forwardRef<
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <span className="text-xs text-muted-foreground">▾</span>
+      <ChevronDown aria-hidden="true" className="text-muted-foreground" size={14} />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ))
@@ -76,7 +77,7 @@ const SelectItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <span className="text-xs">✓</span>
+        <Check aria-hidden="true" size={12} />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>

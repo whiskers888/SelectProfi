@@ -8,6 +8,7 @@ export type OrderResponse = {
   executorId?: string | null
   title: string
   description: string
+  customerCompanyName?: string | null
   requestedCandidatesCount: number
   status: OrderStatusContract
   createdAtUtc: string

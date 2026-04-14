@@ -1,5 +1,6 @@
+import { Bell, CalendarDays } from 'lucide-react'
 import { Dropdown } from '@/components/ui/dropdown'
-import { type WorkspaceView } from '../model/data'
+import { type WorkspaceRole, type WorkspaceView } from '../model/data'
 
 type HeaderMenuAction = 'profile' | 'settings' | 'logout'
 
@@ -16,6 +17,7 @@ type HeaderProps = {
   profileDisplayName: string
   profileEmail: string
   profileRoleLabel: string
+  role: WorkspaceRole
   searchValue: string
   title: string
   subtitle: string
@@ -51,6 +53,7 @@ export function Header({
   profileDisplayName,
   profileEmail,
   profileRoleLabel,
+  role,
   searchValue,
   subtitle,
   title,
@@ -72,7 +75,7 @@ export function Header({
             aria-label="Поиск"
             className="preview11-input preview11-header-search"
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Поиск по заказам и исполнителям..."
+            placeholder={role === 'Executor' ? 'Поиск по проектам и исполнителям...' : 'Поиск по заказам и исполнителям...'}
             type="search"
             value={searchValue}
           />
@@ -85,18 +88,25 @@ export function Header({
             onClick={onOpenMeetings}
             type="button"
           >
-            📅 <span className="preview11-badge">{meetingsCount}</span>
+            <span className="preview11-context-icon" aria-hidden="true">
+              <CalendarDays size={15} strokeWidth={2} />
+            </span>{' '}
+            <span className="preview11-badge">{meetingsCount}</span>
           </button>
           <button
             className={`preview11-context-tab${activeView === 'chats' ? ' preview11-context-tab-active' : ''}`}
             onClick={onOpenNotifications}
             type="button"
           >
-            🔔 <span className="preview11-badge">{notificationsCount}</span>
+            <span className="preview11-context-icon" aria-hidden="true">
+              <Bell size={15} strokeWidth={2} />
+            </span>{' '}
+            <span className="preview11-badge">{notificationsCount}</span>
           </button>
         </div>
 
         <Dropdown
+          className="preview11-profile-dropdown"
           contentClassName="preview11-profile-menu"
           items={[
             { id: 'profile', label: 'Мой профиль' },
@@ -109,15 +119,15 @@ export function Header({
             }
           }}
           trigger={
-            <span className="preview11-profile-chip">
-              <span className="preview11-profile-meta">
-                {/* @dvnull: Ранее имя/роль в хедере были статическими от demo-role, переведено на данные профиля backend. */}
-                <span className="preview11-profile-name">{profileDisplayName}</span>
-                {/* @dvnull: Роль и email в профиле хедера были в одном текстовом блоке; разнесено по отдельным строкам для читаемости. */}
-                <span className="preview11-profile-role">{profileRoleLabel}</span>
-                <span className="preview11-profile-email">{profileEmail}</span>
+            <span className="preview11-profile-stack">
+              <span className="preview11-profile-chip">
+                <span className="preview11-profile-meta">
+                  <span className="preview11-profile-name">{profileDisplayName}</span>
+                  <span className="preview11-profile-email">{profileEmail}</span>
+                </span>
+                <span className="preview11-avatar">{profileInitials(profileDisplayName)}</span>
               </span>
-              <span className="preview11-avatar">{profileInitials(profileDisplayName)}</span>
+              <span className="preview11-profile-role-pill">{profileRoleLabel}</span>
             </span>
           }
         />

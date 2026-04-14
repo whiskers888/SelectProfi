@@ -20,33 +20,52 @@ function toneClassName(tone: WorkspaceTone | undefined): string {
   return 'preview11-tag-neutral'
 }
 
-function toneLabel(tone: WorkspaceTone | undefined): string {
+function toneLabel(tone: WorkspaceTone | undefined, statId: string): string {
+  if (statId === 'shortlist' && tone === 'warning') {
+    return 'Проверить'
+  }
+
   if (tone === 'success') {
     return 'Стабильно'
   }
 
   if (tone === 'warning') {
-    return 'Внимание'
+    return 'В работе'
   }
 
   if (tone === 'danger') {
     return 'Риск'
   }
 
-  return 'Обзор'
+  return 'Старт'
+}
+
+function renderStatValue(value: string): string | JSX.Element {
+  const suffix = ' чел.'
+  if (!value.endsWith(suffix)) {
+    return value
+  }
+
+  return (
+    <>
+      {value.slice(0, -suffix.length)}
+      <span className="preview11-card-value-suffix">{suffix.trim()}</span>
+    </>
+  )
 }
 
 export function StatsGrid({ stats }: StatsGridProps) {
-  // @dvnull: Была card-сетка UI-kit, заменил на HTML-card структуру stats.
   return (
     <section className="preview11-stats">
       {stats.map((stat) => (
         <article key={stat.id} className="preview11-card preview-slide-up">
           <div className="preview11-card-top">
             <p className="preview11-card-meta">{stat.label}</p>
-            <span className={`preview11-tag ${toneClassName(stat.tone)}`}>{toneLabel(stat.tone)}</span>
+            {stat.id !== 'projects' ? (
+              <span className={`preview11-tag ${toneClassName(stat.tone)}`}>{toneLabel(stat.tone, stat.id)}</span>
+            ) : null}
           </div>
-          <p className="preview11-card-value">{stat.value}</p>
+          <p className="preview11-card-value">{renderStatValue(stat.value)}</p>
           <p className="preview11-card-meta">{stat.note}</p>
         </article>
       ))}

@@ -25,6 +25,8 @@ public sealed class GetOrdersItemResult
 
     public string Description { get; init; } = string.Empty;
 
+    public string? CustomerCompanyName { get; init; }
+
     public int RequestedCandidatesCount { get; init; }
 
     public OrderStatus Status { get; init; } = OrderStatus.Active;

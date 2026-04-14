@@ -1,0 +1,9 @@
+archlinux.tail2006cc.ts.net {
+	tls /etc/caddy/certs/archlinux.tail2006cc.ts.net.crt /etc/caddy/certs/archlinux.tail2006cc.ts.net.key
+	reverse_proxy frontend:5173
+}
+
+api.archlinux.tail2006cc.ts.net {
+	tls /etc/caddy/certs/archlinux.tail2006cc.ts.net.crt /etc/caddy/certs/archlinux.tail2006cc.ts.net.key
+	reverse_proxy app:8080
+}

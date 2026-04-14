@@ -1,3 +1,13 @@
+import {
+  BarChart3,
+  BriefcaseBusiness,
+  CalendarDays,
+  FileText,
+  LayoutDashboard,
+  MessageCircle,
+  type LucideIcon,
+  UsersRound,
+} from 'lucide-react'
 import { workspaceViewOptions, type WorkspaceRole, type WorkspaceView } from '../model/data'
 
 type SidebarProps = {
@@ -9,13 +19,13 @@ type SidebarProps = {
   role: WorkspaceRole
 }
 
-const navIconMap: Record<WorkspaceView, string> = {
-  dashboard: '🧾',
-  orders: '📦',
-  candidates: '🧑‍💼',
-  meetings: '📅',
-  chats: '💬',
-  analytics: '📊',
+const navIconMap: Record<WorkspaceView, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  orders: BriefcaseBusiness,
+  candidates: UsersRound,
+  meetings: CalendarDays,
+  chats: MessageCircle,
+  analytics: BarChart3,
 }
 
 const roleHintMap: Record<WorkspaceRole, string> = {
@@ -25,6 +35,10 @@ const roleHintMap: Record<WorkspaceRole, string> = {
 }
 
 function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
+  if (role === 'Executor' && view === 'orders') {
+    return 'Проекты'
+  }
+
   if (role === 'Applicant' && view === 'orders') {
     return 'Вакансии'
   }
@@ -36,13 +50,13 @@ function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
   return workspaceViewOptions.find((option) => option.value === view)?.label ?? view
 }
 
-function toViewIcon(view: WorkspaceView, role: WorkspaceRole): string {
+function toViewIcon(view: WorkspaceView, role: WorkspaceRole): LucideIcon {
   if (role === 'Applicant' && view === 'orders') {
-    return '💼'
+    return BriefcaseBusiness
   }
 
   if (role === 'Applicant' && view === 'candidates') {
-    return '📄'
+    return FileText
   }
 
   return navIconMap[view]
@@ -51,16 +65,13 @@ function toViewIcon(view: WorkspaceView, role: WorkspaceRole): string {
 export function Sidebar({
   activeView,
   collapsed,
-  counters,
   onToggleCollapse,
   onViewChange,
   role,
 }: SidebarProps) {
   const visibleViewOptions =
     role === 'Customer'
-      ? workspaceViewOptions.filter(
-          (view) => view.value !== 'orders' && view.value !== 'candidates',
-        )
+      ? workspaceViewOptions.filter((view) => view.value !== 'orders')
       : workspaceViewOptions
 
   // @dvnull: Ранее sidebar был собран на blue-tailwind карточках, перевел shell на HTML-паттерн макета.
@@ -85,7 +96,7 @@ export function Sidebar({
       <nav aria-label="Основные разделы" className="preview11-nav">
         {visibleViewOptions.map((view) => {
           const isActive = activeView === view.value
-          const counter = counters[view.value] ?? 0
+          const Icon = toViewIcon(view.value, role)
 
           return (
             <button
@@ -95,10 +106,11 @@ export function Sidebar({
               type="button"
             >
               <span className="preview11-nav-left">
-                <span className="preview11-nav-icon">{toViewIcon(view.value, role)}</span>
+                <span className="preview11-nav-icon" aria-hidden="true">
+                  <Icon size={18} strokeWidth={2} />
+                </span>
                 <span className="preview11-nav-label">{toViewLabel(view.value, role)}</span>
               </span>
-              {counter > 0 ? <span className="preview11-badge">{counter}</span> : null}
             </button>
           )
         })}

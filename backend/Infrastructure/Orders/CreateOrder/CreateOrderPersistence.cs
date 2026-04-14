@@ -8,11 +8,19 @@ namespace SelectProfi.backend.Infrastructure.Orders.CreateOrder;
 
 public sealed class CreateOrderPersistence(AppDbContext dbContext) : ICreateOrderPersistence
 {
-    public Task<bool> CustomerExistsAsync(Guid customerId, CancellationToken cancellationToken)
+    public Task<CreateOrderCustomerSnapshot?> FindCustomerSnapshotAsync(
+        Guid customerId,
+        CancellationToken cancellationToken)
     {
-        return dbContext.Users.AnyAsync(
-            user => user.Id == customerId && user.Role == UserRole.Customer,
-            cancellationToken);
+        return dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.Id == customerId && user.Role == UserRole.Customer)
+            .Select(user => new CreateOrderCustomerSnapshot
+            {
+                CustomerId = user.Id,
+                CompanyName = user.CustomerCompanyName
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<CreateOrderPersistenceResult> CreateAsync(Order order, CancellationToken cancellationToken)

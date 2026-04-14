@@ -1,14 +1,19 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
 
-type OrderEditState = {
+type OrderCreateState = {
   title: string
   description: string
   requestedCandidatesCount: string
 }
 
+type OrderEditState = {
+  title: string
+  description: string
+}
+
 type UseOrderFormStateArgs = {
   setSelectedExecutorIdsByOrder: Dispatch<SetStateAction<Record<string, string>>>
-  setCreateForm: Dispatch<SetStateAction<OrderEditState>>
+  setCreateForm: Dispatch<SetStateAction<OrderCreateState>>
   setOrderEditsById: Dispatch<SetStateAction<Record<string, OrderEditState>>>
 }
 

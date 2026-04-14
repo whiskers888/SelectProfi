@@ -12,6 +12,7 @@ import type {
   WorkspaceOrder,
   WorkspaceRole,
   WorkspaceStat,
+  WorkspaceTone,
   WorkspaceView,
 } from '../model/data'
 
@@ -236,6 +237,38 @@ type DashboardStatsSnapshot = {
   shortlistCandidatesCount: number
 }
 
+function resolveCandidateFlowTone(count: number): WorkspaceTone {
+  if (count <= 0) {
+    return 'default'
+  }
+
+  if (count < 3) {
+    return 'warning'
+  }
+
+  return 'success'
+}
+
+function resolveIncomingFromExecutorTone(count: number): WorkspaceTone {
+  if (count <= 0) {
+    return 'default'
+  }
+
+  return 'warning'
+}
+
+function resolveIncomingFromExecutorNote(count: number): string {
+  if (count > 1) {
+    return 'Есть новые кандидаты, стоит проверить их.'
+  }
+
+  if (count === 1) {
+    return 'Есть новый кандидат, стоит проверить.'
+  }
+
+  return 'Новых кандидатов от исполнителя пока нет.'
+}
+
 type DeriveWorkspaceViewStateInput = {
   activeView: WorkspaceView
   analyticsRecovered: boolean
@@ -401,6 +434,10 @@ export function deriveWorkspaceViewState({
       (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
     )
   })
+  const customerSelectedCandidates =
+    role === 'Customer'
+      ? filteredCandidates.filter((candidate) => candidate.statusLabel.trim().toLowerCase() === 'выбран')
+      : filteredCandidates
   const filteredBaseCandidates = allBaseCandidates.filter((candidate) => {
     if (!normalizedSearch) {
       return true
@@ -456,8 +493,8 @@ export function deriveWorkspaceViewState({
   const activeThread =
     filteredThreads.find((thread) => thread.id === preferredChatId) ?? filteredThreads[0] ?? null
   const candidatesCounter =
-    role === 'Customer' && candidateSourceVacancy && vacancyCandidatesItems
-      ? vacancyCandidatesItems.filter((item) => !item.viewedByCustomerAtUtc).length
+    role === 'Customer'
+      ? customerSelectedCandidates.length
       : filteredCandidates.length
 
   const counters: Partial<Record<WorkspaceView, number>> = {
@@ -479,41 +516,41 @@ export function deriveWorkspaceViewState({
           },
           {
             id: 'pipeline',
-            label: 'Кандидаты в пайплайне',
-            value: String(executorDashboardStats?.pipelineCandidatesCount ?? 0),
-            note: '',
-            tone: 'warning',
+            label: 'В подборе',
+            value: `${executorDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
+            note: 'Отклики на заказы + кандидаты, добавленные рекрутером.',
+            tone: resolveCandidateFlowTone(executorDashboardStats?.pipelineCandidatesCount ?? 0),
           },
           {
             id: 'shortlist',
-            label: 'Отправлено в short-list',
-            value: String(executorDashboardStats?.shortlistCandidatesCount ?? 0),
+            label: 'Передано заказчику',
+            value: `${executorDashboardStats?.shortlistCandidatesCount ?? 0} чел.`,
             note: '',
-            tone: 'success',
+            tone: resolveCandidateFlowTone(executorDashboardStats?.shortlistCandidatesCount ?? 0),
           },
         ]
       : role === 'Customer'
         ? [
             {
               id: 'projects',
-              label: 'Проекты в работе',
+              label: 'Заказы в работе',
               value: String(customerDashboardStats?.activeProjectsCount ?? 0),
               note: `${customerDashboardStats?.onApprovalVacanciesCount ?? 0} на этапе согласования`,
               tone: 'default',
             },
             {
               id: 'pipeline',
-              label: 'Кандидаты в пайплайне',
-              value: String(customerDashboardStats?.pipelineCandidatesCount ?? 0),
-              note: '',
-              tone: 'warning',
+              label: 'В подборе',
+              value: `${customerDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
+              note: 'Отклики на заказы + кандидаты, добавленные рекрутером.',
+              tone: resolveCandidateFlowTone(customerDashboardStats?.pipelineCandidatesCount ?? 0),
             },
             {
               id: 'shortlist',
-              label: 'Отправлено в short-list',
-              value: String(customerDashboardStats?.shortlistCandidatesCount ?? 0),
-              note: '',
-              tone: 'success',
+              label: 'Получено от исполнителя',
+              value: `${customerDashboardStats?.shortlistCandidatesCount ?? 0} чел.`,
+              note: resolveIncomingFromExecutorNote(customerDashboardStats?.shortlistCandidatesCount ?? 0),
+              tone: resolveIncomingFromExecutorTone(customerDashboardStats?.shortlistCandidatesCount ?? 0),
             },
           ]
         : dataset.stats
@@ -533,7 +570,7 @@ export function deriveWorkspaceViewState({
     executorBaseCandidates,
     executorMyCandidates,
     filteredBaseCandidates,
-    filteredCandidates,
+    filteredCandidates: customerSelectedCandidates,
     filteredOrders,
     filteredThreads,
     isCandidatesApiLoading,

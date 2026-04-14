@@ -69,6 +69,12 @@ public static class OrdersProblemMap
         "order_requested_candidates_count_too_low",
         "Запрошенное количество кандидатов меньше минимально допустимого.");
 
+    private static readonly ApiProblemDescriptor CustomerCompanyNameMissing = new(
+        StatusCodes.Status400BadRequest,
+        "Ошибка валидации",
+        "customer_company_name_missing",
+        "Укажите компанию в профиле заказчика.");
+
     private static readonly ApiProblemDescriptor UpdateOrderConflict = new(
         StatusCodes.Status409Conflict,
         "Конфликт",
@@ -123,6 +129,7 @@ public static class OrdersProblemMap
         {
             CreateOrderErrorCode.CustomerNotFound => CustomerNotFound,
             CreateOrderErrorCode.RequestedCandidatesCountTooLow => RequestedCandidatesCountTooLow,
+            CreateOrderErrorCode.CustomerCompanyNameMissing => CustomerCompanyNameMissing,
             _ => CreateOrderConflict
         };
     }

@@ -17,6 +17,7 @@ type WorkspaceOrderActionsDependencies = {
   getRequestErrorMessage: (error: unknown) => string
   refetchOrderResponses: () => Promise<unknown>
   refetchOrders: () => Promise<unknown>
+  refetchMyOrderResponse: () => Promise<unknown>
   rejectOrderResponseExecutor: MutationTrigger<{ executorId: string; orderId: string }, unknown>
   respondToOrder: MutationTrigger<string, unknown>
   selectedOrderId: string | null
@@ -34,6 +35,7 @@ export function useWorkspaceOrderActions({
   getRequestErrorMessage,
   refetchOrderResponses,
   refetchOrders,
+  refetchMyOrderResponse,
   rejectOrderResponseExecutor,
   respondToOrder,
   selectedOrderId,
@@ -47,11 +49,15 @@ export function useWorkspaceOrderActions({
     async (orderId: string) => {
       try {
         await respondToOrder(orderId).unwrap()
+        // @dvnull: Ранее после respond обновлялся только список заказов; из-за cache `my-response` кнопка "Вы уже откликнулись" менялась не сразу.
         setBanner({
           variant: 'success',
           message: 'Отклик на заказ отправлен.',
         })
         await refetchOrders()
+        if (selectedOrderId === orderId) {
+          await refetchMyOrderResponse()
+        }
       } catch (error) {
         setBanner({
           variant: 'destructive',
@@ -59,7 +65,7 @@ export function useWorkspaceOrderActions({
         })
       }
     },
-    [getRequestErrorMessage, refetchOrders, respondToOrder, setBanner],
+    [getRequestErrorMessage, refetchMyOrderResponse, refetchOrders, respondToOrder, selectedOrderId, setBanner],
   )
 
   const handleSelectOrderExecutor = useCallback(

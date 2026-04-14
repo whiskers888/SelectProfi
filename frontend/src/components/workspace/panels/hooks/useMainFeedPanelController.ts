@@ -65,6 +65,7 @@ function readInitialCandidateStageFilter(): CandidateStageFilter {
 }
 
 export function useMainFeedPanelController({
+  applicantRespondedOrderIds = [],
   baseCandidates,
   canViewBaseCandidates = false,
   candidates,
@@ -122,6 +123,11 @@ export function useMainFeedPanelController({
     visibleDashboardOrders.length > 0 && checkedVisibleOrderIds.length === visibleDashboardOrders.length
 
   const filteredOrders = orders.filter((order) => {
+    if (role === 'Applicant') {
+      const hasResponded = applicantRespondedOrderIds.includes(order.id)
+      return orderDataScope === 'mine' ? hasResponded : !hasResponded
+    }
+
     if (orderDataScope === 'exchange') {
       return !order.executorId
     }
@@ -164,7 +170,7 @@ export function useMainFeedPanelController({
   const isBaseScope = canViewBaseCandidates && candidateDataScope === 'base'
   const hasActiveCandidateFilters = candidateSourceFilter !== 'all' || candidateStageFilter !== 'all'
   const isApplicantView = role === 'Applicant'
-  const shouldShowCandidateScopeSwitcher = !isApplicantView
+  const shouldShowCandidateScopeSwitcher = role === 'Executor'
   const shouldShowCandidateFilters = !isApplicantView
   const shouldShowBaseCandidateTab = canViewBaseCandidates && !isApplicantView
 

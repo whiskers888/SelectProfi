@@ -44,6 +44,7 @@ function toneClassName(tone: WorkspaceTone): string {
 
 export function MainFeedPanelView({
   allVisibleChecked,
+  canPublishVacancyForCustomer = false,
   canManageOrderResponses = false,
   canManageOrders = false,
   canRespondToOrder = false,
@@ -70,15 +71,21 @@ export function MainFeedPanelView({
   isOrderResponsesLoading = false,
   isOrdersArchiving = false,
   isOrdersStateUpdating = false,
+  isPublishingVacancyForCustomer = false,
   isRejectingOrderExecutor = false,
   isRespondingToOrder = false,
   isSelectingOrderExecutor = false,
+  isUpdatingApplicantResponderStage = false,
   onActivateOrders,
   onArchiveOrders,
+  onCreateVacancyFromOrder,
   onCloseOrderDetails,
   onOpenCandidate,
   onOpenOrder,
+  onPublishVacancyForCustomer,
+  onMoveApplicantResponderToShortlist,
   onPauseOrders,
+  onRejectApplicantResponder,
   onRejectOrderExecutor,
   onRespondToOrder,
   onSelectOrder,
@@ -86,11 +93,14 @@ export function MainFeedPanelView({
   orderDataScope,
   orderResponses = [],
   orders,
+  requesterUserId,
   role = 'Executor',
   selectedDashboardOrder,
   selectedOrderDetails = null,
+  selectedOrderApplicantResponders = [],
   selectedOrderExecutorName = null,
   selectedOrderId,
+  selectedOrderVacancyPreview = null,
   setCandidateDataScope,
   setCandidateSourceFilter,
   setCandidateStageFilter,
@@ -108,14 +118,21 @@ export function MainFeedPanelView({
   }
 
   const isApplicantRole = role === 'Applicant'
+  const isExecutorRole = role === 'Executor'
+  const ordersNoun = isExecutorRole ? 'проектов' : 'заказов'
+  const orderNounSingular = isExecutorRole ? 'проект' : 'заказ'
+  const ordersInWorkLabel = isExecutorRole ? 'Проекты в работе' : 'Заказы в работе'
+  const ordersListTitle = isExecutorRole ? 'Список проектов' : 'Список заказов'
+  const mineOrdersLabel = isExecutorRole ? 'Мои проекты' : 'Мои заказы'
+  const exchangeOrdersLabel = isExecutorRole ? 'Биржа проектов' : 'Биржа заказов'
 
   if (view === 'dashboard') {
     if (!selectedDashboardOrder || orders.length === 0) {
       return renderEmptyState(
-        isApplicantRole ? 'Нет данных по вакансиям' : 'Нет данных по заказам',
+        isApplicantRole ? 'Нет данных по вакансиям' : `Нет данных по ${ordersNoun}`,
         isApplicantRole
           ? 'Сейчас нет доступных вакансий. Попробуйте обновить страницу позже.'
-          : 'Создайте новый заказ или снимите фильтры, чтобы увидеть активные вакансии.',
+          : `Создайте новый ${orderNounSingular} или снимите фильтры, чтобы увидеть активные вакансии.`,
       )
     }
 
@@ -124,10 +141,10 @@ export function MainFeedPanelView({
         <div className="preview11-orders-top">
           <div>
             <h3 className="preview11-panel-title">
-              {isApplicantRole ? 'Вакансии' : 'Заказы в работе'}
+              {isApplicantRole ? 'Вакансии' : ordersInWorkLabel}
             </h3>
             <p className="preview11-panel-subtitle">
-              {isApplicantRole ? 'Выберите вакансию, чтобы открыть детали.' : 'Выберите заказ, чтобы открыть детали.'}
+              {isApplicantRole ? 'Выберите вакансию, чтобы открыть детали.' : `Выберите ${orderNounSingular}, чтобы открыть детали.`}
             </p>
           </div>
           <div className="preview11-orders-controls">
@@ -210,7 +227,7 @@ export function MainFeedPanelView({
             <div className="preview11-feed preview11-orders-feed">
               {visibleDashboardOrders.length === 0 ? (
                 <div className="preview11-empty-state">
-                  <p>Нет заказов в выбранном состоянии.</p>
+                  <p>{`Нет ${ordersNoun} в выбранном состоянии.`}</p>
                 </div>
               ) : (
                 visibleDashboardOrders.map((order) => (
@@ -292,7 +309,7 @@ export function MainFeedPanelView({
           )}
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-slate-900">Список заказов</h3>
+            <h3 className="text-base font-semibold text-slate-900">{ordersListTitle}</h3>
             <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
               <button
                 className={cn(
@@ -302,7 +319,7 @@ export function MainFeedPanelView({
                 onClick={() => setOrderDataScope('mine')}
                 type="button"
               >
-                Мои заказы
+                {mineOrdersLabel}
               </button>
               <button
                 className={cn(
@@ -312,7 +329,7 @@ export function MainFeedPanelView({
                 onClick={() => setOrderDataScope('exchange')}
                 type="button"
               >
-                Биржа заказов
+                {exchangeOrdersLabel}
               </button>
             </div>
           </div>
@@ -331,8 +348,8 @@ export function MainFeedPanelView({
                 <TableRow>
                   <TableCell className="py-8 text-center text-sm text-slate-500" colSpan={isOrderDetailsOpen ? 1 : 5}>
                     {orderDataScope === 'mine'
-                      ? 'В разделе "Мои заказы" пока нет записей.'
-                      : 'В разделе "Биржа заказов" пока нет доступных заказов.'}
+                      ? `В разделе "${mineOrdersLabel}" пока нет записей.`
+                      : `В разделе "${exchangeOrdersLabel}" пока нет доступных ${ordersNoun}.`}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -388,13 +405,42 @@ export function MainFeedPanelView({
               key={`${selectedOrderDetails.id}:${selectedOrderDetails.executorId ?? 'none'}`}
               assignedExecutorName={selectedOrderExecutorName}
               canManageOrderResponses={canManageOrderResponses}
+              canCreateVacancyFromOrder={role === 'Executor' && selectedOrderDetails.executorId === requesterUserId}
+              canPublishVacancyForCustomer={canPublishVacancyForCustomer}
               canRespondToOrder={canRespondToOrder}
               hasRespondedToOrder={hasRespondedToOrder}
               isOrderResponsesLoading={isOrderResponsesLoading}
+              isPublishingVacancyForCustomer={isPublishingVacancyForCustomer}
               isRejectingOrderExecutor={isRejectingOrderExecutor}
               isRespondingToOrder={isRespondingToOrder}
               isSelectingOrderExecutor={isSelectingOrderExecutor}
+              isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
               onBack={onCloseOrderDetails ?? (() => {})}
+              onOpenApplicantResponder={onOpenCandidate}
+              onMoveApplicantResponderToShortlist={(candidateId) => {
+                if (!onMoveApplicantResponderToShortlist) {
+                  return
+                }
+                void onMoveApplicantResponderToShortlist(selectedOrderDetails.id, candidateId)
+              }}
+              onCreateVacancyFromOrder={() => {
+                if (!onCreateVacancyFromOrder) {
+                  return
+                }
+                onCreateVacancyFromOrder(selectedOrderDetails.id)
+              }}
+              onRejectApplicantResponder={(candidateId) => {
+                if (!onRejectApplicantResponder) {
+                  return
+                }
+                void onRejectApplicantResponder(selectedOrderDetails.id, candidateId)
+              }}
+              onPublishVacancyForCustomer={() => {
+                if (!onPublishVacancyForCustomer) {
+                  return
+                }
+                void onPublishVacancyForCustomer()
+              }}
               onRejectOrderExecutor={(executorId) => {
                 if (!onRejectOrderExecutor) {
                   return
@@ -415,6 +461,8 @@ export function MainFeedPanelView({
               }}
               order={selectedOrderDetails}
               orderResponses={orderResponses}
+              applicantResponders={selectedOrderApplicantResponders}
+              vacancyPreview={selectedOrderVacancyPreview}
             />
           ) : null}
         </div>
@@ -425,7 +473,7 @@ export function MainFeedPanelView({
   return (
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-slate-900">{isApplicantView ? 'Мои резюме' : 'Кандидаты и этапы'}</h3>
+        <h3 className="text-base font-semibold text-slate-900">{isApplicantView ? 'Мои резюме' : 'Мои кандидаты'}</h3>
         <div className="relative flex flex-wrap items-center gap-2">
           {shouldShowCandidateScopeSwitcher ? (
             <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
@@ -525,7 +573,6 @@ export function MainFeedPanelView({
               </div>
             </>
           ) : null}
-          <Badge variant="neutral">{filteredCandidateRows.length}</Badge>
         </div>
       </div>
       {filteredCandidateRows.length === 0 ? (

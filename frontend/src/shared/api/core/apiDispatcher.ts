@@ -1,6 +1,7 @@
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { clearAuthSession, setAuthSession, type AuthSession } from '../../../app/authSessionSlice'
+import { setBackendAvailable, setBackendUnavailable } from '../../../app/runtimeStatusSlice'
 
 const baseUrl =
   import.meta.env.VITE_API_BASE_URL ??
@@ -108,6 +109,10 @@ function resolveRequestBody(args: string | FetchArgs): unknown {
 
 function isUnauthorized(error: FetchBaseQueryError | undefined): boolean {
   return error?.status === 401
+}
+
+function isTransportUnavailable(error: FetchBaseQueryError | undefined): boolean {
+  return error?.status === 'FETCH_ERROR' || error?.status === 'TIMEOUT_ERROR'
 }
 
 function isRefreshRequest(args: string | FetchArgs): boolean {
@@ -493,6 +498,13 @@ export const apiDispatcher: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
 ) => {
   let result = await rawBaseQuery(args, api, extraOptions)
 
+  if (isTransportUnavailable(result.error)) {
+    // @dvnull: Добавлен единый флаг недоступности backend, чтобы роутер мог показать отдельную страницу вместо частично сломанного UI.
+    api.dispatch(setBackendUnavailable())
+  } else if (result.data || typeof result.error?.status === 'number') {
+    api.dispatch(setBackendAvailable())
+  }
+
   if (!isUnauthorized(result.error) || isRefreshRequest(args)) {
     if (isUnauthorized(result.error) && isRefreshRequest(args)) {
       api.dispatch(clearAuthSession())
@@ -537,5 +549,11 @@ export const apiDispatcher: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
   }
 
   result = await rawBaseQuery(args, api, extraOptions)
+  if (isTransportUnavailable(result.error)) {
+    api.dispatch(setBackendUnavailable())
+  } else if (result.data || typeof result.error?.status === 'number') {
+    api.dispatch(setBackendAvailable())
+  }
+
   return result
 }
