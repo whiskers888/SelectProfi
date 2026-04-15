@@ -28,15 +28,14 @@ const navIconMap: Record<WorkspaceView, LucideIcon> = {
   analytics: BarChart3,
 }
 
-const roleHintMap: Record<WorkspaceRole, string> = {
-  Customer: 'Откройте заказ, выберите исполнителя и запустите подбор кандидатов.',
-  Executor: 'Откройте проект, добавьте кандидатов и отправьте shortlist заказчику.',
-  Applicant: 'Отслеживайте статусы откликов и поддерживайте связь с рекрутерами.',
-}
-
 function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
+  // @dvnull: Ранее у исполнителя разделы назывались "Дашборд/Проекты"; переименовано в "Мои проекты/Биржа заказов" по новой продуктовой терминологии.
+  if (role === 'Executor' && view === 'dashboard') {
+    return 'Мои проекты'
+  }
+
   if (role === 'Executor' && view === 'orders') {
-    return 'Проекты'
+    return 'Биржа заказов'
   }
 
   if (role === 'Applicant' && view === 'orders') {
@@ -116,12 +115,12 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="preview11-footer">
+      {/* <div className="preview11-footer">
         <div className="preview11-hint-card">
           <div className="preview11-hint-title">Следующий шаг</div>
           <div className="preview11-muted">{roleHintMap[role]}</div>
         </div>
-      </div>
+      </div> */}
     </aside>
   )
 }
