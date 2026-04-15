@@ -12,13 +12,30 @@ using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
+using SelectProfi.backend.Configuration;
 using SelectProfi.backend.Contracts.Orders;
 using SelectProfi.backend.Domain.Orders;
+using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Mappings;
 
 public static class OrderResponseMapper
 {
+    private static decimal ToVisiblePrice(decimal price, UserRole requesterRole, OrderPricingOptions pricingOptions)
+    {
+        if (price <= 0m)
+            return 0m;
+
+        if (requesterRole != UserRole.Executor)
+            return price;
+
+        var commission = pricingOptions.ServiceCommissionPercent;
+        var clampedCommission = commission < 0m ? 0m : commission > 1m ? 1m : commission;
+        var net = price * (1m - clampedCommission);
+
+        return Math.Round(net, 0, MidpointRounding.ToEven);
+    }
+
     public static OrderResponse ToResponse(this CreateOrderResult result)
     {
         // @dvnull: Ранее response mapper не возвращал specialization/price отдельными полями; добавлено сквозное отображение новых атрибутов заказа.
@@ -62,6 +79,27 @@ public static class OrderResponseMapper
         };
     }
 
+    public static OrderResponse ToResponse(this GetOrderByIdResult result, UserRole requesterRole, OrderPricingOptions pricingOptions)
+    {
+        return new OrderResponse
+        {
+            Id = result.OrderId,
+            CustomerId = result.CustomerId,
+            ExecutorId = result.ExecutorId,
+            Title = result.Title,
+            Description = result.Description,
+            SpecializationId = result.SpecializationId,
+            Specialization = result.Specialization,
+            Price = ToVisiblePrice(result.Price, requesterRole, pricingOptions),
+            CustomerCompanyName = result.CustomerCompanyName,
+            RequestedCandidatesCount = result.RequestedCandidatesCount,
+            Status = MapStatus(result.Status),
+            CreatedAtUtc = result.CreatedAtUtc,
+            UpdatedAtUtc = result.UpdatedAtUtc,
+            DeletedAtUtc = null
+        };
+    }
+
     public static OrderListResponse ToResponse(this GetOrdersResult result)
     {
         return new OrderListResponse
@@ -76,6 +114,32 @@ public static class OrderResponseMapper
                 SpecializationId = item.SpecializationId,
                 Specialization = item.Specialization,
                 Price = item.Price,
+                CustomerCompanyName = item.CustomerCompanyName,
+                RequestedCandidatesCount = item.RequestedCandidatesCount,
+                Status = MapStatus(item.Status),
+                CreatedAtUtc = item.CreatedAtUtc,
+                UpdatedAtUtc = item.UpdatedAtUtc,
+                DeletedAtUtc = item.DeletedAtUtc
+            }).ToArray(),
+            Limit = result.Limit,
+            Offset = result.Offset
+        };
+    }
+
+    public static OrderListResponse ToResponse(this GetOrdersResult result, UserRole requesterRole, OrderPricingOptions pricingOptions)
+    {
+        return new OrderListResponse
+        {
+            Items = result.Items.Select(item => new OrderResponse
+            {
+                Id = item.OrderId,
+                CustomerId = item.CustomerId,
+                ExecutorId = item.ExecutorId,
+                Title = item.Title,
+                Description = item.Description,
+                SpecializationId = item.SpecializationId,
+                Specialization = item.Specialization,
+                Price = ToVisiblePrice(item.Price, requesterRole, pricingOptions),
                 CustomerCompanyName = item.CustomerCompanyName,
                 RequestedCandidatesCount = item.RequestedCandidatesCount,
                 Status = MapStatus(item.Status),

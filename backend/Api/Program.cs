@@ -63,9 +63,12 @@ builder.Services.AddOptions<AuthFeatureFlagsOptions>()
     .Bind(builder.Configuration.GetSection(AuthFeatureFlagsOptions.SectionName));
 builder.Services.AddOptions<OrderCandidateRequirementsOptions>()
     .Bind(builder.Configuration.GetSection(OrderCandidateRequirementsOptions.SectionName));
+builder.Services.AddOptions<OrderPricingOptions>()
+    .Bind(builder.Configuration.GetSection(OrderPricingOptions.SectionName));
 builder.Services.AddScoped<IValidator<PostgresOptions>, PostgresOptionsValidator>();
 // @dvnull: Ранее минимум кандидатов был захардкожен в бизнес-правиле; теперь читается из appsettings и валидируется при старте.
 builder.Services.AddScoped<IValidator<OrderCandidateRequirementsOptions>, OrderCandidateRequirementsOptionsValidator>();
+builder.Services.AddScoped<IValidator<OrderPricingOptions>, OrderPricingOptionsValidator>();
 // @dvnull: Проверка корректности claims перенесена в authentication handler; доп. accessor/filter больше не требуются.
 builder.Services.AddApplicationLayer();
 builder.Services.AddInfrastructureLayer();
@@ -123,17 +126,21 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
-    var postgresOptions = scope.ServiceProvider.GetRequiredService<IOptions<PostgresOptions>>().Value;
-    var validator = scope.ServiceProvider.GetRequiredService<IValidator<PostgresOptions>>();
-    var validationResult = validator.Validate(postgresOptions);
-    var candidateRequirementsOptions = scope.ServiceProvider.GetRequiredService<IOptions<OrderCandidateRequirementsOptions>>().Value;
-    var candidateRequirementsValidator = scope.ServiceProvider.GetRequiredService<IValidator<OrderCandidateRequirementsOptions>>();
-    var candidateRequirementsValidationResult = candidateRequirementsValidator.Validate(candidateRequirementsOptions);
+	var postgresOptions = scope.ServiceProvider.GetRequiredService<IOptions<PostgresOptions>>().Value;
+	var validator = scope.ServiceProvider.GetRequiredService<IValidator<PostgresOptions>>();
+	var validationResult = validator.Validate(postgresOptions);
+	var candidateRequirementsOptions = scope.ServiceProvider.GetRequiredService<IOptions<OrderCandidateRequirementsOptions>>().Value;
+	var candidateRequirementsValidator = scope.ServiceProvider.GetRequiredService<IValidator<OrderCandidateRequirementsOptions>>();
+	var candidateRequirementsValidationResult = candidateRequirementsValidator.Validate(candidateRequirementsOptions);
+	var orderPricingOptions = scope.ServiceProvider.GetRequiredService<IOptions<OrderPricingOptions>>().Value;
+	var orderPricingValidator = scope.ServiceProvider.GetRequiredService<IValidator<OrderPricingOptions>>();
+	var orderPricingValidationResult = orderPricingValidator.Validate(orderPricingOptions);
 
-    var startupValidationErrors = validationResult.Errors
-        .Concat(candidateRequirementsValidationResult.Errors)
-        .Select(error => error.ErrorMessage)
-        .ToArray();
+	var startupValidationErrors = validationResult.Errors
+		.Concat(candidateRequirementsValidationResult.Errors)
+		.Concat(orderPricingValidationResult.Errors)
+		.Select(error => error.ErrorMessage)
+		.ToArray();
 
     if (startupValidationErrors.Length > 0)
         throw new InvalidOperationException(string.Join("; ", startupValidationErrors));

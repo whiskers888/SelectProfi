@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Orders.CreateOrder;
@@ -14,6 +15,7 @@ using SelectProfi.backend.Application.Orders.RespondToOrder;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
+using SelectProfi.backend.Configuration;
 using SelectProfi.backend.Contracts.Orders;
 using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Errors;
@@ -32,7 +34,8 @@ namespace SelectProfi.backend.Controllers;
 // @dvnull: Маппинг ErrorCode -> ProblemDetails вынесен в OrdersProblemMap для сокращения дублирования.
 public sealed class OrdersController(
     ICommandDispatcher commandDispatcher,
-    IQueryDispatcher queryDispatcher) : AuthorizedControllerBase
+    IQueryDispatcher queryDispatcher,
+    IOptions<OrderPricingOptions> orderPricingOptions) : AuthorizedControllerBase
 {
     [HttpPost]
     [Authorize(Policy = AuthorizationPolicies.CustomerOnly)]
@@ -61,7 +64,7 @@ public sealed class OrdersController(
             orderId.ToQuery(RequesterUserId, RequesterRole),
             cancellationToken);
 
-        return result.ToActionResult(this);
+        return result.ToActionResult(this, RequesterRole, orderPricingOptions.Value);
     }
 
     [HttpGet]
@@ -77,7 +80,7 @@ public sealed class OrdersController(
             request.ToQuery(RequesterUserId, RequesterRole),
             cancellationToken);
 
-        return result.ToActionResult(this);
+        return result.ToActionResult(this, RequesterRole, orderPricingOptions.Value);
     }
 
     [HttpGet("executors")]

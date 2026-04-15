@@ -14,6 +14,8 @@ using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
+using SelectProfi.backend.Configuration;
+using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Mappings;
 
 namespace SelectProfi.backend.Errors;
@@ -36,10 +38,34 @@ public static class OrdersActionResultExtensions
         return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
     }
 
+    public static IActionResult ToActionResult(
+        this GetOrderByIdResult result,
+        ControllerBase controller,
+        UserRole requesterRole,
+        OrderPricingOptions pricingOptions)
+    {
+        if (result.ErrorCode == GetOrderByIdErrorCode.None)
+            return controller.Ok(result.ToResponse(requesterRole, pricingOptions));
+
+        return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
+    }
+
     public static IActionResult ToActionResult(this GetOrdersResult result, ControllerBase controller)
     {
         if (result.ErrorCode == GetOrdersErrorCode.None)
             return controller.Ok(result.ToResponse());
+
+        return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
+    }
+
+    public static IActionResult ToActionResult(
+        this GetOrdersResult result,
+        ControllerBase controller,
+        UserRole requesterRole,
+        OrderPricingOptions pricingOptions)
+    {
+        if (result.ErrorCode == GetOrdersErrorCode.None)
+            return controller.Ok(result.ToResponse(requesterRole, pricingOptions));
 
         return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
     }
