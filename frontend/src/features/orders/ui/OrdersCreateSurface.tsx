@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
 
 type CreateOrderFormState = {
   title: string
@@ -22,6 +22,7 @@ export type OrdersCreateSurfaceProps = {
     field: keyof CreateOrderFormState,
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => void
+  onCreateDescriptionChange: (value: string) => void
 }
 
 export function OrdersCreateSurface({
@@ -31,6 +32,7 @@ export function OrdersCreateSurface({
   createForm,
   onCreateOrder,
   onCreateInputChange,
+  onCreateDescriptionChange,
 }: OrdersCreateSurfaceProps) {
   return (
     <Card className="border-slate-200 shadow-none">
@@ -60,22 +62,23 @@ export function OrdersCreateSurface({
             maxLength={200}
             disabled={!canCreateOrder || isCreatingOrder}
           />
-          <Textarea
-            value={createForm.description}
-            onChange={(event) => onCreateInputChange('description', event)}
-            placeholder="Описание заказа"
-            required
-            maxLength={4000}
-            className="min-h-10 md:col-span-2"
-            disabled={!canCreateOrder || isCreatingOrder}
-          />
+          {/* @dvnull: Ранее здесь был Textarea для plain-text description; заменено на tiptap-компонент в блоке "Комментарий" для пилотного rich-text UI. */}
+          <div className="space-y-2 md:col-span-2">
+            <Label>Комментарий</Label>
+            <TiptapTextEditor
+              value={createForm.description}
+              onChange={onCreateDescriptionChange}
+              placeholder="Описание заказа"
+              disabled={!canCreateOrder || isCreatingOrder}
+            />
+          </div>
           <Input
             type="number"
-            min={3}
+            min={1}
             step={1}
             value={createForm.requestedCandidatesCount}
             onChange={(event) => onCreateInputChange('requestedCandidatesCount', event)}
-            placeholder="Требуемое количество кандидатов (минимум 3)"
+            placeholder="Требуемое количество кандидатов (минимум 1)"
             required
             disabled={!canCreateOrder || isCreatingOrder}
           />

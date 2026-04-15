@@ -18,17 +18,26 @@ type UseWorkspaceUiActionsDependencies = {
       | {
           title: string
           organization: string
+          specialization: string
+          specializationId: string
+          price: string
           note: string
           requestedCandidatesCount: string
         }
       | ((previousValues: {
           title: string
           organization: string
+          specialization: string
+          specializationId: string
+          price: string
           note: string
           requestedCandidatesCount: string
         }) => {
           title: string
           organization: string
+          specialization: string
+          specializationId: string
+          price: string
           note: string
           requestedCandidatesCount: string
         }),

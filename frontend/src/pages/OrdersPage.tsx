@@ -77,13 +77,14 @@ export function OrdersPage() {
   const [createForm, setCreateForm] = useState({
     title: '',
     description: '',
-    requestedCandidatesCount: '3',
+    requestedCandidatesCount: '1',
   })
-  const { handleExecutorSelectChange, handleCreateInputChange, handleOrderEditInputChange } = useOrderFormState({
-    setSelectedExecutorIdsByOrder,
-    setCreateForm,
-    setOrderEditsById,
-  })
+  const { handleExecutorSelectChange, handleCreateInputChange, handleCreateFieldChange, handleOrderEditInputChange } =
+    useOrderFormState({
+      setSelectedExecutorIdsByOrder,
+      setCreateForm,
+      setOrderEditsById,
+    })
 
   const items = data?.items ?? []
   const currentUserRole = authMe?.role
@@ -120,7 +121,7 @@ export function OrdersPage() {
         setCreateForm({
           title: '',
           description: '',
-          requestedCandidatesCount: '3',
+          requestedCandidatesCount: '1',
         })
       },
       clearOrderEdit: (orderId) => {
@@ -211,6 +212,8 @@ export function OrdersPage() {
               createForm={createForm}
               onCreateOrder={handleCreateOrder}
               onCreateInputChange={handleCreateInputChange}
+              // @dvnull: Ранее description менялся только через Textarea event; добавлен отдельный string-callback для tiptap без изменения остальной create-цепочки.
+              onCreateDescriptionChange={(value) => handleCreateFieldChange('description', value)}
             />
           ) : null}
 

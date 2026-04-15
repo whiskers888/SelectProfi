@@ -43,6 +43,14 @@ export function useOrderFormState({
     }))
   }
 
+  function handleCreateFieldChange(field: 'title' | 'description' | 'requestedCandidatesCount', value: string) {
+    // @dvnull: Ранее изменение create.description шло только через DOM-событие; добавлен handler по прямому string-значению для интеграции tiptap без изменения структуры state.
+    setCreateForm((previous) => ({
+      ...previous,
+      [field]: value,
+    }))
+  }
+
   function handleOrderEditInputChange(
     orderId: string,
     field: 'title' | 'description',
@@ -70,6 +78,7 @@ export function useOrderFormState({
   return {
     handleExecutorSelectChange,
     handleCreateInputChange,
+    handleCreateFieldChange,
     handleOrderEditInputChange,
   }
 }

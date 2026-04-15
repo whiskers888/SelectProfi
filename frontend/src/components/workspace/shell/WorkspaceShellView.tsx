@@ -50,6 +50,9 @@ export function WorkspaceShellView({
   createApplicantResponseFormValues,
   createCandidateFormValues,
   createOrderFormValues,
+  orderSpecializationOptions,
+  isOrderSpecializationsLoading,
+  isOrderSpecializationsError,
   createVacancyFormValues,
   dataset,
   executorBaseCandidates,
@@ -233,6 +236,8 @@ export function WorkspaceShellView({
             {role === 'Customer' && isCreateOrderPageOpen ? (
               <OrderCreatePagePanel
                 formValues={createOrderFormValues}
+                specializationOptions={orderSpecializationOptions}
+                isSpecializationsLoading={isOrderSpecializationsLoading}
                 isCreatingOrder={isCreatingOrder}
                 onBack={closeCreateOrderPage}
                 onFieldChange={handleCreateOrderFormFieldChange}
@@ -274,6 +279,11 @@ export function WorkspaceShellView({
                 {canLoadServerCandidates && isVacancyCandidatesError ? (
                   <Alert variant="destructive">
                     Не удалось загрузить кандидатов из API. Временно показаны локальные данные.
+                  </Alert>
+                ) : null}
+                {role === 'Customer' && isOrderSpecializationsError ? (
+                  <Alert variant="destructive">
+                    Не удалось загрузить справочник специализаций. Доступен ручной ввод.
                   </Alert>
                 ) : null}
 

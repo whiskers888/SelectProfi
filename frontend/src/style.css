@@ -258,6 +258,49 @@ body {
   background: hsl(var(--success) / 0.12);
 }
 
+/* @dvnull: Ранее preflight Tailwind сбрасывал list-style/padding, из-за чего нумерация и маркеры в tiptap визуально пропадали; добавлены явные стили для контента редактора. */
+.tiptap-editor-content {
+  line-height: 1.5;
+}
+
+.tiptap-editor-content p {
+  margin: 0;
+}
+
+.tiptap-editor-content p + p {
+  margin-top: 8px;
+}
+
+.tiptap-editor-content ul {
+  margin: 8px 0;
+  padding-left: 24px;
+  list-style: disc;
+}
+
+.tiptap-editor-content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+  list-style: decimal;
+}
+
+.tiptap-editor-content li + li {
+  margin-top: 4px;
+}
+
+.tiptap-editor-content h2 {
+  margin: 10px 0 6px;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.tiptap-editor-content blockquote {
+  margin: 8px 0;
+  padding-left: 12px;
+  border-left: 3px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+}
+
 .notification-toast-destructive {
   border-color: hsl(var(--destructive));
   background: hsl(var(--destructive) / 0.12);

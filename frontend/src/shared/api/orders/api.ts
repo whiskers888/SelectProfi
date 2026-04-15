@@ -8,6 +8,9 @@ export type OrderResponse = {
   executorId?: string | null
   title: string
   description: string
+  specializationId?: string | null
+  specialization: string
+  price: number
   customerCompanyName?: string | null
   requestedCandidatesCount: number
   status: OrderStatusContract
@@ -35,6 +38,19 @@ export type OrderExecutorResponse = {
 
 export type OrderExecutorListResponse = {
   items: OrderExecutorResponse[]
+}
+
+export type OrderSpecializationResponse = {
+  id: string
+  name: string
+  isActive: boolean
+  sortOrder: number
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export type OrderSpecializationListResponse = {
+  items: OrderSpecializationResponse[]
 }
 
 export type OrderExecutorResponseStatusContract = 'Pending' | 'Withdrawn' | 'Accepted' | 'Rejected'
@@ -71,6 +87,10 @@ export type MyOrderResponseResponse = {
 export type CreateOrderRequest = {
   title: string
   description: string
+  // @dvnull: Ранее create-order frontend-контракт не поддерживал словарь специализаций; добавлены specialization/specializationId/price под новый backend-контракт.
+  specialization?: string
+  specializationId?: string
+  price?: number
   requestedCandidatesCount: number
 }
 
@@ -99,6 +119,13 @@ const ordersApi = api.injectEndpoints({
     getOrderExecutors: build.query<OrderExecutorListResponse, void>({
       query: () => ({
         url: '/api/orders/executors',
+        method: 'GET',
+      }),
+    }),
+    getOrderSpecializations: build.query<OrderSpecializationListResponse, void>({
+      // @dvnull: Ранее фронт не запрашивал справочник специализаций; добавлен endpoint для формы создания заказа.
+      query: () => ({
+        url: '/api/order-specializations',
         method: 'GET',
       }),
     }),
@@ -170,6 +197,7 @@ export const {
   useGetOrderByIdQuery,
   useLazyGetOrderByIdQuery,
   useGetOrderExecutorsQuery,
+  useGetOrderSpecializationsQuery,
   useGetMyOrderResponseQuery,
   useGetOrderResponsesQuery,
   useCreateOrderMutation,

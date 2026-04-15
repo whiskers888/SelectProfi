@@ -66,7 +66,7 @@ export function useOrdersCrudActions({
 }: UseOrdersCrudActionsArgs) {
   const createOrderTitleMaxLength = 200
   const createOrderDescriptionMaxLength = 4000
-  const minRequestedCandidatesCount = 3
+  const minRequestedCandidatesCount = 1
 
   // @dvnull: Ранее CRUD/use-case handlers были локально в OrdersPage; вынесены в model-хук без изменения проверок прав, текстов ошибок и reset/refetch последовательности.
   async function handleCreateOrder(event: FormEvent<HTMLFormElement>) {

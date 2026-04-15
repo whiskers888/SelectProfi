@@ -23,6 +23,7 @@ import {
   useDeleteOrderMutation,
   useGetMyOrderResponseQuery,
   useGetOrderResponsesQuery,
+  useGetOrderSpecializationsQuery,
   useGetOrdersQuery,
   useRejectOrderResponseExecutorMutation,
   useRespondToOrderMutation,
@@ -246,6 +247,13 @@ export function useWorkspaceShellController() {
         }
       : skipToken,
   )
+  const {
+    data: orderSpecializationsResponse,
+    isError: isOrderSpecializationsError,
+    isFetching: isOrderSpecializationsLoading,
+  } = useGetOrderSpecializationsQuery(role === 'Customer' ? undefined : skipToken)
+  // @dvnull: Ранее форма заказа не имела данных справочника специализаций; добавлена загрузка и нормализация options для select.
+  const orderSpecializationOptions = orderSpecializationsResponse?.items.map((item) => ({ id: item.id, name: item.name })) ?? []
   const { data: executorDashboardStats } = useGetExecutorDashboardStatsQuery(
     dashboardRole === 'Executor' ? undefined : skipToken,
   )
@@ -313,8 +321,13 @@ export function useWorkspaceShellController() {
   const [createOrderFormValues, setCreateOrderFormValues] = useState({
     title: '',
     organization: '',
+    // @dvnull: Ранее create-order state не содержал specialization/price; добавлены поля для новой формы заказа.
+    specialization: '',
+    // @dvnull: Ранее выбор специализации по справочнику отсутствовал; добавлено отдельное specializationId для select.
+    specializationId: '',
+    price: '',
     note: '',
-    requestedCandidatesCount: '3',
+    requestedCandidatesCount: '1',
   })
   const customerCompanyName = profile?.customerProfile?.companyName?.trim() ?? ''
   const [createCandidateFormValues, setCreateCandidateFormValues] = useState({
@@ -852,6 +865,7 @@ export function useWorkspaceShellController() {
         status: vacancy.status,
       }
     },
+    orderSpecializationOptions,
     filteredOrders,
     getRequestErrorMessage,
     manualCandidatesByRole,
@@ -948,6 +962,9 @@ export function useWorkspaceShellController() {
     createApplicantResponseFormValues,
     createCandidateFormValues,
     createOrderFormValues,
+    orderSpecializationOptions,
+    isOrderSpecializationsLoading,
+    isOrderSpecializationsError,
     createVacancyFormValues,
     dataset,
     executorBaseCandidates,

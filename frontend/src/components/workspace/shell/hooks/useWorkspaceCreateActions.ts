@@ -6,6 +6,9 @@ type BannerVariant = 'default' | 'success' | 'destructive'
 type OrderCreateFormValues = {
   title: string
   organization: string
+  specialization: string
+  specializationId: string
+  price: string
   note: string
   requestedCandidatesCount: string
 }
@@ -45,6 +48,9 @@ type WorkspaceCreateActionsDependencies = {
     {
       description: string
       title: string
+      specialization?: string
+      specializationId?: string
+      price?: number
       requestedCandidatesCount: number
     },
     { id: string }
@@ -78,6 +84,7 @@ type WorkspaceCreateActionsDependencies = {
   createVacancyFormValues: VacancyCreateFormValues
   createVacancyOrderId: string | null
   getExistingVacancyByOrderId: (orderId: string) => ExistingVacancySummary | null
+  orderSpecializationOptions: { id: string; name: string }[]
   filteredOrders: WorkspaceOrder[]
   getRequestErrorMessage: (error: unknown) => string
   manualCandidatesByRole: Record<WorkspaceRole, WorkspaceCandidate[]>
@@ -145,6 +152,7 @@ export function useWorkspaceCreateActions({
   createVacancyFormValues,
   createVacancyOrderId,
   getExistingVacancyByOrderId,
+  orderSpecializationOptions,
   filteredOrders,
   getRequestErrorMessage,
   manualCandidatesByRole,
@@ -166,7 +174,10 @@ export function useWorkspaceCreateActions({
   setPreferredOrderId,
 }: WorkspaceCreateActionsDependencies) {
   const handleCreateOrderFormFieldChange = useCallback(
-    (field: 'title' | 'organization' | 'note' | 'requestedCandidatesCount', value: string) => {
+    (
+      field: 'title' | 'organization' | 'specialization' | 'specializationId' | 'price' | 'note' | 'requestedCandidatesCount',
+      value: string,
+    ) => {
       setCreateOrderFormValues((previousValues) => ({
         ...previousValues,
         [field]: value,
@@ -181,39 +192,68 @@ export function useWorkspaceCreateActions({
 
       const title = createOrderFormValues.title.trim()
       const organization = createOrderFormValues.organization.trim()
+      const specializationId = createOrderFormValues.specializationId.trim()
+      const selectedSpecialization = orderSpecializationOptions.find((item) => item.id === specializationId)
+      // @dvnull: Ранее специализация всегда отправлялась как свободный текст; добавлен приоритет справочника specializationId с fallback на ручной ввод.
+      const specialization = (selectedSpecialization?.name ?? createOrderFormValues.specialization).trim()
+      const price = Number.parseFloat(createOrderFormValues.price.trim())
       const note = createOrderFormValues.note.trim()
       const requestedCandidatesCount = Number.parseInt(createOrderFormValues.requestedCandidatesCount.trim(), 10)
 
-      if (!title || !organization) {
+      // @dvnull: Ранее форма заказа требовала только title/company; добавлены обязательные specialization и price для явной структуры нового заказа.
+      if (!title || !organization || !specialization) {
         setBanner({
           variant: 'destructive',
           message: 'Заполните обязательные поля формы.',
         })
         return
       }
-      // @dvnull: Ранее workspace create-order отправлял только title/description; добавлен requestedCandidatesCount с минимальным client guard (>=3) под backend-контракт.
-      if (!Number.isFinite(requestedCandidatesCount) || requestedCandidatesCount < 3) {
+      if (!Number.isFinite(price) || price <= 0) {
         setBanner({
           variant: 'destructive',
-          message: 'Укажите количество кандидатов не меньше 3.',
+          message: 'Укажите корректную цену заказа больше 0.',
+        })
+        return
+      }
+      // @dvnull: Ранее workspace create-order проверял минимум requestedCandidatesCount >=3; обновлено до >=1 под актуальный backend-контракт.
+      if (!Number.isFinite(requestedCandidatesCount) || requestedCandidatesCount < 1) {
+        setBanner({
+          variant: 'destructive',
+          message: 'Укажите количество кандидатов не меньше 1.',
         })
         return
       }
 
-      const description = note ? `${organization}. ${note}` : organization
+      // @dvnull: Ранее description собирался как "organization + note"; добавлены specialization/price в формируемый backend-compatible description без изменения API-контракта.
+      const descriptionParts = [
+        `Компания: ${organization}`,
+        `Специализация: ${specialization}`,
+        `Цена заказа: ${price.toLocaleString('ru-RU')} ₽`,
+      ]
+      if (note) {
+        descriptionParts.push(`Комментарий: ${note}`)
+      }
+      const description = descriptionParts.join('\n')
 
       try {
         const createdOrder = await createOrder({
           title,
           description,
+          // @dvnull: Ранее create-order не отправлял specializationId; добавлен проброс выбранного элемента справочника.
+          specialization,
+          specializationId: selectedSpecialization?.id,
+          price,
           requestedCandidatesCount,
         }).unwrap()
         setPreferredOrderId(createdOrder.id)
         setCreateOrderFormValues({
           title: '',
           organization: '',
+          specialization: '',
+          specializationId: '',
+          price: '',
           note: '',
-          requestedCandidatesCount: '3',
+          requestedCandidatesCount: '1',
         })
         await refetchOrders()
         setIsCreateOrderPageOpen(false)
@@ -233,9 +273,13 @@ export function useWorkspaceCreateActions({
       createOrder,
       createOrderFormValues.note,
       createOrderFormValues.organization,
+      createOrderFormValues.price,
       createOrderFormValues.requestedCandidatesCount,
+      createOrderFormValues.specialization,
+      createOrderFormValues.specializationId,
       createOrderFormValues.title,
       getRequestErrorMessage,
+      orderSpecializationOptions,
       refetchOrders,
       setActiveView,
       setBanner,
