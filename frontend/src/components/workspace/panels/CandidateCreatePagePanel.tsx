@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
 import { Textarea } from '@/components/ui/textarea'
 
 type CandidateCreatePagePanelProps = {
@@ -143,7 +143,8 @@ export function CandidateCreatePagePanel({
 
         <div className="space-y-2">
           <Label className="text-slate-600">Содержимое резюме</Label>
-          <RichTextEditor
+          {/* @dvnull: Легаси rich-text-editor на execCommand заменен на tiptap для единого editor-стека. */}
+          <TiptapTextEditor
             value={formValues.resumeRichTextHtml}
             onChange={(value) => onFieldChange('resumeRichTextHtml', value)}
             placeholder="Опишите опыт, стек, достижения."

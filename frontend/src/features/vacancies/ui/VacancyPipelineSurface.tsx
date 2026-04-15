@@ -3,7 +3,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
 import { Textarea } from '@/components/ui/textarea'
 import type { VacancyCandidateStageContract } from '@/shared/api/candidates'
 
@@ -277,7 +277,8 @@ export function VacancyPipelineSurface({
                   disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
                 />
               </div>
-              <RichTextEditor
+              {/* @dvnull: Легаси rich-text-editor на execCommand заменен на tiptap для единого editor-стека. */}
+              <TiptapTextEditor
                 value={createCandidateResumeForm.resumeRichTextHtml}
                 onChange={onCreateCandidateResumeRichTextChange}
                 placeholder="Текст резюме: опыт, достижения, ключевые факты"

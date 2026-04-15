@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
 
 type VacancyCreatePagePanelProps = {
   formValues: {
@@ -79,7 +79,7 @@ export function VacancyCreatePagePanel({
           <Label className="text-slate-600">
             Описание
           </Label>
-          <RichTextEditor
+          <TiptapTextEditor
             value={formValues.description}
             onChange={(value) => onFieldChange('description', value)}
             placeholder="Опишите требования, задачи и условия."
