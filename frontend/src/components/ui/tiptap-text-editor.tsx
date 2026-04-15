@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
+import FontFamily from '@tiptap/extension-font-family'
 import { EditorContent, useEditor } from '@tiptap/react'
 import Placeholder from '@tiptap/extension-placeholder'
+import TextStyle from '@tiptap/extension-text-style'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import { cn } from '@/lib/utils'
@@ -13,6 +15,21 @@ type TiptapTextEditorProps = {
   className?: string
 }
 
+const fontFamilyOptions = [
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Courier New', label: 'Courier' },
+] as const
+
+const fontSizeOptions = [
+  { value: '14px', label: '14' },
+  { value: '16px', label: '16' },
+  { value: '18px', label: '18' },
+  { value: '20px', label: '20' },
+  { value: '24px', label: '24' },
+] as const
+
 export function TiptapTextEditor({
   value,
   onChange,
@@ -20,9 +37,21 @@ export function TiptapTextEditor({
   placeholder = 'Введите текст',
   className,
 }: TiptapTextEditorProps) {
+  function applyFontSize(nextSize: string) {
+    if (!editor || disabled) {
+      return
+    }
+
+    editor.chain().focus().setMark('textStyle', { fontSize: nextSize }).run()
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit,
+      TextStyle,
+      FontFamily.configure({
+        types: ['textStyle'],
+      }),
       Underline,
       Placeholder.configure({
         placeholder,
@@ -31,7 +60,8 @@ export function TiptapTextEditor({
     content: value,
     editable: !disabled,
     onUpdate: ({ editor: currentEditor }) => {
-      onChange(currentEditor.getText({ blockSeparator: '\n' }))
+      // @dvnull: Ранее наружу отдавался только plain-text, из-за чего терялось форматирование; переключено на HTML для tiptap rich-text сценариев.
+      onChange(currentEditor.getHTML())
     },
     editorProps: {
       attributes: {
@@ -54,8 +84,8 @@ export function TiptapTextEditor({
       return
     }
 
-    const currentText = editor.getText({ blockSeparator: '\n' })
-    if (currentText === value) {
+    const currentHtml = editor.getHTML()
+    if (currentHtml === value) {
       return
     }
 
@@ -66,9 +96,42 @@ export function TiptapTextEditor({
     return null
   }
 
+  const activeFontFamily = (editor.getAttributes('textStyle').fontFamily as string | undefined) ?? fontFamilyOptions[0].value
+  const activeFontSize = (editor.getAttributes('textStyle').fontSize as string | undefined) ?? fontSizeOptions[1].value
+
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex flex-wrap items-center gap-2 rounded-md border border-input bg-background px-2 py-1">
+        <select
+          className="h-8 rounded border border-input bg-background px-2 text-xs"
+          value={activeFontFamily}
+          onChange={(event) => {
+            editor.chain().focus().setFontFamily(event.target.value).run()
+          }}
+          disabled={disabled}
+          aria-label="Шрифт"
+        >
+          {fontFamilyOptions.map((fontOption) => (
+            <option key={fontOption.value} value={fontOption.value}>
+              {fontOption.label}
+            </option>
+          ))}
+        </select>
+        <select
+          className="h-8 rounded border border-input bg-background px-2 text-xs"
+          value={activeFontSize}
+          onChange={(event) => {
+            applyFontSize(event.target.value)
+          }}
+          disabled={disabled}
+          aria-label="Размер шрифта"
+        >
+          {fontSizeOptions.map((fontSizeOption) => (
+            <option key={fontSizeOption.value} value={fontSizeOption.value}>
+              {fontSizeOption.label}
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           className={cn(
