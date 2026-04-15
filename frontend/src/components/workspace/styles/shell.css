@@ -134,6 +134,7 @@
 .preview11-state-btn,
 .preview11-mini-btn,
 .preview11-role-option,
+.preview11-profile-role-pill,
 .preview11-profile-dropdown > button {
   -webkit-tap-highlight-color: transparent;
   outline: none;
@@ -146,6 +147,7 @@
 .preview11-state-btn:focus-visible,
 .preview11-mini-btn:focus-visible,
 .preview11-role-option:focus-visible,
+.preview11-profile-role-pill:focus-visible,
 .preview11-profile-dropdown > button:focus-visible {
   border-color: var(--p-border);
   box-shadow: 0 0 0 3px rgb(15 118 110 / 16%);
@@ -470,6 +472,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   min-height: 28px;
   border-radius: 0 0 12px 12px;
   border: 1px solid var(--primary);
@@ -480,7 +483,44 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  padding: 0 10px;
+  padding: 2px 28px 2px 10px;
+  cursor: pointer;
+}
+
+.preview11-profile-role-pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.preview11-profile-role-pill-static {
+  cursor: default;
+  padding-right: 10px;
+}
+
+.preview11-profile-role-label {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+.preview11-profile-role-arrows {
+  display: inline-flex;
+  align-items: center;
+  position: absolute;
+  right: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.preview11-profile-role-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--primary);
 }
 
 .preview11-avatar {
@@ -869,6 +909,12 @@
   gap: 10px;
 }
 
+.preview11-order-side {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
 .preview11-feed-item-title {
   margin: 0;
   font-size: 14px;
@@ -880,6 +926,13 @@
   margin: 4px 0 0;
   color: var(--text2);
   font-size: 12px;
+}
+
+.preview11-order-price {
+  margin: 0;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .preview11-details {

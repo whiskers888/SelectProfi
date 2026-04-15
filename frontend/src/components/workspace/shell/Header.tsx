@@ -1,4 +1,4 @@
-import { Bell, CalendarDays } from 'lucide-react'
+import { ArrowRightLeft, Bell, CalendarDays } from 'lucide-react'
 import { Dropdown } from '@/components/ui/dropdown'
 import { type WorkspaceRole, type WorkspaceView } from '../model/data'
 
@@ -6,7 +6,9 @@ type HeaderMenuAction = 'profile' | 'settings' | 'logout'
 
 type HeaderProps = {
   activeView: WorkspaceView
+  canSwitchRole: boolean
   createLabel: string
+  isSwitchingRole: boolean
   meetingsCount: number
   notificationsCount: number
   onCreateAction: () => void
@@ -14,6 +16,7 @@ type HeaderProps = {
   onOpenNotifications: () => void
   onMenuAction: (action: HeaderMenuAction) => void
   onSearchChange: (value: string) => void
+  onSwitchRole: () => void
   profileDisplayName: string
   profileEmail: string
   profileRoleLabel: string
@@ -42,7 +45,9 @@ function profileInitials(displayName: string): string {
 
 export function Header({
   activeView,
+  canSwitchRole,
   createLabel,
+  isSwitchingRole,
   meetingsCount,
   notificationsCount,
   onCreateAction,
@@ -50,6 +55,7 @@ export function Header({
   onOpenNotifications,
   onMenuAction,
   onSearchChange,
+  onSwitchRole,
   profileDisplayName,
   profileEmail,
   profileRoleLabel,
@@ -105,21 +111,21 @@ export function Header({
           </button>
         </div>
 
-        <Dropdown
-          className="preview11-profile-dropdown"
-          contentClassName="preview11-profile-menu"
-          items={[
-            { id: 'profile', label: 'Мой профиль' },
-            { id: 'settings', label: 'Настройки' },
-            { id: 'logout', label: 'Выйти из аккаунта', tone: 'destructive' },
-          ]}
-          onSelect={(itemId) => {
-            if (itemId === 'profile' || itemId === 'settings' || itemId === 'logout') {
-              onMenuAction(itemId)
-            }
-          }}
-          trigger={
-            <span className="preview11-profile-stack">
+        <span className="preview11-profile-stack">
+          <Dropdown
+            className="preview11-profile-dropdown"
+            contentClassName="preview11-profile-menu"
+            items={[
+              { id: 'profile', label: 'Мой профиль' },
+              { id: 'settings', label: 'Настройки' },
+              { id: 'logout', label: 'Выйти из аккаунта', tone: 'destructive' },
+            ]}
+            onSelect={(itemId) => {
+              if (itemId === 'profile' || itemId === 'settings' || itemId === 'logout') {
+                onMenuAction(itemId)
+              }
+            }}
+            trigger={
               <span className="preview11-profile-chip">
                 <span className="preview11-profile-meta">
                   <span className="preview11-profile-name">{profileDisplayName}</span>
@@ -127,10 +133,29 @@ export function Header({
                 </span>
                 <span className="preview11-avatar">{profileInitials(profileDisplayName)}</span>
               </span>
-              <span className="preview11-profile-role-pill">{profileRoleLabel}</span>
+            }
+          />
+          {canSwitchRole ? (
+            // @dvnull: Декоративная иконка роли переведена в рабочую кнопку переключения Applicant/Executor прямо в workspace header.
+            <button
+              className="preview11-profile-role-pill"
+              disabled={isSwitchingRole}
+              onClick={onSwitchRole}
+              type="button"
+            >
+              <span className="preview11-profile-role-label">{profileRoleLabel}</span>
+              <span className="preview11-profile-role-arrows" aria-hidden="true">
+                <span className="preview11-profile-role-arrow">
+                  <ArrowRightLeft size={18} strokeWidth={2.3} />
+                </span>
+              </span>
+            </button>
+          ) : (
+            <span className="preview11-profile-role-pill preview11-profile-role-pill-static">
+              <span className="preview11-profile-role-label">{profileRoleLabel}</span>
             </span>
-          }
-        />
+          )}
+        </span>
       </div>
     </header>
   )

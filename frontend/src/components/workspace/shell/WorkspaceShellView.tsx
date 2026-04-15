@@ -33,6 +33,7 @@ export function WorkspaceShellView({
   canLoadServerOrders,
   canManageOrder,
   canManageOrderResponses,
+  canSwitchApplicantExecutor,
   canCreateVacancyFromSelectedOrder,
   canPublishVacancyForSelectedOrder,
   hasCreateVacancyDraftForSelectedOrder,
@@ -87,6 +88,7 @@ export function WorkspaceShellView({
   handleRetryAnalytics,
   handleSelectOrderExecutor,
   handleSendMessage,
+  handleToggleRole,
   handleViewChange,
   hasRespondedToSelectedOrder,
   isCandidatesApiLoading,
@@ -109,6 +111,7 @@ export function WorkspaceShellView({
   isUpdatingApplicantResponderStage,
   isSelectedCandidatePurchased,
   isSelectingOrderExecutor,
+  isSwitchingRole,
   isSidebarCollapsed,
   isVacancyCandidatesError,
   isViewLoading,
@@ -159,6 +162,9 @@ export function WorkspaceShellView({
             profileDisplayName={profileDisplayName}
             profileEmail={profileEmail}
             profileRoleLabel={profileRoleLabel}
+            canSwitchRole={canSwitchApplicantExecutor}
+            isSwitchingRole={isSwitchingRole}
+            onSwitchRole={() => void handleToggleRole()}
             role={role}
             searchValue={searchValue}
             subtitle={activeView === 'profile' ? 'Личные данные и настройки роли' : dataset.headerSubtitle}
@@ -289,7 +295,9 @@ export function WorkspaceShellView({
 
                 {(activeView === 'dashboard' || activeView === 'orders' || activeView === 'candidates') && (
                   <>
-                    {activeView !== 'candidates' ? <StatsGrid stats={runtimeStats} /> : null}
+                    {activeView !== 'candidates' ? (
+                      <StatsGrid stats={runtimeStats} onOverview={() => handleViewChange('candidates')} />
+                    ) : null}
                     <MainFeedPanel
                       baseCandidates={role === 'Executor' ? executorBaseCandidates : filteredBaseCandidates}
                       applicantRespondedOrderIds={applicantRespondedOrderIds}

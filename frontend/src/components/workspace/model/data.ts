@@ -16,6 +16,7 @@ export type WorkspaceOrder = {
   id: string
   customerId?: string
   executorId?: string | null
+  price?: number | null
   title: string
   company: string
   location: string
@@ -168,6 +169,7 @@ const customerData: WorkspaceDataset = {
       title: 'Frontend Developer (React)',
       company: 'ООО Альфа',
       location: 'Удаленно',
+      price: 220000,
       priority: 'high',
       responses: 8,
       statusLabel: 'В работе',
@@ -179,6 +181,7 @@ const customerData: WorkspaceDataset = {
       title: 'Product Designer (HR Tech)',
       company: 'ООО Альфа',
       location: 'Москва / Гибрид',
+      price: 180000,
       priority: 'medium',
       responses: 5,
       statusLabel: 'Новые отклики',
@@ -190,6 +193,7 @@ const customerData: WorkspaceDataset = {
       title: 'Head of Sales',
       company: 'АО Омега',
       location: 'Москва / Офис',
+      price: 250000,
       priority: 'low',
       responses: 2,
       statusLabel: 'Пауза',
@@ -343,14 +347,14 @@ const executorData: WorkspaceDataset = {
     },
     {
       id: 'pipeline',
-      label: 'В подборе',
+      label: 'Кандидаты в работе',
       value: '23 чел.',
       note: '5 добавлено сегодня',
       tone: 'warning',
     },
     {
       id: 'shortlist',
-      label: 'Передано заказчику',
+      label: 'Финалисты',
       value: '3 чел.',
       note: '1 сегодня',
       tone: 'success',
@@ -369,6 +373,7 @@ const executorData: WorkspaceDataset = {
       title: 'Frontend Developer (React)',
       company: 'ООО Альфа',
       location: 'Удаленно',
+      price: 210000,
       priority: 'high',
       responses: 5,
       statusLabel: 'Подбор',
@@ -380,6 +385,7 @@ const executorData: WorkspaceDataset = {
       title: 'Data Analyst',
       company: 'FinTech Project',
       location: 'Москва / Гибрид',
+      price: 190000,
       priority: 'medium',
       responses: 4,
       statusLabel: 'Согласование',
@@ -391,6 +397,7 @@ const executorData: WorkspaceDataset = {
       title: 'Product Designer',
       company: 'HR SaaS',
       location: 'Удаленно',
+      price: 170000,
       priority: 'medium',
       responses: 3,
       statusLabel: 'Скрининг',

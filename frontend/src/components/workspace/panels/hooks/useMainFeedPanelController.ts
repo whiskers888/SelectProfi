@@ -94,14 +94,18 @@ export function useMainFeedPanelController({
     )
   }, [candidateSourceFilter, candidateStageFilter])
 
+  const dashboardOrders =
+    role === 'Executor' && requesterUserId
+      ? orders.filter((order) => order.executorId === requesterUserId)
+      : orders
   const selectedDashboardOrder =
-    orders.find((order) => order.id === selectedOrderId) ?? (orders.length > 0 ? orders[0] : null)
+    dashboardOrders.find((order) => order.id === selectedOrderId) ?? (dashboardOrders.length > 0 ? dashboardOrders[0] : null)
   const scopedDashboardOrders =
     dashboardState === 'paused'
-      ? orders.filter((order) => !order.isArchived && Boolean(order.isPaused))
+      ? dashboardOrders.filter((order) => !order.isArchived && Boolean(order.isPaused))
       : dashboardState === 'archive'
-        ? orders.filter((order) => order.isArchived)
-        : orders.filter((order) => !order.isArchived && !order.isPaused)
+        ? dashboardOrders.filter((order) => order.isArchived)
+        : dashboardOrders.filter((order) => !order.isArchived && !order.isPaused)
   const sortedDashboardOrders = [...scopedDashboardOrders]
 
   if (dashboardSort === 'responses') {

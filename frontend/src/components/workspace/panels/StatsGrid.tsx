@@ -1,43 +1,8 @@
-import { type WorkspaceStat, type WorkspaceTone } from '../model/data'
+import { type WorkspaceStat } from '../model/data'
 
 type StatsGridProps = {
   stats: WorkspaceStat[]
-}
-
-function toneClassName(tone: WorkspaceTone | undefined): string {
-  if (tone === 'success') {
-    return 'preview11-tag-ok'
-  }
-
-  if (tone === 'warning') {
-    return 'preview11-tag-warn'
-  }
-
-  if (tone === 'danger') {
-    return 'preview11-tag-danger'
-  }
-
-  return 'preview11-tag-neutral'
-}
-
-function toneLabel(tone: WorkspaceTone | undefined, statId: string): string {
-  if (statId === 'shortlist' && tone === 'warning') {
-    return 'Проверить'
-  }
-
-  if (tone === 'success') {
-    return 'Стабильно'
-  }
-
-  if (tone === 'warning') {
-    return 'В работе'
-  }
-
-  if (tone === 'danger') {
-    return 'Риск'
-  }
-
-  return 'Старт'
+  onOverview: (statId: string) => void
 }
 
 function renderStatValue(value: string): string | JSX.Element {
@@ -54,7 +19,7 @@ function renderStatValue(value: string): string | JSX.Element {
   )
 }
 
-export function StatsGrid({ stats }: StatsGridProps) {
+export function StatsGrid({ stats, onOverview }: StatsGridProps) {
   return (
     <section className="preview11-stats">
       {stats.map((stat) => (
@@ -62,7 +27,9 @@ export function StatsGrid({ stats }: StatsGridProps) {
           <div className="preview11-card-top">
             <p className="preview11-card-meta">{stat.label}</p>
             {stat.id !== 'projects' ? (
-              <span className={`preview11-tag ${toneClassName(stat.tone)}`}>{toneLabel(stat.tone, stat.id)}</span>
+              <button className="preview11-mini-btn" onClick={() => onOverview(stat.id)} type="button">
+                Обзор
+              </button>
             ) : null}
           </div>
           <p className="preview11-card-value">{renderStatValue(stat.value)}</p>

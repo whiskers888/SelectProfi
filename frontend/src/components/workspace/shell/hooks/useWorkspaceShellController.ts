@@ -30,7 +30,7 @@ import {
   useSelectOrderResponseExecutorMutation,
   useUpdateOrderMutation,
 } from '@/shared/api/orders'
-import { useGetMyProfileQuery } from '@/shared/api/profile'
+import { useGetMyProfileQuery, useSwitchMyActiveRoleMutation } from '@/shared/api/profile'
 import {
   useCreateVacancyMutation,
   useGetVacanciesQuery,
@@ -201,7 +201,7 @@ export function useWorkspaceShellController() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const location = useLocation()
-  const { data: profile } = useGetMyProfileQuery()
+  const { data: profile, refetch: refetchProfile } = useGetMyProfileQuery()
   const { data: authMe } = useGetMyAuthInfoQuery()
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
   const [createVacancy, { isLoading: isCreatingVacancy }] = useCreateVacancyMutation()
@@ -218,10 +218,12 @@ export function useWorkspaceShellController() {
   const [respondToVacancy, { isLoading: isRespondingToVacancy }] = useRespondToVacancyMutation()
   const [updateVacancyCandidateStage, { isLoading: isUpdatingApplicantResponderStage }] =
     useUpdateVacancyCandidateStageMutation()
+  const [switchMyActiveRole, { isLoading: isSwitchingRole }] = useSwitchMyActiveRoleMutation()
   const [loadVacancyCandidates] = useLazyGetVacancyCandidatesQuery()
   const [loadVacancyBaseCandidates] = useLazyGetVacancyBaseCandidatesQuery()
   const [preferredOrderId, setPreferredOrderId] = useState<string | null>(null)
   const role = toWorkspaceRole(profile?.activeRole ?? profile?.role) ?? defaultWorkspaceRole
+  const canSwitchApplicantExecutor = role === 'Applicant' || role === 'Executor'
   const applicantRespondedOrderIds = useMemo(
     () => (role === 'Applicant' && authMe?.userId ? readApplicantRespondedOrderIds(authMe.userId) : []),
     [authMe?.userId, role],
@@ -716,6 +718,27 @@ export function useWorkspaceShellController() {
       vacanciesResponse,
     ],
   )
+  const handleToggleRole = useCallback(async () => {
+    if (!canSwitchApplicantExecutor) {
+      return
+    }
+
+    const nextRole: 'Applicant' | 'Executor' = role === 'Applicant' ? 'Executor' : 'Applicant'
+
+    try {
+      await switchMyActiveRole({ activeRole: nextRole }).unwrap()
+      await refetchProfile()
+      setBanner({
+        variant: 'success',
+        message: `Активная роль изменена на «${nextRole === 'Applicant' ? 'Соискатель' : 'Исполнитель'}».`,
+      })
+    } catch (error) {
+      setBanner({
+        variant: 'destructive',
+        message: getRequestErrorMessage(error),
+      })
+    }
+  }, [canSwitchApplicantExecutor, refetchProfile, role, setBanner, switchMyActiveRole])
   const linkedCreateVacancyOrder =
     (createVacancyOrderId ? baseOrders.find((order) => order.id === createVacancyOrderId) : null) ?? selectedOrder ?? null
   const hasCreateVacancyDraftForSelectedOrder =
@@ -943,6 +966,7 @@ export function useWorkspaceShellController() {
     canLoadServerOrders,
     canManageOrder,
     canManageOrderResponses,
+    canSwitchApplicantExecutor,
     canCreateVacancyFromSelectedOrder,
     canPublishVacancyForSelectedOrder,
     handlePublishVacancyForSelectedOrder,
@@ -998,6 +1022,7 @@ export function useWorkspaceShellController() {
     handleRetryAnalytics,
     handleSelectOrderExecutor,
     handleSendMessage,
+    handleToggleRole,
     handleViewChange,
     hasRespondedToSelectedOrder,
     isCandidatesApiLoading,
@@ -1020,6 +1045,7 @@ export function useWorkspaceShellController() {
     isUpdatingApplicantResponderStage,
     isSelectedCandidatePurchased,
     isSelectingOrderExecutor,
+    isSwitchingRole,
     isSidebarCollapsed,
     isVacancyCandidatesError,
     isViewLoading,

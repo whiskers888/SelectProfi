@@ -42,6 +42,14 @@ function toneClassName(tone: WorkspaceTone): string {
   return 'preview11-tag-neutral'
 }
 
+function toOrderPriceLabel(price: number | null | undefined): string {
+  if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) {
+    return 'Цена не указана'
+  }
+
+  return `${price.toLocaleString('ru-RU')} ₽`
+}
+
 export function MainFeedPanelView({
   allVisibleChecked,
   canPublishVacancyForCustomer = false,
@@ -176,50 +184,51 @@ export function MainFeedPanelView({
               <span>{checkedVisibleOrderIds.length}</span>
             </label>
             <div className="preview11-orders-bulk-actions">
-              <button
-                className="preview11-mini-btn"
-                disabled={checkedVisibleOrderIds.length === 0 || !canManageOrders || isOrdersStateUpdating}
-                onClick={() => {
-                  if (!onPauseOrders || checkedVisibleOrderIds.length === 0) {
-                    return
-                  }
-                  void onPauseOrders(checkedVisibleOrderIds)
-                }}
-                type="button"
-              >
-                {isOrdersStateUpdating ? 'Обновляем...' : 'На паузу'}
-              </button>
-              <button
-                className="preview11-mini-btn"
-                disabled={
-                  checkedVisibleOrderIds.length === 0 ||
-                  !canManageOrders ||
-                  isOrdersArchiving ||
-                  dashboardState === 'archive'
-                }
-                onClick={() => {
-                  if (!onArchiveOrders || checkedVisibleOrderIds.length === 0) {
-                    return
-                  }
-                  void onArchiveOrders(checkedVisibleOrderIds)
-                }}
-                type="button"
-              >
-                {isOrdersArchiving ? 'Архивируем...' : 'В архив'}
-              </button>
-              <button
-                className="preview11-mini-btn"
-                disabled={checkedVisibleOrderIds.length === 0 || !canManageOrders || isOrdersStateUpdating}
-                onClick={() => {
-                  if (!onActivateOrders || checkedVisibleOrderIds.length === 0) {
-                    return
-                  }
-                  void onActivateOrders(checkedVisibleOrderIds)
-                }}
-                type="button"
-              >
-                {isOrdersStateUpdating ? 'Обновляем...' : 'Активировать'}
-              </button>
+              {dashboardState !== 'paused' ? (
+                <button
+                  className="preview11-mini-btn"
+                  disabled={checkedVisibleOrderIds.length === 0 || !canManageOrders || isOrdersStateUpdating}
+                  onClick={() => {
+                    if (!onPauseOrders || checkedVisibleOrderIds.length === 0) {
+                      return
+                    }
+                    void onPauseOrders(checkedVisibleOrderIds)
+                  }}
+                  type="button"
+                >
+                  {isOrdersStateUpdating ? 'Обновляем...' : 'На паузу'}
+                </button>
+              ) : null}
+              {dashboardState !== 'archive' ? (
+                <button
+                  className="preview11-mini-btn"
+                  disabled={checkedVisibleOrderIds.length === 0 || !canManageOrders || isOrdersArchiving}
+                  onClick={() => {
+                    if (!onArchiveOrders || checkedVisibleOrderIds.length === 0) {
+                      return
+                    }
+                    void onArchiveOrders(checkedVisibleOrderIds)
+                  }}
+                  type="button"
+                >
+                  {isOrdersArchiving ? 'Архивируем...' : 'В архив'}
+                </button>
+              ) : null}
+              {dashboardState !== 'active' ? (
+                <button
+                  className="preview11-mini-btn"
+                  disabled={checkedVisibleOrderIds.length === 0 || !canManageOrders || isOrdersStateUpdating}
+                  onClick={() => {
+                    if (!onActivateOrders || checkedVisibleOrderIds.length === 0) {
+                      return
+                    }
+                    void onActivateOrders(checkedVisibleOrderIds)
+                  }}
+                  type="button"
+                >
+                  {isOrdersStateUpdating ? 'Обновляем...' : 'Активировать'}
+                </button>
+              ) : null}
             </div>
           </div>
 
@@ -241,12 +250,7 @@ export function MainFeedPanelView({
                       />
                     </div>
                     <button
-                      className={cn(
-                        'preview11-feed-item',
-                        selectedDashboardOrder.id === order.id
-                          ? 'preview11-feed-item-active'
-                          : 'preview11-feed-item-hover',
-                      )}
+                      className={cn('preview11-feed-item', 'preview11-feed-item-hover')}
                       onClick={() => {
                         onSelectOrder(order.id)
                         onOpenOrder(order)
@@ -260,7 +264,10 @@ export function MainFeedPanelView({
                             {order.company} • {order.location}
                           </p>
                         </div>
-                        <span className={`preview11-tag ${toneClassName(order.statusTone)}`}>{order.statusLabel}</span>
+                        <div className="preview11-order-side">
+                          <span className={`preview11-tag ${toneClassName(order.statusTone)}`}>{order.statusLabel}</span>
+                          <p className="preview11-order-price">Цена: {toOrderPriceLabel(order.price)}</p>
+                        </div>
                       </div>
                     </button>
                   </div>
