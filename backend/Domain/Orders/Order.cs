@@ -26,6 +26,19 @@ public sealed class Order
     [MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 
+    // @dvnull: Ранее у заказа не было внешнего ключа на справочник специализаций; добавлена nullable-ссылка на dictionary-элемент.
+    public Guid? SpecializationId { get; set; }
+
+    [ForeignKey(nameof(SpecializationId))]
+    public OrderSpecialization? SpecializationDictionaryItem { get; set; }
+
+    // @dvnull: Ранее специализация заказа сохранялась внутри description; вынесена в отдельное поле для фильтрации и аналитики.
+    [MaxLength(200)]
+    public string Specialization { get; set; } = string.Empty;
+
+    // @dvnull: Ранее цена заказа не имела отдельной колонки; добавлено числовое поле для явного бюджетного атрибута.
+    public decimal Price { get; set; }
+
     [MaxLength(255)]
     public string? CustomerCompanyName { get; set; }
 

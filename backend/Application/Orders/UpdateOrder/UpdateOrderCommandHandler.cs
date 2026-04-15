@@ -31,6 +31,29 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
         if (command.Description is not null)
             order.Description = command.Description.Trim();
 
+        if (command.SpecializationId.HasValue)
+        {
+            var specializationSnapshot = await persistence.FindActiveSpecializationByIdAsync(
+                command.SpecializationId.Value,
+                cancellationToken);
+            if (specializationSnapshot is null)
+                return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.SpecializationNotFound };
+
+            order.SpecializationId = specializationSnapshot.SpecializationId;
+            order.Specialization = specializationSnapshot.Name;
+        }
+
+        // @dvnull: Ранее PATCH заказа не обновлял отдельные specialization/price; добавлено обновление новых атрибутов.
+        if (!command.SpecializationId.HasValue && command.Specialization is not null)
+        {
+            // @dvnull: Ручное текстовое обновление specialization сбрасывает dictionary-ссылку, чтобы не держать несогласованные данные.
+            order.SpecializationId = null;
+            order.Specialization = command.Specialization.Trim();
+        }
+
+        if (command.Price.HasValue)
+            order.Price = command.Price.Value;
+
         if (command.ExecutorId.HasValue)
         {
             var executorExists = await persistence.ExecutorExistsAsync(command.ExecutorId.Value, cancellationToken);
@@ -57,6 +80,9 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            SpecializationId = order.SpecializationId,
+            Specialization = order.Specialization,
+            Price = order.Price,
             CustomerCompanyName = order.CustomerCompanyName,
             RequestedCandidatesCount = order.RequestedCandidatesCount,
             Status = order.Status,

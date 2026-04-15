@@ -16,6 +16,13 @@ public sealed class UpdateOrderCommand : ICommand<UpdateOrderResult>
 
     public string? Description { get; init; }
 
+    public string? Specialization { get; init; }
+
+    // @dvnull: Ранее update-command не поддерживал dictionary-ссылку specializationId; добавлено поле для обновления специализации по справочнику.
+    public Guid? SpecializationId { get; init; }
+
+    public decimal? Price { get; init; }
+
     public Guid? ExecutorId { get; init; }
 
     public OrderStatus? Status { get; init; }

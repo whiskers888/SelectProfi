@@ -25,6 +25,13 @@ public sealed class GetOrdersItemResult
 
     public string Description { get; init; } = string.Empty;
 
+    public string Specialization { get; init; } = string.Empty;
+
+    // @dvnull: Ранее list-item результата не включал specializationId; добавлено поле для справочного источника специализации.
+    public Guid? SpecializationId { get; init; }
+
+    public decimal Price { get; init; }
+
     public string? CustomerCompanyName { get; init; }
 
     public int RequestedCandidatesCount { get; init; }

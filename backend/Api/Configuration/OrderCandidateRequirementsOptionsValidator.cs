@@ -8,8 +8,7 @@ public sealed class OrderCandidateRequirementsOptionsValidator : AbstractValidat
     public OrderCandidateRequirementsOptionsValidator()
     {
         RuleFor(options => options.MinRequestedCandidatesCount)
-            .GreaterThanOrEqualTo(3)
-            .WithMessage("OrderCandidateRequirements:MinRequestedCandidatesCount must be greater than or equal to 3.");
+            .GreaterThanOrEqualTo(1)
+            .WithMessage("OrderCandidateRequirements:MinRequestedCandidatesCount must be greater than or equal to 1.");
     }
 }
-

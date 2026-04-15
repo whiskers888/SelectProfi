@@ -10,6 +10,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
     // @dvnull: Добавлен отдельный контур Order как источник требований и назначений исполнителя.
     public DbSet<Order> Orders => Set<Order>();
+    // @dvnull: Добавлен справочник специализаций заказов для централизованной админ-настройки.
+    public DbSet<OrderSpecialization> OrderSpecializations => Set<OrderSpecialization>();
     public DbSet<OrderExecutorResponse> OrderExecutorResponses => Set<OrderExecutorResponse>();
 
     public DbSet<Candidate> Candidates => Set<Candidate>();
@@ -89,6 +91,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.Entity<Order>(builder =>
         {
             builder.HasKey(order => order.Id);
+            // @dvnull: Ранее специализация/цена заказа не имели отдельных колонок; добавлены типизированные поля для структуры заказа в БД.
+            builder.Property(order => order.Specialization)
+                .HasMaxLength(200)
+                .IsRequired();
+            builder.Property(order => order.Price)
+                .HasPrecision(18, 2)
+                .IsRequired();
             builder.Property(order => order.CustomerCompanyName)
                 .HasMaxLength(255);
             builder.Property(order => order.RequestedCandidatesCount)
@@ -112,9 +121,34 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .HasForeignKey(order => order.ExecutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(order => order.SpecializationDictionaryItem)
+                .WithMany()
+                .HasForeignKey(order => order.SpecializationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasIndex(order => new { order.CustomerId, order.DeletedAtUtc });
             builder.HasIndex(order => new { order.ExecutorId, order.DeletedAtUtc });
+            builder.HasIndex(order => order.SpecializationId);
             builder.HasIndex(order => new { order.Status, order.DeletedAtUtc });
+        });
+
+        modelBuilder.Entity<OrderSpecialization>(builder =>
+        {
+            // @dvnull: Добавлена inline-конфигурация справочника специализаций с уникальным именем и сортировкой.
+            builder.HasKey(item => item.Id);
+            builder.Property(item => item.Name)
+                .HasMaxLength(200)
+                .IsRequired();
+            builder.Property(item => item.IsActive)
+                .HasDefaultValue(true)
+                .IsRequired();
+            builder.Property(item => item.SortOrder)
+                .HasDefaultValue(0)
+                .IsRequired();
+
+            builder.HasIndex(item => item.Name)
+                .IsUnique();
+            builder.HasIndex(item => new { item.IsActive, item.SortOrder, item.Name });
         });
 
         modelBuilder.Entity<OrderExecutorResponse>(builder =>

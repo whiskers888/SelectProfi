@@ -19,13 +19,16 @@ using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
+using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
 using SelectProfi.backend.Application.Orders.RespondToOrder;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
+using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
 using SelectProfi.backend.Application.Profile.SwitchMyActiveRole;
@@ -49,11 +52,15 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<LoginUserCommand, LoginUserResult>, LoginUserCommandHandler>();
         services.AddScoped<ICommandHandler<RefreshAuthSessionCommand, RefreshAuthSessionResult>, RefreshAuthSessionCommandHandler>();
         services.AddScoped<ICommandHandler<CreateOrderCommand, CreateOrderResult>, CreateOrderCommandHandler>();
+        // @dvnull: Ранее справочник специализаций создавался напрямую в контроллере; добавлен CQRS-command для create specialization.
+        services.AddScoped<ICommandHandler<CreateOrderSpecializationCommand, CreateOrderSpecializationResult>, CreateOrderSpecializationCommandHandler>();
         services.AddScoped<ICommandHandler<RejectOrderResponseCommand, RejectOrderResponseResult>, RejectOrderResponseCommandHandler>();
         services.AddScoped<ICommandHandler<RespondToOrderCommand, RespondToOrderResult>, RespondToOrderCommandHandler>();
         services.AddScoped<ICommandHandler<WithdrawOrderResponseCommand, WithdrawOrderResponseResult>, WithdrawOrderResponseCommandHandler>();
         services.AddScoped<ICommandHandler<SelectOrderResponseExecutorCommand, SelectOrderResponseExecutorResult>, SelectOrderResponseExecutorCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateOrderCommand, UpdateOrderResult>, UpdateOrderCommandHandler>();
+        // @dvnull: Ранее обновление specialization выполнялось напрямую через DbContext в API; добавлен CQRS-command для update specialization.
+        services.AddScoped<ICommandHandler<UpdateOrderSpecializationCommand, UpdateOrderSpecializationResult>, UpdateOrderSpecializationCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteOrderCommand, DeleteOrderResult>, DeleteOrderCommandHandler>();
         // @dvnull: Добавлен command отклика соискателя на опубликованную вакансию с автопривязкой registered candidate в pipeline.
         services.AddScoped<ICommandHandler<RespondToVacancyCommand, RespondToVacancyResult>, RespondToVacancyCommandHandler>();
@@ -74,6 +81,8 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<DeleteVacancyCommand, DeleteVacancyResult>, DeleteVacancyCommandHandler>();
         services.AddScoped<IQueryHandler<GetOrderByIdQuery, GetOrderByIdResult>, GetOrderByIdQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrderExecutorsQuery, GetOrderExecutorsResult>, GetOrderExecutorsQueryHandler>();
+        // @dvnull: Ранее список specialization запрашивался напрямую из контроллера; добавлен CQRS-query для dictionary списка.
+        services.AddScoped<IQueryHandler<GetOrderSpecializationsQuery, GetOrderSpecializationsResult>, GetOrderSpecializationsQueryHandler>();
         services.AddScoped<IQueryHandler<GetMyOrderResponseQuery, GetMyOrderResponseResult>, GetMyOrderResponseQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrdersQuery, GetOrdersResult>, GetOrdersQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrderResponsesQuery, GetOrderResponsesResult>, GetOrderResponsesQueryHandler>();

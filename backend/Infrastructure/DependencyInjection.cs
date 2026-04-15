@@ -20,13 +20,16 @@ using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
+using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
 using SelectProfi.backend.Application.Orders.RespondToOrder;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
+using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
 using SelectProfi.backend.Application.Profile.SwitchMyActiveRole;
@@ -58,13 +61,16 @@ using SelectProfi.backend.Infrastructure.Orders.CreateOrder;
 using SelectProfi.backend.Infrastructure.Orders.DeleteOrder;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderById;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderExecutors;
+using SelectProfi.backend.Infrastructure.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Infrastructure.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Infrastructure.Orders.GetOrders;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderResponses;
 using SelectProfi.backend.Infrastructure.Orders.RejectOrderResponse;
 using SelectProfi.backend.Infrastructure.Orders.RespondToOrder;
 using SelectProfi.backend.Infrastructure.Orders.SelectOrderResponseExecutor;
+using SelectProfi.backend.Infrastructure.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Infrastructure.Orders.UpdateOrder;
+using SelectProfi.backend.Infrastructure.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Infrastructure.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Infrastructure.Profile.GetMyProfile;
 using SelectProfi.backend.Infrastructure.Profile.UpdateMyProfile;
@@ -94,12 +100,16 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenPairIssuer, RefreshTokenPairIssuerAdapter>();
         services.AddScoped<IRefreshAuthSessionPersistence, RefreshAuthSessionPersistence>();
         services.AddScoped<ICreateOrderPersistence, CreateOrderPersistence>();
+        // @dvnull: Ранее create specialization шёл напрямую через контроллер; добавлена persistence-реализация под CQRS-command.
+        services.AddScoped<ICreateOrderSpecializationPersistence, CreateOrderSpecializationPersistence>();
         services.AddScoped<IRejectOrderResponsePersistence, RejectOrderResponsePersistence>();
         services.AddScoped<IRespondToOrderPersistence, RespondToOrderPersistence>();
         services.AddScoped<IWithdrawOrderResponsePersistence, WithdrawOrderResponsePersistence>();
         services.AddScoped<ISelectOrderResponseExecutorPersistence, SelectOrderResponseExecutorPersistence>();
         services.AddScoped<IGetOrderByIdPersistence, GetOrderByIdPersistence>();
         services.AddScoped<IGetOrderExecutorsPersistence, GetOrderExecutorsPersistence>();
+        // @dvnull: Ранее dictionary specialization читался напрямую из API-слоя; добавлена persistence-реализация под CQRS-query.
+        services.AddScoped<IGetOrderSpecializationsPersistence, GetOrderSpecializationsPersistence>();
         services.AddScoped<IGetMyOrderResponsePersistence, GetMyOrderResponsePersistence>();
         services.AddScoped<IGetOrdersPersistence, GetOrdersPersistence>();
         services.AddScoped<IGetOrderResponsesPersistence, GetOrderResponsesPersistence>();
@@ -108,6 +118,8 @@ public static class DependencyInjection
         // @dvnull: Добавлена persistence-агрегация dashboard-статистики исполнителя для endpoint /api/dashboard/executor-stats.
         services.AddScoped<IGetExecutorDashboardStatsPersistence, GetExecutorDashboardStatsPersistence>();
         services.AddScoped<IUpdateOrderPersistence, UpdateOrderPersistence>();
+        // @dvnull: Ранее update specialization шёл напрямую через контроллер; добавлена persistence-реализация под CQRS-command.
+        services.AddScoped<IUpdateOrderSpecializationPersistence, UpdateOrderSpecializationPersistence>();
         services.AddScoped<IDeleteOrderPersistence, DeleteOrderPersistence>();
         // @dvnull: Добавлена persistence-реализация backend-отклика соискателя на вакансию с привязкой в VacancyCandidates.
         services.AddScoped<IRespondToVacancyPersistence, RespondToVacancyPersistence>();

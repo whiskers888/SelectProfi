@@ -13,6 +13,22 @@ public sealed class UpdateOrderPersistence(AppDbContext dbContext) : IUpdateOrde
         return dbContext.Orders.FirstOrDefaultAsync(order => order.Id == orderId, cancellationToken);
     }
 
+    public Task<UpdateOrderSpecializationSnapshot?> FindActiveSpecializationByIdAsync(
+        Guid specializationId,
+        CancellationToken cancellationToken)
+    {
+        // @dvnull: Ранее update-order persistence не читала справочник специализаций; добавлена выборка активной specialization по Id.
+        return dbContext.OrderSpecializations
+            .AsNoTracking()
+            .Where(item => item.Id == specializationId && item.IsActive)
+            .Select(item => new UpdateOrderSpecializationSnapshot
+            {
+                SpecializationId = item.Id,
+                Name = item.Name
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public Task<bool> ExecutorExistsAsync(Guid executorId, CancellationToken cancellationToken)
     {
         return dbContext.Users.AnyAsync(

@@ -5,10 +5,13 @@ using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
+using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
 using SelectProfi.backend.Application.Orders.RespondToOrder;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
+using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Contracts.Orders;
@@ -25,6 +28,10 @@ public static class OrderRequestMapper
             CustomerId = customerId,
             Title = request.Title,
             Description = request.Description,
+            // @dvnull: Ранее mapper пробрасывал только title/description; добавлены specialization/price в create-command.
+            Specialization = request.Specialization ?? string.Empty,
+            SpecializationId = request.SpecializationId,
+            Price = request.Price ?? 0m,
             RequestedCandidatesCount = request.RequestedCandidatesCount
         };
     }
@@ -77,6 +84,10 @@ public static class OrderRequestMapper
             RequesterRole = requesterRole,
             Title = request.Title,
             Description = request.Description,
+            // @dvnull: Ранее PATCH mapper не учитывал specialization/price; добавлен проброс в update-command.
+            Specialization = request.Specialization,
+            SpecializationId = request.SpecializationId,
+            Price = request.Price,
             ExecutorId = request.ExecutorId,
             Status = request.Status is null ? null : MapStatus(request.Status.Value)
         };
@@ -169,6 +180,37 @@ public static class OrderRequestMapper
             ExecutorId = routeData.executorId,
             RequesterUserId = requesterUserId,
             RequesterRole = requesterRole
+        };
+    }
+
+    public static GetOrderSpecializationsQuery ToGetOrderSpecializationsQuery(this bool includeInactive)
+    {
+        // @dvnull: Ранее запрос специализаций формировался в контроллере напрямую; вынесено в mapper для единообразия с остальными endpoint-ами.
+        return new GetOrderSpecializationsQuery
+        {
+            IncludeInactive = includeInactive
+        };
+    }
+
+    public static CreateOrderSpecializationCommand ToCommand(this CreateOrderSpecializationRequest request)
+    {
+        return new CreateOrderSpecializationCommand
+        {
+            Name = request.Name,
+            SortOrder = request.SortOrder
+        };
+    }
+
+    public static UpdateOrderSpecializationCommand ToCommand(
+        this UpdateOrderSpecializationRequest request,
+        Guid specializationId)
+    {
+        return new UpdateOrderSpecializationCommand
+        {
+            SpecializationId = specializationId,
+            Name = request.Name,
+            IsActive = request.IsActive,
+            SortOrder = request.SortOrder
         };
     }
 

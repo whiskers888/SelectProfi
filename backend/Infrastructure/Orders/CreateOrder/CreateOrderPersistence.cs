@@ -23,6 +23,22 @@ public sealed class CreateOrderPersistence(AppDbContext dbContext) : ICreateOrde
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public Task<CreateOrderSpecializationSnapshot?> FindActiveSpecializationByIdAsync(
+        Guid specializationId,
+        CancellationToken cancellationToken)
+    {
+        // @dvnull: Ранее create-order persistence не читала справочник специализаций; добавлена выборка активной specialization по Id.
+        return dbContext.OrderSpecializations
+            .AsNoTracking()
+            .Where(item => item.Id == specializationId && item.IsActive)
+            .Select(item => new CreateOrderSpecializationSnapshot
+            {
+                SpecializationId = item.Id,
+                Name = item.Name
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<CreateOrderPersistenceResult> CreateAsync(Order order, CancellationToken cancellationToken)
     {
         dbContext.Orders.Add(order);

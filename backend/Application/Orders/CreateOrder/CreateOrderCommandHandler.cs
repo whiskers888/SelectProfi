@@ -28,6 +28,20 @@ public sealed class CreateOrderCommandHandler(
             };
         }
 
+        Guid? specializationId = null;
+        var specialization = command.Specialization.Trim();
+        if (command.SpecializationId.HasValue)
+        {
+            var specializationSnapshot = await persistence.FindActiveSpecializationByIdAsync(
+                command.SpecializationId.Value,
+                cancellationToken);
+            if (specializationSnapshot is null)
+                return new CreateOrderResult { ErrorCode = CreateOrderErrorCode.SpecializationNotFound };
+
+            specializationId = specializationSnapshot.SpecializationId;
+            specialization = specializationSnapshot.Name;
+        }
+
         var utcNow = DateTime.UtcNow;
         var order = new Order
         {
@@ -36,6 +50,10 @@ public sealed class CreateOrderCommandHandler(
             ExecutorId = null,
             Title = command.Title.Trim(),
             Description = command.Description.Trim(),
+            // @dvnull: Ранее create-flow не выделял specialization/price в отдельные поля; добавлено сохранение новых колонок заказа.
+            SpecializationId = specializationId,
+            Specialization = specialization,
+            Price = command.Price,
             CustomerCompanyName = customerCompanyName,
             RequestedCandidatesCount = command.RequestedCandidatesCount,
             Status = OrderStatus.Active,
@@ -55,6 +73,9 @@ public sealed class CreateOrderCommandHandler(
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            SpecializationId = order.SpecializationId,
+            Specialization = order.Specialization,
+            Price = order.Price,
             CustomerCompanyName = order.CustomerCompanyName,
             RequestedCandidatesCount = order.RequestedCandidatesCount,
             Status = order.Status,

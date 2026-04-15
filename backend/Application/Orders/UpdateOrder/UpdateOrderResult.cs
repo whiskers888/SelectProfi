@@ -16,6 +16,13 @@ public sealed class UpdateOrderResult
 
     public string Description { get; init; } = string.Empty;
 
+    public string Specialization { get; init; } = string.Empty;
+
+    // @dvnull: Ранее update-result не возвращал specializationId; добавлено поле для актуализации связки со справочником.
+    public Guid? SpecializationId { get; init; }
+
+    public decimal Price { get; init; }
+
     public string? CustomerCompanyName { get; init; }
 
     public int RequestedCandidatesCount { get; init; }

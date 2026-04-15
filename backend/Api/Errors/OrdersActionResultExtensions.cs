@@ -6,10 +6,13 @@ using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
+using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
 using SelectProfi.backend.Application.Orders.RespondToOrder;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
+using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Mappings;
 
@@ -108,6 +111,27 @@ public static class OrdersActionResultExtensions
     public static IActionResult ToActionResult(this SelectOrderResponseExecutorResult result, ControllerBase controller)
     {
         if (result.ErrorCode == SelectOrderResponseExecutorErrorCode.None)
+            return controller.Ok(result.ToResponse());
+
+        return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
+    }
+
+    public static IActionResult ToActionResult(this GetOrderSpecializationsResult result, ControllerBase controller)
+    {
+        return controller.Ok(result.ToResponse());
+    }
+
+    public static IActionResult ToActionResult(this CreateOrderSpecializationResult result, ControllerBase controller)
+    {
+        if (result.ErrorCode == CreateOrderSpecializationErrorCode.None)
+            return controller.Created($"/api/order-specializations/{result.SpecializationId}", result.ToResponse());
+
+        return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
+    }
+
+    public static IActionResult ToActionResult(this UpdateOrderSpecializationResult result, ControllerBase controller)
+    {
+        if (result.ErrorCode == UpdateOrderSpecializationErrorCode.None)
             return controller.Ok(result.ToResponse());
 
         return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));

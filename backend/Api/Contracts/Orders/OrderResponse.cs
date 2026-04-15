@@ -12,6 +12,15 @@ public sealed class OrderResponse
 
     public string Description { get; init; } = string.Empty;
 
+    // @dvnull: Ранее specialization хранилась внутри description; добавлено отдельное поле ответа API.
+    public string Specialization { get; init; } = string.Empty;
+
+    // @dvnull: Ранее response не содержал FK на dictionary специализации; добавлен specializationId.
+    public Guid? SpecializationId { get; init; }
+
+    // @dvnull: Ранее цена заказа не возвращалась отдельным атрибутом; добавлено поле price.
+    public decimal Price { get; init; }
+
     public string? CustomerCompanyName { get; init; }
 
     public int RequestedCandidatesCount { get; init; }

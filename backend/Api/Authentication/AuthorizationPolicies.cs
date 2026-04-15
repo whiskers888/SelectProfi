@@ -2,6 +2,7 @@ namespace SelectProfi.backend.Authentication;
 
 public static class AuthorizationPolicies
 {
+    public const string AdminOnly = "admin_only";
     public const string CustomerOnly = "customer_only";
     public const string ExecutorOnly = "executor_only";
     public const string ApplicantOnly = "applicant_only";

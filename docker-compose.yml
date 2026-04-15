@@ -10,7 +10,7 @@ services:
       ConnectionStrings__Redis: redis:6379
       ConnectionStrings__RabbitMq: amqp://guest:guest@rabbitmq:5672/
       # @dvnull: Фиксируем минимум кандидатов через env, чтобы исключить падение API при дрейфе конфигов.
-      OrderCandidateRequirements__MinRequestedCandidatesCount: "3"
+      OrderCandidateRequirements__MinRequestedCandidatesCount: "1"
     ports:
       - "${BACKEND_PORT:-5268}:8080"
     depends_on:

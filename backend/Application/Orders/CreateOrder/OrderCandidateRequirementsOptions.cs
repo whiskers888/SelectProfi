@@ -4,6 +4,5 @@ public sealed class OrderCandidateRequirementsOptions
 {
     public const string SectionName = "OrderCandidateRequirements";
 
-    public int MinRequestedCandidatesCount { get; init; } = 3;
+    public int MinRequestedCandidatesCount { get; init; } = 1;
 }
-

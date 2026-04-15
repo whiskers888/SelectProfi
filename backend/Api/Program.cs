@@ -92,6 +92,10 @@ builder.Services
     .AddScheme<AuthenticationSchemeOptions, SimpleJwtAuthenticationHandler>("Bearer", _ => { });
 builder.Services.AddAuthorization(options =>
 {
+    // @dvnull: Добавлена policy admin_only для endpoint-ов админ-настройки справочников.
+    options.AddPolicy(
+        AuthorizationPolicies.AdminOnly,
+        policy => policy.RequireRole(nameof(UserRole.Admin)));
     options.AddPolicy(
         AuthorizationPolicies.CustomerOnly,
         policy => policy.RequireRole(nameof(UserRole.Customer)));

@@ -4,10 +4,13 @@ using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
+using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
 using SelectProfi.backend.Application.Orders.RespondToOrder;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
+using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Contracts.Orders;
 using SelectProfi.backend.Domain.Orders;
@@ -18,6 +21,7 @@ public static class OrderResponseMapper
 {
     public static OrderResponse ToResponse(this CreateOrderResult result)
     {
+        // @dvnull: Ранее response mapper не возвращал specialization/price отдельными полями; добавлено сквозное отображение новых атрибутов заказа.
         return new OrderResponse
         {
             Id = result.OrderId,
@@ -25,6 +29,9 @@ public static class OrderResponseMapper
             ExecutorId = result.ExecutorId,
             Title = result.Title,
             Description = result.Description,
+            SpecializationId = result.SpecializationId,
+            Specialization = result.Specialization,
+            Price = result.Price,
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
@@ -43,6 +50,9 @@ public static class OrderResponseMapper
             ExecutorId = result.ExecutorId,
             Title = result.Title,
             Description = result.Description,
+            SpecializationId = result.SpecializationId,
+            Specialization = result.Specialization,
+            Price = result.Price,
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
@@ -63,6 +73,9 @@ public static class OrderResponseMapper
                 ExecutorId = item.ExecutorId,
                 Title = item.Title,
                 Description = item.Description,
+                SpecializationId = item.SpecializationId,
+                Specialization = item.Specialization,
+                Price = item.Price,
                 CustomerCompanyName = item.CustomerCompanyName,
                 RequestedCandidatesCount = item.RequestedCandidatesCount,
                 Status = MapStatus(item.Status),
@@ -84,6 +97,9 @@ public static class OrderResponseMapper
             ExecutorId = result.ExecutorId,
             Title = result.Title,
             Description = result.Description,
+            SpecializationId = result.SpecializationId,
+            Specialization = result.Specialization,
+            Price = result.Price,
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
@@ -178,6 +194,49 @@ public static class OrderResponseMapper
                 Id = item.ExecutorId,
                 FullName = item.FullName
             }).ToArray()
+        };
+    }
+
+    public static OrderSpecializationListResponse ToResponse(this GetOrderSpecializationsResult result)
+    {
+        // @dvnull: Ранее специализации формировались прямо в контроллере; вынесен mapper-слой под общий CQRS-подход API.
+        return new OrderSpecializationListResponse
+        {
+            Items = result.Items.Select(item => new OrderSpecializationResponse
+            {
+                Id = item.Id,
+                Name = item.Name,
+                IsActive = item.IsActive,
+                SortOrder = item.SortOrder,
+                CreatedAtUtc = item.CreatedAtUtc,
+                UpdatedAtUtc = item.UpdatedAtUtc
+            }).ToArray()
+        };
+    }
+
+    public static OrderSpecializationResponse ToResponse(this CreateOrderSpecializationResult result)
+    {
+        return new OrderSpecializationResponse
+        {
+            Id = result.SpecializationId,
+            Name = result.Name,
+            IsActive = result.IsActive,
+            SortOrder = result.SortOrder,
+            CreatedAtUtc = result.CreatedAtUtc,
+            UpdatedAtUtc = result.UpdatedAtUtc
+        };
+    }
+
+    public static OrderSpecializationResponse ToResponse(this UpdateOrderSpecializationResult result)
+    {
+        return new OrderSpecializationResponse
+        {
+            Id = result.SpecializationId,
+            Name = result.Name,
+            IsActive = result.IsActive,
+            SortOrder = result.SortOrder,
+            CreatedAtUtc = result.CreatedAtUtc,
+            UpdatedAtUtc = result.UpdatedAtUtc
         };
     }
 

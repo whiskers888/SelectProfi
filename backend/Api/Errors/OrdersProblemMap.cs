@@ -5,10 +5,13 @@ using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
+using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
 using SelectProfi.backend.Application.Orders.RespondToOrder;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
+using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
+using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 
 namespace SelectProfi.backend.Errors;
@@ -32,6 +35,12 @@ public static class OrdersProblemMap
         "Не найдено",
         "executor_not_found",
         "Рекрутер не найден.");
+
+    private static readonly ApiProblemDescriptor SpecializationNotFound = new(
+        StatusCodes.Status404NotFound,
+        "Не найдено",
+        "specialization_not_found",
+        "Специализация не найдена.");
 
     private static readonly ApiProblemDescriptor OrderAccessForbidden = new(
         StatusCodes.Status403Forbidden,
@@ -123,6 +132,18 @@ public static class OrdersProblemMap
         "order_responses_access_forbidden",
         "У вас нет доступа к откликам этого заказа.");
 
+    private static readonly ApiProblemDescriptor OrderSpecializationNotFound = new(
+        StatusCodes.Status404NotFound,
+        "Не найдено",
+        "order_specialization_not_found",
+        "Специализация заказа не найдена.");
+
+    private static readonly ApiProblemDescriptor OrderSpecializationConflict = new(
+        StatusCodes.Status409Conflict,
+        "Конфликт",
+        "order_specialization_conflict",
+        "Не удалось сохранить специализацию заказа из-за конфликта данных.");
+
     public static ApiProblemDescriptor Resolve(CreateOrderErrorCode errorCode)
     {
         return errorCode switch
@@ -130,6 +151,7 @@ public static class OrdersProblemMap
             CreateOrderErrorCode.CustomerNotFound => CustomerNotFound,
             CreateOrderErrorCode.RequestedCandidatesCountTooLow => RequestedCandidatesCountTooLow,
             CreateOrderErrorCode.CustomerCompanyNameMissing => CustomerCompanyNameMissing,
+            CreateOrderErrorCode.SpecializationNotFound => SpecializationNotFound,
             _ => CreateOrderConflict
         };
     }
@@ -167,6 +189,7 @@ public static class OrdersProblemMap
         {
             UpdateOrderErrorCode.NotFound => OrderNotFound,
             UpdateOrderErrorCode.ExecutorNotFound => ExecutorNotFound,
+            UpdateOrderErrorCode.SpecializationNotFound => SpecializationNotFound,
             UpdateOrderErrorCode.Forbidden => OrderAccessForbidden,
             _ => UpdateOrderConflict
         };
@@ -248,6 +271,25 @@ public static class OrdersProblemMap
             SelectOrderResponseExecutorErrorCode.ResponseNotFound => OrderResponseNotFound,
             SelectOrderResponseExecutorErrorCode.NotAvailable => OrderResponseNotAvailable,
             _ => UpdateOrderConflict
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(CreateOrderSpecializationErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            CreateOrderSpecializationErrorCode.Conflict => OrderSpecializationConflict,
+            _ => OrderSpecializationConflict
+        };
+    }
+
+    public static ApiProblemDescriptor Resolve(UpdateOrderSpecializationErrorCode errorCode)
+    {
+        return errorCode switch
+        {
+            UpdateOrderSpecializationErrorCode.NotFound => OrderSpecializationNotFound,
+            UpdateOrderSpecializationErrorCode.Conflict => OrderSpecializationConflict,
+            _ => OrderSpecializationConflict
         };
     }
 }

@@ -224,10 +224,22 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid?>("ExecutorId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<int>("RequestedCandidatesCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(3);
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("SpecializationId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -245,6 +257,8 @@ namespace SelectProfi.backend.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SpecializationId");
 
                     b.HasIndex("CustomerId", "DeletedAtUtc");
 
@@ -289,6 +303,42 @@ namespace SelectProfi.backend.Migrations
                     b.HasIndex("OrderId", "Status");
 
                     b.ToTable("OrderExecutorResponses");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderSpecialization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "SortOrder", "Name");
+
+                    b.ToTable("OrderSpecializations");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.RefreshSession", b =>
@@ -641,9 +691,16 @@ namespace SelectProfi.backend.Migrations
                         .HasForeignKey("ExecutorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("SelectProfi.backend.Domain.Orders.OrderSpecialization", "SpecializationDictionaryItem")
+                        .WithMany()
+                        .HasForeignKey("SpecializationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Customer");
 
                     b.Navigation("Executor");
+
+                    b.Navigation("SpecializationDictionaryItem");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderExecutorResponse", b =>
