@@ -266,7 +266,9 @@ export function MainFeedPanelView({
                         </div>
                         <div className="preview11-order-side">
                           <span className={`preview11-tag ${toneClassName(order.statusTone)}`}>{order.statusLabel}</span>
-                          <p className="preview11-order-price">Цена: {toOrderPriceLabel(order.price)}</p>
+                          {role !== 'Applicant' ? (
+                            <p className="preview11-order-price">Цена: {toOrderPriceLabel(order.price)}</p>
+                          ) : null}
                         </div>
                       </div>
                     </button>
