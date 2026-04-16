@@ -92,6 +92,7 @@ type ExecutorProfileFormValues = {
 }
 
 type ExecutorProfileFormErrors = Partial<Record<keyof ExecutorProfileFormValues, string>>
+type SwitchableRole = Extract<UserRole, 'Applicant' | 'Executor'>
 
 export function ProfilePage() {
   const { notify } = useNotifications()
@@ -212,6 +213,8 @@ export function ProfilePage() {
   const availableRoles = resolveAvailableRoles(profile, activeRole)
   const canSwitchApplicantExecutor =
     availableRoles.includes('Applicant') && availableRoles.includes('Executor')
+  const switchableActiveRole: SwitchableRole | null =
+    activeRole === 'Applicant' || activeRole === 'Executor' ? activeRole : null
 
   function resetRoleFormErrors() {
     setApplicantFormErrors({})
@@ -442,9 +445,9 @@ export function ProfilePage() {
         setCommonFormValues={setCommonFormValues}
       />
 
-      {canSwitchApplicantExecutor ? (
+      {canSwitchApplicantExecutor && switchableActiveRole ? (
         <ProfileRoleSwitcher
-          activeRole={activeRole}
+          activeRole={switchableActiveRole}
           isRoleSwitchDisabled={isRoleSwitchDisabled}
           onSwitchRole={(nextRole) => void handleSwitchActiveRole(nextRole)}
         />

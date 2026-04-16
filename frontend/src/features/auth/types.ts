@@ -1,5 +1,7 @@
 import type { CustomerLegalForm, RegisterUserRole } from '@/shared/api/auth'
 
+export type RegistrationRole = RegisterUserRole
+
 export type LoginFormValues = {
   email: string
   password: string

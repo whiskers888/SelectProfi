@@ -305,7 +305,7 @@ export function useWorkspaceShellController() {
   const isProfileRoute = location.pathname === routePaths.profile
 
   const [workspaceView, setActiveView] = useState<WorkspaceView>(defaultWorkspaceView)
-  const activeView: WorkspaceView = isProfileRoute ? 'profile' : workspaceView
+  const activeView = workspaceView
   const [searchValue, setSearchValue] = useState('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(readInitialSidebarCollapsedState)
   const [orderFilter] = useState<OrderFilter>('all')
@@ -1040,6 +1040,7 @@ export function useWorkspaceShellController() {
     isOrderStatusUpdating,
     isOrdersApiLoading,
     isOrdersError,
+    isProfileRoute,
     isRejectingOrderExecutor,
     isRespondingToOrder: isRespondingToOrder || isRespondingToVacancy,
     isUpdatingApplicantResponderStage,
