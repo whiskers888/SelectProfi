@@ -106,6 +106,7 @@ export function WorkspaceShellView({
   isOrderStatusUpdating,
   isOrdersApiLoading,
   isOrdersError,
+  isProfileRoute,
   isRejectingOrderExecutor,
   isRespondingToOrder,
   isUpdatingApplicantResponderStage,
@@ -167,8 +168,8 @@ export function WorkspaceShellView({
             onSwitchRole={() => void handleToggleRole()}
             role={role}
             searchValue={searchValue}
-            subtitle={activeView === 'profile' ? 'Личные данные и настройки роли' : dataset.headerSubtitle}
-            title={activeView === 'profile' ? 'Мой профиль' : createHeaderTitle(role)}
+            subtitle={isProfileRoute ? 'Личные данные и настройки роли' : dataset.headerSubtitle}
+            title={isProfileRoute ? 'Мой профиль' : createHeaderTitle(role)}
           />
 
           <main className="preview11-content flex-1 space-y-4">
@@ -267,7 +268,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {activeView === 'profile' ? (
+            {isProfileRoute ? (
               <ProfilePage />
             ) : (role === 'Customer' && isCreateOrderPageOpen) ||
             (role === 'Executor' && isCreateCandidatePageOpen) ||
