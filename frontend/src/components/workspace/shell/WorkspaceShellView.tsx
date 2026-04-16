@@ -202,8 +202,12 @@ export function WorkspaceShellView({
                 onRejectApplicantResponder={(candidateId) =>
                   handleSetApplicantResponderStage(selectedOrder.id, candidateId, 'Pool')
                 }
-                onRejectOrderExecutor={(executorId) => handleRejectOrderExecutor(selectedOrder.id, executorId)}
-                onSelectOrderExecutor={(executorId) => handleSelectOrderExecutor(selectedOrder.id, executorId)}
+                onRejectOrderExecutor={(executorId) =>
+                  handleRejectOrderExecutor(selectedOrder.id, executorId)
+                }
+                onSelectOrderExecutor={(executorId) =>
+                  handleSelectOrderExecutor(selectedOrder.id, executorId)
+                }
                 isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
                 order={selectedOrderWithResponses ?? selectedOrder}
                 orderResponses={orderResponses}
@@ -271,12 +275,12 @@ export function WorkspaceShellView({
             {isProfileRoute ? (
               <ProfilePage />
             ) : (role === 'Customer' && isCreateOrderPageOpen) ||
-            (role === 'Executor' && isCreateCandidatePageOpen) ||
-            (role === 'Executor' && isCreateVacancyPageOpen) ||
-            (role === 'Applicant' && isCreateApplicantResponsePageOpen) ||
-            isDetailsPageOpen ? null : (
+              (role === 'Executor' && isCreateCandidatePageOpen) ||
+              (role === 'Executor' && isCreateVacancyPageOpen) ||
+              (role === 'Applicant' && isCreateApplicantResponsePageOpen) ||
+              isDetailsPageOpen ? null : (
               <>
-                {canLoadServerOrders && isOrdersError ? (
+                {/* {canLoadServerOrders && isOrdersError ? (
                   <Alert variant="destructive">
                     {role === 'Executor'
                       ? 'Не удалось загрузить проекты из API. Временно показаны локальные данные.'
@@ -292,15 +296,22 @@ export function WorkspaceShellView({
                   <Alert variant="destructive">
                     Не удалось загрузить справочник специализаций. Доступен ручной ввод.
                   </Alert>
-                ) : null}
+                ) : null} */}
 
-                {(activeView === 'dashboard' || activeView === 'orders' || activeView === 'candidates') && (
+                {(activeView === 'dashboard' ||
+                  activeView === 'orders' ||
+                  activeView === 'candidates') && (
                   <>
                     {activeView !== 'candidates' ? (
-                      <StatsGrid stats={runtimeStats} onOverview={() => handleViewChange('candidates')} />
+                      <StatsGrid
+                        stats={runtimeStats}
+                        onOverview={() => handleViewChange('candidates')}
+                      />
                     ) : null}
                     <MainFeedPanel
-                      baseCandidates={role === 'Executor' ? executorBaseCandidates : filteredBaseCandidates}
+                      baseCandidates={
+                        role === 'Executor' ? executorBaseCandidates : filteredBaseCandidates
+                      }
                       applicantRespondedOrderIds={applicantRespondedOrderIds}
                       canManageOrderResponses={canManageOrderResponses}
                       canPublishVacancyForCustomer={canPublishVacancyForSelectedOrder}
@@ -347,7 +358,9 @@ export function WorkspaceShellView({
                       selectedOrderDetails={selectedOrderWithResponses ?? selectedOrder}
                       selectedOrderApplicantResponders={selectedOrderApplicantResponders}
                       selectedOrderExecutorName={selectedOrderExecutorName}
-                      selectedOrderId={activeView === 'candidates' ? candidateViewSelectedOrderId : selectedOrderId}
+                      selectedOrderId={
+                        activeView === 'candidates' ? candidateViewSelectedOrderId : selectedOrderId
+                      }
                       selectedOrderVacancyPreview={selectedOrderVacancyPreview}
                       isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
                       view={activeView === 'dashboard' ? 'dashboard' : activeView}
@@ -392,8 +405,12 @@ export function WorkspaceShellView({
                               type="button"
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm font-semibold text-slate-900">{thread.participant}</p>
-                                {thread.unread > 0 ? <Badge variant="default">{thread.unread}</Badge> : null}
+                                <p className="text-sm font-semibold text-slate-900">
+                                  {thread.participant}
+                                </p>
+                                {thread.unread > 0 ? (
+                                  <Badge variant="default">{thread.unread}</Badge>
+                                ) : null}
                               </div>
                               <p className="mt-1 text-xs text-slate-600">{thread.preview}</p>
                             </button>
@@ -402,7 +419,9 @@ export function WorkspaceShellView({
 
                         <div className="rounded-xl border border-slate-200 bg-white">
                           <div className="border-b border-slate-200 px-4 py-3">
-                            <p className="text-sm font-semibold text-slate-900">{activeThread?.participant}</p>
+                            <p className="text-sm font-semibold text-slate-900">
+                              {activeThread?.participant}
+                            </p>
                           </div>
                           <div className="max-h-[420px] space-y-3 overflow-y-auto px-4 py-4">
                             {activeThread?.messages.map((message) => (
@@ -448,7 +467,11 @@ export function WorkspaceShellView({
                 ) : null}
 
                 {activeView === 'analytics' ? (
-                  <PipelinePanel errorMessage={analyticsError} onRetry={handleRetryAnalytics} pipeline={dataset.pipeline} />
+                  <PipelinePanel
+                    errorMessage={analyticsError}
+                    onRetry={handleRetryAnalytics}
+                    pipeline={dataset.pipeline}
+                  />
                 ) : null}
               </>
             )}
