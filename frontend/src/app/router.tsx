@@ -44,4 +44,5 @@ export const router = createBrowserRouter([
     element: <AvailabilityRoute element={<Navigate to={routePaths.app} replace />} />,
   },
   { path: routePaths.serviceUnavailable, element: <ServiceUnavailablePage /> },
+  { path: '*', element: <AvailabilityRoute element={<SessionEntryRedirect />} /> },
 ])
