@@ -8,7 +8,6 @@ import { OrderDetailsPagePanel } from '../panels/OrderDetailsPagePanel'
 import { PipelinePanel } from '../panels/PipelinePanel'
 import { StatsGrid } from '../panels/StatsGrid'
 import { VacancyCreatePagePanel } from '../panels/VacancyCreatePagePanel'
-import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -29,8 +28,6 @@ export function WorkspaceShellView({
   authMe,
   applicantRespondedOrderIds,
   canLoadExecutorBaseCandidates,
-  canLoadServerCandidates,
-  canLoadServerOrders,
   canManageOrder,
   canManageOrderResponses,
   canSwitchApplicantExecutor,
@@ -53,7 +50,6 @@ export function WorkspaceShellView({
   createOrderFormValues,
   orderSpecializationOptions,
   isOrderSpecializationsLoading,
-  isOrderSpecializationsError,
   createVacancyFormValues,
   dataset,
   executorBaseCandidates,
@@ -105,7 +101,6 @@ export function WorkspaceShellView({
   isOrderResponsesFetching,
   isOrderStatusUpdating,
   isOrdersApiLoading,
-  isOrdersError,
   isProfileRoute,
   isRejectingOrderExecutor,
   isRespondingToOrder,
@@ -114,7 +109,6 @@ export function WorkspaceShellView({
   isSelectingOrderExecutor,
   isSwitchingRole,
   isSidebarCollapsed,
-  isVacancyCandidatesError,
   isViewLoading,
   orderResponses,
   profileDisplayName,
@@ -280,24 +274,6 @@ export function WorkspaceShellView({
               (role === 'Applicant' && isCreateApplicantResponsePageOpen) ||
               isDetailsPageOpen ? null : (
               <>
-                {/* {canLoadServerOrders && isOrdersError ? (
-                  <Alert variant="destructive">
-                    {role === 'Executor'
-                      ? 'Не удалось загрузить проекты из API. Временно показаны локальные данные.'
-                      : 'Не удалось загрузить заказы из API. Временно показаны локальные данные.'}
-                  </Alert>
-                ) : null}
-                {canLoadServerCandidates && isVacancyCandidatesError ? (
-                  <Alert variant="destructive">
-                    Не удалось загрузить кандидатов из API. Временно показаны локальные данные.
-                  </Alert>
-                ) : null}
-                {role === 'Customer' && isOrderSpecializationsError ? (
-                  <Alert variant="destructive">
-                    Не удалось загрузить справочник специализаций. Доступен ручной ввод.
-                  </Alert>
-                ) : null} */}
-
                 {(activeView === 'dashboard' ||
                   activeView === 'orders' ||
                   activeView === 'candidates') && (
