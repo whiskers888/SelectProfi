@@ -22,6 +22,7 @@ import {
   useCreateOrderMutation,
   useDeleteOrderMutation,
   useGetMyOrderResponseQuery,
+  useGetMyOrdersQuery,
   useGetOrderResponsesQuery,
   useGetOrderSpecializationsQuery,
   useGetOrdersQuery,
@@ -223,6 +224,8 @@ export function useWorkspaceShellController() {
   const [loadVacancyCandidates] = useLazyGetVacancyCandidatesQuery()
   const [loadVacancyBaseCandidates] = useLazyGetVacancyBaseCandidatesQuery()
   const [preferredOrderId, setPreferredOrderId] = useState<string | null>(null)
+  const [workspaceView, setActiveView] = useState<WorkspaceView>(defaultWorkspaceView)
+  const activeView = workspaceView
   const role = toWorkspaceRole(profile?.activeRole ?? profile?.role) ?? defaultWorkspaceRole
   const canSwitchApplicantExecutor = role === 'Applicant' || role === 'Executor'
   const applicantRespondedOrderIds = useMemo(
@@ -237,19 +240,29 @@ export function useWorkspaceShellController() {
   const dashboardRole = authMe?.role === 'Customer' || authMe?.role === 'Executor' ? authMe.role : null
   const dataset = workspaceDataByRole[role]
   const canLoadServerOrders = role !== 'Applicant'
+  const shouldLoadMyOrders = role === 'Executor' && activeView === 'dashboard'
+  const ordersQueryParams = {
+    limit: 100,
+    includeArchived: true,
+  } as const
   const {
-    data: ordersResponse,
-    isError: isOrdersError,
-    isFetching: isOrdersFetching,
-    refetch: refetchOrders,
+    data: allOrdersResponse,
+    isError: isAllOrdersError,
+    isFetching: isAllOrdersFetching,
+    refetch: refetchAllOrders,
   } = useGetOrdersQuery(
-    canLoadServerOrders
-      ? {
-          limit: 100,
-          includeArchived: true,
-        }
-      : skipToken,
+    canLoadServerOrders && !shouldLoadMyOrders ? ordersQueryParams : skipToken,
   )
+  const {
+    data: myOrdersResponse,
+    isError: isMyOrdersError,
+    isFetching: isMyOrdersFetching,
+    refetch: refetchMyOrders,
+  } = useGetMyOrdersQuery(shouldLoadMyOrders ? ordersQueryParams : skipToken)
+  const ordersResponse = shouldLoadMyOrders ? myOrdersResponse : allOrdersResponse
+  const isOrdersError = shouldLoadMyOrders ? isMyOrdersError : isAllOrdersError
+  const isOrdersFetching = shouldLoadMyOrders ? isMyOrdersFetching : isAllOrdersFetching
+  const refetchOrders = shouldLoadMyOrders ? refetchMyOrders : refetchAllOrders
   const {
     data: orderSpecializationsResponse,
     isError: isOrderSpecializationsError,
@@ -304,9 +317,6 @@ export function useWorkspaceShellController() {
       : skipToken,
   )
   const isProfileRoute = location.pathname === routePaths.profile
-
-  const [workspaceView, setActiveView] = useState<WorkspaceView>(defaultWorkspaceView)
-  const activeView = workspaceView
   const [searchValue, setSearchValue] = useState('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(readInitialSidebarCollapsedState)
   const [orderFilter] = useState<OrderFilter>('all')

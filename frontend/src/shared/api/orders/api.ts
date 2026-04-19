@@ -110,6 +110,13 @@ const ordersApi = api.injectEndpoints({
         params: params ?? undefined,
       }),
     }),
+    getMyOrders: build.query<OrderListResponse, GetOrdersRequest | void>({
+      query: (params) => ({
+        url: '/api/orders/my',
+        method: 'GET',
+        params: params ?? undefined,
+      }),
+    }),
     getOrderById: build.query<OrderResponse, string>({
       query: (orderId) => ({
         url: `/api/orders/${orderId}`,
@@ -194,6 +201,7 @@ const ordersApi = api.injectEndpoints({
 
 export const {
   useGetOrdersQuery,
+  useGetMyOrdersQuery,
   useGetOrderByIdQuery,
   useLazyGetOrderByIdQuery,
   useGetOrderExecutorsQuery,
