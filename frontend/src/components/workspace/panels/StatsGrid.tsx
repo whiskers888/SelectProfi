@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import { type WorkspaceStat } from '../model/data'
 
 type StatsGridProps = {
@@ -5,7 +6,7 @@ type StatsGridProps = {
   onOverview: (statId: string) => void
 }
 
-function renderStatValue(value: string): string | JSX.Element {
+function renderStatValue(value: string): string | ReactNode {
   const suffix = ' чел.'
   if (!value.endsWith(suffix)) {
     return value

@@ -1,4 +1,4 @@
-import type { MyProfileResponse } from '@/features/profile/model'
+import type { ExecutorEmploymentType, MyProfileResponse } from '@/features/profile/model'
 import { toCustomerLegalFormValue } from '@/features/profile/lib/enums'
 import { toCommaSeparated } from '@/features/profile/lib/formatters'
 
@@ -40,7 +40,18 @@ export function createCustomerProfileFormValues(profile: MyProfileResponse) {
   }
 }
 
-export function createExecutorProfileFormValues(profile: MyProfileResponse) {
+export function createExecutorProfileFormValues(
+  profile: MyProfileResponse,
+): {
+  employmentType: '' | ExecutorEmploymentType
+  projectTitle: string
+  projectCompanyName: string
+  experienceSummary: string
+  achievements: string
+  certificates: string
+  grade: string
+  extraInfo: string
+} {
   return {
     employmentType: profile.executorProfile?.employmentType ?? '',
     projectTitle: profile.executorProfile?.projectTitle ?? '',

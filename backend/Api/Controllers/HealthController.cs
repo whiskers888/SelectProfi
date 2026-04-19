@@ -8,6 +8,7 @@ namespace SelectProfi.backend.Controllers;
 public sealed class HealthController : ControllerBase
 {
     [HttpGet]
+    [HttpHead]
     public IActionResult Get()
     {
         return Ok();
