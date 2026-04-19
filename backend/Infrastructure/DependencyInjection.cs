@@ -22,6 +22,7 @@ using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
+using SelectProfi.backend.Application.Orders.GetMyOrders;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
@@ -63,6 +64,7 @@ using SelectProfi.backend.Infrastructure.Orders.GetOrderById;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderExecutors;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Infrastructure.Orders.GetMyOrderResponse;
+using SelectProfi.backend.Infrastructure.Orders.GetMyOrders;
 using SelectProfi.backend.Infrastructure.Orders.GetOrders;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderResponses;
 using SelectProfi.backend.Infrastructure.Orders.RejectOrderResponse;
@@ -112,6 +114,7 @@ public static class DependencyInjection
         services.AddScoped<IGetOrderSpecializationsPersistence, GetOrderSpecializationsPersistence>();
         services.AddScoped<IGetMyOrderResponsePersistence, GetMyOrderResponsePersistence>();
         services.AddScoped<IGetOrdersPersistence, GetOrdersPersistence>();
+        services.AddScoped<IGetMyOrdersPersistence, GetMyOrdersPersistence>();
         services.AddScoped<IGetOrderResponsesPersistence, GetOrderResponsesPersistence>();
         // @dvnull: Добавлена persistence-агрегация dashboard-статистики заказчика для endpoint /api/dashboard/customer-stats.
         services.AddScoped<IGetCustomerDashboardStatsPersistence, GetCustomerDashboardStatsPersistence>();

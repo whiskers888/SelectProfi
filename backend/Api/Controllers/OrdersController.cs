@@ -8,6 +8,7 @@ using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
+using SelectProfi.backend.Application.Orders.GetMyOrders;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
@@ -78,6 +79,22 @@ public sealed class OrdersController(
     {
         var result = await queryDispatcher.DispatchAsync<GetOrdersQuery, GetOrdersResult>(
             request.ToQuery(RequesterUserId, RequesterRole),
+            cancellationToken);
+
+        return result.ToActionResult(this, RequesterRole, orderPricingOptions.Value);
+    }
+
+    [HttpGet("my")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    [ProducesResponseType(typeof(OrderListResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    [ProducesBadRequestProblem]
+    public async Task<IActionResult> GetMyList(
+        [FromQuery] GetOrdersRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await queryDispatcher.DispatchAsync<GetMyOrdersQuery, GetOrdersResult>(
+            request.ToMyOrdersQuery(RequesterUserId, RequesterRole),
             cancellationToken);
 
         return result.ToActionResult(this, RequesterRole, orderPricingOptions.Value);

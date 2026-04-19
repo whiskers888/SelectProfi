@@ -3,6 +3,7 @@ using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
+using SelectProfi.backend.Application.Orders.GetMyOrders;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
 using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
@@ -53,6 +54,21 @@ public static class OrderRequestMapper
     {
         // @dvnull: Пробрасываем includeArchived, чтобы фронт мог запросить активные + архивные заказы одним вызовом.
         return new GetOrdersQuery
+        {
+            RequesterUserId = requesterUserId,
+            RequesterRole = requesterRole,
+            Limit = request.Limit,
+            Offset = request.Offset,
+            IncludeArchived = request.IncludeArchived
+        };
+    }
+
+    public static GetMyOrdersQuery ToMyOrdersQuery(
+        this GetOrdersRequest request,
+        Guid requesterUserId,
+        UserRole requesterRole)
+    {
+        return new GetMyOrdersQuery
         {
             RequesterUserId = requesterUserId,
             RequesterRole = requesterRole,

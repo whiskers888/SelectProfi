@@ -21,6 +21,7 @@ using SelectProfi.backend.Application.Orders.GetOrderById;
 using SelectProfi.backend.Application.Orders.GetOrderExecutors;
 using SelectProfi.backend.Application.Orders.GetOrderSpecializations;
 using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
+using SelectProfi.backend.Application.Orders.GetMyOrders;
 using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
@@ -85,6 +86,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetOrderSpecializationsQuery, GetOrderSpecializationsResult>, GetOrderSpecializationsQueryHandler>();
         services.AddScoped<IQueryHandler<GetMyOrderResponseQuery, GetMyOrderResponseResult>, GetMyOrderResponseQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrdersQuery, GetOrdersResult>, GetOrdersQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMyOrdersQuery, GetOrdersResult>, GetMyOrdersQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrderResponsesQuery, GetOrderResponsesResult>, GetOrderResponsesQueryHandler>();
         // @dvnull: Добавлен query-handler серверной агрегации dashboard-метрик заказчика для отдельного frontend-запроса статистики.
         services.AddScoped<IQueryHandler<GetCustomerDashboardStatsQuery, GetCustomerDashboardStatsResult>, GetCustomerDashboardStatsQueryHandler>();
