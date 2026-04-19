@@ -201,8 +201,9 @@ export function useWorkspaceShellController() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const location = useLocation()
-  const { data: profile, refetch: refetchProfile } = useGetMyProfileQuery()
-  const { data: authMe } = useGetMyAuthInfoQuery()
+  const { data: profile, isFetching: isProfileFetching, refetch: refetchProfile } = useGetMyProfileQuery()
+  const { data: authMe, isFetching: isAuthMeFetching } = useGetMyAuthInfoQuery()
+  const isBootstrapLoading = (isProfileFetching || isAuthMeFetching) && (!profile || !authMe)
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
   const [createVacancy, { isLoading: isCreatingVacancy }] = useCreateVacancyMutation()
   const [updateVacancy, { isLoading: isUpdatingVacancy }] = useUpdateVacancyMutation()
@@ -961,6 +962,7 @@ export function useWorkspaceShellController() {
     activeView,
     analyticsError,
     authMe,
+    isBootstrapLoading,
     canLoadExecutorBaseCandidates,
     canLoadServerCandidates,
     canLoadServerOrders,

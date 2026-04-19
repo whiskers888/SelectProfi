@@ -25,6 +25,32 @@
   min-height: 100vh;
 }
 
+.preview11-boot {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 20% 15%, var(--p-soft) 0%, transparent 52%),
+    radial-gradient(circle at 85% 75%, rgb(189 233 227 / 45%) 0%, transparent 56%),
+    var(--bg);
+}
+
+.preview11-boot-card {
+  width: min(520px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 16px 16px 14px;
+  box-shadow: var(--sh);
+  display: grid;
+  gap: 12px;
+}
+
+.preview11-brand-boot .preview11-side-btn {
+  display: none;
+}
+
 .preview11-main {
   display: flex;
   flex: 1;
