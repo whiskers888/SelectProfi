@@ -239,7 +239,7 @@ export function useWorkspaceShellController() {
   const canManageOrder = authMe?.role === 'Customer' || authMe?.role === 'Admin'
   const dashboardRole = authMe?.role === 'Customer' || authMe?.role === 'Executor' ? authMe.role : null
   const dataset = workspaceDataByRole[role]
-  const canLoadServerOrders = role !== 'Applicant'
+  const canLoadServerOrders = !isBootstrapLoading && role !== 'Applicant'
   const shouldLoadMyOrders = role === 'Executor' && activeView === 'dashboard'
   const ordersQueryParams = {
     limit: 100,
