@@ -6,7 +6,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: "8080"
-      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=selectprofi;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres};SSL Mode=Disable
+      ConnectionStrings__Postgres: ${POSTGRES_CONNECTION_STRING:-Host=postgres;Port=5432;Database=selectprofi;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres};SSL Mode=Disable}
       ConnectionStrings__Redis: redis:6379
       ConnectionStrings__RabbitMq: amqp://guest:guest@rabbitmq:5672/
       # @dvnull: Фиксируем минимум кандидатов через env, чтобы исключить падение API при дрейфе конфигов.
