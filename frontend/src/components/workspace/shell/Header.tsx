@@ -129,14 +129,39 @@ export function Header({
               <span className="preview11-profile-chip">
                 <span className="preview11-profile-meta">
                   <span className="preview11-profile-name">{profileDisplayName}</span>
+                  <span className="preview11-profile-role-row">
+                    <span className="preview11-profile-role-spacer" aria-hidden="true" />
+                    <span className="preview11-profile-role-text">{profileRoleLabel}</span>
+                    {canSwitchRole ? (
+                      <button
+                        className="preview11-profile-role-switch"
+                        disabled={isSwitchingRole}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                          onSwitchRole()
+                        }}
+                        type="button"
+                        aria-label="Переключить активную роль"
+                      >
+                        <ArrowRightLeft
+                          size={16}
+                          strokeWidth={2.3}
+                          className="preview11-profile-role-switch-icon"
+                        />
+                      </button>
+                    ) : (
+                      <span className="preview11-profile-role-spacer" aria-hidden="true" />
+                    )}
+                  </span>
                   <span className="preview11-profile-email">{profileEmail}</span>
                 </span>
                 <span className="preview11-avatar">{profileInitials(profileDisplayName)}</span>
               </span>
             }
           />
-          {canSwitchRole ? (
-            // @dvnull: Декоративная иконка роли переведена в рабочую кнопку переключения Applicant/Executor прямо в workspace header.
+          {/* @dvnull: Ранее роль/переключение было отдельным pill справа от профиля; перенесено под ФИО/email внутри meta. */}
+          {/* {canSwitchRole ? (
             <button
               className="preview11-profile-role-pill"
               disabled={isSwitchingRole}
@@ -154,7 +179,7 @@ export function Header({
             <span className="preview11-profile-role-pill preview11-profile-role-pill-static">
               <span className="preview11-profile-role-label">{profileRoleLabel}</span>
             </span>
-          )}
+          )} */}
         </span>
       </div>
     </header>

@@ -161,6 +161,7 @@
 .preview11-mini-btn,
 .preview11-role-option,
 .preview11-profile-role-pill,
+.preview11-profile-role-switch,
 .preview11-profile-dropdown > button {
   -webkit-tap-highlight-color: transparent;
   outline: none;
@@ -174,6 +175,7 @@
 .preview11-mini-btn:focus-visible,
 .preview11-role-option:focus-visible,
 .preview11-profile-role-pill:focus-visible,
+.preview11-profile-role-switch:focus-visible,
 .preview11-profile-dropdown > button:focus-visible {
   border-color: var(--p-border);
   box-shadow: 0 0 0 3px rgb(15 118 110 / 16%);
@@ -454,6 +456,8 @@
   display: inline-flex;
   flex-direction: column;
   min-width: 220px;
+  width: 220px;
+  flex: 0 0 auto;
 }
 
 .preview11-profile-dropdown > button {
@@ -466,22 +470,27 @@
 }
 
 .preview11-profile-chip {
-  display: inline-flex;
-  align-items: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   gap: 12px;
   min-height: 52px;
   min-width: 220px;
+  width: 100%;
   border: 1px solid var(--border);
   border-radius: 14px 14px 8px 8px;
   background: var(--surface);
   box-shadow: var(--sh);
-  padding: 8px 10px 8px 12px;
+  padding: 8px 12px;
 }
 
 .preview11-profile-meta {
   display: grid;
+  flex: 1 1 0%;
   min-width: 0;
   gap: 1px;
+  justify-items: center;
+  text-align: center;
 }
 
 .preview11-profile-name {
@@ -497,6 +506,57 @@
   color: var(--text2);
   font-size: 12px;
   line-height: 1.2;
+}
+
+.preview11-profile-role-row {
+  display: grid;
+  grid-template-columns: 26px 1fr 26px;
+  align-items: center;
+  column-gap: 8px;
+  min-width: 0;
+  width: 100%;
+  justify-self: center;
+}
+
+.preview11-profile-role-text {
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  justify-self: center;
+}
+
+.preview11-profile-role-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  justify-self: end;
+}
+
+.preview11-profile-role-switch:hover {
+  background: var(--primary-h);
+}
+
+.preview11-profile-role-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.preview11-profile-role-switch-icon {
+  color: #fff;
+}
+
+.preview11-profile-role-spacer {
+  width: 26px;
+  height: 26px;
+  visibility: hidden;
 }
 
 .preview11-profile-role-pill {
@@ -558,9 +618,10 @@
 .preview11-avatar {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--p-border);
   background: var(--p-soft);
   color: var(--primary);
   font-size: 12px;
@@ -1237,6 +1298,11 @@
   .preview11-header-right {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .preview11-profile-stack {
+    width: 100%;
   }
 
   .preview11-content {
