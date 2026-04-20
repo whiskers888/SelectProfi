@@ -336,7 +336,7 @@ const customerData: WorkspaceDataset = {
 }
 
 const executorData: WorkspaceDataset = {
-  headerSubtitle: 'Рабочее пространство исполнителя и управления кандидатом',
+  headerSubtitle: 'Рабочее пространство исполнителя и управления кандидатами',
   stats: [
     {
       id: 'projects',

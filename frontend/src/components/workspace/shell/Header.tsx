@@ -81,7 +81,7 @@ export function Header({
             aria-label="Поиск"
             className="preview11-input preview11-header-search"
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={role === 'Executor' ? 'Поиск по проектам и исполнителям...' : 'Поиск по заказам и исполнителям...'}
+            placeholder={role === 'Executor' ? 'Поиск...' : 'Поиск...'}
             type="search"
             value={searchValue}
           />

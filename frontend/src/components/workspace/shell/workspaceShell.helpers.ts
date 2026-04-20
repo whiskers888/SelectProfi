@@ -23,7 +23,7 @@ type ProblemDetailsPayload = {
 
 export function createHeaderTitle(role: WorkspaceRole): string {
   if (role === 'Executor') {
-    return 'Проекты и кандидаты'
+    return 'Проекты'
   }
 
   if (role === 'Applicant') {
@@ -513,14 +513,14 @@ export function deriveWorkspaceViewState({
             id: 'projects',
             label: 'Проекты в работе',
             value: String(executorDashboardStats?.activeProjectsCount ?? 0),
-            note: `${executorDashboardStats?.onApprovalVacanciesCount ?? 0} на этапе согласования`,
+            note: `${executorDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на этапе согласования`,
             tone: 'default',
           },
           {
             id: 'pipeline',
             label: 'Кандидаты в работе',
             value: `${executorDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
-            note: 'Отклики на заказы + кандидаты, добавленные рекрутером.',
+            note: 'Отклики на вакансии + кандидаты, добавленные рекрутером.',
             tone: resolveCandidateFlowTone(executorDashboardStats?.pipelineCandidatesCount ?? 0),
           },
           {
@@ -537,14 +537,14 @@ export function deriveWorkspaceViewState({
               id: 'projects',
               label: 'Заказы в работе',
               value: String(customerDashboardStats?.activeProjectsCount ?? 0),
-              note: `${customerDashboardStats?.onApprovalVacanciesCount ?? 0} на этапе согласования`,
+              note: `${customerDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на этапе согласования`,
               tone: 'default',
             },
             {
               id: 'pipeline',
               label: 'Кандидаты в работе',
               value: `${customerDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
-              note: 'Отклики на заказы + кандидаты, добавленные рекрутером.',
+              note: 'Отклики на вакансии + кандидаты, добавленные рекрутером.',
               tone: resolveCandidateFlowTone(customerDashboardStats?.pipelineCandidatesCount ?? 0),
             },
             {
