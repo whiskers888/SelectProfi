@@ -1,19 +1,19 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using Api.Mappings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Configuration;
 using SelectProfi.backend.Contracts.Auth;
-using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Mappings;
 
-namespace SelectProfi.backend.Controllers;
+namespace Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
@@ -61,7 +61,7 @@ public sealed class AuthController(
         CancellationToken cancellationToken)
     {
         var result = await commandDispatcher.DispatchAsync<LoginUserCommand, LoginUserResult>(
-            request.ToCommand(),
+            AuthRequestMapper.ToCommand(request),
             cancellationToken);
 
         if (result.ErrorCode == LoginUserErrorCode.InvalidCredentials)
@@ -80,7 +80,7 @@ public sealed class AuthController(
         CancellationToken cancellationToken)
     {
         var result = await commandDispatcher.DispatchAsync<RefreshAuthSessionCommand, RefreshAuthSessionResult>(
-            request.ToCommand(),
+            AuthRequestMapper.ToCommand(request),
             cancellationToken);
 
         if (result.ErrorCode == RefreshAuthSessionErrorCode.InvalidRefreshToken)

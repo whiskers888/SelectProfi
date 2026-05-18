@@ -885,12 +885,17 @@
 }
 
 .preview11-orders-bulk-left {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 22px auto auto;
   align-items: center;
-  gap: 8px;
+  column-gap: 8px;
   color: var(--text2);
   font-size: 12px;
   font-weight: 700;
+}
+
+.preview11-orders-bulk-left > .preview11-order-select {
+  justify-self: center;
 }
 
 .preview11-orders-bulk-actions {

@@ -2,6 +2,7 @@ import {
   BarChart3,
   BriefcaseBusiness,
   CalendarDays,
+  FileStack,
   FileText,
   LayoutDashboard,
   MessageCircle,
@@ -26,6 +27,7 @@ const navIconMap: Record<WorkspaceView, LucideIcon> = {
   meetings: CalendarDays,
   chats: MessageCircle,
   analytics: BarChart3,
+  documents: FileStack,
 }
 
 function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
@@ -71,7 +73,7 @@ export function Sidebar({
   const visibleViewOptions =
     role === 'Customer'
       ? workspaceViewOptions.filter((view) => view.value !== 'orders')
-      : workspaceViewOptions
+      : workspaceViewOptions.filter((view) => view.value !== 'documents')
 
   // @dvnull: Ранее sidebar был собран на blue-tailwind карточках, перевел shell на HTML-паттерн макета.
   return (

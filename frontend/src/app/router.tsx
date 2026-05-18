@@ -7,11 +7,8 @@ import { ServiceUnavailablePage } from '@/pages/ServiceUnavailablePage'
 import { WorkspacePage } from '@/pages/WorkspacePage'
 
 export const router = createBrowserRouter([
-  { path: routePaths.root, element: <AvailabilityRoute element={<SessionEntryRedirect />} /> },
-  {
-    path: routePaths.dashboardEntry,
-    element: <AvailabilityRoute element={<SessionEntryRedirect />} />,
-  },
+  { path: routePaths.root, element: <SessionEntryRedirect /> },
+  { path: routePaths.dashboardEntry, element: <SessionEntryRedirect /> },
   { path: routePaths.auth, element: <AvailabilityRoute element={<LoginPage />} /> },
   { path: routePaths.authJoin, element: <AvailabilityRoute element={<RegisterPage />} /> },
   {

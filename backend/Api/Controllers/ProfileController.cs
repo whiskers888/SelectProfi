@@ -1,3 +1,4 @@
+using Api.Mappings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SelectProfi.backend.Authentication;

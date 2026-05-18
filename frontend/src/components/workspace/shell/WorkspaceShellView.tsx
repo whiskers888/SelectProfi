@@ -51,7 +51,6 @@ export function WorkspaceShellView({
   orderSpecializationOptions,
   isOrderSpecializationsLoading,
   createVacancyFormValues,
-  dataset,
   executorBaseCandidates,
   executorMyCandidates,
   filteredBaseCandidates,
@@ -147,7 +146,7 @@ export function WorkspaceShellView({
           <Header
             activeView={activeView}
             createLabel={createActionLabel(role)}
-            meetingsCount={dataset.meetings.length}
+            meetingsCount={0}
             notificationsCount={counters.chats ?? 0}
             onCreateAction={handleHeaderCreateAction}
             onOpenMeetings={() => handleViewChange('meetings')}
@@ -162,7 +161,7 @@ export function WorkspaceShellView({
             onSwitchRole={() => void handleToggleRole()}
             role={role}
             searchValue={searchValue}
-            subtitle={isProfileRoute ? 'Личные данные и настройки роли' : dataset.headerSubtitle}
+            subtitle={isProfileRoute ? 'Личные данные и настройки роли' : ''}
             title={isProfileRoute ? 'Мой профиль' : createHeaderTitle(role)}
           />
 
@@ -344,7 +343,7 @@ export function WorkspaceShellView({
                   </>
                 )}
 
-                {activeView === 'meetings' ? <CalendarPanel meetings={dataset.meetings} /> : null}
+                {activeView === 'meetings' ? <CalendarPanel meetings={[]} /> : null}
 
                 {activeView === 'chats' ? (
                   <Card className="rounded-xl border-slate-200 p-4 shadow-none">
@@ -446,8 +445,20 @@ export function WorkspaceShellView({
                   <PipelinePanel
                     errorMessage={analyticsError}
                     onRetry={handleRetryAnalytics}
-                    pipeline={dataset.pipeline}
+                    pipeline={[]}
                   />
+                ) : null}
+
+                {activeView === 'documents' ? (
+                  <Card className="rounded-xl border-slate-200 p-4 shadow-none">
+                    <h3 className="text-base font-semibold text-slate-900">Документооборот</h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Управление документами и контрактами по заказам.
+                    </p>
+                    <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+                      Документы будут отображаться здесь.
+                    </div>
+                  </Card>
                 ) : null}
               </>
             )}
