@@ -22,7 +22,7 @@ public sealed class AddCandidateFromBaseCommandHandler(IAddCandidateFromBasePers
         if (!CandidateAccessRules.CanMutateVacancyCandidatePipeline(vacancy.Status))
             return new AddCandidateFromBaseResult { ErrorCode = AddCandidateFromBaseErrorCode.VacancyNotPublished };
 
-        var candidate = await persistence.FindRegisteredCandidateByIdAsync(command.CandidateId, cancellationToken);
+        var candidate = await persistence.FindActiveCandidateByIdAsync(command.CandidateId, cancellationToken);
         if (candidate is null)
             return new AddCandidateFromBaseResult { ErrorCode = AddCandidateFromBaseErrorCode.CandidateNotFound };
 

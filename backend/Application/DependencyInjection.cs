@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
+using SelectProfi.backend.Application.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
@@ -8,6 +9,7 @@ using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCus
 using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
@@ -43,7 +45,8 @@ using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
 
 namespace SelectProfi.backend.Application;
 
-public static class DependencyInjection
+public static class 
+    DependencyInjection
 {
     public static IServiceCollection AddApplicationLayer(this IServiceCollection services)
     {
@@ -67,8 +70,10 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<RespondToVacancyCommand, RespondToVacancyResult>, RespondToVacancyCommandHandler>();
         // @dvnull: Добавлен отдельный command для привязки существующего кандидата из базы к вакансии без создания нового резюме.
         services.AddScoped<ICommandHandler<AddCandidateFromBaseCommand, AddCandidateFromBaseResult>, AddCandidateFromBaseCommandHandler>();
+        services.AddScoped<ICommandHandler<RemoveVacancyCandidateCommand, RemoveVacancyCandidateResult>, RemoveVacancyCandidateCommandHandler>();
         // @dvnull: Добавлен command смены стадии кандидата в vacancy pipeline с инвариантом selectedCandidate.
         services.AddScoped<ICommandHandler<UpdateVacancyCandidateStageCommand, UpdateVacancyCandidateStageResult>, UpdateVacancyCandidateStageCommandHandler>();
+        services.AddScoped<ICommandHandler<UploadCandidateResumeAttachmentCommand, UploadCandidateResumeAttachmentResult>, UploadCandidateResumeAttachmentCommandHandler>();
         // @dvnull: Добавлен command финального выбора кандидата заказчиком только из shortlist.
         services.AddScoped<ICommandHandler<SelectVacancyCandidateCommand, SelectVacancyCandidateResult>, SelectVacancyCandidateCommandHandler>();
         // @dvnull: Добавлен command фиксации просмотра кандидата заказчиком для расчета счетчика новых профилей.

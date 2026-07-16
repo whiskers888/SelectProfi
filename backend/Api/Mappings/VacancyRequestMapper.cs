@@ -5,6 +5,7 @@ using SelectProfi.backend.Application.Vacancies.GetVacancyById;
 using SelectProfi.backend.Application.Vacancies.UpdateVacancy;
 using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
+using SelectProfi.backend.Application.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
@@ -115,7 +116,7 @@ public static class VacancyRequestMapper
             BirthDate = request.BirthDate,
             Email = request.Email,
             Phone = request.Phone,
-            Specialization = request.Specialization,
+            SpecializationId = request.SpecializationId ?? Guid.Empty,
             ResumeTitle = request.ResumeTitle,
             ResumeContentJson = request.ResumeContentJson,
             ResumeAttachmentsJson = request.ResumeAttachmentsJson
@@ -136,6 +137,11 @@ public static class VacancyRequestMapper
             RequesterRole = requesterRole
         };
     }
+
+    public static RemoveVacancyCandidateCommand ToRemoveCommand(this Guid candidateId, Guid vacancyId, Guid requesterUserId, UserRole requesterRole) => new()
+    {
+        VacancyId = vacancyId, CandidateId = candidateId, RequesterUserId = requesterUserId, RequesterRole = requesterRole
+    };
 
     public static RespondToVacancyCommand ToRespondToVacancyCommand(
         this Guid vacancyId,

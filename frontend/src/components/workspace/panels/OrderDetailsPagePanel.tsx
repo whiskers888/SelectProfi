@@ -3,12 +3,18 @@ import { MessageCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Modal } from '@/components/ui/modal'
 import { workspaceToneToBadgeVariant, type WorkspaceCandidate, type WorkspaceOrder } from '../model/data'
 import type { OrderExecutorResponseItemResponse } from '@/shared/api/orders'
 
 type OrderDetailsPagePanelProps = {
   applicantResponders?: WorkspaceCandidate[]
+  availableCandidates?: WorkspaceCandidate[]
+  assignedCandidateIds?: string[]
   canCreateVacancyFromOrder?: boolean
+  canCreateCandidateFromOrder?: boolean
+  canManageCandidatesFromOrder?: boolean
   hasCreateVacancyDraft?: boolean
   canPublishVacancyForCustomer?: boolean
   vacancyPreview?: {
@@ -24,10 +30,15 @@ type OrderDetailsPagePanelProps = {
   isRespondingToOrder?: boolean
   isSelectingOrderExecutor?: boolean
   isUpdatingApplicantResponderStage?: boolean
+  isAddingCandidateFromBase?: boolean
+  isRemovingVacancyCandidate?: boolean
   order: WorkspaceOrder
   assignedExecutorName?: string | null
   onBack: () => void
   onCreateVacancyFromOrder?: () => void
+  onCreateCandidateFromOrder?: () => void
+  onAddCandidateFromBase?: (candidateId: string) => boolean | Promise<boolean>
+  onRemoveCandidateFromVacancy?: (candidateId: string) => void | Promise<void>
   onPublishVacancyForCustomer?: () => void | Promise<void>
   onRespondToOrder?: () => void | Promise<void>
   onOpenApplicantResponder?: (candidate: WorkspaceCandidate) => void
@@ -40,7 +51,11 @@ type OrderDetailsPagePanelProps = {
 
 export function OrderDetailsPagePanel({
   applicantResponders = [],
+  availableCandidates = [],
+  assignedCandidateIds = [],
   canCreateVacancyFromOrder = false,
+  canCreateCandidateFromOrder = false,
+  canManageCandidatesFromOrder = false,
   hasCreateVacancyDraft = false,
   canPublishVacancyForCustomer = false,
   vacancyPreview = null,
@@ -53,10 +68,15 @@ export function OrderDetailsPagePanel({
   isRespondingToOrder = false,
   isSelectingOrderExecutor = false,
   isUpdatingApplicantResponderStage = false,
+  isAddingCandidateFromBase = false,
+  isRemovingVacancyCandidate = false,
   order,
   assignedExecutorName = null,
   onBack,
   onCreateVacancyFromOrder,
+  onCreateCandidateFromOrder,
+  onAddCandidateFromBase,
+  onRemoveCandidateFromVacancy,
   onPublishVacancyForCustomer,
   onRespondToOrder,
   onOpenApplicantResponder,
@@ -69,6 +89,15 @@ export function OrderDetailsPagePanel({
   const hasAssignedExecutor = Boolean(order.executorId)
   const [isResponsesExpanded, setIsResponsesExpanded] = useState(() => !hasAssignedExecutor)
   const [expandedExecutorIds, setExpandedExecutorIds] = useState<Set<string>>(() => new Set<string>())
+  const [isCandidatePickerOpen, setIsCandidatePickerOpen] = useState(false)
+  const [candidateSearch, setCandidateSearch] = useState('')
+  const normalizedCandidateSearch = candidateSearch.trim().toLocaleLowerCase('ru-RU')
+  const assignedCandidateIdSet = new Set(assignedCandidateIds)
+  const matchingCandidates = availableCandidates.filter(
+    (candidate) =>
+      !normalizedCandidateSearch ||
+      `${candidate.name} ${candidate.position}`.toLocaleLowerCase('ru-RU').includes(normalizedCandidateSearch),
+  )
 
   function toStatusLabel(status: OrderExecutorResponseItemResponse['status']): string {
     if (status === 'Pending') {
@@ -268,6 +297,21 @@ export function OrderDetailsPagePanel({
             </Button>
           </div>
         ) : null}
+        {canManageCandidatesFromOrder ? (
+          <div className="mt-3">
+            <Button
+              className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => setIsCandidatePickerOpen(true)}
+              type="button"
+              disabled={!canCreateCandidateFromOrder}
+            >
+              Добавить кандидата
+            </Button>
+            {!canCreateCandidateFromOrder ? (
+              <p className="mt-2 text-sm text-slate-600">Сначала создайте и опубликуйте вакансию.</p>
+            ) : null}
+          </div>
+        ) : null}
         {canPublishVacancyForCustomer ? (
           <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Вакансия на согласовании</p>
@@ -420,6 +464,72 @@ export function OrderDetailsPagePanel({
           ) : null}
         </div>
       ) : null}
+      <Modal
+        className="max-w-3xl"
+        description="Выберите кандидата из своей базы или создайте нового вручную."
+        onOpenChange={setIsCandidatePickerOpen}
+        open={isCandidatePickerOpen}
+        title="Добавить кандидата к заказу"
+        footer={
+          <div className="flex flex-wrap justify-between gap-2">
+            <Button onClick={() => onCreateCandidateFromOrder?.()} type="button">
+              Добавить нового вручную
+            </Button>
+            <Button onClick={() => setIsCandidatePickerOpen(false)} type="button" variant="outline">
+              Закрыть
+            </Button>
+          </div>
+        }
+      >
+        <Input
+          aria-label="Поиск кандидата"
+          className="mb-4 h-10 rounded-xl"
+          onChange={(event) => setCandidateSearch(event.target.value)}
+          placeholder="Поиск по ФИО или специализации"
+          value={candidateSearch}
+        />
+        <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+          {matchingCandidates.map((candidate) => (
+            <div key={candidate.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3">
+              <div>
+                <p className="font-medium text-slate-900">{candidate.name}</p>
+                <p className="text-sm text-slate-600">{candidate.position}</p>
+              </div>
+              {assignedCandidateIdSet.has(candidate.id) ? (
+                <Button
+                  aria-label={`${candidate.name}: кандидат уже добавлен к вакансии`}
+                  className="border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
+                  disabled={isRemovingVacancyCandidate}
+                  onClick={() => void onRemoveCandidateFromVacancy?.(candidate.id)}
+                  title="Кандидат уже добавлен к этой вакансии"
+                  type="button"
+                  variant="outline"
+                >
+                  {isRemovingVacancyCandidate ? 'Исключаем...' : 'Исключить'}
+                </Button>
+              ) : (
+                <Button
+                  disabled={isAddingCandidateFromBase}
+                  onClick={() => {
+                    void Promise.resolve(onAddCandidateFromBase?.(candidate.id)).then((wasAdded) => {
+                      if (wasAdded) {
+                        setIsCandidatePickerOpen(false)
+                      }
+                    })
+                  }}
+                  type="button"
+                  variant="outline"
+                >
+                  {isAddingCandidateFromBase ? 'Добавляем...' : 'Выбрать'}
+                </Button>
+              )}
+            </div>
+          ))}
+          {matchingCandidates.length === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-600">Кандидаты не найдены.</p>
+          ) : null}
+        </div>
+      </Modal>
     </Card>
   )
 }

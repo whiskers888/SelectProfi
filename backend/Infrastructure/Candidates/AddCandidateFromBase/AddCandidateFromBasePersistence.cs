@@ -15,15 +15,12 @@ public sealed class AddCandidateFromBasePersistence(AppDbContext dbContext) : IA
             .FirstOrDefaultAsync(vacancy => vacancy.Id == vacancyId && vacancy.DeletedAtUtc == null, cancellationToken);
     }
 
-    public Task<Candidate?> FindRegisteredCandidateByIdAsync(Guid candidateId, CancellationToken cancellationToken)
+    public Task<Candidate?> FindActiveCandidateByIdAsync(Guid candidateId, CancellationToken cancellationToken)
     {
         return dbContext.Candidates
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                candidate => candidate.Id == candidateId
-                             && candidate.DeletedAtUtc == null
-                             && candidate.Source == CandidateSource.RegisteredUser
-                             && candidate.UserId != null,
+                candidate => candidate.Id == candidateId && candidate.DeletedAtUtc == null,
                 cancellationToken);
     }
 

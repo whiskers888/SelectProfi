@@ -55,7 +55,8 @@ export function OrderCreatePagePanel({
       </div>
 
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
-        <div className="space-y-2">
+        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2 md:col-span-2">
           <Label className="text-slate-600" htmlFor="workspace-order-title">
             Название заказа
           </Label>
@@ -77,12 +78,10 @@ export function OrderCreatePagePanel({
           <Input
             id="workspace-order-organization"
             value={formValues.organization}
-            onMouseDown={(event) => event.preventDefault()}
+            onChange={(event) => onFieldChange('organization', event.target.value)}
             placeholder="ООО Альфа"
             required
-            readOnly
-            tabIndex={-1}
-            className="h-11 select-none rounded-xl border-slate-200 caret-transparent text-slate-900"
+            className="h-11 rounded-xl border-slate-200 text-slate-900"
           />
         </div>
 
@@ -121,7 +120,9 @@ export function OrderCreatePagePanel({
             />
           )}
         </div>
+        </div>
 
+        <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-order-price">
             Цена заказа
@@ -139,7 +140,7 @@ export function OrderCreatePagePanel({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 md:col-span-2 md:order-3">
           <Label className="text-slate-600" htmlFor="workspace-order-note">
             Комментарий
           </Label>
@@ -152,7 +153,7 @@ export function OrderCreatePagePanel({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 md:order-2">
           <Label className="text-slate-600" htmlFor="workspace-order-requested-candidates-count">
             Требуемое количество кандидатов
           </Label>
@@ -167,6 +168,7 @@ export function OrderCreatePagePanel({
             required
             className="h-11 rounded-xl border-slate-200 text-slate-900"
           />
+        </div>
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">

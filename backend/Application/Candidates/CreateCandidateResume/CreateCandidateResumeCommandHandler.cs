@@ -2,6 +2,7 @@ using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Candidates;
 using SelectProfi.backend.Domain.Users;
+using System.Text.Json;
 
 namespace SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 
@@ -39,6 +40,10 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
         if (!CandidateAccessRules.CanMutateVacancyCandidatePipeline(vacancy.Status))
             return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.VacancyNotPublished };
 
+        var specialization = await persistence.FindActiveSpecializationByIdAsync(command.SpecializationId, cancellationToken);
+        if (specialization is null)
+            return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.InvalidInput };
+
         var fullName = NormalizeRequired(command.FullName);
         var normalizedFullName = NormalizeFullName(fullName);
         var normalizedEmail = NormalizeEmail(command.Email);
@@ -65,7 +70,7 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
             FullName = fullName,
             NormalizedFullName = normalizedFullName,
             BirthDate = birthDate,
-            PublicAlias = BuildPublicAlias(candidateId, command.Specialization),
+            PublicAlias = BuildPublicAlias(candidateId, specialization.Name),
             Email = NormalizeOptional(command.Email),
             NormalizedEmail = normalizedEmail,
             Phone = NormalizeOptional(command.Phone),
@@ -82,6 +87,7 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
             Id = Guid.NewGuid(),
             CandidateId = candidate.Id,
             OwnerUserId = command.RequesterUserId,
+            SpecializationId = specialization.Id,
             Title = NormalizeRequired(command.ResumeTitle),
             ContentJson = NormalizeJson(command.ResumeContentJson),
             AttachmentsJson = NormalizeOptional(command.ResumeAttachmentsJson),
@@ -118,8 +124,27 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
     private static bool IsValid(CreateCandidateResumeCommand command)
     {
         return !string.IsNullOrWhiteSpace(command.FullName)
-               && !string.IsNullOrWhiteSpace(command.Specialization)
-               && !string.IsNullOrWhiteSpace(command.ResumeTitle);
+               && command.SpecializationId != Guid.Empty
+               && !string.IsNullOrWhiteSpace(command.Phone)
+               && !string.IsNullOrWhiteSpace(command.ResumeTitle)
+               && HasResumeContent(command.ResumeContentJson)
+               && HasValidAttachmentLinks(command.ResumeAttachmentsJson);
+    }
+
+    private static bool HasResumeContent(string value)
+    {
+        return !string.IsNullOrWhiteSpace(value) && value != "{}";
+    }
+
+    private static bool HasValidAttachmentLinks(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return true;
+        try
+        {
+            var links = JsonSerializer.Deserialize<string[]>(value) ?? [];
+            return links.All(link => Uri.TryCreate(link, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps));
+        }
+        catch (JsonException) { return false; }
     }
 
     private static string NormalizeRequired(string value)

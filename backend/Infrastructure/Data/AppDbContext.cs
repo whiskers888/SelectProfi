@@ -18,6 +18,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<CandidateResume> CandidateResumes => Set<CandidateResume>();
 
+    public DbSet<CandidateResumeAttachment> CandidateResumeAttachments => Set<CandidateResumeAttachment>();
+
     public DbSet<VacancyCandidate> VacancyCandidates => Set<VacancyCandidate>();
 
     public DbSet<User> Users => Set<User>();
@@ -281,8 +283,28 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .HasForeignKey(resume => resume.OwnerUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(resume => resume.Specialization)
+                .WithMany()
+                .HasForeignKey(resume => resume.SpecializationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasIndex(resume => new { resume.CandidateId, resume.DeletedAtUtc });
             builder.HasIndex(resume => new { resume.OwnerUserId, resume.DeletedAtUtc });
+            builder.HasIndex(resume => resume.SpecializationId);
+        });
+
+        modelBuilder.Entity<CandidateResumeAttachment>(builder =>
+        {
+            builder.HasKey(attachment => attachment.Id);
+            builder.Property(attachment => attachment.OriginalFileName).HasMaxLength(255).IsRequired();
+            builder.Property(attachment => attachment.StoredFileName).HasMaxLength(255).IsRequired();
+            builder.Property(attachment => attachment.ContentType).HasMaxLength(128).IsRequired();
+            builder.HasOne(attachment => attachment.CandidateResume)
+                .WithMany()
+                .HasForeignKey(attachment => attachment.CandidateResumeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(attachment => attachment.CandidateResumeId);
+            builder.HasIndex(attachment => attachment.StoredFileName).IsUnique();
         });
 
         modelBuilder.Entity<VacancyCandidate>(builder =>

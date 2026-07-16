@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Domain.Candidates;
 using SelectProfi.backend.Domain.Vacancies;
+using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Infrastructure.Data;
 
 namespace SelectProfi.backend.Infrastructure.Candidates.CreateCandidateResume;
@@ -13,6 +14,13 @@ public sealed class CreateCandidateResumePersistence(AppDbContext dbContext) : I
         return dbContext.Vacancies
             .AsNoTracking()
             .FirstOrDefaultAsync(vacancy => vacancy.Id == vacancyId && vacancy.DeletedAtUtc == null, cancellationToken);
+    }
+
+    public Task<OrderSpecialization?> FindActiveSpecializationByIdAsync(Guid specializationId, CancellationToken cancellationToken)
+    {
+        return dbContext.OrderSpecializations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == specializationId && item.IsActive, cancellationToken);
     }
 
     public Task<bool> CandidateIdentityExistsAsync(

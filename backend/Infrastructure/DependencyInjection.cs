@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
+using SelectProfi.backend.Application.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
@@ -46,6 +47,7 @@ using SelectProfi.backend.Infrastructure.Auth.Login;
 using SelectProfi.backend.Infrastructure.Auth.Refresh;
 using SelectProfi.backend.Infrastructure.Auth.Register;
 using SelectProfi.backend.Infrastructure.Candidates.AddCandidateFromBase;
+using SelectProfi.backend.Infrastructure.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Infrastructure.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyBaseCandidates;
@@ -55,6 +57,8 @@ using SelectProfi.backend.Infrastructure.Candidates.MarkVacancyCandidateViewedBy
 using SelectProfi.backend.Infrastructure.Candidates.RespondToVacancy;
 using SelectProfi.backend.Infrastructure.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Infrastructure.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Infrastructure.Candidates.UploadCandidateResumeAttachment;
+using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Infrastructure.Data;
 using SelectProfi.backend.Infrastructure.Dashboard.GetCustomerDashboardStats;
 using SelectProfi.backend.Infrastructure.Dashboard.GetExecutorDashboardStats;
@@ -128,6 +132,7 @@ public static class DependencyInjection
         services.AddScoped<IRespondToVacancyPersistence, RespondToVacancyPersistence>();
         // @dvnull: Добавлена persistence-реализация для привязки кандидата из системной базы в pipeline вакансии.
         services.AddScoped<IAddCandidateFromBasePersistence, AddCandidateFromBasePersistence>();
+        services.AddScoped<IRemoveVacancyCandidatePersistence, RemoveVacancyCandidatePersistence>();
         // @dvnull: Добавлена persistence-реализация для смены стадии кандидата в vacancy pipeline.
         services.AddScoped<IUpdateVacancyCandidateStagePersistence, UpdateVacancyCandidateStagePersistence>();
         // @dvnull: Добавлена persistence-реализация для финального выбора кандидата заказчиком.
@@ -143,6 +148,8 @@ public static class DependencyInjection
         services.AddScoped<IGetSelectedCandidateContactsPersistence, GetSelectedCandidateContactsPersistence>();
         // @dvnull: Ранее infra-слой не умел сохранять связку Candidate + Resume + VacancyCandidate; добавлена persistence-реализация для нового сценария.
         services.AddScoped<ICreateCandidateResumePersistence, CreateCandidateResumePersistence>();
+        services.AddScoped<IResumeAttachmentStorage, LocalResumeAttachmentStorage>();
+        services.AddScoped<IUploadCandidateResumeAttachmentPersistence, UploadCandidateResumeAttachmentPersistence>();
         services.AddScoped<ICreateVacancyPersistence, CreateVacancyPersistence>();
         services.AddScoped<IGetVacancyByIdPersistence, GetVacancyByIdPersistence>();
         services.AddScoped<IGetVacanciesPersistence, GetVacanciesPersistence>();

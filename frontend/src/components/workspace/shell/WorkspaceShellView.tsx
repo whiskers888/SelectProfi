@@ -32,6 +32,8 @@ export function WorkspaceShellView({
   canManageOrderResponses,
   canSwitchApplicantExecutor,
   canCreateVacancyFromSelectedOrder,
+  canCreateCandidateFromSelectedOrder,
+  canManageCandidatesFromSelectedOrder,
   canPublishVacancyForSelectedOrder,
   hasCreateVacancyDraftForSelectedOrder,
   canRespondToSelectedOrder,
@@ -64,6 +66,9 @@ export function WorkspaceShellView({
   handleCreateApplicantResponseFromPage,
   handleCreateCandidateFormFieldChange,
   handleCreateCandidateFromPage,
+  handleCreateCandidateFromOrder,
+  handleAddCandidateFromOrder,
+  handleRemoveCandidateFromOrder,
   handleCreateOrderFormFieldChange,
   handleCreateOrderFromPage,
   handleCreateVacancyAndSendToCustomerFromPage,
@@ -88,6 +93,8 @@ export function WorkspaceShellView({
   handleViewChange,
   hasRespondedToSelectedOrder,
   isCandidatesApiLoading,
+  isAddingCandidateFromBase,
+  isRemovingVacancyCandidate,
   isCreateApplicantResponsePageOpen,
   isCreateCandidatePageOpen,
   isCreateOrderPageOpen,
@@ -123,6 +130,7 @@ export function WorkspaceShellView({
   selectedOrderExecutorName,
   selectedOrderId,
   selectedOrderApplicantResponders,
+  selectedOrderCandidateIds,
   selectedOrderVacancyPreview,
   selectedOrderWithResponses,
   setChatDraft,
@@ -171,7 +179,11 @@ export function WorkspaceShellView({
               <OrderDetailsPagePanel
                 key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}
                 assignedExecutorName={selectedOrderExecutorName}
+                availableCandidates={executorMyCandidates}
+                assignedCandidateIds={selectedOrderCandidateIds}
                 canCreateVacancyFromOrder={canCreateVacancyFromSelectedOrder}
+                canCreateCandidateFromOrder={canCreateCandidateFromSelectedOrder}
+                canManageCandidatesFromOrder={canManageCandidatesFromSelectedOrder}
                 canPublishVacancyForCustomer={canPublishVacancyForSelectedOrder}
                 hasCreateVacancyDraft={hasCreateVacancyDraftForSelectedOrder}
                 canManageOrderResponses={canManageOrderResponses}
@@ -181,6 +193,9 @@ export function WorkspaceShellView({
                 isSelectingOrderExecutor={isSelectingOrderExecutor}
                 onBack={closeOrderDetails}
                 onCreateVacancyFromOrder={() => handleCreateVacancyFromOrder(selectedOrder.id)}
+                onCreateCandidateFromOrder={() => handleCreateCandidateFromOrder(selectedOrder.id)}
+                onAddCandidateFromBase={(candidateId) => handleAddCandidateFromOrder(selectedOrder.id, candidateId)}
+                onRemoveCandidateFromVacancy={(candidateId) => handleRemoveCandidateFromOrder(selectedOrder.id, candidateId)}
                 onPublishVacancyForCustomer={handlePublishVacancyForSelectedOrder}
                 onRespondToOrder={() => {
                   if (role === 'Applicant') {
@@ -203,6 +218,8 @@ export function WorkspaceShellView({
                   handleSelectOrderExecutor(selectedOrder.id, executorId)
                 }
                 isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
+                isAddingCandidateFromBase={isAddingCandidateFromBase}
+                isRemovingVacancyCandidate={isRemovingVacancyCandidate}
                 order={selectedOrderWithResponses ?? selectedOrder}
                 orderResponses={orderResponses}
                 applicantResponders={selectedOrderApplicantResponders}
@@ -223,6 +240,7 @@ export function WorkspaceShellView({
             {role === 'Executor' && isCreateCandidatePageOpen ? (
               <CandidateCreatePagePanel
                 formValues={createCandidateFormValues}
+                specializationOptions={orderSpecializationOptions}
                 onBack={closeCreateCandidatePage}
                 onFieldChange={handleCreateCandidateFormFieldChange}
                 onSubmit={handleCreateCandidateFromPage}

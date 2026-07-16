@@ -7,7 +7,7 @@ export type CreateCandidateResumeRequest = {
   birthDate?: string
   email?: string
   phone?: string
-  specialization: string
+  specializationId: string
   resumeTitle: string
   resumeContentJson: string
   resumeAttachmentsJson?: string
@@ -108,6 +108,17 @@ const candidatesApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
+      invalidatesTags: (_result, _error, { vacancyId }) => [{ type: 'VacancyCandidate', id: vacancyId }],
+    }),
+    uploadCandidateResumeAttachment: build.mutation<
+      { attachmentId: string },
+      { vacancyId: string; resumeId: string; file: File }
+    >({
+      query: ({ vacancyId, resumeId, file }) => {
+        const body = new FormData()
+        body.append('file', file)
+        return { url: `/api/vacancies/${vacancyId}/candidates/resumes/${resumeId}/attachments`, method: 'POST', body }
+      },
     }),
     addCandidateFromBase: build.mutation<
       VacancyCandidateResponse,
@@ -117,6 +128,11 @@ const candidatesApi = api.injectEndpoints({
         url: `/api/vacancies/${vacancyId}/candidates/${candidateId}`,
         method: 'POST',
       }),
+      invalidatesTags: (_result, _error, { vacancyId }) => [{ type: 'VacancyCandidate', id: vacancyId }],
+    }),
+    removeVacancyCandidate: build.mutation<void, { vacancyId: string; candidateId: string }>({
+      query: ({ vacancyId, candidateId }) => ({ url: `/api/vacancies/${vacancyId}/candidates/${candidateId}`, method: 'DELETE' }),
+      invalidatesTags: (_result, _error, { vacancyId }) => [{ type: 'VacancyCandidate', id: vacancyId }],
     }),
     respondToVacancy: build.mutation<VacancyCandidateResponse, { vacancyId: string }>({
       query: ({ vacancyId }) => ({
@@ -129,6 +145,7 @@ const candidatesApi = api.injectEndpoints({
         url: `/api/vacancies/${vacancyId}/candidates`,
         method: 'GET',
       }),
+      providesTags: (_result, _error, { vacancyId }) => [{ type: 'VacancyCandidate', id: vacancyId }],
     }),
     getVacancyBaseCandidates: build.query<VacancyBaseCandidatesResponse, { vacancyId: string }>({
       query: ({ vacancyId }) => ({
@@ -183,7 +200,9 @@ const candidatesApi = api.injectEndpoints({
 
 export const {
   useCreateCandidateResumeMutation,
+  useUploadCandidateResumeAttachmentMutation,
   useAddCandidateFromBaseMutation,
+  useRemoveVacancyCandidateMutation,
   useRespondToVacancyMutation,
   useGetVacancyCandidatesQuery,
   useLazyGetVacancyCandidatesQuery,

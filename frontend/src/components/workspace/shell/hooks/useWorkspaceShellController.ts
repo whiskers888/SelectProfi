@@ -11,6 +11,10 @@ import { useGetMyAuthInfoQuery } from '@/shared/api/auth'
 import {
   useGetVacancyBaseCandidatesQuery,
   useGetVacancyCandidatesQuery,
+  useAddCandidateFromBaseMutation,
+  useRemoveVacancyCandidateMutation,
+  useCreateCandidateResumeMutation,
+  useUploadCandidateResumeAttachmentMutation,
   useLazyGetVacancyBaseCandidatesQuery,
   useLazyGetVacancyCandidatesQuery,
   useMarkVacancyCandidateViewedByCustomerMutation,
@@ -218,6 +222,10 @@ export function useWorkspaceShellController() {
     useSelectOrderResponseExecutorMutation()
   const [markVacancyCandidateViewedByCustomer] = useMarkVacancyCandidateViewedByCustomerMutation()
   const [respondToVacancy, { isLoading: isRespondingToVacancy }] = useRespondToVacancyMutation()
+  const [createCandidateResume] = useCreateCandidateResumeMutation()
+  const [uploadCandidateResumeAttachment] = useUploadCandidateResumeAttachmentMutation()
+  const [addCandidateFromBase, { isLoading: isAddingCandidateFromBase }] = useAddCandidateFromBaseMutation()
+  const [removeVacancyCandidate, { isLoading: isRemovingVacancyCandidate }] = useRemoveVacancyCandidateMutation()
   const [updateVacancyCandidateStage, { isLoading: isUpdatingApplicantResponderStage }] =
     useUpdateVacancyCandidateStageMutation()
   const [switchMyActiveRole, { isLoading: isSwitchingRole }] = useSwitchMyActiveRoleMutation()
@@ -267,7 +275,7 @@ export function useWorkspaceShellController() {
     data: orderSpecializationsResponse,
     isError: isOrderSpecializationsError,
     isFetching: isOrderSpecializationsLoading,
-  } = useGetOrderSpecializationsQuery(role === 'Customer' ? undefined : skipToken)
+  } = useGetOrderSpecializationsQuery(role === 'Customer' || role === 'Executor' ? undefined : skipToken)
   // @dvnull: Ранее форма заказа не имела данных справочника специализаций; добавлена загрузка и нормализация options для select.
   const orderSpecializationOptions = orderSpecializationsResponse?.items.map((item) => ({ id: item.id, name: item.name })) ?? []
   const { data: executorDashboardStats } = useGetExecutorDashboardStatsQuery(
@@ -349,6 +357,7 @@ export function useWorkspaceShellController() {
     email: '',
     phone: '',
     specialization: '',
+    specializationId: '',
     resumeTitle: '',
     resumeRichTextHtml: '',
     resumeAttachmentLinks: '',
@@ -359,6 +368,7 @@ export function useWorkspaceShellController() {
     email: '',
     phone: '',
     specialization: '',
+    specializationId: '',
     resumeTitle: '',
     resumeRichTextHtml: '',
     resumeAttachmentLinks: '',
@@ -564,6 +574,16 @@ export function useWorkspaceShellController() {
           ).values(),
         )
       : []
+  const selectedOrderCandidateIds =
+    role === 'Executor' && selectedOrder
+      ? Array.from(
+          new Set(
+            executorGlobalCandidates
+              .filter((candidate) => candidate.orderId === selectedOrder.id)
+              .map((candidate) => candidate.id),
+          ),
+        )
+      : []
   const hasRespondedToSelectedOrder =
     role === 'Applicant'
       ? Boolean(selectedOrder && applicantRespondedOrderIds.includes(selectedOrder.id))
@@ -582,6 +602,14 @@ export function useWorkspaceShellController() {
         selectedOrder.executorId === authMe?.userId &&
         !selectedOrder.isArchived,
     )
+  const canManageCandidatesFromSelectedOrder =
+    role === 'Executor' &&
+    Boolean(
+      selectedOrder &&
+        selectedOrder.executorId === authMe?.userId &&
+        !selectedOrder.isArchived,
+    )
+  const canCreateCandidateFromSelectedOrder = canManageCandidatesFromSelectedOrder && selectedOrderVacancy?.status === 'Published'
   const canPublishVacancyForSelectedOrder =
     role === 'Customer' && selectedOrderVacancy?.status === 'OnApproval'
   // @dvnull: Ранее превью вакансии не прокидывалось в panel деталей заказа, из-за чего заказчик не видел текст перед подтверждением.
@@ -801,6 +829,53 @@ export function useWorkspaceShellController() {
       setPreferredOrderId,
       startViewTransition,
     })
+
+  const handleCreateCandidateFromOrder = useCallback(
+    (orderId: string) => {
+      const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
+      if (!vacancy || vacancy.status !== 'Published') {
+        setBanner({
+          variant: 'destructive',
+          message: 'Сначала создайте и опубликуйте вакансию для этого заказа.',
+        })
+        return
+      }
+
+      setPreferredOrderId(orderId)
+      setDetailsInUrl({ orderId: null, candidateId: null }, true)
+      setIsCreateCandidatePageOpen(true)
+      setIsCreateOrderPageOpen(false)
+      setIsCreateApplicantResponsePageOpen(false)
+      setActiveView('candidates')
+    },
+    [setActiveView, setBanner, setDetailsInUrl, setIsCreateApplicantResponsePageOpen, setIsCreateCandidatePageOpen, setIsCreateOrderPageOpen, setPreferredOrderId, vacanciesResponse],
+  )
+  const handleAddCandidateFromOrder = useCallback(
+    async (orderId: string, candidateId: string) => {
+      const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
+      if (!vacancy || vacancy.status !== 'Published') {
+        setBanner({ variant: 'destructive', message: 'Сначала создайте и опубликуйте вакансию для этого заказа.' })
+        return false
+      }
+      try {
+        await addCandidateFromBase({ vacancyId: vacancy.id, candidateId }).unwrap()
+        setBanner({ variant: 'success', message: 'Кандидат добавлен к вакансии.' })
+        return true
+      } catch (error) {
+        setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) })
+        return false
+      }
+    },
+    [addCandidateFromBase, setBanner, vacanciesResponse],
+  )
+  const handleRemoveCandidateFromOrder = useCallback(async (orderId: string, candidateId: string) => {
+    const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
+    if (!vacancy) return
+    try {
+      await removeVacancyCandidate({ vacancyId: vacancy.id, candidateId }).unwrap()
+      setBanner({ variant: 'success', message: 'Кандидат исключён из вакансии.' })
+    } catch (error) { setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) }) }
+  }, [getRequestErrorMessage, removeVacancyCandidate, setBanner, vacanciesResponse])
   const {
     handleActivateOrders,
     handleArchiveOrders,
@@ -881,6 +956,8 @@ export function useWorkspaceShellController() {
   } = useWorkspaceCreateActions({
     createApplicantResponseFormValues,
     createCandidateFormValues,
+    createCandidateResume,
+    uploadCandidateResumeAttachment,
     createOrder,
     createVacancy,
     updateVacancy,
@@ -888,6 +965,7 @@ export function useWorkspaceShellController() {
     createOrderFormValues,
     createVacancyFormValues,
     createVacancyOrderId,
+    candidateSourceVacancyId: candidateSourceVacancy?.id ?? null,
     getExistingVacancyByOrderId: (orderId: string) => {
       const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
       if (!vacancy) {
@@ -980,6 +1058,8 @@ export function useWorkspaceShellController() {
     canManageOrderResponses,
     canSwitchApplicantExecutor,
     canCreateVacancyFromSelectedOrder,
+    canManageCandidatesFromSelectedOrder,
+    canCreateCandidateFromSelectedOrder,
     canPublishVacancyForSelectedOrder,
     handlePublishVacancyForSelectedOrder,
     hasCreateVacancyDraftForSelectedOrder,
@@ -1015,6 +1095,9 @@ export function useWorkspaceShellController() {
     handleCreateApplicantResponseFromPage,
     handleCreateCandidateFormFieldChange,
     handleCreateCandidateFromPage,
+    handleCreateCandidateFromOrder,
+    handleAddCandidateFromOrder,
+    handleRemoveCandidateFromOrder,
     handleCreateOrderFormFieldChange,
     handleCreateOrderFromPage,
     handleCreateVacancyAndSendToCustomerFromPage,
@@ -1038,6 +1121,8 @@ export function useWorkspaceShellController() {
     handleViewChange,
     hasRespondedToSelectedOrder,
     isCandidatesApiLoading,
+    isAddingCandidateFromBase,
+    isRemovingVacancyCandidate,
     isCreateApplicantResponsePageOpen,
     isCreateCandidatePageOpen,
     isCreateOrderPageOpen,
@@ -1075,6 +1160,7 @@ export function useWorkspaceShellController() {
     selectedOrderExecutorName,
     selectedOrderId,
     selectedOrderApplicantResponders,
+    selectedOrderCandidateIds,
     selectedOrderVacancyPreview,
     selectedOrderWithResponses,
     setChatDraft,

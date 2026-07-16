@@ -43,9 +43,9 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
                 BirthDate = new DateOnly(1995, 6, 1),
                 Email = $"candidate-{Guid.NewGuid():N}@selectprofi.test",
                 Phone = "+79990000001",
-                Specialization = "backend developer",
+                SpecializationId = scenario.SpecializationId,
                 ResumeTitle = "Senior .NET Developer",
-                ResumeContentJson = "{}"
+                ResumeContentJson = "{\"summary\":\"Experience\"}"
             });
 
         await AssertVacancyNotPublishedAsync(response);
@@ -111,9 +111,9 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
                 BirthDate = new DateOnly(1995, 6, 1),
                 Email = $"candidate-{candidateKey}@selectprofi.test",
                 Phone = BuildUniquePhone(candidateKey),
-                Specialization = "backend developer",
+                SpecializationId = scenario.SpecializationId,
                 ResumeTitle = "Senior .NET Developer",
-                ResumeContentJson = "{}"
+                ResumeContentJson = "{\"summary\":\"Experience\"}"
             });
         var payload = await response.Content.ReadFromJsonAsync<CandidateResumeResponse>();
 
@@ -142,6 +142,24 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
         Assert.Equal(scenario.VacancyId, payload!.VacancyId);
         Assert.Equal(candidateId, payload.CandidateId);
         Assert.Equal("Pool", payload.Stage);
+    }
+
+    [Fact]
+    public async Task AddCandidateFromBase_WhenManualCandidate_ReturnsCreated()
+    {
+        var targetScenario = await SeedVacancyScenarioAsync(VacancyStatus.Published);
+        var sourceScenario = await SeedVacancyScenarioAsync(VacancyStatus.Published);
+        var candidateId = await SeedVacancyCandidateLinkAsync(
+            sourceScenario,
+            CandidateSource.AddedByExecutor,
+            VacancyCandidateStage.Pool);
+        using var client = CreateAuthorizedClient(targetScenario.Executor);
+
+        using var response = await client.PostAsync(
+            $"/api/vacancies/{targetScenario.VacancyId}/candidates/{candidateId}",
+            content: null);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]
@@ -202,8 +220,17 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
         var executor = BuildUser(UserRole.Executor);
         var orderId = Guid.NewGuid();
         var vacancyId = Guid.NewGuid();
+        var specializationId = Guid.NewGuid();
 
         dbContext.Users.AddRange(customer.DbUser, executor.DbUser);
+        dbContext.OrderSpecializations.Add(new OrderSpecialization
+        {
+            Id = specializationId,
+            Name = $"Backend developer {specializationId:N}",
+            IsActive = true,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        });
         dbContext.Orders.Add(new Order
         {
             Id = orderId,
@@ -229,7 +256,7 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
 
         await dbContext.SaveChangesAsync();
 
-        return new TestScenario(vacancyId, customer, executor);
+        return new TestScenario(vacancyId, specializationId, customer, executor);
     }
 
     private async Task<Guid> SeedRegisteredCandidateAsync()
@@ -434,7 +461,7 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
         return new string(digits);
     }
 
-    private sealed record TestScenario(Guid VacancyId, TestUser Customer, TestUser Executor);
+    private sealed record TestScenario(Guid VacancyId, Guid SpecializationId, TestUser Customer, TestUser Executor);
 
     private sealed record TestUser(Guid Id, string Email, UserRole Role, User DbUser);
 }

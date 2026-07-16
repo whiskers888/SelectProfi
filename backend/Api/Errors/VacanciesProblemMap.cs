@@ -5,6 +5,7 @@ using SelectProfi.backend.Application.Vacancies.GetVacancyById;
 using SelectProfi.backend.Application.Vacancies.UpdateVacancy;
 using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
+using SelectProfi.backend.Application.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
@@ -330,6 +331,13 @@ public static class VacanciesProblemMap
             _ => CandidateLinkConflict
         };
     }
+    public static ApiProblemDescriptor Resolve(RemoveVacancyCandidateErrorCode errorCode) => errorCode switch
+    {
+        RemoveVacancyCandidateErrorCode.VacancyNotFound => VacancyNotFound,
+        RemoveVacancyCandidateErrorCode.Forbidden => CandidateLinkForbidden,
+        RemoveVacancyCandidateErrorCode.VacancyNotPublished => VacancyNotPublished,
+        _ => CandidateLinkConflict
+    };
 
     public static ApiProblemDescriptor Resolve(RespondToVacancyErrorCode errorCode)
     {

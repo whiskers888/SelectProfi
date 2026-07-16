@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Domain.Candidates;
@@ -18,6 +19,11 @@ public sealed class CandidateResume
 
     [ForeignKey(nameof(OwnerUserId))]
     public User OwnerUser { get; set; } = null!;
+
+    public Guid SpecializationId { get; set; }
+
+    [ForeignKey(nameof(SpecializationId))]
+    public OrderSpecialization Specialization { get; set; } = null!;
 
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;

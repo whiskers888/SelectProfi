@@ -19,7 +19,7 @@ public sealed class CreateCandidateResumeCommand : ICommand<CreateCandidateResum
 
     public string? Phone { get; init; }
 
-    public string Specialization { get; init; } = string.Empty;
+    public Guid SpecializationId { get; init; }
 
     public string ResumeTitle { get; init; } = string.Empty;
 
