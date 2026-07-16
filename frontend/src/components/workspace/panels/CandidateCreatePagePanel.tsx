@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
-import { Textarea } from '@/components/ui/textarea'
+import { ResumeLinksInput } from '../ResumeLinksInput'
+import { ResumeFilesInput } from '../ResumeFilesInput'
 
 type CandidateCreatePagePanelProps = {
   formValues: {
@@ -155,14 +156,12 @@ export function CandidateCreatePagePanel({
           <Label className="text-slate-600" htmlFor="workspace-candidate-resume-attachments">
             Ссылки на вложения
           </Label>
-          <Textarea
+        <ResumeLinksInput
             id="workspace-candidate-resume-attachments"
             value={formValues.resumeAttachmentLinks}
-            onChange={(event) => onFieldChange('resumeAttachmentLinks', event.target.value)}
-            placeholder="Одна ссылка на строку (облако, портфолио, pdf)."
-            maxLength={2000}
-            className="min-h-[100px] rounded-xl border-slate-200 text-slate-900"
-          />
+            onChange={(value) => onFieldChange('resumeAttachmentLinks', value)}
+        />
+        <ResumeFilesInput id="workspace-candidate-resume-files" />
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">

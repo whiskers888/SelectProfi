@@ -1,18 +1,20 @@
 // frontend/src/components/workspace/shell/hooks/useWorkspaceShellController.ts
+import { useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { useNotifications } from '@/components/ui/useNotifications'
 import { routePaths } from '@/app/routePaths'
 import type { AppDispatch } from '@/app/store'
 import { toRoleLabel, toWorkspaceRole, deriveWorkspaceViewState } from '../workspaceShell.helpers'
-import { useWorkspaceUIState } from './ui/useWorkspaceUIState'
-import { useWorkspaceForms } from './form/useWorkspaceForms'
-import { useWorkspaceApiQueries } from './api/useWorkspaceApiQueries'
+import { useWorkspaceUIState } from './useWorkspaceUIState'
+import { useWorkspaceForms } from './useWorkspaceForms'
+import { useWorkspaceApiQueries } from './useWorkspaceApiQueries'
 import { useWorkspaceDataQueries } from './api/useWorkspaceDataQueries'
 import { useWorkspaceOrderData } from './data/useWorkspaceOrderData'
 import { useWorkspaceCandidateData } from './data/useWorkspaceCandidateData'
-import { useWorkspaceCallbacks } from './actions/useWorkspaceCallbacks'
-import { useWorkspaceEffects } from './effects/useWorkspaceEffects'
+import { useWorkspaceCallbacks } from './useWorkspaceCallbacks'
+import { useWorkspaceEffects } from './useWorkspaceEffects'
+import { useWorkspaceNavigation } from './useWorkspaceNavigation'
 
 const defaultWorkspaceRole = 'Customer'
 
@@ -36,6 +38,26 @@ export function useWorkspaceShellController() {
   // === 4. Forms State ===
   const forms = useWorkspaceForms()
 
+  const navigation = useWorkspaceNavigation({
+    location,
+    navigate,
+    role,
+    setActiveView: uiState.setActiveView,
+    setIsCreateApplicantResponsePageOpen: uiState.setIsCreateApplicantResponsePageOpen,
+    setIsCreateCandidatePageOpen: uiState.setIsCreateCandidatePageOpen,
+    setIsCreateOrderPageOpen: uiState.setIsCreateOrderPageOpen,
+    setIsCreateVacancyPageOpen: uiState.setIsCreateVacancyPageOpen,
+    setPreferredOrderId: uiState.setPreferredOrderId,
+    startViewTransition: uiState.startViewTransition,
+  })
+
+  const handleCreateCandidateFormFieldChange = useCallback(
+    (field: keyof typeof forms.createCandidateFormValues, value: string) => {
+      forms.setCreateCandidateFormValues((previousValues) => ({ ...previousValues, [field]: value }))
+    },
+    [forms],
+  )
+
   // === 5. Data Queries (orders, vacancies, candidates) ===
   const dataQueries = useWorkspaceDataQueries({
     role,
@@ -43,6 +65,7 @@ export function useWorkspaceShellController() {
     canLoadServerOrders: !isBootstrapLoading,
     canLoadServerCandidates: role !== 'Applicant' && !isBootstrapLoading,
     canLoadExecutorBaseCandidates: role === 'Executor' && !isBootstrapLoading,
+    preferredOrderId: uiState.preferredOrderId,
   })
 
   // === 6. Normalize order data ===
@@ -58,8 +81,8 @@ export function useWorkspaceShellController() {
   const candidateData = useWorkspaceCandidateData({
     candidateScopeOrderId: orderData.candidateScopeOrderId,
     vacanciesResponse: dataQueries.vacanciesResponse,
-    vacancyCandidatesResponse: undefined,
-    vacancyBaseCandidatesResponse: undefined,
+    vacancyCandidatesResponse: dataQueries.vacancyCandidatesResponse,
+    vacancyBaseCandidatesResponse: dataQueries.vacancyBaseCandidatesResponse,
     canLoadServerCandidates: role !== 'Applicant' && !isBootstrapLoading,
     canLoadExecutorBaseCandidates: role === 'Executor' && !isBootstrapLoading,
   })
@@ -81,8 +104,8 @@ export function useWorkspaceShellController() {
     fallbackMeetings: [],
     fallbackStats: [],
     isOrdersFetching: dataQueries.isOrdersFetching,
-    isVacancyCandidatesError: false,
-    isVacancyCandidatesFetching: false,
+    isVacancyCandidatesError: dataQueries.isVacancyCandidatesError,
+    isVacancyCandidatesFetching: dataQueries.isVacancyCandidatesFetching,
     locationSearch: location.search,
     manualCandidates: [],
     meetings: [],
@@ -97,7 +120,7 @@ export function useWorkspaceShellController() {
     serverCandidates: candidateData.serverCandidates,
     threads: [],
     vacanciesResponseExists: Boolean(dataQueries.vacanciesResponse),
-    vacancyCandidatesItems: null,
+    vacancyCandidatesItems: dataQueries.vacancyCandidatesResponse?.items ?? null,
   })
 
   // === 9. Actions & Callbacks ===
@@ -169,6 +192,7 @@ export function useWorkspaceShellController() {
     createCandidateFormValues: forms.createCandidateFormValues,
     createApplicantResponseFormValues: forms.createApplicantResponseFormValues,
     createVacancyFormValues: forms.createVacancyFormValues,
+    handleCreateCandidateFormFieldChange,
 
     // API Data
     orderSpecializationOptions: apiQueries.orderSpecializationOptions,
@@ -206,5 +230,10 @@ export function useWorkspaceShellController() {
 
     // Callbacks
     ...callbacks,
+    handleViewChange: navigation.handleViewChange,
+    handleOpenOrderDetails: navigation.handleOpenOrderDetails,
+    handleOpenCandidateDetails: navigation.handleOpenCandidateDetails,
+    closeOrderDetails: () => navigation.setDetailsInUrl({ orderId: null }),
+    closeCandidateDetails: () => navigation.setDetailsInUrl({ candidateId: null }),
   }
 }

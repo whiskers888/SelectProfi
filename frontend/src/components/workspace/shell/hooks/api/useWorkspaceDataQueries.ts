@@ -3,8 +3,6 @@ import { skipToken } from '@reduxjs/toolkit/query'
 import {
   useGetVacancyBaseCandidatesQuery,
   useGetVacancyCandidatesQuery,
-  useLazyGetVacancyBaseCandidatesQuery,
-  useLazyGetVacancyCandidatesQuery,
 } from '@/shared/api/candidates'
 import {
   useCreateOrderMutation,
@@ -32,6 +30,7 @@ type UseWorkspaceDataQueriesProps = {
   canLoadServerOrders: boolean
   canLoadServerCandidates: boolean
   canLoadExecutorBaseCandidates: boolean
+  preferredOrderId: string | null
 }
 
 export function useWorkspaceDataQueries({
@@ -40,6 +39,7 @@ export function useWorkspaceDataQueries({
   canLoadServerOrders,
   canLoadServerCandidates,
   canLoadExecutorBaseCandidates,
+  preferredOrderId,
 }: UseWorkspaceDataQueriesProps) {
   const ordersQueryParams = { limit: 100, includeArchived: true } as const
   const shouldLoadMyOrders = role === 'Executor'
@@ -78,8 +78,19 @@ export function useWorkspaceDataQueries({
   }
 
   // Кандидаты по вакансии
-  const [loadVacancyCandidates] = useLazyGetVacancyCandidatesQuery()
-  const [loadVacancyBaseCandidates] = useLazyGetVacancyBaseCandidatesQuery()
+  const candidateVacancy = vacanciesResponse?.items.find((vacancy) => vacancy.orderId === preferredOrderId)
+    ?? vacanciesResponse?.items[0]
+  const candidateVacancyId = candidateVacancy?.id
+  const {
+    data: vacancyCandidatesResponse,
+    isFetching: isVacancyCandidatesFetching,
+    isError: isVacancyCandidatesError,
+  } = useGetVacancyCandidatesQuery(
+    canLoadServerCandidates && candidateVacancyId ? { vacancyId: candidateVacancyId } : skipToken,
+  )
+  const { data: vacancyBaseCandidatesResponse } = useGetVacancyBaseCandidatesQuery(
+    canLoadExecutorBaseCandidates && candidateVacancyId ? { vacancyId: candidateVacancyId } : skipToken,
+  )
 
   // Ответы на заказы
   const { data: myOrderResponse, refetch: refetchMyOrderResponse } = useGetMyOrderResponseQuery(
@@ -122,8 +133,10 @@ export function useWorkspaceDataQueries({
     getCandidateSourceVacancyByOrderId,
 
     // Запросы кандидатов
-    loadVacancyCandidates,
-    loadVacancyBaseCandidates,
+    vacancyCandidatesResponse,
+    vacancyBaseCandidatesResponse,
+    isVacancyCandidatesFetching,
+    isVacancyCandidatesError,
 
     // Запросы ответов
     myOrderResponse,

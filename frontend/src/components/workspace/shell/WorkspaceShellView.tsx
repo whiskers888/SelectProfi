@@ -295,7 +295,11 @@ export function WorkspaceShellView({
                       canViewBaseCandidates={canLoadExecutorBaseCandidates}
                       candidates={role === 'Executor' ? executorMyCandidates : filteredCandidates}
                       hasRespondedToOrder={hasRespondedToSelectedOrder}
-                      isLoading={isViewLoading || isOrdersApiLoading || isCandidatesApiLoading}
+                      isLoading={
+                        isViewLoading ||
+                        (activeView === 'orders' && isOrdersApiLoading) ||
+                        (activeView === 'candidates' && isCandidatesApiLoading)
+                      }
                       isOrderResponsesLoading={isOrderResponsesFetching}
                       isOrdersArchiving={isDeletingOrder}
                       isOrdersStateUpdating={isOrderStatusUpdating}

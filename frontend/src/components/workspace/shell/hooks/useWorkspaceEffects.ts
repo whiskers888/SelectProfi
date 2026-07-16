@@ -11,6 +11,7 @@ type UseWorkspaceEffectsProps = {
 const sidebarCollapsedStorageKey = 'workspace-sidebar-collapsed-v1';
 
 export function useWorkspaceEffects({ authMe, uiState, forms, apiQueries }: UseWorkspaceEffectsProps) {
+    const transitionTimeoutRef = uiState.transitionTimeoutRef;
     // Сохранение состояния сайдбара
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -37,9 +38,9 @@ export function useWorkspaceEffects({ authMe, uiState, forms, apiQueries }: UseW
     // Очистка таймера при размонтировании
     useEffect(() => {
         return () => {
-            if (uiState.transitionTimeoutRef?.current) {
-                window.clearTimeout(uiState.transitionTimeoutRef.current);
+            if (transitionTimeoutRef?.current) {
+                window.clearTimeout(transitionTimeoutRef.current);
             }
         };
-    }, [uiState]);
+    }, [transitionTimeoutRef]);
 }
