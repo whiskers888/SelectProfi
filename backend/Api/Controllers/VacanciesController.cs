@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
+using SelectProfi.backend.Application.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
@@ -11,6 +12,7 @@ using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCus
 using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Vacancies.CreateVacancy;
 using SelectProfi.backend.Application.Vacancies.DeleteVacancy;
@@ -150,6 +152,33 @@ public sealed class VacanciesController(
         return result.ToActionResult(this);
     }
 
+    [HttpPost("{vacancyId:guid}/candidates/resumes/{resumeId:guid}/attachments")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesBadRequestProblem]
+    public async Task<IActionResult> UploadCandidateResumeAttachment(
+        Guid vacancyId,
+        Guid resumeId,
+        [FromForm] IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null)
+            return BadRequest(new ProblemDetails { Title = "Ошибка валидации", Status = StatusCodes.Status400BadRequest, Detail = "Файл обязателен." });
+
+        await using var content = file.OpenReadStream();
+        var result = await commandDispatcher.DispatchAsync<UploadCandidateResumeAttachmentCommand, UploadCandidateResumeAttachmentResult>(
+            new UploadCandidateResumeAttachmentCommand
+            {
+                VacancyId = vacancyId, ResumeId = resumeId, RequesterUserId = RequesterUserId,
+                Content = content, FileName = file.FileName, ContentType = file.ContentType, Length = file.Length
+            }, cancellationToken);
+
+        return result.Success
+            ? Created($"/api/vacancies/{vacancyId}/candidates/resumes/{resumeId}/attachments/{result.AttachmentId}", new { result.AttachmentId })
+            : BadRequest(new ProblemDetails { Title = "Ошибка валидации", Status = StatusCodes.Status400BadRequest, Detail = "Файл не принят." });
+    }
+
     [HttpPost("{vacancyId:guid}/respond")]
     [Authorize(Policy = AuthorizationPolicies.ApplicantOnly)]
     [ProducesResponseType(typeof(VacancyCandidateResponse), StatusCodes.Status201Created)]
@@ -180,6 +209,16 @@ public sealed class VacanciesController(
             candidateId.ToCommand(vacancyId, RequesterUserId, RequesterRole),
             cancellationToken);
 
+        return result.ToActionResult(this);
+    }
+
+    [HttpDelete("{vacancyId:guid}/candidates/{candidateId:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RemoveCandidate(Guid vacancyId, Guid candidateId, CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<RemoveVacancyCandidateCommand, RemoveVacancyCandidateResult>(
+            candidateId.ToRemoveCommand(vacancyId, RequesterUserId, RequesterRole), cancellationToken);
         return result.ToActionResult(this);
     }
 

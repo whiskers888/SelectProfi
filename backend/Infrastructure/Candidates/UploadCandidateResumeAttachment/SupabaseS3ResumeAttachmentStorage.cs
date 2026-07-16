@@ -24,7 +24,7 @@ public sealed class SupabaseS3ResumeAttachmentStorage : IResumeAttachmentStorage
         });
     }
 
-    public async Task<string> SaveAsync(Stream content, string extension, string contentType, CancellationToken cancellationToken)
+    public async Task<string> SaveAsync(Stream content, string extension, CancellationToken cancellationToken)
     {
         var safeExtension = extension.StartsWith('.') ? extension.ToLowerInvariant() : string.Empty;
         var objectKey = $"resumes/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid():N}{safeExtension}";
@@ -33,7 +33,7 @@ public sealed class SupabaseS3ResumeAttachmentStorage : IResumeAttachmentStorage
             BucketName = _options.Bucket,
             Key = objectKey,
             InputStream = content,
-            ContentType = contentType,
+            ContentType = "application/octet-stream",
             AutoCloseStream = false,
         }, cancellationToken);
         return objectKey;

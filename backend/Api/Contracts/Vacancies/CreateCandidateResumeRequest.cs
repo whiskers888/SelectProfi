@@ -19,9 +19,7 @@ public sealed class CreateCandidateResumeRequest
     public string? Phone { get; init; }
 
     [Required]
-    [MinLength(1)]
-    [MaxLength(120)]
-    public string Specialization { get; init; } = string.Empty;
+    public Guid? SpecializationId { get; init; }
 
     [Required]
     [MinLength(1)]

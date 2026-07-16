@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
+using SelectProfi.backend.Application.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
@@ -86,6 +87,8 @@ public static class VacanciesActionResultExtensions
 
         return controller.ToProblem(VacanciesProblemMap.Resolve(result.ErrorCode));
     }
+    public static IActionResult ToActionResult(this RemoveVacancyCandidateResult result, ControllerBase controller) =>
+        result.ErrorCode == RemoveVacancyCandidateErrorCode.None ? controller.NoContent() : controller.ToProblem(VacanciesProblemMap.Resolve(result.ErrorCode));
 
     public static IActionResult ToActionResult(this RespondToVacancyResult result, ControllerBase controller)
     {

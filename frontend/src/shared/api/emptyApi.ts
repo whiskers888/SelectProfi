@@ -4,6 +4,6 @@ import { apiDispatcher } from './core/apiDispatcher'
 export const emptyApi = createApi({
   reducerPath: 'api',
   baseQuery: apiDispatcher,
-  tagTypes: ['Order'],
+  tagTypes: ['Order', 'VacancyCandidate'],
   endpoints: () => ({}),
 })

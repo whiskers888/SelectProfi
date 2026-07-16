@@ -1,5 +1,6 @@
 import { type FormEvent, useCallback } from 'react'
 import type { WorkspaceCandidate, WorkspaceOrder, WorkspaceRole, WorkspaceView } from '../../model/data'
+import { buildResumeAttachmentsJson, buildResumeContentJson } from '@/features/vacancies/lib/resume'
 
 type BannerVariant = 'default' | 'success' | 'destructive'
 
@@ -19,6 +20,7 @@ type CandidateCreateFormValues = {
   email: string
   phone: string
   specialization: string
+  specializationId: string
   resumeTitle: string
   resumeRichTextHtml: string
   resumeAttachmentLinks: string
@@ -63,6 +65,26 @@ type WorkspaceCreateActionsDependencies = {
     },
     { id: string; status: VacancyStatusContract }
   >
+  createCandidateResume: MutationTrigger<
+    {
+      vacancyId: string
+      body: {
+        fullName: string
+        birthDate?: string
+        email?: string
+        phone: string
+        specializationId: string
+        resumeTitle: string
+        resumeContentJson: string
+        resumeAttachmentsJson?: string
+      }
+    },
+    { candidateId: string; candidateResumeId: string }
+  >
+  uploadCandidateResumeAttachment: MutationTrigger<
+    { vacancyId: string; resumeId: string; file: File },
+    { attachmentId: string }
+  >
   updateVacancy: MutationTrigger<
     {
       vacancyId: string
@@ -83,6 +105,7 @@ type WorkspaceCreateActionsDependencies = {
   createOrderFormValues: OrderCreateFormValues
   createVacancyFormValues: VacancyCreateFormValues
   createVacancyOrderId: string | null
+  candidateSourceVacancyId: string | null
   getExistingVacancyByOrderId: (orderId: string) => ExistingVacancySummary | null
   orderSpecializationOptions: { id: string; name: string }[]
   filteredOrders: WorkspaceOrder[]
@@ -146,11 +169,14 @@ export function useWorkspaceCreateActions({
   createCandidateFormValues,
   createOrder,
   createVacancy,
+  createCandidateResume,
+  uploadCandidateResumeAttachment,
   updateVacancy,
   updateVacancyStatus,
   createOrderFormValues,
   createVacancyFormValues,
   createVacancyOrderId,
+  candidateSourceVacancyId,
   getExistingVacancyByOrderId,
   orderSpecializationOptions,
   filteredOrders,
@@ -489,6 +515,7 @@ export function useWorkspaceCreateActions({
         | 'email'
         | 'phone'
         | 'specialization'
+        | 'specializationId'
         | 'resumeTitle'
         | 'resumeRichTextHtml'
         | 'resumeAttachmentLinks',
@@ -503,15 +530,16 @@ export function useWorkspaceCreateActions({
   )
 
   const handleCreateCandidateFromPage = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
+    async (event: FormEvent<HTMLFormElement>, files: File[] = []) => {
       event.preventDefault()
 
       const fullName = createCandidateFormValues.fullName.trim()
-      const specialization = createCandidateFormValues.specialization.trim()
+      const specializationId = createCandidateFormValues.specializationId.trim()
+      const phone = createCandidateFormValues.phone.trim()
       const resumeTitle = createCandidateFormValues.resumeTitle.trim()
       const resumeSummary = toResumeSummary(createCandidateFormValues.resumeRichTextHtml)
 
-      if (!fullName || !specialization || !resumeTitle || !resumeSummary) {
+      if (!candidateSourceVacancyId || !fullName || !phone || !specializationId || !resumeTitle || !resumeSummary) {
         setBanner({
           variant: 'destructive',
           message: 'Заполните ФИО, специализацию, заголовок и содержимое резюме.',
@@ -519,31 +547,34 @@ export function useWorkspaceCreateActions({
         return
       }
 
-      const normalizedCandidateKey = toNormalizedCandidateKey(fullName, specialization)
-      const nextCandidateIndex = manualCandidatesByRole[role].length + 1
-
-      const nextCandidate: WorkspaceCandidate = {
-        id: `cand-local-${normalizedCandidateKey || 'candidate'}-${nextCandidateIndex}`,
-        name: fullName,
-        position: specialization,
-        source: 'Добавлен вручную',
-        rating: '4.6',
-        orderId: getPreferredOrderId(filteredOrders),
-        statusLabel: 'Новый',
-        statusTone: 'warning',
-        comment: resumeSummary || 'Новый профиль добавлен исполнителем.',
+      try {
+        const created = await createCandidateResume({
+          vacancyId: candidateSourceVacancyId,
+          body: {
+            fullName,
+            birthDate: createCandidateFormValues.birthDate.trim() || undefined,
+            email: createCandidateFormValues.email.trim() || undefined,
+            phone,
+            specializationId,
+            resumeTitle,
+            resumeContentJson: buildResumeContentJson({ resumeSkills: '', resumeRichTextHtml: createCandidateFormValues.resumeRichTextHtml }),
+            resumeAttachmentsJson: buildResumeAttachmentsJson({ resumeAttachmentLinks: createCandidateFormValues.resumeAttachmentLinks }),
+          },
+        }).unwrap()
+        await Promise.all(files.map((file) => uploadCandidateResumeAttachment({ vacancyId: candidateSourceVacancyId, resumeId: created.candidateResumeId, file }).unwrap()))
+        await refetchVacancies()
+      } catch (error) {
+        setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) })
+        return
       }
 
-      setManualCandidatesByRole((previousCandidatesByRole) => ({
-        ...previousCandidatesByRole,
-        [role]: [nextCandidate, ...previousCandidatesByRole[role]],
-      }))
       setCreateCandidateFormValues({
         fullName: '',
         birthDate: '',
         email: '',
         phone: '',
         specialization: '',
+        specializationId: '',
         resumeTitle: '',
         resumeRichTextHtml: '',
         resumeAttachmentLinks: '',
@@ -557,17 +588,22 @@ export function useWorkspaceCreateActions({
     },
     [
       createCandidateFormValues.fullName,
+      createCandidateFormValues.birthDate,
+      createCandidateFormValues.email,
+      createCandidateFormValues.phone,
       createCandidateFormValues.resumeRichTextHtml,
       createCandidateFormValues.resumeTitle,
-      createCandidateFormValues.specialization,
-      filteredOrders,
-      manualCandidatesByRole,
-      role,
+      createCandidateFormValues.specializationId,
+      createCandidateFormValues.resumeAttachmentLinks,
+      candidateSourceVacancyId,
+      createCandidateResume,
+      uploadCandidateResumeAttachment,
+      refetchVacancies,
+      getRequestErrorMessage,
       setActiveView,
       setBanner,
       setCreateCandidateFormValues,
       setIsCreateCandidatePageOpen,
-      setManualCandidatesByRole,
     ],
   )
 
@@ -634,6 +670,7 @@ export function useWorkspaceCreateActions({
         email: '',
         phone: '',
         specialization: '',
+        specializationId: '',
         resumeTitle: '',
         resumeRichTextHtml: '',
         resumeAttachmentLinks: '',

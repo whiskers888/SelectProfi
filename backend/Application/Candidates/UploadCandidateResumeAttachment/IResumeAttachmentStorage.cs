@@ -2,6 +2,6 @@ namespace SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttach
 
 public interface IResumeAttachmentStorage
 {
-    Task<string> SaveAsync(Stream content, string extension, string contentType, CancellationToken cancellationToken);
-    Task DeleteAsync(string objectKey, CancellationToken cancellationToken);
+    Task<string> SaveAsync(Stream content, string extension, CancellationToken cancellationToken);
+    Task DeleteAsync(string storedFileName, CancellationToken cancellationToken);
 }

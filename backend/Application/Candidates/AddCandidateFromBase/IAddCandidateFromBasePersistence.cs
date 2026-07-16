@@ -7,7 +7,7 @@ public interface IAddCandidateFromBasePersistence
 {
     Task<Vacancy?> FindActiveVacancyByIdAsync(Guid vacancyId, CancellationToken cancellationToken);
 
-    Task<Candidate?> FindRegisteredCandidateByIdAsync(Guid candidateId, CancellationToken cancellationToken);
+    Task<Candidate?> FindActiveCandidateByIdAsync(Guid candidateId, CancellationToken cancellationToken);
 
     Task<AddCandidateFromBasePersistenceResult> CreateAsync(
         VacancyCandidate vacancyCandidate,

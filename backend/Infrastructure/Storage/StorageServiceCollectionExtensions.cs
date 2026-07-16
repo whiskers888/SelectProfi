@@ -4,7 +4,7 @@ using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment
 using SelectProfi.backend.Infrastructure.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Infrastructure.Storage;
 
-namespace Infrastructure;
+namespace SelectProfi.backend.Infrastructure;
 
 public static class StorageServiceCollectionExtensions
 {
