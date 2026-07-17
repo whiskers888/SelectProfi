@@ -299,6 +299,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             builder.Property(attachment => attachment.OriginalFileName).HasMaxLength(255).IsRequired();
             builder.Property(attachment => attachment.StoredFileName).HasMaxLength(255).IsRequired();
             builder.Property(attachment => attachment.ContentType).HasMaxLength(128).IsRequired();
+            builder.Property(attachment => attachment.AttachmentType).HasMaxLength(64).IsRequired();
+            builder.Property(attachment => attachment.CustomType).HasMaxLength(128);
             builder.HasOne(attachment => attachment.CandidateResume)
                 .WithMany()
                 .HasForeignKey(attachment => attachment.CandidateResumeId)

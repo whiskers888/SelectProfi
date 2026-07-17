@@ -1,4 +1,5 @@
 import { api } from '../generated/openapi'
+import type { SelectedResumeFile } from '@/components/workspace/ResumeFilesInput'
 
 export type VacancyCandidateStageContract = 'Pool' | 'Shortlist'
 
@@ -132,12 +133,26 @@ const candidatesApi = api.injectEndpoints({
     }),
     uploadCandidateResumeAttachment: build.mutation<
       { attachmentId: string },
-      { vacancyId: string; resumeId: string; file: File }
+      { vacancyId: string; resumeId: string; file: SelectedResumeFile }
     >({
       query: ({ vacancyId, resumeId, file }) => {
         const body = new FormData()
-        body.append('file', file)
+        body.append('file', file.file)
+        body.append('attachmentType', file.type)
+        if (file.customType.trim()) body.append('customType', file.customType.trim())
         return { url: `/api/vacancies/${vacancyId}/candidates/resumes/${resumeId}/attachments`, method: 'POST', body }
+      },
+    }),
+    uploadMyCandidateResumeAttachment: build.mutation<
+      { attachmentId: string },
+      { resumeId: string; file: SelectedResumeFile }
+    >({
+      query: ({ resumeId, file }) => {
+        const body = new FormData()
+        body.append('file', file.file)
+        body.append('attachmentType', file.type)
+        if (file.customType.trim()) body.append('customType', file.customType.trim())
+        return { url: `/api/candidates/resumes/${resumeId}/attachments`, method: 'POST', body }
       },
     }),
     addCandidateFromBase: build.mutation<
@@ -223,6 +238,7 @@ export const {
   useCreateMyCandidateResumeMutation,
   useCreateCandidateResumeMutation,
   useUploadCandidateResumeAttachmentMutation,
+  useUploadMyCandidateResumeAttachmentMutation,
   useAddCandidateFromBaseMutation,
   useRemoveVacancyCandidateMutation,
   useRespondToVacancyMutation,

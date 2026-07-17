@@ -7,10 +7,12 @@ namespace SelectProfi.backend.Infrastructure.Candidates.UploadCandidateResumeAtt
 
 public sealed class UploadCandidateResumeAttachmentPersistence(AppDbContext dbContext) : IUploadCandidateResumeAttachmentPersistence
 {
-    public Task<bool> CanUploadAsync(Guid vacancyId, Guid resumeId, Guid requesterUserId, CancellationToken cancellationToken) =>
+    public Task<bool> CanUploadAsync(Guid? vacancyId, Guid resumeId, Guid requesterUserId, CancellationToken cancellationToken) =>
         dbContext.CandidateResumes.AnyAsync(resume =>
             resume.Id == resumeId && resume.DeletedAtUtc == null && resume.OwnerUserId == requesterUserId &&
-            dbContext.VacancyCandidates.Any(link => link.VacancyId == vacancyId && link.CandidateId == resume.CandidateId && link.DeletedAtUtc == null), cancellationToken);
+            (!vacancyId.HasValue ||
+             dbContext.VacancyCandidates.Any(link => link.VacancyId == vacancyId.Value && link.CandidateId == resume.CandidateId && link.DeletedAtUtc == null)),
+            cancellationToken);
 
     public async Task SaveAsync(CandidateResumeAttachment attachment, CancellationToken cancellationToken)
     {

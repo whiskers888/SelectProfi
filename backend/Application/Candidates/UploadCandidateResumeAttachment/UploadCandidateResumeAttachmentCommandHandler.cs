@@ -14,7 +14,9 @@ public sealed class UploadCandidateResumeAttachmentCommandHandler(
     public async Task<UploadCandidateResumeAttachmentResult> HandleAsync(UploadCandidateResumeAttachmentCommand command, CancellationToken cancellationToken)
     {
         var extension = Path.GetExtension(command.FileName).ToLowerInvariant();
-        if (command.Length <= 0 || command.Length > MaxFileSize || !AllowedExtensions.Contains(extension))
+        if (command.Length <= 0 || command.Length > MaxFileSize || !AllowedExtensions.Contains(extension) ||
+            string.IsNullOrWhiteSpace(command.AttachmentType) || command.AttachmentType.Length > 64 ||
+            command.CustomType?.Length > 128)
             return new UploadCandidateResumeAttachmentResult { Error = "invalid_file" };
 
         if (!await persistence.CanUploadAsync(command.VacancyId, command.ResumeId, command.RequesterUserId, cancellationToken))
@@ -25,7 +27,11 @@ public sealed class UploadCandidateResumeAttachmentCommandHandler(
         {
             Id = Guid.NewGuid(), CandidateResumeId = command.ResumeId,
             OriginalFileName = Path.GetFileName(command.FileName), StoredFileName = storedFileName,
-            ContentType = command.ContentType, Length = command.Length, CreatedAtUtc = DateTime.UtcNow
+            ContentType = command.ContentType,
+            AttachmentType = command.AttachmentType.Trim(),
+            CustomType = string.IsNullOrWhiteSpace(command.CustomType) ? null : command.CustomType.Trim(),
+            Length = command.Length,
+            CreatedAtUtc = DateTime.UtcNow
         };
         try
         {

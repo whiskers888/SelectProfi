@@ -4,6 +4,6 @@ namespace SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttach
 
 public interface IUploadCandidateResumeAttachmentPersistence
 {
-    Task<bool> CanUploadAsync(Guid vacancyId, Guid resumeId, Guid requesterUserId, CancellationToken cancellationToken);
+    Task<bool> CanUploadAsync(Guid? vacancyId, Guid resumeId, Guid requesterUserId, CancellationToken cancellationToken);
     Task SaveAsync(CandidateResumeAttachment attachment, CancellationToken cancellationToken);
 }
