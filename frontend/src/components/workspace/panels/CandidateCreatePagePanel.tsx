@@ -62,7 +62,7 @@ export function CandidateCreatePagePanel({
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-candidate-full-name">
-            ФИО кандидата
+            ФИО кандидата <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
           <Input
             id="workspace-candidate-full-name"
@@ -104,7 +104,7 @@ export function CandidateCreatePagePanel({
           </div>
           <div className="space-y-2">
             <Label className="text-slate-600" htmlFor="workspace-candidate-phone">
-              Телефон
+              Телефон <span aria-hidden="true" className="text-destructive">*</span>
             </Label>
             <Input
               id="workspace-candidate-phone"
@@ -120,7 +120,7 @@ export function CandidateCreatePagePanel({
 
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-candidate-specialization">
-            Позиция / специализация
+            Позиция / специализация <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
           <select
             id="workspace-candidate-specialization"
@@ -145,7 +145,7 @@ export function CandidateCreatePagePanel({
 
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-candidate-resume-title">
-            Заголовок резюме
+            Заголовок резюме <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
           <Input
             id="workspace-candidate-resume-title"
@@ -159,7 +159,9 @@ export function CandidateCreatePagePanel({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600">Содержимое резюме</Label>
+          <Label className="text-slate-600">
+            Содержимое резюме <span aria-hidden="true" className="text-destructive">*</span>
+          </Label>
           {/* @dvnull: Легаси rich-text-editor на execCommand заменен на tiptap для единого editor-стека. */}
           <TiptapTextEditor
             value={formValues.resumeRichTextHtml}
