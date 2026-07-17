@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Candidates.GetMyCandidates;
+using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Contracts.Vacancies;
@@ -17,6 +18,40 @@ namespace SelectProfi.backend.Controllers;
 [Produces("application/json", "application/problem+json")]
 public sealed class CandidatesController(ICommandDispatcher commandDispatcher, IQueryDispatcher queryDispatcher) : AuthorizedControllerBase
 {
+    [HttpPost("resumes/{resumeId:guid}/attachments")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesBadRequestProblem]
+    public async Task<IActionResult> UploadMyCandidateResumeAttachment(
+        Guid resumeId,
+        [FromForm] IFormFile? file,
+        [FromForm] string? attachmentType,
+        [FromForm] string? customType,
+        CancellationToken cancellationToken)
+    {
+        if (file is null)
+            return BadRequest(new ProblemDetails { Title = "Ошибка валидации", Status = StatusCodes.Status400BadRequest, Detail = "Файл обязателен." });
+
+        await using var content = file.OpenReadStream();
+        var result = await commandDispatcher.DispatchAsync<UploadCandidateResumeAttachmentCommand, UploadCandidateResumeAttachmentResult>(
+            new UploadCandidateResumeAttachmentCommand
+            {
+                ResumeId = resumeId,
+                RequesterUserId = RequesterUserId,
+                Content = content,
+                FileName = file.FileName,
+                ContentType = file.ContentType,
+                Length = file.Length,
+                AttachmentType = attachmentType ?? string.Empty,
+                CustomType = customType
+            },
+            cancellationToken);
+
+        return result.Success
+            ? Created($"/api/candidates/resumes/{resumeId}/attachments/{result.AttachmentId}", new { result.AttachmentId })
+            : BadRequest(new ProblemDetails { Title = "Ошибка валидации", Status = StatusCodes.Status400BadRequest, Detail = "Файл не принят." });
+    }
+
     [HttpGet("mine")]
     [ProducesResponseType(typeof(IReadOnlyList<MyCandidateResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyCandidates(CancellationToken cancellationToken)

@@ -22,6 +22,12 @@ public sealed class CandidateResumeAttachment
     [MaxLength(128)]
     public string ContentType { get; set; } = string.Empty;
 
+    [MaxLength(64)]
+    public string AttachmentType { get; set; } = string.Empty;
+
+    [MaxLength(128)]
+    public string? CustomType { get; set; }
+
     public long Length { get; set; }
 
     public DateTime CreatedAtUtc { get; set; }

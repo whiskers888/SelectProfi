@@ -1,11 +1,11 @@
-import { type FormEvent } from 'react'
+import { type FormEvent, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
 import { ResumeLinksInput } from '../ResumeLinksInput'
-import { ResumeFilesInput } from '../ResumeFilesInput'
+import { ResumeFilesInput, type SelectedResumeFile } from '../ResumeFilesInput'
 
 type CandidateCreatePagePanelProps = {
   formValues: {
@@ -33,7 +33,7 @@ type CandidateCreatePagePanelProps = {
       | 'resumeAttachmentLinks',
     value: string,
   ) => void
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
+  onSubmit: (event: FormEvent<HTMLFormElement>, files: SelectedResumeFile[]) => void | Promise<void>
   specializationOptions: Array<{ id: string; name: string }>
 }
 
@@ -44,6 +44,7 @@ export function CandidateCreatePagePanel({
   onSubmit,
   specializationOptions,
 }: CandidateCreatePagePanelProps) {
+  const [files, setFiles] = useState<SelectedResumeFile[]>([])
   const hasVisibleResumeText = formValues.resumeRichTextHtml.replace(/<[^>]*>/g, ' ').trim().length > 0
   const isFormInvalid =
     !formValues.fullName.trim() ||
@@ -59,7 +60,7 @@ export function CandidateCreatePagePanel({
         <p className="text-sm text-slate-600">Заполните профиль кандидата и данные резюме.</p>
       </div>
 
-      <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
+      <form className="mt-4 grid gap-4" onSubmit={(event) => onSubmit(event, files)}>
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-candidate-full-name">
             ФИО кандидата <span aria-hidden="true" className="text-destructive">*</span>
@@ -179,7 +180,7 @@ export function CandidateCreatePagePanel({
             value={formValues.resumeAttachmentLinks}
             onChange={(value) => onFieldChange('resumeAttachmentLinks', value)}
         />
-        <ResumeFilesInput id="workspace-candidate-resume-files" />
+        <ResumeFilesInput id="workspace-candidate-resume-files" value={files} onChange={setFiles} />
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">

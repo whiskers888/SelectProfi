@@ -1,6 +1,7 @@
 import { type FormEvent, useCallback } from 'react'
 import type { WorkspaceCandidate, WorkspaceOrder, WorkspaceRole, WorkspaceView } from '../../model/data'
 import { buildResumeAttachmentsJson, buildResumeContentJson } from '@/features/vacancies/lib/resume'
+import type { SelectedResumeFile } from '@/components/workspace/ResumeFilesInput'
 
 type BannerVariant = 'default' | 'success' | 'destructive'
 
@@ -95,7 +96,11 @@ type WorkspaceCreateActionsDependencies = {
     { candidateId: string; candidateResumeId: string }
   >
   uploadCandidateResumeAttachment: MutationTrigger<
-    { vacancyId: string; resumeId: string; file: File },
+    { vacancyId: string; resumeId: string; file: SelectedResumeFile },
+    { attachmentId: string }
+  >
+  uploadMyCandidateResumeAttachment: MutationTrigger<
+    { resumeId: string; file: SelectedResumeFile },
     { attachmentId: string }
   >
   updateVacancy: MutationTrigger<
@@ -187,6 +192,7 @@ export function useWorkspaceCreateActions({
   createCandidateResume,
   createMyCandidateResume,
   uploadCandidateResumeAttachment,
+  uploadMyCandidateResumeAttachment,
   updateVacancy,
   updateVacancyStatus,
   createOrderFormValues,
@@ -548,7 +554,7 @@ export function useWorkspaceCreateActions({
   )
 
   const handleCreateCandidateFromPage = useCallback(
-    async (event: FormEvent<HTMLFormElement>, files: File[] = []) => {
+    async (event: FormEvent<HTMLFormElement>, files: SelectedResumeFile[] = []) => {
       event.preventDefault()
 
       const fullName = createCandidateFormValues.fullName.trim()
@@ -583,6 +589,7 @@ export function useWorkspaceCreateActions({
           await Promise.all(files.map((file) => uploadCandidateResumeAttachment({ vacancyId: candidateSourceVacancyId, resumeId: created.candidateResumeId, file }).unwrap()))
           await refetchVacancies()
         } else {
+          await Promise.all(files.map((file) => uploadMyCandidateResumeAttachment({ resumeId: created.candidateResumeId, file }).unwrap()))
           setManualCandidatesByRole((previous) => ({
             ...previous,
             [role]: [{
@@ -641,6 +648,7 @@ export function useWorkspaceCreateActions({
       createCandidateResume,
       createMyCandidateResume,
       uploadCandidateResumeAttachment,
+      uploadMyCandidateResumeAttachment,
       refetchVacancies,
       getRequestErrorMessage,
       setActiveView,

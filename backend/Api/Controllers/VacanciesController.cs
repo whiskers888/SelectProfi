@@ -161,6 +161,8 @@ public sealed class VacanciesController(
         Guid vacancyId,
         Guid resumeId,
         [FromForm] IFormFile? file,
+        [FromForm] string? attachmentType,
+        [FromForm] string? customType,
         CancellationToken cancellationToken)
     {
         if (file is null)
@@ -171,7 +173,8 @@ public sealed class VacanciesController(
             new UploadCandidateResumeAttachmentCommand
             {
                 VacancyId = vacancyId, ResumeId = resumeId, RequesterUserId = RequesterUserId,
-                Content = content, FileName = file.FileName, ContentType = file.ContentType, Length = file.Length
+                Content = content, FileName = file.FileName, ContentType = file.ContentType, Length = file.Length,
+                AttachmentType = attachmentType ?? string.Empty, CustomType = customType
             }, cancellationToken);
 
         return result.Success

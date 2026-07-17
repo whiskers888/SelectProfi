@@ -17,6 +17,7 @@ import {
   useCreateCandidateResumeMutation,
   useCreateMyCandidateResumeMutation,
   useUploadCandidateResumeAttachmentMutation,
+  useUploadMyCandidateResumeAttachmentMutation,
   useLazyGetVacancyBaseCandidatesQuery,
   useLazyGetVacancyCandidatesQuery,
   useMarkVacancyCandidateViewedByCustomerMutation,
@@ -226,6 +227,7 @@ export function useWorkspaceShellController() {
   const [createCandidateResume] = useCreateCandidateResumeMutation()
   const [createMyCandidateResume] = useCreateMyCandidateResumeMutation()
   const [uploadCandidateResumeAttachment] = useUploadCandidateResumeAttachmentMutation()
+  const [uploadMyCandidateResumeAttachment] = useUploadMyCandidateResumeAttachmentMutation()
   const [addCandidateFromBase, { isLoading: isAddingCandidateFromBase }] = useAddCandidateFromBaseMutation()
   const [removeVacancyCandidate, { isLoading: isRemovingVacancyCandidate }] = useRemoveVacancyCandidateMutation()
   const [updateVacancyCandidateStage, { isLoading: isUpdatingApplicantResponderStage }] =
@@ -983,6 +985,7 @@ export function useWorkspaceShellController() {
     createCandidateResume,
     createMyCandidateResume,
     uploadCandidateResumeAttachment,
+    uploadMyCandidateResumeAttachment,
     createOrder,
     createVacancy,
     updateVacancy,
