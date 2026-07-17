@@ -9,6 +9,11 @@ services:
       ConnectionStrings__Postgres: ${POSTGRES_CONNECTION_STRING:-Host=postgres;Port=5432;Database=selectprofi;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres};SSL Mode=Disable}
       ConnectionStrings__Redis: redis:6379
       ConnectionStrings__RabbitMq: amqp://guest:guest@rabbitmq:5672/
+      S3__ENDPOINT: ${S3__ENDPOINT}
+      S3__REGION: ${S3__REGION}
+      S3__BUCKET: ${S3__BUCKET}
+      S3__ACCESSKEYID: ${S3__ACCESSKEYID}
+      S3__SECRETACCESSKEY: ${S3__SECRETACCESSKEY}
       # @dvnull: Фиксируем минимум кандидатов через env, чтобы исключить падение API при дрейфе конфигов.
       OrderCandidateRequirements__MinRequestedCandidatesCount: "1"
     ports:
