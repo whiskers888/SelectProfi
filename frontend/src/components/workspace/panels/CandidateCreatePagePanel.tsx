@@ -1,10 +1,11 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
-import { Textarea } from '@/components/ui/textarea'
+import { ResumeLinksInput } from '../ResumeLinksInput'
+import { ResumeFilesInput } from '../ResumeFilesInput'
 
 type CandidateCreatePagePanelProps = {
   formValues: {
@@ -19,7 +20,6 @@ type CandidateCreatePagePanelProps = {
     resumeAttachmentLinks: string
   }
   onBack: () => void
-  specializationOptions: { id: string; name: string }[]
   onFieldChange: (
     field:
       | 'fullName'
@@ -33,7 +33,8 @@ type CandidateCreatePagePanelProps = {
       | 'resumeAttachmentLinks',
     value: string,
   ) => void
-  onSubmit: (event: FormEvent<HTMLFormElement>, files: File[]) => void | Promise<void>
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
+  specializationOptions: Array<{ id: string; name: string }>
 }
 
 export function CandidateCreatePagePanel({
@@ -43,27 +44,13 @@ export function CandidateCreatePagePanel({
   onSubmit,
   specializationOptions,
 }: CandidateCreatePagePanelProps) {
-  const [files, setFiles] = useState<File[]>([])
   const hasVisibleResumeText = formValues.resumeRichTextHtml.replace(/<[^>]*>/g, ' ').trim().length > 0
-  const invalidAttachmentLink = formValues.resumeAttachmentLinks
-    .split('\n')
-    .map((link) => link.trim())
-    .filter(Boolean)
-    .some((link) => {
-      try {
-        const url = new URL(link)
-        return url.protocol !== 'http:' && url.protocol !== 'https:'
-      } catch {
-        return true
-      }
-    })
   const isFormInvalid =
     !formValues.fullName.trim() ||
     !formValues.phone.trim() ||
     !formValues.specializationId.trim() ||
     !formValues.resumeTitle.trim() ||
-    !hasVisibleResumeText ||
-    invalidAttachmentLink
+    !hasVisibleResumeText
 
   return (
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
@@ -72,7 +59,7 @@ export function CandidateCreatePagePanel({
         <p className="text-sm text-slate-600">Заполните профиль кандидата и данные резюме.</p>
       </div>
 
-      <form className="mt-4 grid gap-4" onSubmit={(event) => onSubmit(event, files)}>
+      <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-candidate-full-name">
             ФИО кандидата
@@ -86,23 +73,6 @@ export function CandidateCreatePagePanel({
             required
             className="h-11 rounded-xl border-slate-200 text-slate-900"
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="workspace-candidate-files">Прикрепить файлы</Label>
-          <Input
-            id="workspace-candidate-files"
-            type="file"
-            multiple
-            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.mp4,.webm"
-            onChange={(event) => setFiles(Array.from(event.target.files ?? []).filter((file) => file.size <= 25 * 1024 * 1024))}
-          />
-          {files.map((file) => (
-            <div key={`${file.name}-${file.lastModified}`} className="flex items-center justify-between text-sm">
-              <span>{file.name} ({Math.ceil(file.size / 1024)} KB)</span>
-              <Button type="button" variant="ghost" onClick={() => setFiles((current) => current.filter((item) => item !== file))}>Удалить</Button>
-            </div>
-          ))}
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -142,6 +112,7 @@ export function CandidateCreatePagePanel({
               onChange={(event) => onFieldChange('phone', event.target.value)}
               placeholder="+7 999 000-00-00"
               maxLength={32}
+              required
               className="h-11 rounded-xl border-slate-200 text-slate-900"
             />
           </div>
@@ -154,13 +125,20 @@ export function CandidateCreatePagePanel({
           <select
             id="workspace-candidate-specialization"
             value={formValues.specializationId}
-            onChange={(event) => onFieldChange('specializationId', event.target.value)}
+            onChange={(event) => {
+              const specializationId = event.target.value
+              const specialization = specializationOptions.find((item) => item.id === specializationId)?.name ?? ''
+              onFieldChange('specializationId', specializationId)
+              onFieldChange('specialization', specialization)
+            }}
             required
-            className="h-11 w-full rounded-xl border border-slate-200 bg-background px-3 text-slate-900"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-slate-900"
           >
             <option value="">Выберите специализацию</option>
-            {specializationOptions.map((option) => (
-              <option key={option.id} value={option.id}>{option.name}</option>
+            {specializationOptions.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
             ))}
           </select>
         </div>
@@ -194,21 +172,12 @@ export function CandidateCreatePagePanel({
           <Label className="text-slate-600" htmlFor="workspace-candidate-resume-attachments">
             Ссылки на вложения
           </Label>
-          <Textarea
+        <ResumeLinksInput
             id="workspace-candidate-resume-attachments"
             value={formValues.resumeAttachmentLinks}
-            onChange={(event) => onFieldChange('resumeAttachmentLinks', event.target.value)}
-            placeholder="Одна ссылка на строку (облако, портфолио, pdf)."
-            maxLength={2000}
-            className="min-h-[100px] rounded-xl border-slate-200 text-slate-900"
-            aria-invalid={invalidAttachmentLink}
-            aria-describedby={invalidAttachmentLink ? 'workspace-candidate-resume-attachments-error' : undefined}
-          />
-          {invalidAttachmentLink ? (
-            <p id="workspace-candidate-resume-attachments-error" className="text-sm text-destructive" role="alert">
-              Укажите ссылку в формате https://example.com или удалите эту строку.
-            </p>
-          ) : null}
+            onChange={(value) => onFieldChange('resumeAttachmentLinks', value)}
+        />
+        <ResumeFilesInput id="workspace-candidate-resume-files" />
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">

@@ -10,10 +10,12 @@ import { api } from '@/shared/api/generated/openapi'
 import { useGetMyAuthInfoQuery } from '@/shared/api/auth'
 import {
   useGetVacancyBaseCandidatesQuery,
+  useGetMyCandidatesQuery,
   useGetVacancyCandidatesQuery,
   useAddCandidateFromBaseMutation,
   useRemoveVacancyCandidateMutation,
   useCreateCandidateResumeMutation,
+  useCreateMyCandidateResumeMutation,
   useUploadCandidateResumeAttachmentMutation,
   useLazyGetVacancyBaseCandidatesQuery,
   useLazyGetVacancyCandidatesQuery,
@@ -43,13 +45,10 @@ import {
   useUpdateVacancyStatusMutation,
 } from '@/shared/api/vacancies'
 import {
-  defaultWorkspaceRole,
-  defaultWorkspaceView,
   type WorkspaceCandidate,
   type WorkspaceChatThread,
   type WorkspaceRole,
   type WorkspaceView,
-  workspaceDataByRole,
 } from '../../model/data'
 import {
   useMarkCustomerViewedCandidate,
@@ -72,6 +71,8 @@ import {
 } from '../workspaceShell.helpers'
 
 type OrderFilter = 'all' | 'active' | 'paused'
+const defaultWorkspaceRole: WorkspaceRole = 'Customer'
+const defaultWorkspaceView: WorkspaceView = 'dashboard'
 const sidebarCollapsedStorageKey = 'workspace-sidebar-collapsed-v1'
 const vacancyCreateDraftsStorageKey = 'workspace-vacancy-create-drafts-v1'
 const applicantRespondedVacanciesStorageKey = 'workspace-applicant-responded-vacancies-v1'
@@ -223,6 +224,7 @@ export function useWorkspaceShellController() {
   const [markVacancyCandidateViewedByCustomer] = useMarkVacancyCandidateViewedByCustomerMutation()
   const [respondToVacancy, { isLoading: isRespondingToVacancy }] = useRespondToVacancyMutation()
   const [createCandidateResume] = useCreateCandidateResumeMutation()
+  const [createMyCandidateResume] = useCreateMyCandidateResumeMutation()
   const [uploadCandidateResumeAttachment] = useUploadCandidateResumeAttachmentMutation()
   const [addCandidateFromBase, { isLoading: isAddingCandidateFromBase }] = useAddCandidateFromBaseMutation()
   const [removeVacancyCandidate, { isLoading: isRemovingVacancyCandidate }] = useRemoveVacancyCandidateMutation()
@@ -246,7 +248,7 @@ export function useWorkspaceShellController() {
   const profileRoleLabel = toRoleLabel(role)
   const canManageOrder = authMe?.role === 'Customer' || authMe?.role === 'Admin'
   const dashboardRole = authMe?.role === 'Customer' || authMe?.role === 'Executor' ? authMe.role : null
-  const dataset = workspaceDataByRole[role]
+  const dataset = { orders: [] }
   const canLoadServerOrders = !isBootstrapLoading && role !== 'Applicant'
   const shouldLoadMyOrders = role === 'Executor' && activeView === 'dashboard'
   const ordersQueryParams = {
@@ -289,6 +291,9 @@ export function useWorkspaceShellController() {
   const canLoadExecutorBaseCandidates = role === 'Executor'
   const { data: vacanciesResponse, refetch: refetchVacancies } = useGetVacanciesQuery(
     canLoadServerVacancies ? undefined : skipToken,
+  )
+  const { data: myCandidatesResponse } = useGetMyCandidatesQuery(
+    role === 'Executor' ? undefined : skipToken,
   )
   const applicantVacancyOrders =
     role === 'Applicant' && vacanciesResponse
@@ -381,16 +386,17 @@ export function useWorkspaceShellController() {
   const [chatDraft, setChatDraft] = useState('')
   const [preferredChatId, setPreferredChatId] = useState<string | null>(null)
   const [threadsByRole, setThreadsByRole] = useState<Record<WorkspaceRole, WorkspaceChatThread[]>>({
-    Customer: workspaceDataByRole.Customer.chats,
-    Executor: workspaceDataByRole.Executor.chats,
-    Applicant: workspaceDataByRole.Applicant.chats,
+    Customer: [],
+    Executor: [],
+    Applicant: [],
   })
+  const [createCandidateVacancyId, setCreateCandidateVacancyId] = useState<string | null>(null)
   const [manualCandidatesByRole, setManualCandidatesByRole] = useState<Record<WorkspaceRole, WorkspaceCandidate[]>>({
     Customer: [],
     Executor: [],
     Applicant: [],
   })
-  const [analyticsRecoveredByRole, setAnalyticsRecoveredByRole] = useState<Record<WorkspaceRole, boolean>>({
+  const [, setAnalyticsRecoveredByRole] = useState<Record<WorkspaceRole, boolean>>({
     Customer: false,
     Executor: false,
     Applicant: false,
@@ -495,7 +501,6 @@ export function useWorkspaceShellController() {
     selectedOrderId,
   } = deriveWorkspaceViewState({
     activeView,
-    analyticsRecovered: analyticsRecoveredByRole[role],
     baseOrders:
       role === 'Executor'
         ? baseOrders.map((order) => {
@@ -514,15 +519,32 @@ export function useWorkspaceShellController() {
     canLoadServerOrders,
     candidateSourceVacancy,
     customerDashboardStats,
-    dataset,
     executorDashboardStats,
     executorGlobalBaseCandidates,
     executorGlobalCandidates,
+    fallbackCandidates: [],
+    fallbackMeetings: [],
+    fallbackStats: [],
     isOrdersFetching,
     isVacancyCandidatesError,
     isVacancyCandidatesFetching,
     locationSearch: location.search,
-    manualCandidates,
+    manualCandidates: role === 'Executor'
+      ? (myCandidatesResponse ?? []).map((candidate) => ({
+          id: candidate.candidateId,
+          name: candidate.fullName,
+          position: candidate.specializationName || candidate.resumeTitle,
+          orderId: '',
+          source: 'Мой кандидат',
+          sourceType: 'AddedByExecutor' as const,
+          isOwnedByRequester: true,
+          rating: '—',
+          statusLabel: 'Новый',
+          statusTone: 'default' as const,
+          comment: candidate.resumeTitle,
+        }))
+      : manualCandidates,
+    meetings: [],
     orderFilter,
     ordersResponseExists: Boolean(ordersResponse),
     preferredChatId,
@@ -842,6 +864,7 @@ export function useWorkspaceShellController() {
       }
 
       setPreferredOrderId(orderId)
+      setCreateCandidateVacancyId(vacancy.id)
       setDetailsInUrl({ orderId: null, candidateId: null }, true)
       setIsCreateCandidatePageOpen(true)
       setIsCreateOrderPageOpen(false)
@@ -925,6 +948,7 @@ export function useWorkspaceShellController() {
     setDetailsInUrl,
     setIsCreateApplicantResponsePageOpen,
     setIsCreateCandidatePageOpen,
+    setCreateCandidateVacancyId,
     setIsCreateOrderPageOpen,
     setThreadsByRole,
     todayTimeLabel,
@@ -957,6 +981,7 @@ export function useWorkspaceShellController() {
     createApplicantResponseFormValues,
     createCandidateFormValues,
     createCandidateResume,
+    createMyCandidateResume,
     uploadCandidateResumeAttachment,
     createOrder,
     createVacancy,
@@ -965,7 +990,10 @@ export function useWorkspaceShellController() {
     createOrderFormValues,
     createVacancyFormValues,
     createVacancyOrderId,
-    candidateSourceVacancyId: candidateSourceVacancy?.id ?? null,
+    candidateSourceVacancyId: createCandidateVacancyId,
+    candidateSourceOrderId: createCandidateVacancyId
+      ? vacanciesResponse?.items.find((vacancy) => vacancy.id === createCandidateVacancyId)?.orderId ?? null
+      : null,
     getExistingVacancyByOrderId: (orderId: string) => {
       const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
       if (!vacancy) {
@@ -1002,6 +1030,10 @@ export function useWorkspaceShellController() {
     setIsCreateVacancyPageOpen,
     setManualCandidatesByRole,
     setPreferredOrderId,
+    openOrderDetails: (orderId) => {
+      setDetailsInUrl({ orderId, candidateId: null }, true)
+      setActiveView('dashboard')
+    },
   })
 
   function toggleSidebar() {
