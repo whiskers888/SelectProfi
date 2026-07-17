@@ -48,6 +48,7 @@ type UseWorkspaceUiActionsDependencies = {
   ) => void
   setIsCreateApplicantResponsePageOpen: (value: boolean) => void
   setIsCreateCandidatePageOpen: (value: boolean) => void
+  setCreateCandidateVacancyId: (value: string | null) => void
   setIsCreateOrderPageOpen: (value: boolean) => void
   setThreadsByRole: (
     value:
@@ -74,6 +75,7 @@ export function useWorkspaceUiActions({
   setDetailsInUrl,
   setIsCreateApplicantResponsePageOpen,
   setIsCreateCandidatePageOpen,
+  setCreateCandidateVacancyId,
   setIsCreateOrderPageOpen,
   setThreadsByRole,
   todayTimeLabel,
@@ -151,6 +153,7 @@ export function useWorkspaceUiActions({
     }
 
     if (role === 'Executor') {
+      setCreateCandidateVacancyId(null)
       setIsCreateCandidatePageOpen(true)
       setIsCreateOrderPageOpen(false)
       setIsCreateApplicantResponsePageOpen(false)
@@ -170,6 +173,7 @@ export function useWorkspaceUiActions({
     setDetailsInUrl,
     setIsCreateApplicantResponsePageOpen,
     setIsCreateCandidatePageOpen,
+    setCreateCandidateVacancyId,
     setIsCreateOrderPageOpen,
     setCreateOrderFormValues,
   ])

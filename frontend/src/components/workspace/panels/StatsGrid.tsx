@@ -15,11 +15,11 @@ function resolveStatBadge(stat: WorkspaceStat): null | { tagClassName: 'preview1
     return { tagClassName: 'preview11-tag-warn' }
   }
 
-  if (stat.label === 'Проекты в работе' || stat.label === 'Финалисты') {
+  if (stat.label === 'Проекты в работе' || stat.label === 'Финалисты' || stat.label === 'Заказы в работе') {
     return { tagClassName: 'preview11-tag-ok' }
   }
 
-  if (stat.label === 'Кандидаты в работе') {
+  if (stat.label === 'Кандидаты на рассмотрении') {
     return { tagClassName: 'preview11-tag-warn' }
   }
 
@@ -27,7 +27,7 @@ function resolveStatBadge(stat: WorkspaceStat): null | { tagClassName: 'preview1
 }
 
 function shouldHighlightProjectsCard(stat: WorkspaceStat): boolean {
-  return stat.id === 'projects' || stat.label === 'Проекты в работе'
+  return stat.id === 'projects' || stat.label === 'Проекты в работе' || stat.label === 'Заказы в работе'
 }
 
 function renderStatValue(value: string): string | ReactNode {
@@ -61,7 +61,7 @@ export function StatsGrid({ stats, onOverview }: StatsGridProps) {
               ) : (
                 <p className="preview11-card-meta">{stat.label}</p>
               )}
-              {stat.id !== 'projects' ? (
+              {stat.id !== 'projects' && stat.id !== 'balance' ? (
                 <button className="preview11-mini-btn" onClick={() => onOverview(stat.id)} type="button">
                   Обзор
                 </button>

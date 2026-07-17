@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ProfilePage } from './ProfilePage'
 import { api } from '../shared/api/generated/openapi'
 import { authSessionReducer } from '../app/authSessionSlice'
+import { NotificationsProvider } from '@/components/ui/notifications'
 
 type ProfileFixture = {
   userId: string
@@ -108,7 +109,9 @@ function renderProfilePage() {
 
   return render(
     <Provider store={store}>
-      <ProfilePage />
+      <NotificationsProvider>
+        <ProfilePage />
+      </NotificationsProvider>
     </Provider>,
   )
 }

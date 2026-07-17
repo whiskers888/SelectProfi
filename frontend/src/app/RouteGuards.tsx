@@ -25,7 +25,8 @@ export function AvailabilityRoute({ element }: AvailabilityRouteProps) {
   const location = useLocation()
 
   if (isBackendUnavailable && location.pathname !== routePaths.serviceUnavailable) {
-    return <Navigate to={routePaths.serviceUnavailable} replace />
+    const returnTo = `${location.pathname}${location.search}${location.hash}`
+    return <Navigate to={`${routePaths.serviceUnavailable}?returnTo=${encodeURIComponent(returnTo)}`} replace />
   }
 
   return element
@@ -34,10 +35,11 @@ export function AvailabilityRoute({ element }: AvailabilityRouteProps) {
 export function SessionEntryRedirect() {
   const hasAccessToken = useHasAccessToken()
   const isBackendUnavailable = useIsBackendUnavailable()
+  const location = useLocation()
 
   if (isBackendUnavailable) {
-    // @dvnull: Добавлен явный редирект на страницу недоступности, чтобы не оставлять пользователя на пустом экране при сетевой аварии.
-    return <Navigate to={routePaths.serviceUnavailable} replace />
+    const returnTo = `${location.pathname}${location.search}${location.hash}`
+    return <Navigate to={`${routePaths.serviceUnavailable}?returnTo=${encodeURIComponent(returnTo)}`} replace />
   }
 
   return <Navigate to={hasAccessToken ? routePaths.app : routePaths.auth} replace />

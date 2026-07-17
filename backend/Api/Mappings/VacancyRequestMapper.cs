@@ -103,7 +103,7 @@ public static class VacancyRequestMapper
 
     public static CreateCandidateResumeCommand ToCommand(
         this CreateCandidateResumeRequest request,
-        Guid vacancyId,
+        Guid? vacancyId,
         Guid requesterUserId,
         UserRole requesterRole)
     {
@@ -122,6 +122,12 @@ public static class VacancyRequestMapper
             ResumeAttachmentsJson = request.ResumeAttachmentsJson
         };
     }
+
+    public static CreateCandidateResumeCommand ToCommand(
+        this CreateCandidateResumeRequest request,
+        Guid requesterUserId,
+        UserRole requesterRole) =>
+        request.ToCommand(null, requesterUserId, requesterRole);
 
     public static AddCandidateFromBaseCommand ToCommand(
         this Guid candidateId,

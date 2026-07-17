@@ -7,7 +7,7 @@ using DomainCustomerLegalForm = SelectProfi.backend.Domain.Users.CustomerLegalFo
 using DomainExecutorEmploymentType = SelectProfi.backend.Domain.Users.ExecutorEmploymentType;
 using DomainUserRole = SelectProfi.backend.Domain.Users.UserRole;
 
-namespace SelectProfi.backend.Mappings;
+namespace Api.Mappings;
 
 [Mapper]
 public static partial class ProfileRequestMapper

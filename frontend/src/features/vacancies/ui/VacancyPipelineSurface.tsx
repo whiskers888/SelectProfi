@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
-import { Textarea } from '@/components/ui/textarea'
+import { ResumeLinksInput } from '@/components/workspace/ResumeLinksInput'
+import { ResumeFilesInput } from '@/components/workspace/ResumeFilesInput'
 import type { VacancyCandidateStageContract } from '@/shared/api/candidates'
 
 type CreateCandidateResumeForm = {
@@ -284,12 +285,13 @@ export function VacancyPipelineSurface({
                 placeholder="Текст резюме: опыт, достижения, ключевые факты"
                 disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
               />
-              <Textarea
+              <ResumeLinksInput
+                id="vacancy-candidate-resume-attachments"
                 value={createCandidateResumeForm.resumeAttachmentLinks}
-                onChange={(event) => onCreateCandidateResumeInputChange('resumeAttachmentLinks', event)}
-                placeholder="Ссылки на вложения, по одной на строку (optional)"
+                onChange={(value) => onCreateCandidateResumeInputChange('resumeAttachmentLinks', { target: { value } } as ChangeEvent<HTMLInputElement>)}
                 disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
               />
+              <ResumeFilesInput id="vacancy-candidate-resume-files" disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume} />
               <div>
                 <Button
                   type="submit"

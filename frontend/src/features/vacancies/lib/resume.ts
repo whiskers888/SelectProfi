@@ -25,14 +25,15 @@ export function buildResumeContentJson(form: ResumeContentInput): string {
 }
 
 export function buildResumeAttachmentsJson(form: ResumeAttachmentsInput): string | undefined {
-  const links = form.resumeAttachmentLinks
-    .split('\n')
-    .map((link) => link.trim())
-    .filter((link) => link.length > 0)
+  if (!form.resumeAttachmentLinks.trim()) return undefined
 
-  if (links.length === 0) {
-    return undefined
+  try {
+    const links = JSON.parse(form.resumeAttachmentLinks)
+    if (Array.isArray(links)) return JSON.stringify(links.filter((link) => link?.url?.trim()))
+  } catch {
+    // Старый формат: одна ссылка на строку.
   }
 
-  return JSON.stringify(links)
+  const links = form.resumeAttachmentLinks.split('\n').map((url) => url.trim()).filter(Boolean)
+  return links.length ? JSON.stringify(links.map((url) => ({ type: 'Другое', url }))) : undefined
 }

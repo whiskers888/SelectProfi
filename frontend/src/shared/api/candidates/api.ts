@@ -21,6 +21,14 @@ export type CandidateResumeResponse = {
   contactsAccessExpiresAtUtc: string
 }
 
+export type MyCandidateResponse = {
+  candidateId: string
+  fullName: string
+  specializationName: string
+  resumeTitle: string
+  updatedAtUtc: string
+}
+
 export type VacancyCandidateResponse = {
   vacancyCandidateId: string
   vacancyId: string
@@ -99,6 +107,18 @@ export type ExecutorCandidateContactsResponse = {
 
 const candidatesApi = api.injectEndpoints({
   endpoints: (build) => ({
+    getMyCandidates: build.query<MyCandidateResponse[], void>({
+      query: () => ({ url: '/api/candidates/mine', method: 'GET' }),
+      providesTags: ['VacancyCandidate'],
+    }),
+    createMyCandidateResume: build.mutation<CandidateResumeResponse, CreateCandidateResumeRequest>({
+      query: (body) => ({
+        url: '/api/candidates/resumes',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['VacancyCandidate'],
+    }),
     createCandidateResume: build.mutation<
       CandidateResumeResponse,
       { vacancyId: string; body: CreateCandidateResumeRequest }
@@ -199,6 +219,8 @@ const candidatesApi = api.injectEndpoints({
 })
 
 export const {
+  useGetMyCandidatesQuery,
+  useCreateMyCandidateResumeMutation,
   useCreateCandidateResumeMutation,
   useUploadCandidateResumeAttachmentMutation,
   useAddCandidateFromBaseMutation,

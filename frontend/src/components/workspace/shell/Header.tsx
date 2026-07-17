@@ -64,7 +64,6 @@ export function Header({
   subtitle,
   title,
 }: HeaderProps) {
-  // @dvnull: Ранее был blue-tailwind header, перевел shell на структуру и визуальные паттерны HTML-эталона.
   return (
     <header className="preview11-header">
       <div className="preview11-header-title">
@@ -88,7 +87,6 @@ export function Header({
         </div>
 
         <div className="preview11-context-tabs">
-          {/* @dvnull: Ранее табы встреч/уведомлений были неинтерактивными span, вернул рабочие кнопки навигации. */}
           <button
             className={`preview11-context-tab${activeView === 'meetings' ? ' preview11-context-tab-active' : ''}`}
             onClick={onOpenMeetings}
@@ -112,6 +110,7 @@ export function Header({
         </div>
 
         <span className="preview11-profile-stack">
+          {/* Триггер дропдауна — только информация о профиле, без кнопки переключения роли */}
           <Dropdown
             className="preview11-profile-dropdown"
             contentClassName="preview11-profile-menu"
@@ -129,19 +128,25 @@ export function Header({
               <span className="preview11-profile-chip">
                 <span className="preview11-profile-meta">
                   <span className="preview11-profile-name">{profileDisplayName}</span>
+                  <span className="preview11-profile-role-row">
+                    <span className="preview11-profile-role-spacer" aria-hidden="true" />
+                    <span className="preview11-profile-role-text">{profileRoleLabel}</span>
+                    <span className="preview11-profile-role-spacer" aria-hidden="true" />
+                  </span>
                   <span className="preview11-profile-email">{profileEmail}</span>
                 </span>
                 <span className="preview11-avatar">{profileInitials(profileDisplayName)}</span>
               </span>
             }
           />
-          {canSwitchRole ? (
-            // @dvnull: Декоративная иконка роли переведена в рабочую кнопку переключения Applicant/Executor прямо в workspace header.
+          {/* Кнопка переключения роли вынесена отдельно, чтобы избежать вложенности <button> в <button> */}
+          {canSwitchRole && (
             <button
               className="preview11-profile-role-pill"
               disabled={isSwitchingRole}
               onClick={onSwitchRole}
               type="button"
+              aria-label="Переключить активную роль"
             >
               <span className="preview11-profile-role-label">{profileRoleLabel}</span>
               <span className="preview11-profile-role-arrows" aria-hidden="true">
@@ -150,10 +155,6 @@ export function Header({
                 </span>
               </span>
             </button>
-          ) : (
-            <span className="preview11-profile-role-pill preview11-profile-role-pill-static">
-              <span className="preview11-profile-role-label">{profileRoleLabel}</span>
-            </span>
           )}
         </span>
       </div>

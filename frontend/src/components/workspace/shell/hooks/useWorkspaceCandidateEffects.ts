@@ -112,6 +112,11 @@ export function useSyncExecutorGlobalCandidates({
               globalBaseCandidatesMap.set(item.candidateId, mappedBaseCandidate)
               globalBaseCandidatesUpdatedAt.set(item.candidateId, nextUpdatedAt)
             }
+
+            if (mappedBaseCandidate.isOwnedByRequester && !globalCandidatesMap.has(item.candidateId)) {
+              globalCandidatesMap.set(item.candidateId, mappedBaseCandidate)
+              globalCandidatesUpdatedAt.set(item.candidateId, nextUpdatedAt)
+            }
           }
         }
 

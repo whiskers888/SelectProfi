@@ -81,6 +81,19 @@ type WorkspaceCreateActionsDependencies = {
     },
     { candidateId: string; candidateResumeId: string }
   >
+  createMyCandidateResume: MutationTrigger<
+    {
+      fullName: string
+      birthDate?: string
+      email?: string
+      phone: string
+      specializationId: string
+      resumeTitle: string
+      resumeContentJson: string
+      resumeAttachmentsJson?: string
+    },
+    { candidateId: string; candidateResumeId: string }
+  >
   uploadCandidateResumeAttachment: MutationTrigger<
     { vacancyId: string; resumeId: string; file: File },
     { attachmentId: string }
@@ -106,6 +119,7 @@ type WorkspaceCreateActionsDependencies = {
   createVacancyFormValues: VacancyCreateFormValues
   createVacancyOrderId: string | null
   candidateSourceVacancyId: string | null
+  candidateSourceOrderId: string | null
   getExistingVacancyByOrderId: (orderId: string) => ExistingVacancySummary | null
   orderSpecializationOptions: { id: string; name: string }[]
   filteredOrders: WorkspaceOrder[]
@@ -143,6 +157,7 @@ type WorkspaceCreateActionsDependencies = {
         ) => Record<WorkspaceRole, WorkspaceCandidate[]>),
   ) => void
   setPreferredOrderId: (value: string | null) => void
+  openOrderDetails: (orderId: string) => void
 }
 
 function getPreferredOrderId(orders: WorkspaceOrder[]): string {
@@ -170,6 +185,7 @@ export function useWorkspaceCreateActions({
   createOrder,
   createVacancy,
   createCandidateResume,
+  createMyCandidateResume,
   uploadCandidateResumeAttachment,
   updateVacancy,
   updateVacancyStatus,
@@ -177,6 +193,7 @@ export function useWorkspaceCreateActions({
   createVacancyFormValues,
   createVacancyOrderId,
   candidateSourceVacancyId,
+  candidateSourceOrderId,
   getExistingVacancyByOrderId,
   orderSpecializationOptions,
   filteredOrders,
@@ -198,6 +215,7 @@ export function useWorkspaceCreateActions({
   setIsCreateVacancyPageOpen,
   setManualCandidatesByRole,
   setPreferredOrderId,
+  openOrderDetails,
 }: WorkspaceCreateActionsDependencies) {
   const handleCreateOrderFormFieldChange = useCallback(
     (
@@ -539,7 +557,7 @@ export function useWorkspaceCreateActions({
       const resumeTitle = createCandidateFormValues.resumeTitle.trim()
       const resumeSummary = toResumeSummary(createCandidateFormValues.resumeRichTextHtml)
 
-      if (!candidateSourceVacancyId || !fullName || !phone || !specializationId || !resumeTitle || !resumeSummary) {
+      if (!fullName || !phone || !specializationId || !resumeTitle || !resumeSummary) {
         setBanner({
           variant: 'destructive',
           message: 'Заполните ФИО, специализацию, заголовок и содержимое резюме.',
@@ -548,9 +566,7 @@ export function useWorkspaceCreateActions({
       }
 
       try {
-        const created = await createCandidateResume({
-          vacancyId: candidateSourceVacancyId,
-          body: {
+        const body = {
             fullName,
             birthDate: createCandidateFormValues.birthDate.trim() || undefined,
             email: createCandidateFormValues.email.trim() || undefined,
@@ -559,10 +575,31 @@ export function useWorkspaceCreateActions({
             resumeTitle,
             resumeContentJson: buildResumeContentJson({ resumeSkills: '', resumeRichTextHtml: createCandidateFormValues.resumeRichTextHtml }),
             resumeAttachmentsJson: buildResumeAttachmentsJson({ resumeAttachmentLinks: createCandidateFormValues.resumeAttachmentLinks }),
-          },
-        }).unwrap()
-        await Promise.all(files.map((file) => uploadCandidateResumeAttachment({ vacancyId: candidateSourceVacancyId, resumeId: created.candidateResumeId, file }).unwrap()))
-        await refetchVacancies()
+          }
+        const created = candidateSourceVacancyId
+          ? await createCandidateResume({ vacancyId: candidateSourceVacancyId, body }).unwrap()
+          : await createMyCandidateResume(body).unwrap()
+        if (candidateSourceVacancyId) {
+          await Promise.all(files.map((file) => uploadCandidateResumeAttachment({ vacancyId: candidateSourceVacancyId, resumeId: created.candidateResumeId, file }).unwrap()))
+          await refetchVacancies()
+        } else {
+          setManualCandidatesByRole((previous) => ({
+            ...previous,
+            [role]: [{
+              id: created.candidateId,
+              name: fullName,
+              position: createCandidateFormValues.specialization,
+              orderId: '',
+              source: 'Добавлен вручную',
+              sourceType: 'AddedByExecutor',
+              isOwnedByRequester: true,
+              rating: '—',
+              statusLabel: 'Новый',
+              statusTone: 'default',
+              comment: resumeTitle,
+            }, ...previous[role]],
+          }))
+        }
       } catch (error) {
         setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) })
         return
@@ -580,7 +617,11 @@ export function useWorkspaceCreateActions({
         resumeAttachmentLinks: '',
       })
       setIsCreateCandidatePageOpen(false)
-      setActiveView('candidates')
+      if (candidateSourceOrderId) {
+        openOrderDetails(candidateSourceOrderId)
+      } else {
+        setActiveView('candidates')
+      }
       setBanner({
         variant: 'success',
         message: 'Кандидат добавлен в рабочий список.',
@@ -596,7 +637,9 @@ export function useWorkspaceCreateActions({
       createCandidateFormValues.specializationId,
       createCandidateFormValues.resumeAttachmentLinks,
       candidateSourceVacancyId,
+      candidateSourceOrderId,
       createCandidateResume,
+      createMyCandidateResume,
       uploadCandidateResumeAttachment,
       refetchVacancies,
       getRequestErrorMessage,
@@ -604,6 +647,7 @@ export function useWorkspaceCreateActions({
       setBanner,
       setCreateCandidateFormValues,
       setIsCreateCandidatePageOpen,
+      openOrderDetails,
     ],
   )
 

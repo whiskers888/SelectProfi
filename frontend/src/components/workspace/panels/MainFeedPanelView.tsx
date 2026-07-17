@@ -133,6 +133,7 @@ export function MainFeedPanelView({
   const ordersListTitle = isExecutorRole ? 'Список проектов' : 'Список заказов'
   const mineOrdersLabel = isExecutorRole ? 'Мои проекты' : 'Мои заказы'
   const exchangeOrdersLabel = isExecutorRole ? 'Биржа проектов' : 'Биржа заказов'
+  const orderPriceLabelPrefix = isExecutorRole ? 'К получению' : 'Цена'
 
   if (view === 'dashboard') {
     if (!selectedDashboardOrder || orders.length === 0) {
@@ -267,7 +268,9 @@ export function MainFeedPanelView({
                         <div className="preview11-order-side">
                           <span className={`preview11-tag ${toneClassName(order.statusTone)}`}>{order.statusLabel}</span>
                           {role !== 'Applicant' ? (
-                            <p className="preview11-order-price">Цена: {toOrderPriceLabel(order.price)}</p>
+                            <p className="preview11-order-price">
+                              {orderPriceLabelPrefix}: {toOrderPriceLabel(order.price)}
+                            </p>
                           ) : null}
                         </div>
                       </div>

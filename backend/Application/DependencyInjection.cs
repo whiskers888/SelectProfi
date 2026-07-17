@@ -3,6 +3,7 @@ using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
+using SelectProfi.backend.Application.Candidates.GetMyCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
@@ -104,6 +105,7 @@ public static class
         // @dvnull: Добавлен query получения обезличенного списка кандидатов вакансии для выборки на frontend без контактов.
         services.AddScoped<IQueryHandler<GetVacancyCandidatesQuery, GetVacancyCandidatesResult>, GetVacancyCandidatesQueryHandler>();
         services.AddScoped<IQueryHandler<GetVacancyBaseCandidatesQuery, GetVacancyBaseCandidatesResult>, GetVacancyBaseCandidatesQueryHandler>();
+        services.AddScoped<IQueryHandler<GetMyCandidatesQuery, GetMyCandidatesResult>, GetMyCandidatesQueryHandler>();
         // @dvnull: Добавлен query получения контактов выбранного кандидата для заказчика после финального выбора.
         services.AddScoped<IQueryHandler<GetSelectedCandidateContactsQuery, GetSelectedCandidateContactsResult>, GetSelectedCandidateContactsQueryHandler>();
         services.AddScoped<IQueryHandler<GetMyProfileQuery, GetMyProfileResult>, GetMyProfileQueryHandler>();

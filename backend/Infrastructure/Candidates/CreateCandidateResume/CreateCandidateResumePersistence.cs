@@ -45,12 +45,13 @@ public sealed class CreateCandidateResumePersistence(AppDbContext dbContext) : I
     public async Task<CreateCandidateResumePersistenceResult> CreateAsync(
         Candidate candidate,
         CandidateResume resume,
-        VacancyCandidate vacancyCandidate,
+        VacancyCandidate? vacancyCandidate,
         CancellationToken cancellationToken)
     {
         dbContext.Candidates.Add(candidate);
         dbContext.CandidateResumes.Add(resume);
-        dbContext.VacancyCandidates.Add(vacancyCandidate);
+        if (vacancyCandidate is not null)
+            dbContext.VacancyCandidates.Add(vacancyCandidate);
 
         try
         {

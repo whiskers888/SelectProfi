@@ -3,7 +3,7 @@ using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
 using SelectProfi.backend.Contracts.Auth;
 
-namespace SelectProfi.backend.Mappings;
+namespace Api.Mappings;
 
 public static class AuthResponseMapper
 {

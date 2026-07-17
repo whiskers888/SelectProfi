@@ -2,6 +2,7 @@ using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Candidates;
 using SelectProfi.backend.Domain.Users;
+using SelectProfi.backend.Domain.Vacancies;
 using System.Text.Json;
 
 namespace SelectProfi.backend.Application.Candidates.CreateCandidateResume;
@@ -30,15 +31,23 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
         if (!IsValid(command))
             return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.InvalidInput };
 
-        var vacancy = await persistence.FindActiveVacancyByIdAsync(command.VacancyId, cancellationToken);
-        if (vacancy is null)
-            return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.VacancyNotFound };
+        Vacancy? vacancy = null;
+        if (command.VacancyId.HasValue)
+        {
+            vacancy = await persistence.FindActiveVacancyByIdAsync(command.VacancyId.Value, cancellationToken);
+            if (vacancy is null)
+                return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.VacancyNotFound };
 
-        if (!CandidateAccessRules.CanManageVacancyCandidateByExecutor(command.RequesterRole, command.RequesterUserId, vacancy.ExecutorId))
+            if (!CandidateAccessRules.CanManageVacancyCandidateByExecutor(command.RequesterRole, command.RequesterUserId, vacancy.ExecutorId))
+                return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.Forbidden };
+
+            if (!CandidateAccessRules.CanMutateVacancyCandidatePipeline(vacancy.Status))
+                return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.VacancyNotPublished };
+        }
+        else if (command.RequesterRole != UserRole.Executor)
+        {
             return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.Forbidden };
-
-        if (!CandidateAccessRules.CanMutateVacancyCandidatePipeline(vacancy.Status))
-            return new CreateCandidateResumeResult { ErrorCode = CreateCandidateResumeErrorCode.VacancyNotPublished };
+        }
 
         var specialization = await persistence.FindActiveSpecializationByIdAsync(command.SpecializationId, cancellationToken);
         if (specialization is null)
@@ -96,16 +105,18 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
             UpdatedAtUtc = utcNow
         };
 
-        var vacancyCandidate = new VacancyCandidate
-        {
-            Id = Guid.NewGuid(),
-            VacancyId = vacancy.Id,
-            CandidateId = candidate.Id,
-            AddedByExecutorId = command.RequesterUserId,
-            Stage = VacancyCandidateStage.Pool,
-            AddedAtUtc = utcNow,
-            UpdatedAtUtc = utcNow
-        };
+        VacancyCandidate? vacancyCandidate = vacancy is null
+            ? null
+            : new VacancyCandidate
+            {
+                Id = Guid.NewGuid(),
+                VacancyId = vacancy.Id,
+                CandidateId = candidate.Id,
+                AddedByExecutorId = command.RequesterUserId,
+                Stage = VacancyCandidateStage.Pool,
+                AddedAtUtc = utcNow,
+                UpdatedAtUtc = utcNow
+            };
 
         var persistenceResult = await persistence.CreateAsync(candidate, resume, vacancyCandidate, cancellationToken);
         if (persistenceResult == CreateCandidateResumePersistenceResult.Conflict)
@@ -116,7 +127,7 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
             ErrorCode = CreateCandidateResumeErrorCode.None,
             CandidateId = candidate.Id,
             CandidateResumeId = resume.Id,
-            VacancyCandidateId = vacancyCandidate.Id,
+            VacancyCandidateId = vacancyCandidate?.Id ?? Guid.Empty,
             PublicAlias = candidate.PublicAlias,
             ContactsAccessExpiresAtUtc = contactsAccessExpiresAtUtc
         };
@@ -141,8 +152,26 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
         if (string.IsNullOrWhiteSpace(value)) return true;
         try
         {
-            var links = JsonSerializer.Deserialize<string[]>(value) ?? [];
-            return links.All(link => Uri.TryCreate(link, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps));
+            using var document = JsonDocument.Parse(value);
+            if (document.RootElement.ValueKind != JsonValueKind.Array)
+                return false;
+
+            foreach (var item in document.RootElement.EnumerateArray())
+            {
+                var link = item.ValueKind switch
+                {
+                    JsonValueKind.String => item.GetString(),
+                    JsonValueKind.Object when item.TryGetProperty("url", out var url) && url.ValueKind == JsonValueKind.String
+                        => url.GetString(),
+                    _ => null
+                };
+
+                if (!Uri.TryCreate(link, UriKind.Absolute, out var uri) ||
+                    (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+                    return false;
+            }
+
+            return true;
         }
         catch (JsonException) { return false; }
     }

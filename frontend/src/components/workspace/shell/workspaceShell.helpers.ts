@@ -8,7 +8,7 @@ import type { VacancyResponse } from '@/shared/api/vacancies'
 import type {
   WorkspaceCandidate,
   WorkspaceChatThread,
-  WorkspaceDataset,
+  WorkspaceMeeting,
   WorkspaceOrder,
   WorkspaceRole,
   WorkspaceStat,
@@ -20,6 +20,7 @@ type ProblemDetailsPayload = {
   detail?: string
   title?: string
 }
+type OrderFilter = 'all' | 'active' | 'paused';
 
 export function createHeaderTitle(role: WorkspaceRole): string {
   if (role === 'Executor') {
@@ -232,12 +233,12 @@ export function getRequestErrorMessage(error: unknown): string {
   return 'Не удалось выполнить запрос.'
 }
 
-type DashboardStatsSnapshot = {
-  activeProjectsCount: number
-  onApprovalVacanciesCount: number
-  pipelineCandidatesCount: number
-  shortlistCandidatesCount: number
-}
+// type DashboardStatsSnapshot = {
+//   activeProjectsCount: number
+//   onApprovalVacanciesCount: number
+//   pipelineCandidatesCount: number
+//   shortlistCandidatesCount: number
+// }
 
 function resolveCandidateFlowTone(count: number): WorkspaceTone {
   if (count <= 0) {
@@ -272,36 +273,39 @@ function resolveIncomingFromExecutorNote(count: number): string {
 }
 
 type DeriveWorkspaceViewStateInput = {
-  activeView: WorkspaceView
-  analyticsRecovered: boolean
-  baseOrders: WorkspaceOrder[]
-  canLoadExecutorBaseCandidates: boolean
-  canLoadServerCandidates: boolean
-  canLoadServerOrders: boolean
-  candidateSourceVacancy: VacancyResponse | null
-  dataset: WorkspaceDataset
-  executorDashboardStats?: DashboardStatsSnapshot
-  executorGlobalBaseCandidates: WorkspaceCandidate[]
-  executorGlobalCandidates: WorkspaceCandidate[]
-  isOrdersFetching: boolean
-  isVacancyCandidatesError: boolean
-  isVacancyCandidatesFetching: boolean
-  locationSearch: string
-  manualCandidates: WorkspaceCandidate[]
-  orderFilter: 'all' | 'active' | 'paused'
-  ordersResponseExists: boolean
-  preferredChatId: string | null
-  preferredOrderId: string | null
-  purchasedCandidateIds: string[]
-  role: WorkspaceRole
-  searchValue: string
-  serverBaseCandidates: WorkspaceCandidate[]
-  serverCandidates: WorkspaceCandidate[]
-  threads: WorkspaceChatThread[]
-  vacanciesResponseExists: boolean
-  vacancyCandidatesItems: VacancyCandidatesItemResponse[] | null
-  customerDashboardStats?: DashboardStatsSnapshot
-}
+  activeView: WorkspaceView;
+  analyticsError?: string | null;
+  baseOrders: WorkspaceOrder[];
+  canLoadExecutorBaseCandidates: boolean;
+  canLoadServerCandidates: boolean;
+  canLoadServerOrders: boolean;
+  candidateSourceVacancy: any;
+  executorDashboardStats?: any;
+  executorGlobalBaseCandidates: WorkspaceCandidate[];
+  executorGlobalCandidates: WorkspaceCandidate[];
+  fallbackCandidates: WorkspaceCandidate[];  // ← добавить
+  fallbackMeetings: WorkspaceMeeting[];      // ← добавить
+  fallbackStats: WorkspaceStat[];            // ← добавить
+  isOrdersFetching: boolean;
+  isVacancyCandidatesError: boolean;
+  isVacancyCandidatesFetching: boolean;
+  locationSearch: string;
+  manualCandidates: WorkspaceCandidate[];
+  meetings: WorkspaceMeeting[];
+  orderFilter: OrderFilter;
+  ordersResponseExists: boolean;
+  preferredChatId: string | null;
+  preferredOrderId: string | null;
+  purchasedCandidateIds: string[];
+  role: WorkspaceRole;
+  searchValue: string;
+  serverBaseCandidates: WorkspaceCandidate[];
+  serverCandidates: WorkspaceCandidate[];
+  threads: WorkspaceChatThread[];
+  vacanciesResponseExists: boolean;
+  vacancyCandidatesItems: any[] | null;
+  customerDashboardStats?: any;
+};
 
 type DeriveWorkspaceViewStateResult = {
   activeThread: WorkspaceChatThread | null
@@ -332,239 +336,219 @@ type DeriveWorkspaceViewStateResult = {
 
 export function deriveWorkspaceViewState({
   activeView,
-  analyticsRecovered,
+  analyticsError,
   baseOrders,
   canLoadExecutorBaseCandidates,
   canLoadServerCandidates,
   canLoadServerOrders,
   candidateSourceVacancy,
-  dataset,
   executorDashboardStats,
   executorGlobalBaseCandidates,
   executorGlobalCandidates,
+  fallbackCandidates = [],
+  fallbackMeetings = [],
+  fallbackStats = [],
   isOrdersFetching,
   isVacancyCandidatesError,
   isVacancyCandidatesFetching,
   locationSearch,
-  manualCandidates,
-  orderFilter,
+  manualCandidates = [],
+  meetings = [],
   ordersResponseExists,
   preferredChatId,
   preferredOrderId,
   purchasedCandidateIds,
   role,
   searchValue,
-  serverBaseCandidates,
-  serverCandidates,
-  threads,
+  serverBaseCandidates = [],
+  serverCandidates = [],
+  threads = [],
   vacanciesResponseExists,
   vacancyCandidatesItems,
   customerDashboardStats,
 }: DeriveWorkspaceViewStateInput): DeriveWorkspaceViewStateResult {
-  const analyticsError = analyticsRecovered ? null : dataset.analyticsError ?? null
-  const hasExecutorVacancies = role === 'Executor' && vacanciesResponseExists
-  const executorCandidatesForUi = hasExecutorVacancies ? executorGlobalCandidates : []
-  const executorBaseCandidatesForUi = hasExecutorVacancies ? executorGlobalBaseCandidates : []
-  const baseCandidates =
-    role === 'Executor'
-      ? vacanciesResponseExists
-        ? executorCandidatesForUi
-        : dataset.candidates
-      : !canLoadServerCandidates
-        ? dataset.candidates
-        : !vacanciesResponseExists
-          ? dataset.candidates
-          : !candidateSourceVacancy
-            ? []
-            : vacancyCandidatesItems
-              ? serverCandidates
-              : isVacancyCandidatesError
-                ? dataset.candidates
-                : []
-  const isOrdersApiLoading = canLoadServerOrders && !ordersResponseExists && isOrdersFetching
-  const isCandidatesApiLoading =
-    role === 'Executor'
-      ? false
-      : canLoadServerCandidates && !vacancyCandidatesItems && isVacancyCandidatesFetching
+  const resolvedAnalyticsError = analyticsError ?? null;
 
-  const allOrders = baseOrders
-  const allCandidates = [...manualCandidates, ...baseCandidates]
-  const allBaseCandidates =
-    role === 'Executor'
-      ? executorBaseCandidatesForUi
-      : canLoadExecutorBaseCandidates
-        ? serverBaseCandidates
-        : []
-  const normalizedSearch = searchValue.trim().toLowerCase()
+  const hasExecutorVacancies = role === 'Executor' && vacanciesResponseExists;
+  const executorCandidatesForUi = hasExecutorVacancies ? executorGlobalCandidates : [];
+  const executorBaseCandidatesForUi = hasExecutorVacancies ? executorGlobalBaseCandidates : [];
+
+  // Определяем, какие кандидаты будут базовыми
+  let baseCandidates: WorkspaceCandidate[];
+  if (role === 'Executor') {
+    baseCandidates = vacanciesResponseExists ? executorCandidatesForUi : fallbackCandidates;
+  } else if (!canLoadServerCandidates) {
+    baseCandidates = fallbackCandidates;
+  } else if (!vacanciesResponseExists) {
+    baseCandidates = fallbackCandidates;
+  } else if (!candidateSourceVacancy) {
+    baseCandidates = [];
+  } else if (vacancyCandidatesItems) {
+    baseCandidates = serverCandidates ?? [];
+  } else if (isVacancyCandidatesError) {
+    baseCandidates = fallbackCandidates ?? [];
+  } else {
+    baseCandidates = [];
+  }
+
+  const isOrdersApiLoading = canLoadServerOrders && !ordersResponseExists && isOrdersFetching;
+  const isCandidatesApiLoading = role !== 'Executor' && canLoadServerCandidates && !vacancyCandidatesItems && isVacancyCandidatesFetching;
+
+  const allOrders = baseOrders;
+  const allCandidates = [...manualCandidates, ...baseCandidates];
+  const allBaseCandidates = role === 'Executor'
+    ? executorBaseCandidatesForUi
+    : canLoadExecutorBaseCandidates
+      ? serverBaseCandidates
+      : [];
+
+  const normalizedSearch = searchValue.trim().toLowerCase();
 
   const filteredOrders = allOrders.filter((order) => {
-    if (activeView !== 'dashboard' && order.isArchived) {
-      return false
-    }
-
-    const matchesFilter =
-      orderFilter === 'all' ||
-      (orderFilter === 'active' && order.statusTone !== 'danger') ||
-      (orderFilter === 'paused' && order.statusTone === 'danger')
-
-    if (!matchesFilter) {
-      return false
-    }
-
-    if (!normalizedSearch) {
-      return true
-    }
-
+    if (activeView !== 'dashboard' && order.isArchived) return false;
+    //const matchesFilter = orderFilter === 'all' ||
+      //(orderFilter === 'active' && order.statusTone !== 'danger') ||
+      //(orderFilter === 'paused' && order.statusTone === 'danger');
+    //if (!matchesFilter) return false;
+    if (!normalizedSearch) return true;
     return (
       order.title.toLowerCase().includes(normalizedSearch) ||
       order.company.toLowerCase().includes(normalizedSearch) ||
       order.location.toLowerCase().includes(normalizedSearch)
-    )
-  })
+    );
+  });
 
-  const orderTitleById = new Map(allOrders.map((order) => [order.id, order.title]))
+  const orderTitleById = new Map(allOrders.map(order => [order.id, order.title]));
 
-  const filteredCandidates = allCandidates.filter((candidate) => {
-    if (!normalizedSearch) {
-      return true
-    }
-
+  const filteredCandidates = allCandidates.filter(candidate => {
+    if (!normalizedSearch) return true;
     return (
       candidate.name.toLowerCase().includes(normalizedSearch) ||
       candidate.position.toLowerCase().includes(normalizedSearch) ||
       candidate.source.toLowerCase().includes(normalizedSearch) ||
       (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
-    )
-  })
-  const customerSelectedCandidates =
-    role === 'Customer'
-      ? filteredCandidates.filter((candidate) => candidate.statusLabel.trim().toLowerCase() === 'выбран')
-      : filteredCandidates
-  const filteredBaseCandidates = allBaseCandidates.filter((candidate) => {
-    if (!normalizedSearch) {
-      return true
-    }
+    );
+  });
 
+  const customerSelectedCandidates = role === 'Customer'
+    ? filteredCandidates.filter(candidate => candidate.statusLabel.trim().toLowerCase() === 'выбран')
+    : filteredCandidates;
+
+  const filteredBaseCandidates = allBaseCandidates.filter(candidate => {
+    if (!normalizedSearch) return true;
     return (
       candidate.name.toLowerCase().includes(normalizedSearch) ||
       candidate.position.toLowerCase().includes(normalizedSearch) ||
       candidate.source.toLowerCase().includes(normalizedSearch) ||
       (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
-    )
-  })
-  const executorMyCandidates = filteredCandidates.filter(
-    (candidate) =>
-      candidate.isOwnedByRequester === true || purchasedCandidateIds.includes(candidate.id),
-  )
-  const executorBaseCandidates = filteredBaseCandidates.filter(
-    (candidate) =>
-      candidate.isOwnedByRequester !== true && !purchasedCandidateIds.includes(candidate.id),
-  )
+    );
+  });
 
-  const selectedOrderId =
-    filteredOrders.find((order) => order.id === preferredOrderId)?.id ??
-    filteredOrders[0]?.id ??
-    null
-  const detailParams = new URLSearchParams(locationSearch)
-  const selectedOrderIdFromUrl = detailParams.get('orderId')
-  const selectedCandidateIdFromUrl = detailParams.get('candidateId')
-  const selectedOrder = allOrders.find((order) => order.id === selectedOrderIdFromUrl) ?? null
+  const executorMyCandidates = filteredCandidates.filter(candidate =>
+    candidate.isOwnedByRequester === true || purchasedCandidateIds.includes(candidate.id)
+  );
+  const executorBaseCandidates = filteredBaseCandidates.filter(candidate =>
+    candidate.isOwnedByRequester !== true && !purchasedCandidateIds.includes(candidate.id)
+  );
 
-  const knownCandidates = [...allCandidates, ...allBaseCandidates]
-  const selectedCandidate =
-    knownCandidates.find((candidate) => candidate.id === selectedCandidateIdFromUrl) ?? null
-  const isSelectedCandidatePurchased =
-    selectedCandidate ? purchasedCandidateIds.includes(selectedCandidate.id) : false
-  const candidateViewOrders = allOrders.filter((order) => !order.isArchived)
-  const candidateViewSelectedOrderId =
-    candidateViewOrders.find((order) => order.id === preferredOrderId)?.id ??
-    candidateViewOrders[0]?.id ??
-    null
+  const selectedOrderId = filteredOrders.find(order => order.id === preferredOrderId)?.id ?? filteredOrders[0]?.id ?? null;
+  const detailParams = new URLSearchParams(locationSearch);
+  const selectedOrderIdFromUrl = detailParams.get('orderId');
+  const selectedCandidateIdFromUrl = detailParams.get('candidateId');
+  const selectedOrder = allOrders.find(order => order.id === selectedOrderIdFromUrl) ?? null;
 
-  const filteredThreads = threads.filter((thread) => {
-    if (!normalizedSearch) {
-      return true
-    }
+  const knownCandidates = [...allCandidates, ...allBaseCandidates];
+  const selectedCandidate = knownCandidates.find(candidate => candidate.id === selectedCandidateIdFromUrl) ?? null;
+  const isSelectedCandidatePurchased = selectedCandidate ? purchasedCandidateIds.includes(selectedCandidate.id) : false;
 
-    return (
-      thread.participant.toLowerCase().includes(normalizedSearch) ||
-      thread.preview.toLowerCase().includes(normalizedSearch)
-    )
-  })
+  const candidateViewOrders = allOrders.filter(order => !order.isArchived);
+  const candidateViewSelectedOrderId = candidateViewOrders.find(order => order.id === preferredOrderId)?.id ?? candidateViewOrders[0]?.id ?? null;
 
-  const activeThread =
-    filteredThreads.find((thread) => thread.id === preferredChatId) ?? filteredThreads[0] ?? null
-  const candidatesCounter =
-    role === 'Customer'
-      ? customerSelectedCandidates.length
-      : filteredCandidates.length
+  const filteredThreads = threads.filter(thread => {
+    if (!normalizedSearch) return true;
+    return thread.participant.toLowerCase().includes(normalizedSearch) ||
+      thread.preview.toLowerCase().includes(normalizedSearch);
+  });
+
+  const activeThread = filteredThreads.find(thread => thread.id === preferredChatId) ?? filteredThreads[0] ?? null;
+
+  const candidatesCounter = role === 'Customer'
+    ? customerSelectedCandidates.length
+    : filteredCandidates.length;
+
+  // Используем переданные meetings вместо dataset.meetings
+  const meetingsList = meetings ?? fallbackMeetings ?? [];
 
   const counters: Partial<Record<WorkspaceView, number>> = {
-    dashboard: dataset.meetings.length,
+    dashboard: meetingsList.length,
     orders: filteredOrders.length,
     candidates: candidatesCounter,
-    meetings: dataset.meetings.length,
+    meetings: meetingsList.length,
     chats: filteredThreads.reduce((sum, thread) => sum + thread.unread, 0),
+  };
+
+  let runtimeStats: WorkspaceStat[];
+  if (role === 'Executor') {
+    runtimeStats = [
+      {
+        id: 'projects',
+        label: 'Проекты в работе',
+        value: String(executorDashboardStats?.activeProjectsCount ?? 0),
+        note: `${executorDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на этапе согласования`,
+        tone: 'default',
+      },
+      {
+        id: 'pipeline',
+        label: 'Кандидаты на рассмотрении',
+        value: `${executorDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
+        note: 'Кандидаты ожидают вашего финального решения, выберете одного из них.',
+        tone: resolveCandidateFlowTone(executorDashboardStats?.pipelineCandidatesCount ?? 0),
+      },
+      {
+        id: 'shortlist',
+        label: 'Финалисты',
+        value: `${executorDashboardStats?.shortlistCandidatesCount ?? 0} чел.`,
+        note: '',
+        tone: resolveCandidateFlowTone(executorDashboardStats?.shortlistCandidatesCount ?? 0),
+      },
+    ];
+  } else if (role === 'Customer') {
+    runtimeStats = [
+      {
+        id: 'projects',
+        label: 'Заказы в работе',
+        value: String(customerDashboardStats?.activeProjectsCount ?? 0),
+        note: `${customerDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на этапе согласования`,
+        tone: 'default',
+      },
+      {
+        id: 'pipeline',
+        label: 'Кандидаты на рассмотрении',
+        value: `${customerDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
+        note: 'Кандидаты ожидают вашего финального решения, выберете одного из них.',
+        tone: resolveCandidateFlowTone(customerDashboardStats?.pipelineCandidatesCount ?? 0),
+      },
+      {
+        id: 'shortlist',
+        label: 'Получено новых кандидатов',
+        value: `${customerDashboardStats?.shortlistCandidatesCount ?? 0} чел.`,
+        note: resolveIncomingFromExecutorNote(customerDashboardStats?.shortlistCandidatesCount ?? 0),
+        tone: resolveIncomingFromExecutorTone(customerDashboardStats?.shortlistCandidatesCount ?? 0),
+      },
+    ];
+  } else {
+    runtimeStats = fallbackStats ?? [];
   }
-  const runtimeStats: WorkspaceStat[] =
-    role === 'Executor'
-      ? [
-          {
-            id: 'projects',
-            label: 'Проекты в работе',
-            value: String(executorDashboardStats?.activeProjectsCount ?? 0),
-            note: `${executorDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на этапе согласования`,
-            tone: 'default',
-          },
-          {
-            id: 'pipeline',
-            label: 'Кандидаты в работе',
-            value: `${executorDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
-            note: 'Отклики на вакансии + кандидаты, добавленные рекрутером.',
-            tone: resolveCandidateFlowTone(executorDashboardStats?.pipelineCandidatesCount ?? 0),
-          },
-          {
-            id: 'shortlist',
-            label: 'Финалисты',
-            value: `${executorDashboardStats?.shortlistCandidatesCount ?? 0} чел.`,
-            note: '',
-            tone: resolveCandidateFlowTone(executorDashboardStats?.shortlistCandidatesCount ?? 0),
-          },
-        ]
-      : role === 'Customer'
-        ? [
-            {
-              id: 'projects',
-              label: 'Заказы в работе',
-              value: String(customerDashboardStats?.activeProjectsCount ?? 0),
-              note: `${customerDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на этапе согласования`,
-              tone: 'default',
-            },
-            {
-              id: 'pipeline',
-              label: 'Кандидаты в работе',
-              value: `${customerDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
-              note: 'Отклики на вакансии + кандидаты, добавленные рекрутером.',
-              tone: resolveCandidateFlowTone(customerDashboardStats?.pipelineCandidatesCount ?? 0),
-            },
-            {
-              id: 'shortlist',
-              label: 'Получено от исполнителя',
-              value: `${customerDashboardStats?.shortlistCandidatesCount ?? 0} чел.`,
-              note: resolveIncomingFromExecutorNote(customerDashboardStats?.shortlistCandidatesCount ?? 0),
-              tone: resolveIncomingFromExecutorTone(customerDashboardStats?.shortlistCandidatesCount ?? 0),
-            },
-          ]
-        : dataset.stats
-  const isStandaloneOrderDetailsOpen = Boolean(selectedOrder) && activeView !== 'orders'
-  const isDetailsPageOpen = Boolean(selectedCandidate) || isStandaloneOrderDetailsOpen
+
+  const isStandaloneOrderDetailsOpen = Boolean(selectedOrder) && activeView !== 'orders';
+  const isDetailsPageOpen = Boolean(selectedCandidate) || isStandaloneOrderDetailsOpen;
 
   return {
     activeThread,
     allBaseCandidates,
     allCandidates,
     allOrders,
-    analyticsError,
+    analyticsError: resolvedAnalyticsError,
     baseCandidates,
     candidateViewOrders,
     candidateViewSelectedOrderId,
@@ -584,5 +568,5 @@ export function deriveWorkspaceViewState({
     selectedCandidate,
     selectedOrder,
     selectedOrderId,
-  }
+  };
 }
