@@ -22,7 +22,7 @@ import {
   useUpdateVacancyMutation,
   useUpdateVacancyStatusMutation,
 } from '@/shared/api/vacancies'
-import type { WorkspaceRole } from '../../model/data'
+import type { WorkspaceRole } from '../../../model/data'
 
 type UseWorkspaceDataQueriesProps = {
   role: WorkspaceRole

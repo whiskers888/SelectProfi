@@ -48,7 +48,7 @@ export function useWorkspaceUIState() {
         }, 280);
     };
 
-    const setDetailsInUrl = (params: { orderId?: string | null; candidateId?: string | null }, replace?: boolean) => {
+    const setDetailsInUrl = (_params: { orderId?: string | null; candidateId?: string | null }, _replace?: boolean) => {
         // реализация
     };
 

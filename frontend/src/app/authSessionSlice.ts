@@ -6,12 +6,16 @@ import {
   type AuthSession,
 } from "@/lib/sessionStorageService"
 
-interface AuthSessionState {
+export type { AuthSession } from '@/lib/sessionStorageService'
+
+export interface AuthSessionState {
   session: AuthSession | null
+  bootstrapStatus: 'idle' | 'in_progress' | 'done'
 }
 
 const initialState: AuthSessionState = {
   session: loadSession(),
+  bootstrapStatus: 'idle',
 }
 
 const authSessionSlice = createSlice({
@@ -26,8 +30,14 @@ const authSessionSlice = createSlice({
       state.session = null
       clearSession()
     },
+    setAuthSessionBootstrapStatus: (
+      state,
+      action: PayloadAction<AuthSessionState['bootstrapStatus']>,
+    ) => {
+      state.bootstrapStatus = action.payload
+    },
   },
 })
 
-export const { setAuthSession, clearAuthSession } = authSessionSlice.actions
+export const { setAuthSession, clearAuthSession, setAuthSessionBootstrapStatus } = authSessionSlice.actions
 export const authSessionReducer = authSessionSlice.reducer

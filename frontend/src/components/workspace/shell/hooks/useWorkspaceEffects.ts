@@ -5,12 +5,11 @@ type UseWorkspaceEffectsProps = {
     authMe: any;
     uiState: any;
     forms: any;
-    apiQueries: any;
 };
 
 const sidebarCollapsedStorageKey = 'workspace-sidebar-collapsed-v1';
 
-export function useWorkspaceEffects({ authMe, uiState, forms, apiQueries }: UseWorkspaceEffectsProps) {
+export function useWorkspaceEffects({ authMe, uiState, forms }: UseWorkspaceEffectsProps) {
     const transitionTimeoutRef = uiState.transitionTimeoutRef;
     // Сохранение состояния сайдбара
     useEffect(() => {

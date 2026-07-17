@@ -1,6 +1,5 @@
 // src/components/workspace/shell/hooks/useWorkspaceCallbacks.ts
-import {useCallback, useMemo} from 'react';
-import { useDispatch } from 'react-redux';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clearAuthSession } from '@/app/authSessionSlice';
 import { routePaths } from '@/app/routePaths';
@@ -29,11 +28,7 @@ type UseWorkspaceCallbacksProps = {
 
 export function useWorkspaceCallbacks({
                                           role,
-                                          activeView,
-                                          authMe,
-                                          profile,
                                           uiState,
-                                          forms,
                                           apiQueries,
                                           notify,
                                           dispatch,

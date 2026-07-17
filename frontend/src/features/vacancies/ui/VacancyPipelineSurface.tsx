@@ -1,11 +1,11 @@
-import { type ChangeEvent, type FormEvent } from 'react'
+import { type ChangeEvent, type FormEvent, useState } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
 import { ResumeLinksInput } from '@/components/workspace/ResumeLinksInput'
-import { ResumeFilesInput } from '@/components/workspace/ResumeFilesInput'
+import { ResumeFilesInput, type SelectedResumeFile } from '@/components/workspace/ResumeFilesInput'
 import type { VacancyCandidateStageContract } from '@/shared/api/candidates'
 
 type CreateCandidateResumeForm = {
@@ -72,6 +72,7 @@ export function VacancyPipelineSurface({
   onCreateCandidateResume,
   getRequestErrorMessage,
 }: VacancyPipelineSurfaceProps) {
+  const [resumeFiles, setResumeFiles] = useState<SelectedResumeFile[]>([])
   function hasVisibleText(html: string): boolean {
     return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().length > 0
   }
@@ -291,7 +292,12 @@ export function VacancyPipelineSurface({
                 onChange={(value) => onCreateCandidateResumeInputChange('resumeAttachmentLinks', { target: { value } } as ChangeEvent<HTMLInputElement>)}
                 disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
               />
-              <ResumeFilesInput id="vacancy-candidate-resume-files" disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume} />
+              <ResumeFilesInput
+                id="vacancy-candidate-resume-files"
+                value={resumeFiles}
+                onChange={setResumeFiles}
+                disabled={!canManagePipeline || !isVacancyPublished || isCreatingCandidateResume}
+              />
               <div>
                 <Button
                   type="submit"

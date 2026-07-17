@@ -1,11 +1,11 @@
-import { type FormEvent } from 'react'
+import { type FormEvent, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
 import { ResumeLinksInput } from '../ResumeLinksInput'
-import { ResumeFilesInput } from '../ResumeFilesInput'
+import { ResumeFilesInput, type SelectedResumeFile } from '../ResumeFilesInput'
 
 type ApplicantResponseCreatePagePanelProps = {
   formValues: {
@@ -40,6 +40,7 @@ export function ApplicantResponseCreatePagePanel({
   onFieldChange,
   onSubmit,
 }: ApplicantResponseCreatePagePanelProps) {
+  const [resumeFiles, setResumeFiles] = useState<SelectedResumeFile[]>([])
   const hasVisibleResumeText = formValues.resumeRichTextHtml.replace(/<[^>]*>/g, ' ').trim().length > 0
   const isFormInvalid =
     !formValues.fullName.trim() ||
@@ -161,7 +162,11 @@ export function ApplicantResponseCreatePagePanel({
             value={formValues.resumeAttachmentLinks}
             onChange={(value) => onFieldChange('resumeAttachmentLinks', value)}
         />
-        <ResumeFilesInput id="workspace-applicant-resume-files" />
+        <ResumeFilesInput
+          id="workspace-applicant-resume-files"
+          value={resumeFiles}
+          onChange={setResumeFiles}
+        />
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">
