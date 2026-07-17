@@ -20,7 +20,7 @@ public interface ICreateCandidateResumePersistence
     Task<CreateCandidateResumePersistenceResult> CreateAsync(
         Candidate candidate,
         CandidateResume resume,
-        VacancyCandidate vacancyCandidate,
+        VacancyCandidate? vacancyCandidate,
         CancellationToken cancellationToken);
 }
 

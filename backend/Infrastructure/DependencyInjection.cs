@@ -5,6 +5,7 @@ using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Application.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Application.Candidates.GetVacancyBaseCandidates;
+using SelectProfi.backend.Application.Candidates.GetMyCandidates;
 using SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCustomer;
@@ -51,6 +52,7 @@ using SelectProfi.backend.Infrastructure.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Infrastructure.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidateContactsForExecutor;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyBaseCandidates;
+using SelectProfi.backend.Infrastructure.Candidates.GetMyCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetVacancyCandidates;
 using SelectProfi.backend.Infrastructure.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Infrastructure.Candidates.MarkVacancyCandidateViewedByCustomer;
@@ -144,6 +146,7 @@ public static class DependencyInjection
         // @dvnull: Добавлена persistence-реализация чтения обезличенного списка кандидатов вакансии.
         services.AddScoped<IGetVacancyCandidatesPersistence, GetVacancyCandidatesPersistence>();
         services.AddScoped<IGetVacancyBaseCandidatesPersistence, GetVacancyBaseCandidatesPersistence>();
+        services.AddScoped<IGetMyCandidatesPersistence, GetMyCandidatesPersistence>();
         // @dvnull: Добавлена persistence-реализация чтения контактов выбранного кандидата для заказчика.
         services.AddScoped<IGetSelectedCandidateContactsPersistence, GetSelectedCandidateContactsPersistence>();
         // @dvnull: Ранее infra-слой не умел сохранять связку Candidate + Resume + VacancyCandidate; добавлена persistence-реализация для нового сценария.

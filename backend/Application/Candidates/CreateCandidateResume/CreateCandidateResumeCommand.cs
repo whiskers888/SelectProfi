@@ -5,7 +5,7 @@ namespace SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 
 public sealed class CreateCandidateResumeCommand : ICommand<CreateCandidateResumeResult>
 {
-    public Guid VacancyId { get; init; }
+    public Guid? VacancyId { get; init; }
 
     public Guid RequesterUserId { get; init; }
 
