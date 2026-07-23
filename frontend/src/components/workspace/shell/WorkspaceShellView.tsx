@@ -137,10 +137,8 @@ export function WorkspaceShellView({
   setSearchValue,
   toggleSidebar,
 }: WorkspaceShellViewProps) {
-  const activeSurface = isProfileRoute
-    ? 'profile'
-    : role === 'Customer' && isCreateOrderPageOpen
-      ? 'create-order'
+  const activeSurface = role === 'Customer' && isCreateOrderPageOpen
+    ? 'create-order'
       : role === 'Executor' && isCreateCandidatePageOpen
         ? 'create-candidate'
         : role === 'Executor' && isCreateVacancyPageOpen && linkedCreateVacancyOrder
@@ -151,7 +149,9 @@ export function WorkspaceShellView({
               ? 'candidate-details'
               : selectedOrder && activeView !== 'orders'
                 ? 'order-details'
-                : 'feed'
+                : isProfileRoute
+                  ? 'profile'
+                  : 'feed'
 
   return (
     <div className="preview11-html">
