@@ -174,7 +174,7 @@ export function WorkspaceShellView({
           />
 
           <main className="preview11-content flex-1 space-y-4">
-            {selectedOrder && activeView !== 'orders' && !isCreateVacancyPageOpen ? (
+            {selectedOrder && activeView !== 'orders' && !isCreateVacancyPageOpen && !isCreateCandidatePageOpen ? (
               <OrderDetailsPagePanel
                 key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}
                 assignedExecutorName={selectedOrderExecutorName}
