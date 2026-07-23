@@ -417,9 +417,14 @@ export function MainFeedPanelView({
               key={`${selectedOrderDetails.id}:${selectedOrderDetails.executorId ?? 'none'}`}
               assignedExecutorName={selectedOrderExecutorName}
               canManageOrderResponses={canManageOrderResponses}
-              canCreateVacancyFromOrder={role === 'Executor' && selectedOrderDetails.executorId === requesterUserId}
+              canCreateVacancyFromOrder={
+                role === 'Executor' &&
+                selectedOrderDetails.executorId === requesterUserId &&
+                (!selectedOrderVacancyPreview || selectedOrderVacancyPreview.status === 'Draft')
+              }
               canPublishVacancyForCustomer={canPublishVacancyForCustomer}
               canRespondToOrder={canRespondToOrder}
+              hasCreateVacancyDraft={selectedOrderVacancyPreview?.status === 'Draft'}
               hasRespondedToOrder={hasRespondedToOrder}
               isOrderResponsesLoading={isOrderResponsesLoading}
               isPublishingVacancyForCustomer={isPublishingVacancyForCustomer}

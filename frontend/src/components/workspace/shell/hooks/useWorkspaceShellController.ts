@@ -624,7 +624,8 @@ export function useWorkspaceShellController() {
       selectedOrder &&
         selectedOrder.executorId &&
         selectedOrder.executorId === authMe?.userId &&
-        !selectedOrder.isArchived,
+        !selectedOrder.isArchived &&
+        (!selectedOrderVacancy || selectedOrderVacancy.status === 'Draft'),
     )
   const canManageCandidatesFromSelectedOrder =
     role === 'Executor' &&
@@ -638,9 +639,10 @@ export function useWorkspaceShellController() {
     role === 'Customer' && selectedOrderVacancy?.status === 'OnApproval'
   // @dvnull: Ранее превью вакансии не прокидывалось в panel деталей заказа, из-за чего заказчик не видел текст перед подтверждением.
   const selectedOrderVacancyPreview = selectedOrderVacancy
-    ? {
+      ? {
         title: selectedOrderVacancy.title,
         description: selectedOrderVacancy.description,
+        status: selectedOrderVacancy.status,
       }
     : null
   const handlePublishVacancyForSelectedOrder = useCallback(async () => {
@@ -805,8 +807,7 @@ export function useWorkspaceShellController() {
   const linkedCreateVacancyOrder =
     (createVacancyOrderId ? baseOrders.find((order) => order.id === createVacancyOrderId) : null) ?? selectedOrder ?? null
   const hasCreateVacancyDraftForSelectedOrder =
-    Boolean(authMe?.userId && selectedOrder) &&
-    Boolean(readVacancyCreateDraft(authMe?.userId ?? '', selectedOrder?.id ?? ''))
+    selectedOrderVacancy?.status === 'Draft'
   const handleCreateVacancyFromOrder = useCallback(
     (orderId: string) => {
       const order = baseOrders.find((item) => item.id === orderId)
@@ -819,15 +820,25 @@ export function useWorkspaceShellController() {
       }
       const userId = authMe?.userId ?? ''
       const savedDraft = userId ? readVacancyCreateDraft(userId, order.id) : null
+      const existingVacancy = vacanciesResponse?.items.find((item) => item.orderId === order.id) ?? null
+
+      if (existingVacancy && existingVacancy.status !== 'Draft') {
+        setBanner({
+          variant: 'destructive',
+          message: 'Для этого заказа уже создана вакансия. Повторное создание недоступно.',
+        })
+        return
+      }
+
       // @dvnull: Ранее кнопка в деталях заказа переводила на отдельную страницу /vacancies; переносим создание в workspace-форму.
       setCreateVacancyOrderId(order.id)
       setCreateVacancyFormValues({
-        title: savedDraft?.title ?? order.title,
-        description: savedDraft?.description ?? '',
+        title: existingVacancy?.title ?? savedDraft?.title ?? order.title,
+        description: existingVacancy?.description ?? savedDraft?.description ?? '',
       })
       setIsCreateVacancyPageOpen(true)
     },
-    [authMe?.userId, baseOrders, setBanner],
+    [authMe?.userId, baseOrders, setBanner, vacanciesResponse],
   )
 
   useMarkCustomerViewedCandidate({
@@ -1006,6 +1017,8 @@ export function useWorkspaceShellController() {
       return {
         id: vacancy.id,
         status: vacancy.status,
+        title: vacancy.title,
+        description: vacancy.description,
       }
     },
     orderSpecializationOptions,

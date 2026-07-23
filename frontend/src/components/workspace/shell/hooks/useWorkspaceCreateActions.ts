@@ -36,6 +36,8 @@ type VacancyStatusContract = 'Draft' | 'OnApproval' | 'Published'
 type ExistingVacancySummary = {
   id: string
   status: VacancyStatusContract
+  title: string
+  description: string
 }
 
 type UnwrappableMutationResult<TResult> = {
@@ -353,6 +355,13 @@ export function useWorkspaceCreateActions({
     async (orderId: string, title: string, description: string): Promise<{ id: string; status: VacancyStatusContract }> => {
       const existingVacancy = getExistingVacancyByOrderId(orderId)
       if (existingVacancy) {
+        if (existingVacancy.status !== 'Draft') {
+          return {
+            id: existingVacancy.id,
+            status: existingVacancy.status,
+          }
+        }
+
         const updatedVacancy = await updateVacancy({
           vacancyId: existingVacancy.id,
           body: { title, description },

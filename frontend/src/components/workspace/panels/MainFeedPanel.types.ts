@@ -41,6 +41,7 @@ export type MainFeedPanelProps = {
   selectedOrderVacancyPreview?: {
     title: string
     description: string
+    status: 'Draft' | 'OnApproval' | 'Published'
   } | null
   view: 'dashboard' | 'orders' | 'candidates'
   isOrderResponsesLoading?: boolean
