@@ -42,6 +42,8 @@ export type MainFeedPanelProps = {
     title: string
     description: string
     status: 'Draft' | 'OnApproval' | 'Published'
+    createdAtUtc: string
+    updatedAtUtc: string
   } | null
   view: 'dashboard' | 'orders' | 'candidates'
   isOrderResponsesLoading?: boolean

@@ -20,6 +20,9 @@ type OrderDetailsPagePanelProps = {
   vacancyPreview?: {
     title: string
     description: string
+    status: 'Draft' | 'OnApproval' | 'Published'
+    createdAtUtc: string
+    updatedAtUtc: string
   } | null
   canManageOrderResponses?: boolean
   hasRespondedToOrder?: boolean
@@ -120,6 +123,14 @@ export function OrderDetailsPagePanel({
   const vacancyDescriptionPreview = vacancyPreview
     ? vacancyPreview.description.replace(/<[^>]*>/g, ' ').trim()
     : ''
+  const vacancyStatusLabel = vacancyPreview?.status === 'Published'
+    ? 'Согласовано и опубликовано'
+    : vacancyPreview?.status === 'OnApproval'
+      ? 'Отправлено на согласование'
+      : 'Черновик сохранён'
+  const vacancyStatusDate = vacancyPreview?.status === 'Draft'
+    ? vacancyPreview.createdAtUtc
+    : vacancyPreview?.updatedAtUtc
 
   return (
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
@@ -258,6 +269,15 @@ export function OrderDetailsPagePanel({
       </dl>
 
       <div className="mt-5">
+        {vacancyPreview ? (
+          <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Статус вакансии</p>
+            <p className="mt-2 text-sm font-medium text-slate-900">{vacancyStatusLabel}</p>
+            {vacancyStatusDate ? (
+              <p className="mt-1 text-xs text-slate-600">{new Date(vacancyStatusDate).toLocaleString('ru-RU')}</p>
+            ) : null}
+          </div>
+        ) : null}
         {canRespondToOrder ? (
           <Button
             className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"

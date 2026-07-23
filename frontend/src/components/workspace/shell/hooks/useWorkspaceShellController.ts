@@ -643,6 +643,8 @@ export function useWorkspaceShellController() {
         title: selectedOrderVacancy.title,
         description: selectedOrderVacancy.description,
         status: selectedOrderVacancy.status,
+        createdAtUtc: selectedOrderVacancy.createdAtUtc,
+        updatedAtUtc: selectedOrderVacancy.updatedAtUtc,
       }
     : null
   const handlePublishVacancyForSelectedOrder = useCallback(async () => {
