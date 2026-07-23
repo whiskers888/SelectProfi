@@ -58,7 +58,6 @@ type UseWorkspaceUiActionsDependencies = {
         ) => Record<WorkspaceRole, WorkspaceChatThread[]>),
   ) => void
   todayTimeLabel: () => string
-  onOpenWorkspace: () => void
   onOpenProfile: () => void
   onLogout: () => void
 }
@@ -79,7 +78,6 @@ export function useWorkspaceUiActions({
   setIsCreateOrderPageOpen,
   setThreadsByRole,
   todayTimeLabel,
-  onOpenWorkspace,
   onOpenProfile,
   onLogout,
 }: UseWorkspaceUiActionsDependencies) {
@@ -131,7 +129,6 @@ export function useWorkspaceUiActions({
   }, [activeThread, chatDraft, role, setBanner, setChatDraft, setThreadsByRole, todayTimeLabel])
 
   const handleHeaderCreateAction = useCallback(() => {
-    onOpenWorkspace()
     setDetailsInUrl({ orderId: null, candidateId: null }, true)
     setActiveView('dashboard')
 
@@ -168,7 +165,6 @@ export function useWorkspaceUiActions({
   }, [
     role,
     customerCompanyName,
-    onOpenWorkspace,
     setActiveView,
     setDetailsInUrl,
     setIsCreateApplicantResponsePageOpen,

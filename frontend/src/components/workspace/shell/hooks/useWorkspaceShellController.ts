@@ -967,11 +967,6 @@ export function useWorkspaceShellController() {
     setIsCreateOrderPageOpen,
     setThreadsByRole,
     todayTimeLabel,
-    onOpenWorkspace: () => {
-      if (location.pathname === routePaths.profile) {
-        navigate(routePaths.app, { replace: true })
-      }
-    },
     onOpenProfile: () => {
       navigate(routePaths.profile)
     },
