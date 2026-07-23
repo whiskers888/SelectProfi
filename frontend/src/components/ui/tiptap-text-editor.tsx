@@ -251,9 +251,22 @@ export function TiptapTextEditor({
           className="rounded border border-input px-2 py-1 text-xs"
           onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
           disabled={disabled}
-          aria-label="Очистить формат"
+          aria-label="Сбросить форматирование выделенного текста"
         >
-          Очистить
+          Сбросить формат
+        </button>
+        <button
+          type="button"
+          className="rounded border border-input px-2 py-1 text-xs"
+          onClick={() => {
+            if (window.confirm('Очистить всё описание? Это действие нельзя отменить.')) {
+              editor.chain().focus().clearContent().run()
+            }
+          }}
+          disabled={disabled || editor.isEmpty}
+          aria-label="Очистить описание"
+        >
+          Очистить описание
         </button>
       </div>
       <EditorContent editor={editor} />
