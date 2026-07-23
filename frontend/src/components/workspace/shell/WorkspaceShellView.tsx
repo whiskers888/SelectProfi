@@ -101,7 +101,6 @@ export function WorkspaceShellView({
   isPublishingVacancyForCustomer,
   isSendingVacancyToCustomer,
   isDeletingOrder,
-  isDetailsPageOpen,
   isOrderResponsesFetching,
   isOrderStatusUpdating,
   isOrdersApiLoading,
@@ -138,6 +137,22 @@ export function WorkspaceShellView({
   setSearchValue,
   toggleSidebar,
 }: WorkspaceShellViewProps) {
+  const activeSurface = isProfileRoute
+    ? 'profile'
+    : role === 'Customer' && isCreateOrderPageOpen
+      ? 'create-order'
+      : role === 'Executor' && isCreateCandidatePageOpen
+        ? 'create-candidate'
+        : role === 'Executor' && isCreateVacancyPageOpen && linkedCreateVacancyOrder
+          ? 'create-vacancy'
+          : role === 'Applicant' && isCreateApplicantResponsePageOpen
+            ? 'create-applicant-response'
+            : selectedCandidate
+              ? 'candidate-details'
+              : selectedOrder && activeView !== 'orders'
+                ? 'order-details'
+                : 'feed'
+
   return (
     <div className="preview11-html">
       <div className="preview11-app">
@@ -174,7 +189,7 @@ export function WorkspaceShellView({
           />
 
           <main className="preview11-content flex-1 space-y-4">
-            {selectedOrder && activeView !== 'orders' && !isCreateVacancyPageOpen && !isCreateCandidatePageOpen ? (
+            {activeSurface === 'order-details' && selectedOrder ? (
               <OrderDetailsPagePanel
                 key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}
                 assignedExecutorName={selectedOrderExecutorName}
@@ -227,7 +242,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {selectedCandidate ? (
+            {activeSurface === 'candidate-details' && selectedCandidate ? (
               <CandidateDetailsPagePanel
                 candidate={selectedCandidate}
                 canPurchase={selectedCandidate.isOwnedByRequester !== true}
@@ -237,7 +252,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {role === 'Executor' && isCreateCandidatePageOpen ? (
+            {activeSurface === 'create-candidate' ? (
               <CandidateCreatePagePanel
                 formValues={createCandidateFormValues}
                 specializationOptions={orderSpecializationOptions}
@@ -247,7 +262,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {role === 'Applicant' && isCreateApplicantResponsePageOpen ? (
+            {activeSurface === 'create-applicant-response' ? (
               <ApplicantResponseCreatePagePanel
                 formValues={createApplicantResponseFormValues}
                 onBack={closeCreateApplicantResponsePage}
@@ -256,7 +271,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {role === 'Customer' && isCreateOrderPageOpen ? (
+            {activeSurface === 'create-order' ? (
               <OrderCreatePagePanel
                 formValues={createOrderFormValues}
                 specializationOptions={orderSpecializationOptions}
@@ -267,7 +282,7 @@ export function WorkspaceShellView({
                 onSubmit={handleCreateOrderFromPage}
               />
             ) : null}
-            {role === 'Executor' && isCreateVacancyPageOpen && linkedCreateVacancyOrder ? (
+            {activeSurface === 'create-vacancy' && linkedCreateVacancyOrder ? (
               <VacancyCreatePagePanel
                 formValues={createVacancyFormValues}
                 isCreatingVacancy={isCreatingVacancy}
@@ -284,13 +299,9 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {isProfileRoute ? (
+            {activeSurface === 'profile' ? (
               <ProfilePage />
-            ) : (role === 'Customer' && isCreateOrderPageOpen) ||
-              (role === 'Executor' && isCreateCandidatePageOpen) ||
-              (role === 'Executor' && isCreateVacancyPageOpen) ||
-              (role === 'Applicant' && isCreateApplicantResponsePageOpen) ||
-              isDetailsPageOpen ? null : (
+            ) : activeSurface === 'feed' ? (
               <>
                 {(activeView === 'dashboard' ||
                   activeView === 'orders' ||
@@ -485,7 +496,7 @@ export function WorkspaceShellView({
                   </Card>
                 ) : null}
               </>
-            )}
+            ) : null}
           </main>
         </div>
       </div>
