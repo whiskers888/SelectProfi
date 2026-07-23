@@ -364,9 +364,6 @@ export function WorkspaceShellView({
                 {activeView === 'chats' ? (
                   <Card className="rounded-xl border-slate-200 p-4 shadow-none">
                     <h3 className="text-base font-semibold text-slate-900">Чаты</h3>
-                    <p className="mt-1 text-sm text-slate-600">
-                      Быстрая коммуникация между ролями и фиксация следующих шагов.
-                    </p>
 
                     {isViewLoading ? (
                       <div className="mt-4 flex items-center gap-3 text-sm text-slate-600">
