@@ -24,6 +24,10 @@ export type WorkspaceOrder = {
   title: string
   company: string
   location: string
+  employeeCompensation: string
+  functional: string
+  requirements: string
+  otherConditions: string
   priority: 'high' | 'medium' | 'low'
   responses: number
   statusLabel: string

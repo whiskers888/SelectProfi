@@ -53,6 +53,21 @@ type OrderDetailsPagePanelProps = {
   orderResponses?: OrderExecutorResponseItemResponse[]
 }
 
+function OrderDetailRow({ label, value }: { label: string; value: string }) {
+  const visibleValue = value.trim() || 'Не указано'
+
+  return (
+    <div className="grid gap-2 md:grid-cols-[10rem_minmax(0,1fr)] md:items-start md:gap-4">
+      <dt className="pt-3 text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
+        {label}
+      </dt>
+      <dd className="min-h-11 whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-900">
+        {visibleValue}
+      </dd>
+    </div>
+  )
+}
+
 export function OrderDetailsPagePanel({
   applicantResponders = [],
   availableCandidates = [],
@@ -152,18 +167,13 @@ export function OrderDetailsPagePanel({
       </div>
 
       <dl className="mt-4 grid gap-3">
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Вакансия</dt>
-          <dd className="mt-1 text-sm text-slate-900">{order.title}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Компания</dt>
-          <dd className="mt-1 text-sm text-slate-900">{order.company}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Локация</dt>
-          <dd className="mt-1 text-sm text-slate-900">{order.location}</dd>
-        </div>
+        <OrderDetailRow label="Компания" value={order.company} />
+        <OrderDetailRow label="Вакансия" value={order.title} />
+        <OrderDetailRow label="Локация" value={order.location} />
+        <OrderDetailRow label="Оплата" value={order.employeeCompensation} />
+        <OrderDetailRow label="Функционал" value={order.functional} />
+        <OrderDetailRow label="Требования" value={order.requirements} />
+        <OrderDetailRow label="Другие условия" value={order.otherConditions} />
         <div>
           <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Отклики</dt>
           <dd className="mt-1 text-sm text-slate-900">{order.responses}</dd>

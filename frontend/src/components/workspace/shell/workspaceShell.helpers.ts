@@ -6,6 +6,10 @@ import type {
 } from '@/shared/api/candidates'
 import type { VacancyResponse } from '@/shared/api/vacancies'
 import type {
+  CustomerDashboardStatsResponse,
+  ExecutorDashboardStatsResponse,
+} from '@/shared/api/dashboard'
+import type {
   WorkspaceCandidate,
   WorkspaceChatThread,
   WorkspaceMeeting,
@@ -109,8 +113,12 @@ export function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
     executorId: order.executorId ?? null,
     price: order.price,
     title: order.title,
-    company: toOrderCompanyLabel(order.description),
-    location: 'Локация не указана',
+    company: order.customerCompanyName?.trim() || 'Компания не указана',
+    location: order.location,
+    employeeCompensation: order.employeeCompensation,
+    functional: order.functional,
+    requirements: order.requirements,
+    otherConditions: order.otherConditions,
     priority: hasExecutor ? 'medium' : 'high',
     responses: 0,
     statusLabel: isArchived
@@ -138,7 +146,11 @@ export function toWorkspaceOrderFromVacancy(vacancy: VacancyResponse): Workspace
     price: null,
     title: vacancy.title,
     company: toOrderCompanyLabel(vacancy.description),
-    location: 'Локация не указана',
+    location: '',
+    employeeCompensation: '',
+    functional: '',
+    requirements: '',
+    otherConditions: '',
     priority: isPublished ? 'medium' : 'high',
     responses: 0,
     statusLabel: isPublished ? 'Опубликована' : isOnApproval ? 'На согласовании' : 'Черновик',
@@ -279,8 +291,8 @@ type DeriveWorkspaceViewStateInput = {
   canLoadExecutorBaseCandidates: boolean;
   canLoadServerCandidates: boolean;
   canLoadServerOrders: boolean;
-  candidateSourceVacancy: any;
-  executorDashboardStats?: any;
+  candidateSourceVacancy: VacancyResponse | null;
+  executorDashboardStats?: ExecutorDashboardStatsResponse;
   executorGlobalBaseCandidates: WorkspaceCandidate[];
   executorGlobalCandidates: WorkspaceCandidate[];
   fallbackCandidates: WorkspaceCandidate[];  // ← добавить
@@ -303,8 +315,8 @@ type DeriveWorkspaceViewStateInput = {
   serverCandidates: WorkspaceCandidate[];
   threads: WorkspaceChatThread[];
   vacanciesResponseExists: boolean;
-  vacancyCandidatesItems: any[] | null;
-  customerDashboardStats?: any;
+  vacancyCandidatesItems: VacancyCandidatesItemResponse[] | null;
+  customerDashboardStats?: CustomerDashboardStatsResponse;
 };
 
 type DeriveWorkspaceViewStateResult = {
