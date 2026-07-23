@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SelectProfi.backend.Contracts.Orders;
 using SelectProfi.backend.Contracts.Vacancies;
 using SelectProfi.backend.Domain.Candidates;
 using SelectProfi.backend.Domain.Orders;
@@ -27,6 +28,49 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
         _factory = factory;
         _configuration = factory.Services.GetService(typeof(IConfiguration)) as IConfiguration
             ?? throw new InvalidOperationException("IConfiguration is not available.");
+    }
+
+    [Fact]
+    public async Task CreateOrder_WithVacancyDetails_PersistsAndReturnsStructuredFields()
+    {
+        var scenario = await SeedVacancyScenarioAsync(VacancyStatus.Draft);
+        using var client = CreateAuthorizedClient(scenario.Customer);
+        var request = new CreateOrderRequest
+        {
+            Title = "Senior React Developer",
+            Description = "Structured vacancy details",
+            SpecializationId = scenario.SpecializationId,
+            Price = 250000m,
+            RequestedCandidatesCount = 3,
+            Location = "Москва / удалённо",
+            EmployeeCompensation = "200 000–250 000 ₽ net",
+            Functional = "Разработка продукта и code review",
+            Requirements = "React, TypeScript, опыт от 3 лет",
+            OtherConditions = "ДМС, техника и гибкий график"
+        };
+
+        using var createResponse = await client.PostAsJsonAsync("/api/orders", request);
+        var createdOrder = await createResponse.Content.ReadFromJsonAsync<OrderResponse>();
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        Assert.NotNull(createdOrder);
+        Assert.Equal("Integration Company", createdOrder!.CustomerCompanyName);
+        Assert.Equal(request.Location, createdOrder.Location);
+        Assert.Equal(request.EmployeeCompensation, createdOrder.EmployeeCompensation);
+        Assert.Equal(request.Functional, createdOrder.Functional);
+        Assert.Equal(request.Requirements, createdOrder.Requirements);
+        Assert.Equal(request.OtherConditions, createdOrder.OtherConditions);
+
+        using var getResponse = await client.GetAsync($"/api/orders/{createdOrder.Id}");
+        var storedOrder = await getResponse.Content.ReadFromJsonAsync<OrderResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        Assert.NotNull(storedOrder);
+        Assert.Equal(request.Location, storedOrder!.Location);
+        Assert.Equal(request.EmployeeCompensation, storedOrder.EmployeeCompensation);
+        Assert.Equal(request.Functional, storedOrder.Functional);
+        Assert.Equal(request.Requirements, storedOrder.Requirements);
+        Assert.Equal(request.OtherConditions, storedOrder.OtherConditions);
     }
 
     [Fact]
@@ -238,6 +282,11 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
             ExecutorId = executor.Id,
             Title = "Order for integration tests",
             Description = "Integration test order description",
+            Location = "Remote",
+            EmployeeCompensation = "200000 RUB",
+            Functional = "Build product",
+            Requirements = "Backend experience",
+            OtherConditions = "Flexible schedule",
             CreatedAtUtc = now,
             UpdatedAtUtc = now
         });
@@ -256,7 +305,7 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
 
         await dbContext.SaveChangesAsync();
 
-        return new TestScenario(vacancyId, specializationId, customer, executor);
+        return new TestScenario(orderId, vacancyId, specializationId, customer, executor);
     }
 
     private async Task<Guid> SeedRegisteredCandidateAsync()
@@ -385,6 +434,7 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
                 FirstName = role.ToString(),
                 LastName = "Integration",
                 Role = role,
+                CustomerCompanyName = role == UserRole.Customer ? "Integration Company" : null,
                 IsEmailVerified = true,
                 IsPhoneVerified = true,
                 CreatedAtUtc = DateTime.UtcNow
@@ -461,7 +511,12 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
         return new string(digits);
     }
 
-    private sealed record TestScenario(Guid VacancyId, Guid SpecializationId, TestUser Customer, TestUser Executor);
+    private sealed record TestScenario(
+        Guid OrderId,
+        Guid VacancyId,
+        Guid SpecializationId,
+        TestUser Customer,
+        TestUser Executor);
 
     private sealed record TestUser(Guid Id, string Email, UserRole Role, User DbUser);
 }

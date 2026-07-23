@@ -31,6 +31,21 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
         if (command.Description is not null)
             order.Description = command.Description.Trim();
 
+        if (command.Location is not null)
+            order.Location = command.Location.Trim();
+
+        if (command.EmployeeCompensation is not null)
+            order.EmployeeCompensation = command.EmployeeCompensation.Trim();
+
+        if (command.Functional is not null)
+            order.Functional = command.Functional.Trim();
+
+        if (command.Requirements is not null)
+            order.Requirements = command.Requirements.Trim();
+
+        if (command.OtherConditions is not null)
+            order.OtherConditions = command.OtherConditions.Trim();
+
         if (command.SpecializationId.HasValue)
         {
             var specializationSnapshot = await persistence.FindActiveSpecializationByIdAsync(
@@ -80,6 +95,11 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            Location = order.Location,
+            EmployeeCompensation = order.EmployeeCompensation,
+            Functional = order.Functional,
+            Requirements = order.Requirements,
+            OtherConditions = order.OtherConditions,
             SpecializationId = order.SpecializationId,
             Specialization = order.Specialization,
             Price = order.Price,

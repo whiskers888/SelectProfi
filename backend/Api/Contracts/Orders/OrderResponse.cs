@@ -12,6 +12,16 @@ public sealed class OrderResponse
 
     public string Description { get; init; } = string.Empty;
 
+    public string Location { get; init; } = string.Empty;
+
+    public string EmployeeCompensation { get; init; } = string.Empty;
+
+    public string Functional { get; init; } = string.Empty;
+
+    public string Requirements { get; init; } = string.Empty;
+
+    public string OtherConditions { get; init; } = string.Empty;
+
     // @dvnull: Ранее specialization хранилась внутри description; добавлено отдельное поле ответа API.
     public string Specialization { get; init; } = string.Empty;
 

@@ -14,6 +14,21 @@ public sealed class CreateOrderRequest
     [MaxLength(4000)]
     public string Description { get; init; } = string.Empty;
 
+    [MaxLength(255)]
+    public string? Location { get; init; }
+
+    [MaxLength(255)]
+    public string? EmployeeCompensation { get; init; }
+
+    [MaxLength(4000)]
+    public string? Functional { get; init; }
+
+    [MaxLength(4000)]
+    public string? Requirements { get; init; }
+
+    [MaxLength(4000)]
+    public string? OtherConditions { get; init; }
+
     [MaxLength(200)]
     // @dvnull: Ранее specialization передавалась внутри description; добавлено отдельное поле контракта create-order.
     public string? Specialization { get; init; }

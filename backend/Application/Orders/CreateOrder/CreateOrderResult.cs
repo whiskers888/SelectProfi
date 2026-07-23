@@ -16,6 +16,16 @@ public sealed class CreateOrderResult
 
     public string Description { get; init; } = string.Empty;
 
+    public string Location { get; init; } = string.Empty;
+
+    public string EmployeeCompensation { get; init; } = string.Empty;
+
+    public string Functional { get; init; } = string.Empty;
+
+    public string Requirements { get; init; } = string.Empty;
+
+    public string OtherConditions { get; init; } = string.Empty;
+
     public string Specialization { get; init; } = string.Empty;
 
     // @dvnull: Ранее create-result не возвращал specializationId; добавлено поле для фронтовой привязки к словарю.

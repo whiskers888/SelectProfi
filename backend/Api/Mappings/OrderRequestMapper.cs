@@ -29,6 +29,11 @@ public static class OrderRequestMapper
             CustomerId = customerId,
             Title = request.Title,
             Description = request.Description,
+            Location = request.Location ?? string.Empty,
+            EmployeeCompensation = request.EmployeeCompensation ?? string.Empty,
+            Functional = request.Functional ?? string.Empty,
+            Requirements = request.Requirements ?? string.Empty,
+            OtherConditions = request.OtherConditions ?? string.Empty,
             // @dvnull: Ранее mapper пробрасывал только title/description; добавлены specialization/price в create-command.
             Specialization = request.Specialization ?? string.Empty,
             SpecializationId = request.SpecializationId,
@@ -100,6 +105,11 @@ public static class OrderRequestMapper
             RequesterRole = requesterRole,
             Title = request.Title,
             Description = request.Description,
+            Location = request.Location,
+            EmployeeCompensation = request.EmployeeCompensation,
+            Functional = request.Functional,
+            Requirements = request.Requirements,
+            OtherConditions = request.OtherConditions,
             // @dvnull: Ранее PATCH mapper не учитывал specialization/price; добавлен проброс в update-command.
             Specialization = request.Specialization,
             SpecializationId = request.SpecializationId,

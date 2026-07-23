@@ -24,6 +24,11 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            Location = order.Location,
+            EmployeeCompensation = order.EmployeeCompensation,
+            Functional = order.Functional,
+            Requirements = order.Requirements,
+            OtherConditions = order.OtherConditions,
             // @dvnull: Ранее detail-query не возвращал specialization/price; добавлен проброс отдельных полей заказа.
             SpecializationId = order.SpecializationId,
             Specialization = order.Specialization,

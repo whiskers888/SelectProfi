@@ -25,6 +25,16 @@ public sealed class GetOrdersItemResult
 
     public string Description { get; init; } = string.Empty;
 
+    public string Location { get; init; } = string.Empty;
+
+    public string EmployeeCompensation { get; init; } = string.Empty;
+
+    public string Functional { get; init; } = string.Empty;
+
+    public string Requirements { get; init; } = string.Empty;
+
+    public string OtherConditions { get; init; } = string.Empty;
+
     public string Specialization { get; init; } = string.Empty;
 
     // @dvnull: Ранее list-item результата не включал specializationId; добавлено поле для справочного источника специализации.

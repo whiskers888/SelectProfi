@@ -27,6 +27,11 @@ public sealed class GetOrdersQueryHandler(IGetOrdersPersistence persistence)
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
+            Location = order.Location,
+            EmployeeCompensation = order.EmployeeCompensation,
+            Functional = order.Functional,
+            Requirements = order.Requirements,
+            OtherConditions = order.OtherConditions,
             // @dvnull: Ранее list-query не включал specialization/price; добавлены поля в список заказов.
             SpecializationId = order.SpecializationId,
             Specialization = order.Specialization,

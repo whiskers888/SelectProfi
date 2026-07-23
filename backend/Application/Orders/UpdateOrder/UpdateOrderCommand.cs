@@ -16,6 +16,16 @@ public sealed class UpdateOrderCommand : ICommand<UpdateOrderResult>
 
     public string? Description { get; init; }
 
+    public string? Location { get; init; }
+
+    public string? EmployeeCompensation { get; init; }
+
+    public string? Functional { get; init; }
+
+    public string? Requirements { get; init; }
+
+    public string? OtherConditions { get; init; }
+
     public string? Specialization { get; init; }
 
     // @dvnull: Ранее update-command не поддерживал dictionary-ссылку specializationId; добавлено поле для обновления специализации по справочнику.

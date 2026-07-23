@@ -10,6 +10,16 @@ public sealed class CreateOrderCommand : ICommand<CreateOrderResult>
 
     public string Description { get; init; } = string.Empty;
 
+    public string Location { get; init; } = string.Empty;
+
+    public string EmployeeCompensation { get; init; } = string.Empty;
+
+    public string Functional { get; init; } = string.Empty;
+
+    public string Requirements { get; init; } = string.Empty;
+
+    public string OtherConditions { get; init; } = string.Empty;
+
     public string Specialization { get; init; } = string.Empty;
 
     // @dvnull: Ранее create-command не поддерживал dictionary-ссылку specializationId; добавлено поле для справочника специализаций.

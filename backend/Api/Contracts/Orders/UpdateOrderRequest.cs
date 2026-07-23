@@ -12,6 +12,21 @@ public sealed class UpdateOrderRequest : IValidatableObject
     [MaxLength(4000)]
     public string? Description { get; init; }
 
+    [MaxLength(255)]
+    public string? Location { get; init; }
+
+    [MaxLength(255)]
+    public string? EmployeeCompensation { get; init; }
+
+    [MaxLength(4000)]
+    public string? Functional { get; init; }
+
+    [MaxLength(4000)]
+    public string? Requirements { get; init; }
+
+    [MaxLength(4000)]
+    public string? OtherConditions { get; init; }
+
     [MinLength(1)]
     [MaxLength(200)]
     // @dvnull: Ранее PATCH не поддерживал отдельную специализацию заказа; добавлено частичное обновление specialization.
@@ -32,6 +47,11 @@ public sealed class UpdateOrderRequest : IValidatableObject
     {
         if (Title is null &&
             Description is null &&
+            Location is null &&
+            EmployeeCompensation is null &&
+            Functional is null &&
+            Requirements is null &&
+            OtherConditions is null &&
             Specialization is null &&
             SpecializationId is null &&
             Price is null &&
@@ -39,8 +59,8 @@ public sealed class UpdateOrderRequest : IValidatableObject
             Status is null)
         {
             yield return new ValidationResult(
-                "At least one field (title, description, specialization, specializationId, price, executorId or status) is required.",
-                [nameof(Title), nameof(Description), nameof(Specialization), nameof(SpecializationId), nameof(Price), nameof(ExecutorId), nameof(Status)]);
+                "At least one order field is required.",
+                [nameof(Title), nameof(Description), nameof(Location), nameof(EmployeeCompensation), nameof(Functional), nameof(Requirements), nameof(OtherConditions), nameof(Specialization), nameof(SpecializationId), nameof(Price), nameof(ExecutorId), nameof(Status)]);
         }
     }
 }

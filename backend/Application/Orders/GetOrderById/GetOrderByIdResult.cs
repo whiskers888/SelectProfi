@@ -16,6 +16,16 @@ public sealed class GetOrderByIdResult
 
     public string Description { get; init; } = string.Empty;
 
+    public string Location { get; init; } = string.Empty;
+
+    public string EmployeeCompensation { get; init; } = string.Empty;
+
+    public string Functional { get; init; } = string.Empty;
+
+    public string Requirements { get; init; } = string.Empty;
+
+    public string OtherConditions { get; init; } = string.Empty;
+
     public string Specialization { get; init; } = string.Empty;
 
     // @dvnull: Ранее detail-result не включал specializationId; добавлено поле для чтения справочного значения.

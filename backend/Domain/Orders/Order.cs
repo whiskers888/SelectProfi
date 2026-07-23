@@ -26,6 +26,21 @@ public sealed class Order
     [MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 
+    [MaxLength(255)]
+    public string Location { get; set; } = string.Empty;
+
+    [MaxLength(255)]
+    public string EmployeeCompensation { get; set; } = string.Empty;
+
+    [MaxLength(4000)]
+    public string Functional { get; set; } = string.Empty;
+
+    [MaxLength(4000)]
+    public string Requirements { get; set; } = string.Empty;
+
+    [MaxLength(4000)]
+    public string OtherConditions { get; set; } = string.Empty;
+
     // @dvnull: Ранее у заказа не было внешнего ключа на справочник специализаций; добавлена nullable-ссылка на dictionary-элемент.
     public Guid? SpecializationId { get; set; }
 

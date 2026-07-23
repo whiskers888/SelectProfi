@@ -102,6 +102,21 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .IsRequired();
             builder.Property(order => order.CustomerCompanyName)
                 .HasMaxLength(255);
+            builder.Property(order => order.Location)
+                .HasMaxLength(255)
+                .IsRequired();
+            builder.Property(order => order.EmployeeCompensation)
+                .HasMaxLength(255)
+                .IsRequired();
+            builder.Property(order => order.Functional)
+                .HasMaxLength(4000)
+                .IsRequired();
+            builder.Property(order => order.Requirements)
+                .HasMaxLength(4000)
+                .IsRequired();
+            builder.Property(order => order.OtherConditions)
+                .HasMaxLength(4000)
+                .IsRequired();
             builder.Property(order => order.RequestedCandidatesCount)
                 .HasDefaultValue(3)
                 .IsRequired();
