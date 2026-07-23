@@ -92,10 +92,6 @@ export function WorkspaceShellView({
   handleViewChange,
   hasRespondedToSelectedOrder,
   isCandidatesApiLoading,
-  isCreateApplicantResponsePageOpen,
-  isCreateCandidatePageOpen,
-  isCreateOrderPageOpen,
-  isCreateVacancyPageOpen,
   isCreatingOrder,
   isCreatingVacancy,
   isPublishingVacancyForCustomer,
@@ -104,7 +100,6 @@ export function WorkspaceShellView({
   isOrderResponsesFetching,
   isOrderStatusUpdating,
   isOrdersApiLoading,
-  isProfileRoute,
   isRejectingOrderExecutor,
   isRespondingToOrder,
   isUpdatingApplicantResponderStage,
@@ -136,23 +131,9 @@ export function WorkspaceShellView({
   setPreferredOrderId,
   setSearchValue,
   toggleSidebar,
+  workspaceScreen,
 }: WorkspaceShellViewProps) {
-  const activeSurface = role === 'Customer' && isCreateOrderPageOpen
-    ? 'create-order'
-      : role === 'Executor' && isCreateCandidatePageOpen
-        ? 'create-candidate'
-        : role === 'Executor' && isCreateVacancyPageOpen && linkedCreateVacancyOrder
-          ? 'create-vacancy'
-          : role === 'Applicant' && isCreateApplicantResponsePageOpen
-            ? 'create-applicant-response'
-            : selectedCandidate
-              ? 'candidate-details'
-              : selectedOrder && activeView !== 'orders'
-                ? 'order-details'
-                : isProfileRoute
-                  ? 'profile'
-                  : 'feed'
-
+  // Один renderer выбирает единственный полноэкранный surface.
   return (
     <div className="preview11-html">
       <div className="preview11-app">
@@ -184,12 +165,12 @@ export function WorkspaceShellView({
             onSwitchRole={() => void handleToggleRole()}
             role={role}
             searchValue={searchValue}
-            subtitle={isProfileRoute ? 'Личные данные и настройки роли' : ''}
-            title={isProfileRoute ? 'Мой профиль' : createHeaderTitle(role)}
+            subtitle={workspaceScreen === 'profile' ? 'Личные данные и настройки роли' : ''}
+            title={workspaceScreen === 'profile' ? 'Мой профиль' : createHeaderTitle(role)}
           />
 
           <main className="preview11-content flex-1 space-y-4">
-            {activeSurface === 'order-details' && selectedOrder ? (
+            {workspaceScreen === 'order-details' && selectedOrder ? (
               <OrderDetailsPagePanel
                 key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}
                 assignedExecutorName={selectedOrderExecutorName}
@@ -242,7 +223,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {activeSurface === 'candidate-details' && selectedCandidate ? (
+            {workspaceScreen === 'candidate-details' && selectedCandidate ? (
               <CandidateDetailsPagePanel
                 candidate={selectedCandidate}
                 canPurchase={selectedCandidate.isOwnedByRequester !== true}
@@ -252,7 +233,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {activeSurface === 'create-candidate' ? (
+            {workspaceScreen === 'create-candidate' ? (
               <CandidateCreatePagePanel
                 formValues={createCandidateFormValues}
                 specializationOptions={orderSpecializationOptions}
@@ -262,7 +243,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {activeSurface === 'create-applicant-response' ? (
+            {workspaceScreen === 'create-applicant-response' ? (
               <ApplicantResponseCreatePagePanel
                 formValues={createApplicantResponseFormValues}
                 onBack={closeCreateApplicantResponsePage}
@@ -271,7 +252,7 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {activeSurface === 'create-order' ? (
+            {workspaceScreen === 'create-order' ? (
               <OrderCreatePagePanel
                 formValues={createOrderFormValues}
                 specializationOptions={orderSpecializationOptions}
@@ -282,7 +263,7 @@ export function WorkspaceShellView({
                 onSubmit={handleCreateOrderFromPage}
               />
             ) : null}
-            {activeSurface === 'create-vacancy' && linkedCreateVacancyOrder ? (
+            {workspaceScreen === 'create-vacancy' && linkedCreateVacancyOrder ? (
               <VacancyCreatePagePanel
                 formValues={createVacancyFormValues}
                 isCreatingVacancy={isCreatingVacancy}
@@ -299,9 +280,9 @@ export function WorkspaceShellView({
               />
             ) : null}
 
-            {activeSurface === 'profile' ? (
+            {workspaceScreen === 'profile' ? (
               <ProfilePage />
-            ) : activeSurface === 'feed' ? (
+            ) : workspaceScreen === 'feed' ? (
               <>
                 {(activeView === 'dashboard' ||
                   activeView === 'orders' ||

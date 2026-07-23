@@ -70,6 +70,14 @@ import {
   toWorkspaceOrderFromVacancy,
   toWorkspaceRole,
 } from '../workspaceShell.helpers'
+import {
+  closeWorkspaceScreen,
+  createWorkspaceScreenState,
+  openWorkspaceScreen,
+  resolveWorkspaceScreen,
+  syncWorkspaceScreenRoute,
+  type WorkspacePrimaryScreen,
+} from '../workspaceScreen'
 
 type OrderFilter = 'all' | 'active' | 'paused'
 const defaultWorkspaceRole: WorkspaceRole = 'Customer'
@@ -342,10 +350,35 @@ export function useWorkspaceShellController() {
     },
     [notify],
   )
-  const [isCreateOrderPageOpen, setIsCreateOrderPageOpen] = useState(false)
-  const [isCreateVacancyPageOpen, setIsCreateVacancyPageOpen] = useState(false)
-  const [isCreateCandidatePageOpen, setIsCreateCandidatePageOpen] = useState(false)
-  const [isCreateApplicantResponsePageOpen, setIsCreateApplicantResponsePageOpen] = useState(false)
+  const [screenState, setScreenState] = useState(() => createWorkspaceScreenState(isProfileRoute))
+  const routedScreenState = syncWorkspaceScreenRoute(screenState, isProfileRoute)
+  const createScreenSetter = useCallback(
+    (screen: WorkspacePrimaryScreen) => (isOpen: boolean) => {
+      setScreenState((currentState) => {
+        const routedState = syncWorkspaceScreenRoute(currentState, isProfileRoute)
+        return isOpen
+          ? openWorkspaceScreen(routedState, screen)
+          : closeWorkspaceScreen(routedState, screen)
+      })
+    },
+    [isProfileRoute],
+  )
+  const setIsCreateOrderPageOpen = useMemo(
+    () => createScreenSetter('create-order'),
+    [createScreenSetter],
+  )
+  const setIsCreateVacancyPageOpen = useMemo(
+    () => createScreenSetter('create-vacancy'),
+    [createScreenSetter],
+  )
+  const setIsCreateCandidatePageOpen = useMemo(
+    () => createScreenSetter('create-candidate'),
+    [createScreenSetter],
+  )
+  const setIsCreateApplicantResponsePageOpen = useMemo(
+    () => createScreenSetter('create-applicant-response'),
+    [createScreenSetter],
+  )
   const [createOrderFormValues, setCreateOrderFormValues] = useState({
     title: '',
     organization: '',
@@ -559,6 +592,11 @@ export function useWorkspaceShellController() {
     threads,
     vacanciesResponseExists: Boolean(vacanciesResponse),
     vacancyCandidatesItems: vacancyCandidatesResponse?.items ?? null,
+  })
+  const workspaceScreen = resolveWorkspaceScreen(routedScreenState.current, {
+    activeView,
+    hasSelectedCandidate: Boolean(selectedCandidate),
+    hasSelectedOrder: Boolean(selectedOrder),
   })
   const { data: myOrderResponse, refetch: refetchMyOrderResponse } = useGetMyOrderResponseQuery(
     role === 'Executor' && selectedOrder ? selectedOrder.id : skipToken,
@@ -840,7 +878,7 @@ export function useWorkspaceShellController() {
       })
       setIsCreateVacancyPageOpen(true)
     },
-    [authMe?.userId, baseOrders, setBanner, vacanciesResponse],
+    [authMe?.userId, baseOrders, setBanner, setIsCreateVacancyPageOpen, vacanciesResponse],
   )
 
   useMarkCustomerViewedCandidate({
@@ -858,11 +896,8 @@ export function useWorkspaceShellController() {
       location,
       navigate,
       role,
+      openFeed: () => setScreenState({ current: 'feed', returnTo: 'feed' }),
       setActiveView,
-      setIsCreateApplicantResponsePageOpen,
-      setIsCreateCandidatePageOpen,
-      setIsCreateOrderPageOpen,
-      setIsCreateVacancyPageOpen,
       setPreferredOrderId,
       startViewTransition,
     })
@@ -913,7 +948,7 @@ export function useWorkspaceShellController() {
       await removeVacancyCandidate({ vacancyId: vacancy.id, candidateId }).unwrap()
       setBanner({ variant: 'success', message: 'Кандидат исключён из вакансии.' })
     } catch (error) { setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) }) }
-  }, [getRequestErrorMessage, removeVacancyCandidate, setBanner, vacanciesResponse])
+  }, [removeVacancyCandidate, setBanner, vacanciesResponse])
   const {
     handleActivateOrders,
     handleArchiveOrders,
@@ -968,10 +1003,7 @@ export function useWorkspaceShellController() {
     setThreadsByRole,
     todayTimeLabel,
     onOpenProfile: () => {
-      setIsCreateOrderPageOpen(false)
-      setIsCreateVacancyPageOpen(false)
-      setIsCreateCandidatePageOpen(false)
-      setIsCreateApplicantResponsePageOpen(false)
+      setScreenState({ current: 'profile', returnTo: 'profile' })
       setDetailsInUrl({ orderId: null, candidateId: null }, true)
       navigate(routePaths.profile)
     },
@@ -1173,10 +1205,6 @@ export function useWorkspaceShellController() {
     isCandidatesApiLoading,
     isAddingCandidateFromBase,
     isRemovingVacancyCandidate,
-    isCreateApplicantResponsePageOpen,
-    isCreateCandidatePageOpen,
-    isCreateOrderPageOpen,
-    isCreateVacancyPageOpen,
     isCreatingOrder,
     isCreatingVacancy: isCreatingVacancy || isUpdatingVacancy,
     isPublishingVacancyForCustomer: isSendingVacancyToCustomer,
@@ -1213,6 +1241,7 @@ export function useWorkspaceShellController() {
     selectedOrderCandidateIds,
     selectedOrderVacancyPreview,
     selectedOrderWithResponses,
+    workspaceScreen,
     setChatDraft,
     setPreferredChatId,
     setPreferredOrderId,

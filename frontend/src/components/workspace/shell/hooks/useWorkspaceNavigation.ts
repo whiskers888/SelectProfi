@@ -7,11 +7,8 @@ type UseWorkspaceNavigationDependencies = {
   location: Location
   navigate: NavigateFunction
   role: WorkspaceRole
+  openFeed: () => void
   setActiveView: (view: WorkspaceView) => void
-  setIsCreateApplicantResponsePageOpen: (value: boolean) => void
-  setIsCreateCandidatePageOpen: (value: boolean) => void
-  setIsCreateOrderPageOpen: (value: boolean) => void
-  setIsCreateVacancyPageOpen: (value: boolean) => void
   setPreferredOrderId: (value: string | null) => void
   startViewTransition: () => void
 }
@@ -20,11 +17,8 @@ export function useWorkspaceNavigation({
   location,
   navigate,
   role,
+  openFeed,
   setActiveView,
-  setIsCreateApplicantResponsePageOpen,
-  setIsCreateCandidatePageOpen,
-  setIsCreateOrderPageOpen,
-  setIsCreateVacancyPageOpen,
   setPreferredOrderId,
   startViewTransition,
 }: UseWorkspaceNavigationDependencies) {
@@ -72,10 +66,7 @@ export function useWorkspaceNavigation({
       } else {
         setActiveView(nextView)
       }
-      setIsCreateOrderPageOpen(false)
-      setIsCreateCandidatePageOpen(false)
-      setIsCreateApplicantResponsePageOpen(false)
-      setIsCreateVacancyPageOpen(false)
+      openFeed()
       if (isProfileRoute) {
         navigate(routePaths.app, { replace: true })
       } else {
@@ -86,13 +77,10 @@ export function useWorkspaceNavigation({
     [
       location.pathname,
       navigate,
+      openFeed,
       role,
       setActiveView,
       setDetailsInUrl,
-      setIsCreateApplicantResponsePageOpen,
-      setIsCreateCandidatePageOpen,
-      setIsCreateOrderPageOpen,
-      setIsCreateVacancyPageOpen,
       startViewTransition,
     ],
   )
