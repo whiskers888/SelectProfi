@@ -968,6 +968,11 @@ export function useWorkspaceShellController() {
     setThreadsByRole,
     todayTimeLabel,
     onOpenProfile: () => {
+      setIsCreateOrderPageOpen(false)
+      setIsCreateVacancyPageOpen(false)
+      setIsCreateCandidatePageOpen(false)
+      setIsCreateApplicantResponsePageOpen(false)
+      setDetailsInUrl({ orderId: null, candidateId: null }, true)
       navigate(routePaths.profile)
     },
     onLogout: () => {
