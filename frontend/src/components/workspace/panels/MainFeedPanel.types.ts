@@ -19,6 +19,7 @@ export type MainFeedPanelProps = {
   onActivateOrders?: (orderIds: string[]) => void | Promise<void>
   onArchiveOrders?: (orderIds: string[]) => void | Promise<void>
   onCreateVacancyFromOrder?: (orderId: string) => void
+  onOpenChat?: () => void
   onPauseOrders?: (orderIds: string[]) => void | Promise<void>
   onOpenCandidate: (candidate: WorkspaceCandidate) => void
   onCloseOrderDetails?: () => void

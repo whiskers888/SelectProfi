@@ -87,6 +87,7 @@ export function MainFeedPanelView({
   onActivateOrders,
   onArchiveOrders,
   onCreateVacancyFromOrder,
+  onOpenChat,
   onCloseOrderDetails,
   onOpenCandidate,
   onOpenOrder,
@@ -433,6 +434,7 @@ export function MainFeedPanelView({
               isSelectingOrderExecutor={isSelectingOrderExecutor}
               isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
               onBack={onCloseOrderDetails ?? (() => {})}
+              onOpenChat={onOpenChat}
               onOpenApplicantResponder={onOpenCandidate}
               onMoveApplicantResponderToShortlist={(candidateId) => {
                 if (!onMoveApplicantResponderToShortlist) {

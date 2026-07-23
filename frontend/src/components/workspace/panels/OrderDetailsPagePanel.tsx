@@ -38,6 +38,7 @@ type OrderDetailsPagePanelProps = {
   order: WorkspaceOrder
   assignedExecutorName?: string | null
   onBack: () => void
+  onOpenChat?: () => void
   onCreateVacancyFromOrder?: () => void
   onCreateCandidateFromOrder?: () => void
   onAddCandidateFromBase?: (candidateId: string) => boolean | Promise<boolean>
@@ -76,6 +77,7 @@ export function OrderDetailsPagePanel({
   order,
   assignedExecutorName = null,
   onBack,
+  onOpenChat,
   onCreateVacancyFromOrder,
   onCreateCandidateFromOrder,
   onAddCandidateFromBase,
@@ -360,14 +362,14 @@ export function OrderDetailsPagePanel({
 
       {showChatWithCustomerButton ? (
         <div className="mt-3">
-          <Button className="h-10 rounded-xl" type="button" variant="outline">
+          <Button className="h-10 rounded-xl" onClick={onOpenChat} type="button" variant="outline">
             Перейти в чат с заказчиком
           </Button>
         </div>
       ) : null}
       {showChatWithExecutorButton ? (
         <div className="mt-3">
-          <Button className="h-10 rounded-xl" type="button" variant="outline">
+          <Button className="h-10 rounded-xl" onClick={onOpenChat} type="button" variant="outline">
             Перейти в чат с исполнителем
           </Button>
         </div>

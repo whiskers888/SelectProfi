@@ -191,6 +191,7 @@ export function WorkspaceShellView({
                 isRejectingOrderExecutor={isRejectingOrderExecutor}
                 isSelectingOrderExecutor={isSelectingOrderExecutor}
                 onBack={closeOrderDetails}
+                onOpenChat={() => handleViewChange('chats')}
                 onCreateVacancyFromOrder={() => handleCreateVacancyFromOrder(selectedOrder.id)}
                 onCreateCandidateFromOrder={() => handleCreateCandidateFromOrder(selectedOrder.id)}
                 onAddCandidateFromBase={(candidateId) => handleAddCandidateFromOrder(selectedOrder.id, candidateId)}
@@ -328,6 +329,7 @@ export function WorkspaceShellView({
                       onActivateOrders={handleActivateOrders}
                       onArchiveOrders={handleArchiveOrders}
                       onCreateVacancyFromOrder={handleCreateVacancyFromOrder}
+                      onOpenChat={() => handleViewChange('chats')}
                       onCloseOrderDetails={closeOrderDetails}
                       onOpenCandidate={handleOpenCandidateDetails}
                       onOpenOrder={handleOpenOrderDetails}
