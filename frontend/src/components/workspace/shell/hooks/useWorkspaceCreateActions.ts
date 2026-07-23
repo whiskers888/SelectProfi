@@ -1,19 +1,14 @@
 import { type FormEvent, useCallback } from 'react'
 import type { WorkspaceCandidate, WorkspaceOrder, WorkspaceRole, WorkspaceView } from '../../model/data'
+import {
+  createEmptyOrderFormValues,
+  type OrderCreateFormField,
+  type OrderCreateFormValues,
+} from '../../model/orderCreateForm'
 import { buildResumeAttachmentsJson, buildResumeContentJson } from '@/features/vacancies/lib/resume'
 import type { SelectedResumeFile } from '@/components/workspace/ResumeFilesInput'
 
 type BannerVariant = 'default' | 'success' | 'destructive'
-
-type OrderCreateFormValues = {
-  title: string
-  organization: string
-  specialization: string
-  specializationId: string
-  price: string
-  note: string
-  requestedCandidatesCount: string
-}
 
 type CandidateCreateFormValues = {
   fullName: string
@@ -56,6 +51,11 @@ type WorkspaceCreateActionsDependencies = {
       specialization?: string
       specializationId?: string
       price?: number
+      location?: string
+      employeeCompensation?: string
+      functional?: string
+      requirements?: string
+      otherConditions?: string
       requestedCandidatesCount: number
     },
     { id: string }
@@ -227,7 +227,7 @@ export function useWorkspaceCreateActions({
 }: WorkspaceCreateActionsDependencies) {
   const handleCreateOrderFormFieldChange = useCallback(
     (
-      field: 'title' | 'organization' | 'specialization' | 'specializationId' | 'price' | 'note' | 'requestedCandidatesCount',
+      field: OrderCreateFormField,
       value: string,
     ) => {
       setCreateOrderFormValues((previousValues) => ({
@@ -249,7 +249,11 @@ export function useWorkspaceCreateActions({
       // @dvnull: Ранее специализация всегда отправлялась как свободный текст; добавлен приоритет справочника specializationId с fallback на ручной ввод.
       const specialization = (selectedSpecialization?.name ?? createOrderFormValues.specialization).trim()
       const price = Number.parseFloat(createOrderFormValues.price.trim())
-      const note = createOrderFormValues.note.trim()
+      const location = createOrderFormValues.location.trim()
+      const employeeCompensation = createOrderFormValues.employeeCompensation.trim()
+      const functional = createOrderFormValues.functional.trim()
+      const requirements = createOrderFormValues.requirements.trim()
+      const otherConditions = createOrderFormValues.otherConditions.trim()
       const requestedCandidatesCount = Number.parseInt(createOrderFormValues.requestedCandidatesCount.trim(), 10)
 
       // @dvnull: Ранее форма заказа требовала только title/company; добавлены обязательные specialization и price для явной структуры нового заказа.
@@ -276,16 +280,7 @@ export function useWorkspaceCreateActions({
         return
       }
 
-      // @dvnull: Ранее description собирался как "organization + note"; добавлены specialization/price в формируемый backend-compatible description без изменения API-контракта.
-      const descriptionParts = [
-        `Компания: ${organization}`,
-        `Специализация: ${specialization}`,
-        `Цена заказа: ${price.toLocaleString('ru-RU')} ₽`,
-      ]
-      if (note) {
-        descriptionParts.push(`Комментарий: ${note}`)
-      }
-      const description = descriptionParts.join('\n')
+      const description = otherConditions || requirements || functional || title
 
       try {
         const createdOrder = await createOrder({
@@ -295,18 +290,15 @@ export function useWorkspaceCreateActions({
           specialization,
           specializationId: selectedSpecialization?.id,
           price,
+          location,
+          employeeCompensation,
+          functional,
+          requirements,
+          otherConditions,
           requestedCandidatesCount,
         }).unwrap()
         setPreferredOrderId(createdOrder.id)
-        setCreateOrderFormValues({
-          title: '',
-          organization: '',
-          specialization: '',
-          specializationId: '',
-          price: '',
-          note: '',
-          requestedCandidatesCount: '1',
-        })
+        setCreateOrderFormValues(createEmptyOrderFormValues())
         await refetchOrders()
         setIsCreateOrderPageOpen(false)
         setActiveView('dashboard')
@@ -323,10 +315,14 @@ export function useWorkspaceCreateActions({
     },
     [
       createOrder,
-      createOrderFormValues.note,
+      createOrderFormValues.employeeCompensation,
+      createOrderFormValues.functional,
+      createOrderFormValues.location,
       createOrderFormValues.organization,
+      createOrderFormValues.otherConditions,
       createOrderFormValues.price,
       createOrderFormValues.requestedCandidatesCount,
+      createOrderFormValues.requirements,
       createOrderFormValues.specialization,
       createOrderFormValues.specializationId,
       createOrderFormValues.title,
@@ -650,6 +646,7 @@ export function useWorkspaceCreateActions({
       createCandidateFormValues.phone,
       createCandidateFormValues.resumeRichTextHtml,
       createCandidateFormValues.resumeTitle,
+      createCandidateFormValues.specialization,
       createCandidateFormValues.specializationId,
       createCandidateFormValues.resumeAttachmentLinks,
       candidateSourceVacancyId,
@@ -665,6 +662,8 @@ export function useWorkspaceCreateActions({
       setCreateCandidateFormValues,
       setIsCreateCandidatePageOpen,
       openOrderDetails,
+      role,
+      setManualCandidatesByRole,
     ],
   )
 

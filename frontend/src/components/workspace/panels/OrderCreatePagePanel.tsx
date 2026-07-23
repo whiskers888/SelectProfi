@@ -3,24 +3,20 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { TiptapTextEditor } from '@/components/ui/tiptap-text-editor'
+import { Textarea } from '@/components/ui/textarea'
+import type {
+  OrderCreateFormField,
+  OrderCreateFormValues,
+} from '../model/orderCreateForm'
 
 type OrderCreatePagePanelProps = {
-  formValues: {
-    title: string
-    organization: string
-    specialization: string
-    specializationId: string
-    price: string
-    note: string
-    requestedCandidatesCount: string
-  }
+  formValues: OrderCreateFormValues
   specializationOptions: { id: string; name: string }[]
   isSpecializationsLoading: boolean
   isCreatingOrder: boolean
   onBack: () => void
   onFieldChange: (
-    field: 'title' | 'organization' | 'specialization' | 'specializationId' | 'price' | 'note' | 'requestedCandidatesCount',
+    field: OrderCreateFormField,
     value: string,
   ) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>
@@ -57,7 +53,7 @@ export function OrderCreatePagePanel({
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-order-title">
-            Название заказа
+            Вакансия
           </Label>
           <Input
             id="workspace-order-title"
@@ -124,7 +120,7 @@ export function OrderCreatePagePanel({
 
         <div className="space-y-2">
           <Label className="text-slate-600" htmlFor="workspace-order-price">
-            Цена заказа
+            Стоимость заказа
           </Label>
           <Input
             id="workspace-order-price"
@@ -140,15 +136,72 @@ export function OrderCreatePagePanel({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-note">
-            Комментарий
+          <Label className="text-slate-600" htmlFor="workspace-order-location">
+            Локация
           </Label>
-          {/* @dvnull: Ранее для комментария использовался Textarea с plain-text вводом; заменено на tiptap для пилотной rich-text формы создания заказа. */}
-          <TiptapTextEditor
-            value={formValues.note}
-            onChange={(value) => onFieldChange('note', value.slice(0, 3800))}
-            placeholder="Ключевые детали, сроки и пожелания по вакансии."
-            className="rounded-xl border-slate-200 text-slate-900"
+          <Input
+            id="workspace-order-location"
+            value={formValues.location}
+            onChange={(event) => onFieldChange('location', event.target.value)}
+            placeholder="Например, Москва / удалённо"
+            maxLength={255}
+            className="h-11 rounded-xl border-slate-200 text-slate-900"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600" htmlFor="workspace-order-employee-compensation">
+            Оплата сотрудника
+          </Label>
+          <Input
+            id="workspace-order-employee-compensation"
+            value={formValues.employeeCompensation}
+            onChange={(event) => onFieldChange('employeeCompensation', event.target.value)}
+            placeholder="Например, 200 000–250 000 ₽ net"
+            maxLength={255}
+            className="h-11 rounded-xl border-slate-200 text-slate-900"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600" htmlFor="workspace-order-functional">
+            Функционал
+          </Label>
+          <Textarea
+            id="workspace-order-functional"
+            value={formValues.functional}
+            onChange={(event) => onFieldChange('functional', event.target.value)}
+            placeholder="Основные задачи будущего сотрудника"
+            maxLength={4000}
+            className="min-h-28 rounded-xl border-slate-200 text-slate-900"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600" htmlFor="workspace-order-requirements">
+            Требования
+          </Label>
+          <Textarea
+            id="workspace-order-requirements"
+            value={formValues.requirements}
+            onChange={(event) => onFieldChange('requirements', event.target.value)}
+            placeholder="Опыт, навыки и обязательные требования"
+            maxLength={4000}
+            className="min-h-28 rounded-xl border-slate-200 text-slate-900"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-600" htmlFor="workspace-order-other-conditions">
+            Другие условия
+          </Label>
+          <Textarea
+            id="workspace-order-other-conditions"
+            value={formValues.otherConditions}
+            onChange={(event) => onFieldChange('otherConditions', event.target.value)}
+            placeholder="ДМС, техника, бонусы и другие преимущества"
+            maxLength={4000}
+            className="min-h-28 rounded-xl border-slate-200 text-slate-900"
           />
         </div>
 

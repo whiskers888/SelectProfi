@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import type { WorkspaceChatThread, WorkspaceRole, WorkspaceView } from '../../model/data'
+import type { OrderCreateFormValues } from '../../model/orderCreateForm'
 
 type BannerVariant = 'default' | 'success' | 'destructive'
 
@@ -15,32 +16,8 @@ type UseWorkspaceUiActionsDependencies = {
   setChatDraft: (value: string) => void
   setCreateOrderFormValues: (
     value:
-      | {
-          title: string
-          organization: string
-          specialization: string
-          specializationId: string
-          price: string
-          note: string
-          requestedCandidatesCount: string
-        }
-      | ((previousValues: {
-          title: string
-          organization: string
-          specialization: string
-          specializationId: string
-          price: string
-          note: string
-          requestedCandidatesCount: string
-        }) => {
-          title: string
-          organization: string
-          specialization: string
-          specializationId: string
-          price: string
-          note: string
-          requestedCandidatesCount: string
-        }),
+      | OrderCreateFormValues
+      | ((previousValues: OrderCreateFormValues) => OrderCreateFormValues),
   ) => void
   setIsCreateApplicantResponsePageOpen: (value: boolean) => void
   setIsCreateCandidatePageOpen: (value: boolean) => void

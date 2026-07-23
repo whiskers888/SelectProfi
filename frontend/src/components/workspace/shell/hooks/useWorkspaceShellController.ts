@@ -54,6 +54,7 @@ import {
   type WorkspaceRole,
   type WorkspaceView,
 } from '../../model/data'
+import { createEmptyOrderFormValues } from '../../model/orderCreateForm'
 import {
   useMarkCustomerViewedCandidate,
   useSyncExecutorGlobalCandidates,
@@ -399,17 +400,7 @@ export function useWorkspaceShellController() {
     () => createScreenSetter('create-applicant-response'),
     [createScreenSetter],
   )
-  const [createOrderFormValues, setCreateOrderFormValues] = useState({
-    title: '',
-    organization: '',
-    // @dvnull: Ранее create-order state не содержал specialization/price; добавлены поля для новой формы заказа.
-    specialization: '',
-    // @dvnull: Ранее выбор специализации по справочнику отсутствовал; добавлено отдельное specializationId для select.
-    specializationId: '',
-    price: '',
-    note: '',
-    requestedCandidatesCount: '1',
-  })
+  const [createOrderFormValues, setCreateOrderFormValues] = useState(createEmptyOrderFormValues)
   const customerCompanyName = profile?.customerProfile?.companyName?.trim() ?? ''
   const [createCandidateFormValues, setCreateCandidateFormValues] = useState({
     fullName: '',

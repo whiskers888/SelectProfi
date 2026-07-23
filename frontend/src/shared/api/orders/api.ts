@@ -8,6 +8,11 @@ export type OrderResponse = {
   executorId?: string | null
   title: string
   description: string
+  location: string
+  employeeCompensation: string
+  functional: string
+  requirements: string
+  otherConditions: string
   specializationId?: string | null
   specialization: string
   price: number
@@ -91,12 +96,22 @@ export type CreateOrderRequest = {
   specialization?: string
   specializationId?: string
   price?: number
+  location?: string
+  employeeCompensation?: string
+  functional?: string
+  requirements?: string
+  otherConditions?: string
   requestedCandidatesCount: number
 }
 
 export type UpdateOrderRequest = {
   title?: string
   description?: string
+  location?: string
+  employeeCompensation?: string
+  functional?: string
+  requirements?: string
+  otherConditions?: string
   executorId?: string
   status?: OrderStatusContract
 }
