@@ -24,7 +24,10 @@ import {
   useRespondToVacancyMutation,
   useUpdateVacancyCandidateStageMutation,
 } from '@/shared/api/candidates'
-import { useGetCustomerDashboardStatsQuery, useGetExecutorDashboardStatsQuery } from '@/shared/api/dashboard'
+import {
+  useGetCustomerDashboardStatsQuery,
+  useGetExecutorDashboardStatsQuery,
+} from '@/shared/api/dashboard'
 import {
   useCreateOrderMutation,
   useDeleteOrderMutation,
@@ -56,6 +59,7 @@ import {
   useSyncExecutorGlobalCandidates,
 } from './useWorkspaceCandidateEffects'
 import { useWorkspaceCreateActions } from './useWorkspaceCreateActions'
+import { useWorkspaceHistory } from './useWorkspaceHistory'
 import { useWorkspaceNavigation } from './useWorkspaceNavigation'
 import { useWorkspaceOrderActions } from './useWorkspaceOrderActions'
 import { useWorkspaceUiActions } from './useWorkspaceUiActions'
@@ -70,14 +74,7 @@ import {
   toWorkspaceOrderFromVacancy,
   toWorkspaceRole,
 } from '../workspaceShell.helpers'
-import {
-  closeWorkspaceScreen,
-  createWorkspaceScreenState,
-  openWorkspaceScreen,
-  resolveWorkspaceScreen,
-  syncWorkspaceScreenRoute,
-  type WorkspacePrimaryScreen,
-} from '../workspaceScreen'
+import { resolveWorkspaceScreen, type WorkspaceCreateScreen } from '../workspaceScreen'
 
 type OrderFilter = 'all' | 'active' | 'paused'
 const defaultWorkspaceRole: WorkspaceRole = 'Customer'
@@ -147,7 +144,11 @@ function readVacancyCreateDraft(userId: string, orderId: string): VacancyCreateD
   return draftsMap[key] ?? null
 }
 
-function saveVacancyCreateDraft(userId: string, orderId: string, formValues: { title: string; description: string }): void {
+function saveVacancyCreateDraft(
+  userId: string,
+  orderId: string,
+  formValues: { title: string; description: string },
+): void {
   const key = makeVacancyCreateDraftKey(userId, orderId)
   const draftsMap = readVacancyCreateDraftsMap()
   draftsMap[key] = {
@@ -216,13 +217,18 @@ export function useWorkspaceShellController() {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
   const location = useLocation()
-  const { data: profile, isFetching: isProfileFetching, refetch: refetchProfile } = useGetMyProfileQuery()
+  const {
+    data: profile,
+    isFetching: isProfileFetching,
+    refetch: refetchProfile,
+  } = useGetMyProfileQuery()
   const { data: authMe, isFetching: isAuthMeFetching } = useGetMyAuthInfoQuery()
   const isBootstrapLoading = (isProfileFetching || isAuthMeFetching) && (!profile || !authMe)
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
   const [createVacancy, { isLoading: isCreatingVacancy }] = useCreateVacancyMutation()
   const [updateVacancy, { isLoading: isUpdatingVacancy }] = useUpdateVacancyMutation()
-  const [updateVacancyStatus, { isLoading: isSendingVacancyToCustomer }] = useUpdateVacancyStatusMutation()
+  const [updateVacancyStatus, { isLoading: isSendingVacancyToCustomer }] =
+    useUpdateVacancyStatusMutation()
   const [updateOrder, { isLoading: isOrderStatusUpdating }] = useUpdateOrderMutation()
   const [deleteOrder, { isLoading: isDeletingOrder }] = useDeleteOrderMutation()
   const [respondToOrder, { isLoading: isRespondingToOrder }] = useRespondToOrderMutation()
@@ -236,8 +242,10 @@ export function useWorkspaceShellController() {
   const [createMyCandidateResume] = useCreateMyCandidateResumeMutation()
   const [uploadCandidateResumeAttachment] = useUploadCandidateResumeAttachmentMutation()
   const [uploadMyCandidateResumeAttachment] = useUploadMyCandidateResumeAttachmentMutation()
-  const [addCandidateFromBase, { isLoading: isAddingCandidateFromBase }] = useAddCandidateFromBaseMutation()
-  const [removeVacancyCandidate, { isLoading: isRemovingVacancyCandidate }] = useRemoveVacancyCandidateMutation()
+  const [addCandidateFromBase, { isLoading: isAddingCandidateFromBase }] =
+    useAddCandidateFromBaseMutation()
+  const [removeVacancyCandidate, { isLoading: isRemovingVacancyCandidate }] =
+    useRemoveVacancyCandidateMutation()
   const [updateVacancyCandidateStage, { isLoading: isUpdatingApplicantResponderStage }] =
     useUpdateVacancyCandidateStageMutation()
   const [switchMyActiveRole, { isLoading: isSwitchingRole }] = useSwitchMyActiveRoleMutation()
@@ -249,15 +257,19 @@ export function useWorkspaceShellController() {
   const role = toWorkspaceRole(profile?.activeRole ?? profile?.role) ?? defaultWorkspaceRole
   const canSwitchApplicantExecutor = role === 'Applicant' || role === 'Executor'
   const applicantRespondedOrderIds = useMemo(
-    () => (role === 'Applicant' && authMe?.userId ? readApplicantRespondedOrderIds(authMe.userId) : []),
+    () =>
+      role === 'Applicant' && authMe?.userId ? readApplicantRespondedOrderIds(authMe.userId) : [],
     [authMe?.userId, role],
   )
   const profileDisplayName =
-    `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || authMe?.email || 'Пользователь'
+    `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() ||
+    authMe?.email ||
+    'Пользователь'
   const profileEmail = profile?.email ?? authMe?.email ?? '—'
   const profileRoleLabel = toRoleLabel(role)
   const canManageOrder = authMe?.role === 'Customer' || authMe?.role === 'Admin'
-  const dashboardRole = authMe?.role === 'Customer' || authMe?.role === 'Executor' ? authMe.role : null
+  const dashboardRole =
+    authMe?.role === 'Customer' || authMe?.role === 'Executor' ? authMe.role : null
   const dataset = { orders: [] }
   const canLoadServerOrders = !isBootstrapLoading && role !== 'Applicant'
   const shouldLoadMyOrders = role === 'Executor' && activeView === 'dashboard'
@@ -270,9 +282,7 @@ export function useWorkspaceShellController() {
     isError: isAllOrdersError,
     isFetching: isAllOrdersFetching,
     refetch: refetchAllOrders,
-  } = useGetOrdersQuery(
-    canLoadServerOrders && !shouldLoadMyOrders ? ordersQueryParams : skipToken,
-  )
+  } = useGetOrdersQuery(canLoadServerOrders && !shouldLoadMyOrders ? ordersQueryParams : skipToken)
   const {
     data: myOrdersResponse,
     isError: isMyOrdersError,
@@ -287,9 +297,12 @@ export function useWorkspaceShellController() {
     data: orderSpecializationsResponse,
     isError: isOrderSpecializationsError,
     isFetching: isOrderSpecializationsLoading,
-  } = useGetOrderSpecializationsQuery(role === 'Customer' || role === 'Executor' ? undefined : skipToken)
+  } = useGetOrderSpecializationsQuery(
+    role === 'Customer' || role === 'Executor' ? undefined : skipToken,
+  )
   // @dvnull: Ранее форма заказа не имела данных справочника специализаций; добавлена загрузка и нормализация options для select.
-  const orderSpecializationOptions = orderSpecializationsResponse?.items.map((item) => ({ id: item.id, name: item.name })) ?? []
+  const orderSpecializationOptions =
+    orderSpecializationsResponse?.items.map((item) => ({ id: item.id, name: item.name })) ?? []
   const { data: executorDashboardStats } = useGetExecutorDashboardStatsQuery(
     dashboardRole === 'Executor' ? undefined : skipToken,
   )
@@ -324,7 +337,8 @@ export function useWorkspaceShellController() {
     null
   const candidateSourceVacancy =
     candidateScopeOrderId && vacanciesResponse
-      ? vacanciesResponse.items.find((vacancy) => vacancy.orderId === candidateScopeOrderId) ?? null
+      ? (vacanciesResponse.items.find((vacancy) => vacancy.orderId === candidateScopeOrderId) ??
+        null)
       : null
   const {
     data: vacancyCandidatesResponse,
@@ -332,7 +346,9 @@ export function useWorkspaceShellController() {
     isFetching: isVacancyCandidatesFetching,
     refetch: refetchVacancyCandidates,
   } = useGetVacancyCandidatesQuery(
-    canLoadServerCandidates && candidateSourceVacancy ? { vacancyId: candidateSourceVacancy.id } : skipToken,
+    canLoadServerCandidates && candidateSourceVacancy
+      ? { vacancyId: candidateSourceVacancy.id }
+      : skipToken,
   )
   const { data: vacancyBaseCandidatesResponse } = useGetVacancyBaseCandidatesQuery(
     canLoadExecutorBaseCandidates && candidateSourceVacancy
@@ -350,18 +366,22 @@ export function useWorkspaceShellController() {
     },
     [notify],
   )
-  const [screenState, setScreenState] = useState(() => createWorkspaceScreenState(isProfileRoute))
-  const routedScreenState = syncWorkspaceScreenRoute(screenState, isProfileRoute)
+  const {
+    dismissCreateScreen,
+    entry: workspaceHistoryEntry,
+    goBackFromCreateScreen,
+    goBackFromDetails,
+    openCreateScreen,
+  } = useWorkspaceHistory(location, navigate)
   const createScreenSetter = useCallback(
-    (screen: WorkspacePrimaryScreen) => (isOpen: boolean) => {
-      setScreenState((currentState) => {
-        const routedState = syncWorkspaceScreenRoute(currentState, isProfileRoute)
-        return isOpen
-          ? openWorkspaceScreen(routedState, screen)
-          : closeWorkspaceScreen(routedState, screen)
-      })
+    (screen: WorkspaceCreateScreen) => (isOpen: boolean) => {
+      if (isOpen) {
+        openCreateScreen(screen)
+      } else {
+        dismissCreateScreen(screen)
+      }
     },
-    [isProfileRoute],
+    [dismissCreateScreen, openCreateScreen],
   )
   const setIsCreateOrderPageOpen = useMemo(
     () => createScreenSetter('create-order'),
@@ -426,7 +446,9 @@ export function useWorkspaceShellController() {
     Applicant: [],
   })
   const [createCandidateVacancyId, setCreateCandidateVacancyId] = useState<string | null>(null)
-  const [manualCandidatesByRole, setManualCandidatesByRole] = useState<Record<WorkspaceRole, WorkspaceCandidate[]>>({
+  const [manualCandidatesByRole, setManualCandidatesByRole] = useState<
+    Record<WorkspaceRole, WorkspaceCandidate[]>
+  >({
     Customer: [],
     Executor: [],
     Applicant: [],
@@ -438,7 +460,9 @@ export function useWorkspaceShellController() {
   })
   const [purchasedCandidateIds, setPurchasedCandidateIds] = useState<string[]>([])
   const [executorGlobalCandidates, setExecutorGlobalCandidates] = useState<WorkspaceCandidate[]>([])
-  const [executorGlobalBaseCandidates, setExecutorGlobalBaseCandidates] = useState<WorkspaceCandidate[]>([])
+  const [executorGlobalBaseCandidates, setExecutorGlobalBaseCandidates] = useState<
+    WorkspaceCandidate[]
+  >([])
   const transitionTimeoutRef = useRef<number | null>(null)
 
   useEffect(
@@ -468,7 +492,8 @@ export function useWorkspaceShellController() {
     }
 
     const hasMeaningfulDraft =
-      createVacancyFormValues.title.trim().length > 0 || createVacancyFormValues.description.trim().length > 0
+      createVacancyFormValues.title.trim().length > 0 ||
+      createVacancyFormValues.description.trim().length > 0
 
     // @dvnull: Ранее черновик создания вакансии в workspace не сохранялся между закрытием/повторным открытием формы.
     if (!hasMeaningfulDraft) {
@@ -512,7 +537,9 @@ export function useWorkspaceShellController() {
       : []
   const serverBaseCandidates =
     candidateSourceVacancy && vacancyBaseCandidatesResponse
-      ? vacancyBaseCandidatesResponse.items.map((item) => toWorkspaceBaseCandidate(item, candidateSourceVacancy))
+      ? vacancyBaseCandidatesResponse.items.map((item) =>
+          toWorkspaceBaseCandidate(item, candidateSourceVacancy),
+        )
       : []
   const {
     activeThread,
@@ -564,21 +591,22 @@ export function useWorkspaceShellController() {
     isVacancyCandidatesError,
     isVacancyCandidatesFetching,
     locationSearch: location.search,
-    manualCandidates: role === 'Executor'
-      ? (myCandidatesResponse ?? []).map((candidate) => ({
-          id: candidate.candidateId,
-          name: candidate.fullName,
-          position: candidate.specializationName || candidate.resumeTitle,
-          orderId: '',
-          source: 'Мой кандидат',
-          sourceType: 'AddedByExecutor' as const,
-          isOwnedByRequester: true,
-          rating: '—',
-          statusLabel: 'Новый',
-          statusTone: 'default' as const,
-          comment: candidate.resumeTitle,
-        }))
-      : manualCandidates,
+    manualCandidates:
+      role === 'Executor'
+        ? (myCandidatesResponse ?? []).map((candidate) => ({
+            id: candidate.candidateId,
+            name: candidate.fullName,
+            position: candidate.specializationName || candidate.resumeTitle,
+            orderId: '',
+            source: 'Мой кандидат',
+            sourceType: 'AddedByExecutor' as const,
+            isOwnedByRequester: true,
+            rating: '—',
+            statusLabel: 'Новый',
+            statusTone: 'default' as const,
+            comment: candidate.resumeTitle,
+          }))
+        : manualCandidates,
     meetings: [],
     orderFilter,
     ordersResponseExists: Boolean(ordersResponse),
@@ -593,7 +621,13 @@ export function useWorkspaceShellController() {
     vacanciesResponseExists: Boolean(vacanciesResponse),
     vacancyCandidatesItems: vacancyCandidatesResponse?.items ?? null,
   })
-  const workspaceScreen = resolveWorkspaceScreen(routedScreenState.current, {
+  const primaryScreen =
+    workspaceHistoryEntry?.kind === 'create'
+      ? workspaceHistoryEntry.screen
+      : isProfileRoute
+        ? 'profile'
+        : 'feed'
+  const workspaceScreen = resolveWorkspaceScreen(primaryScreen, {
     activeView,
     hasSelectedCandidate: Boolean(selectedCandidate),
     hasSelectedOrder: Boolean(selectedOrder),
@@ -611,7 +645,8 @@ export function useWorkspaceShellController() {
   )
   const orderResponses = orderResponsesResponse?.items ?? []
   const selectedOrderExecutorName = selectedOrder?.executorId
-    ? orderResponses.find((response) => response.executorId === selectedOrder.executorId)?.executorFullName ?? null
+    ? (orderResponses.find((response) => response.executorId === selectedOrder.executorId)
+        ?.executorFullName ?? null)
     : null
   const selectedOrderWithResponses = selectedOrder
     ? {
@@ -621,7 +656,7 @@ export function useWorkspaceShellController() {
     : null
   const selectedOrderVacancy =
     selectedOrder && vacanciesResponse
-      ? vacanciesResponse.items.find((vacancy) => vacancy.orderId === selectedOrder.id) ?? null
+      ? (vacanciesResponse.items.find((vacancy) => vacancy.orderId === selectedOrder.id) ?? null)
       : null
   const selectedOrderApplicantResponders =
     role === 'Executor' && selectedOrder
@@ -630,7 +665,8 @@ export function useWorkspaceShellController() {
             executorGlobalCandidates
               .filter(
                 (candidate) =>
-                  candidate.orderId === selectedOrder.id && candidate.sourceType === 'RegisteredUser',
+                  candidate.orderId === selectedOrder.id &&
+                  candidate.sourceType === 'RegisteredUser',
               )
               .map((candidate) => [candidate.id, candidate]),
           ).values(),
@@ -652,32 +688,40 @@ export function useWorkspaceShellController() {
       : myOrderResponse?.hasResponse === true
   const canRespondToSelectedOrder =
     role === 'Executor'
-      ? Boolean(selectedOrder && !selectedOrder.isArchived && !selectedOrder.isPaused && !selectedOrder.executorId)
+      ? Boolean(
+          selectedOrder &&
+          !selectedOrder.isArchived &&
+          !selectedOrder.isPaused &&
+          !selectedOrder.executorId,
+        )
       : role === 'Applicant'
-        ? Boolean(selectedOrderVacancy && selectedOrder && !applicantRespondedOrderIds.includes(selectedOrder.id))
+        ? Boolean(
+            selectedOrderVacancy &&
+            selectedOrder &&
+            !applicantRespondedOrderIds.includes(selectedOrder.id),
+          )
         : false
   const canCreateVacancyFromSelectedOrder =
     role === 'Executor' &&
     Boolean(
       selectedOrder &&
-        selectedOrder.executorId &&
-        selectedOrder.executorId === authMe?.userId &&
-        !selectedOrder.isArchived &&
-        (!selectedOrderVacancy || selectedOrderVacancy.status === 'Draft'),
+      selectedOrder.executorId &&
+      selectedOrder.executorId === authMe?.userId &&
+      !selectedOrder.isArchived &&
+      (!selectedOrderVacancy || selectedOrderVacancy.status === 'Draft'),
     )
   const canManageCandidatesFromSelectedOrder =
     role === 'Executor' &&
     Boolean(
-      selectedOrder &&
-        selectedOrder.executorId === authMe?.userId &&
-        !selectedOrder.isArchived,
+      selectedOrder && selectedOrder.executorId === authMe?.userId && !selectedOrder.isArchived,
     )
-  const canCreateCandidateFromSelectedOrder = canManageCandidatesFromSelectedOrder && selectedOrderVacancy?.status === 'Published'
+  const canCreateCandidateFromSelectedOrder =
+    canManageCandidatesFromSelectedOrder && selectedOrderVacancy?.status === 'Published'
   const canPublishVacancyForSelectedOrder =
     role === 'Customer' && selectedOrderVacancy?.status === 'OnApproval'
   // @dvnull: Ранее превью вакансии не прокидывалось в panel деталей заказа, из-за чего заказчик не видел текст перед подтверждением.
   const selectedOrderVacancyPreview = selectedOrderVacancy
-      ? {
+    ? {
         title: selectedOrderVacancy.title,
         description: selectedOrderVacancy.description,
         status: selectedOrderVacancy.status,
@@ -712,55 +756,65 @@ export function useWorkspaceShellController() {
       })
     }
   }, [refetchVacancies, selectedOrderVacancy, setBanner, updateVacancyStatus])
-  const handleRespondToSelectedVacancy = useCallback(async (orderId: string) => {
-    if (role !== 'Applicant') {
-      return
-    }
-
-    const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
-    if (!vacancy) {
-      setBanner({
-        variant: 'destructive',
-        message: 'Вакансия для отклика не найдена.',
-      })
-      return
-    }
-
-    try {
-      await respondToVacancy({ vacancyId: vacancy.id }).unwrap()
-      if (authMe?.userId) {
-        const nextIds = applicantRespondedOrderIds.includes(orderId)
-          ? applicantRespondedOrderIds
-          : [...applicantRespondedOrderIds, orderId]
-        saveApplicantRespondedOrderIds(authMe.userId, nextIds)
+  const handleRespondToSelectedVacancy = useCallback(
+    async (orderId: string) => {
+      if (role !== 'Applicant') {
+        return
       }
-      setBanner({
-        variant: 'success',
-        message: 'Отклик на вакансию отправлен.',
-      })
-    } catch (error) {
-      const errorStatus =
-        typeof error === 'object' && error !== null && 'status' in error
-          ? (error as { status?: number | string }).status
-          : undefined
-      if (errorStatus === 409 && authMe?.userId) {
-        const nextIds = applicantRespondedOrderIds.includes(orderId)
-          ? applicantRespondedOrderIds
-          : [...applicantRespondedOrderIds, orderId]
-        // @dvnull: Ранее при 409 на повторном отклике вакансия оставалась в "Бирже"; синхронизируем "Мои заказы" на фронте.
-        saveApplicantRespondedOrderIds(authMe.userId, nextIds)
+
+      const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
+      if (!vacancy) {
         setBanner({
-          variant: 'success',
-          message: 'Отклик уже был отправлен ранее.',
+          variant: 'destructive',
+          message: 'Вакансия для отклика не найдена.',
         })
         return
       }
-      setBanner({
-        variant: 'destructive',
-        message: getRequestErrorMessage(error),
-      })
-    }
-  }, [applicantRespondedOrderIds, authMe?.userId, respondToVacancy, role, setBanner, vacanciesResponse])
+
+      try {
+        await respondToVacancy({ vacancyId: vacancy.id }).unwrap()
+        if (authMe?.userId) {
+          const nextIds = applicantRespondedOrderIds.includes(orderId)
+            ? applicantRespondedOrderIds
+            : [...applicantRespondedOrderIds, orderId]
+          saveApplicantRespondedOrderIds(authMe.userId, nextIds)
+        }
+        setBanner({
+          variant: 'success',
+          message: 'Отклик на вакансию отправлен.',
+        })
+      } catch (error) {
+        const errorStatus =
+          typeof error === 'object' && error !== null && 'status' in error
+            ? (error as { status?: number | string }).status
+            : undefined
+        if (errorStatus === 409 && authMe?.userId) {
+          const nextIds = applicantRespondedOrderIds.includes(orderId)
+            ? applicantRespondedOrderIds
+            : [...applicantRespondedOrderIds, orderId]
+          // @dvnull: Ранее при 409 на повторном отклике вакансия оставалась в "Бирже"; синхронизируем "Мои заказы" на фронте.
+          saveApplicantRespondedOrderIds(authMe.userId, nextIds)
+          setBanner({
+            variant: 'success',
+            message: 'Отклик уже был отправлен ранее.',
+          })
+          return
+        }
+        setBanner({
+          variant: 'destructive',
+          message: getRequestErrorMessage(error),
+        })
+      }
+    },
+    [
+      applicantRespondedOrderIds,
+      authMe?.userId,
+      respondToVacancy,
+      role,
+      setBanner,
+      vacanciesResponse,
+    ],
+  )
   const handleSetApplicantResponderStage = useCallback(
     async (orderId: string, candidateId: string, stage: 'Pool' | 'Shortlist') => {
       if (role !== 'Executor') {
@@ -845,9 +899,10 @@ export function useWorkspaceShellController() {
     }
   }, [canSwitchApplicantExecutor, refetchProfile, role, setBanner, switchMyActiveRole])
   const linkedCreateVacancyOrder =
-    (createVacancyOrderId ? baseOrders.find((order) => order.id === createVacancyOrderId) : null) ?? selectedOrder ?? null
-  const hasCreateVacancyDraftForSelectedOrder =
-    selectedOrderVacancy?.status === 'Draft'
+    (createVacancyOrderId ? baseOrders.find((order) => order.id === createVacancyOrderId) : null) ??
+    selectedOrder ??
+    null
+  const hasCreateVacancyDraftForSelectedOrder = selectedOrderVacancy?.status === 'Draft'
   const handleCreateVacancyFromOrder = useCallback(
     (orderId: string) => {
       const order = baseOrders.find((item) => item.id === orderId)
@@ -860,7 +915,8 @@ export function useWorkspaceShellController() {
       }
       const userId = authMe?.userId ?? ''
       const savedDraft = userId ? readVacancyCreateDraft(userId, order.id) : null
-      const existingVacancy = vacanciesResponse?.items.find((item) => item.orderId === order.id) ?? null
+      const existingVacancy =
+        vacanciesResponse?.items.find((item) => item.orderId === order.id) ?? null
 
       if (existingVacancy && existingVacancy.status !== 'Draft') {
         setBanner({
@@ -896,7 +952,6 @@ export function useWorkspaceShellController() {
       location,
       navigate,
       role,
-      openFeed: () => setScreenState({ current: 'feed', returnTo: 'feed' }),
       setActiveView,
       setPreferredOrderId,
       startViewTransition,
@@ -915,19 +970,25 @@ export function useWorkspaceShellController() {
 
       setPreferredOrderId(orderId)
       setCreateCandidateVacancyId(vacancy.id)
-      setDetailsInUrl({ orderId: null, candidateId: null }, true)
       setIsCreateCandidatePageOpen(true)
-      setIsCreateOrderPageOpen(false)
-      setIsCreateApplicantResponsePageOpen(false)
       setActiveView('candidates')
     },
-    [setActiveView, setBanner, setDetailsInUrl, setIsCreateApplicantResponsePageOpen, setIsCreateCandidatePageOpen, setIsCreateOrderPageOpen, setPreferredOrderId, vacanciesResponse],
+    [
+      setActiveView,
+      setBanner,
+      setIsCreateCandidatePageOpen,
+      setPreferredOrderId,
+      vacanciesResponse,
+    ],
   )
   const handleAddCandidateFromOrder = useCallback(
     async (orderId: string, candidateId: string) => {
       const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
       if (!vacancy || vacancy.status !== 'Published') {
-        setBanner({ variant: 'destructive', message: 'Сначала создайте и опубликуйте вакансию для этого заказа.' })
+        setBanner({
+          variant: 'destructive',
+          message: 'Сначала создайте и опубликуйте вакансию для этого заказа.',
+        })
         return false
       }
       try {
@@ -941,14 +1002,19 @@ export function useWorkspaceShellController() {
     },
     [addCandidateFromBase, setBanner, vacanciesResponse],
   )
-  const handleRemoveCandidateFromOrder = useCallback(async (orderId: string, candidateId: string) => {
-    const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
-    if (!vacancy) return
-    try {
-      await removeVacancyCandidate({ vacancyId: vacancy.id, candidateId }).unwrap()
-      setBanner({ variant: 'success', message: 'Кандидат исключён из вакансии.' })
-    } catch (error) { setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) }) }
-  }, [removeVacancyCandidate, setBanner, vacanciesResponse])
+  const handleRemoveCandidateFromOrder = useCallback(
+    async (orderId: string, candidateId: string) => {
+      const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
+      if (!vacancy) return
+      try {
+        await removeVacancyCandidate({ vacancyId: vacancy.id, candidateId }).unwrap()
+        setBanner({ variant: 'success', message: 'Кандидат исключён из вакансии.' })
+      } catch (error) {
+        setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) })
+      }
+    },
+    [removeVacancyCandidate, setBanner, vacanciesResponse],
+  )
   const {
     handleActivateOrders,
     handleArchiveOrders,
@@ -979,41 +1045,42 @@ export function useWorkspaceShellController() {
       return
     }
 
-    setPurchasedCandidateIds((previousPurchasedCandidateIds) => [...previousPurchasedCandidateIds, candidate.id])
+    setPurchasedCandidateIds((previousPurchasedCandidateIds) => [
+      ...previousPurchasedCandidateIds,
+      candidate.id,
+    ])
     setBanner({
       variant: 'success',
       message: 'Доступ к комментариям кандидата открыт.',
     })
   }
 
-  const { handleHeaderCreateAction, handleHeaderMenuAction, handleSendMessage } = useWorkspaceUiActions({
-    activeThread,
-    chatDraft,
-    customerCompanyName,
-    role,
-    setActiveView,
-    setBanner,
-    setChatDraft,
-    setCreateOrderFormValues,
-    setDetailsInUrl,
-    setIsCreateApplicantResponsePageOpen,
-    setIsCreateCandidatePageOpen,
-    setCreateCandidateVacancyId,
-    setIsCreateOrderPageOpen,
-    setThreadsByRole,
-    todayTimeLabel,
-    onOpenProfile: () => {
-      setScreenState({ current: 'profile', returnTo: 'profile' })
-      setDetailsInUrl({ orderId: null, candidateId: null }, true)
-      navigate(routePaths.profile)
-    },
-    onLogout: () => {
-      // @dvnull: Ранее при logout чистилась только auth-сессия; query-cache сохранял профиль прошлого аккаунта до hard reload.
-      dispatch(clearAuthSession())
-      dispatch(api.util.resetApiState())
-      navigate(routePaths.auth, { replace: true })
-    },
-  })
+  const { handleHeaderCreateAction, handleHeaderMenuAction, handleSendMessage } =
+    useWorkspaceUiActions({
+      activeThread,
+      chatDraft,
+      customerCompanyName,
+      role,
+      setActiveView,
+      setBanner,
+      setChatDraft,
+      setCreateOrderFormValues,
+      setIsCreateApplicantResponsePageOpen,
+      setIsCreateCandidatePageOpen,
+      setCreateCandidateVacancyId,
+      setIsCreateOrderPageOpen,
+      setThreadsByRole,
+      todayTimeLabel,
+      onOpenProfile: () => {
+        navigate(routePaths.profile)
+      },
+      onLogout: () => {
+        // @dvnull: Ранее при logout чистилась только auth-сессия; query-cache сохранял профиль прошлого аккаунта до hard reload.
+        dispatch(clearAuthSession())
+        dispatch(api.util.resetApiState())
+        navigate(routePaths.auth, { replace: true })
+      },
+    })
   const {
     handleCreateApplicantResponseFormFieldChange,
     handleCreateApplicantResponseFromPage,
@@ -1040,7 +1107,8 @@ export function useWorkspaceShellController() {
     createVacancyOrderId,
     candidateSourceVacancyId: createCandidateVacancyId,
     candidateSourceOrderId: createCandidateVacancyId
-      ? vacanciesResponse?.items.find((vacancy) => vacancy.id === createCandidateVacancyId)?.orderId ?? null
+      ? (vacanciesResponse?.items.find((vacancy) => vacancy.id === createCandidateVacancyId)
+          ?.orderId ?? null)
       : null,
     getExistingVacancyByOrderId: (orderId: string) => {
       const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
@@ -1091,11 +1159,19 @@ export function useWorkspaceShellController() {
   }
 
   function closeOrderDetails() {
-    setDetailsInUrl({ orderId: null })
+    if (goBackFromDetails()) {
+      return
+    }
+
+    setDetailsInUrl({ orderId: null }, true)
   }
 
   function closeCandidateDetails() {
-    setDetailsInUrl({ candidateId: null })
+    if (goBackFromDetails()) {
+      return
+    }
+
+    setDetailsInUrl({ candidateId: null }, true)
   }
 
   function handleRetryAnalytics() {
@@ -1110,21 +1186,37 @@ export function useWorkspaceShellController() {
   }
 
   function closeCreateCandidatePage() {
+    if (goBackFromCreateScreen('create-candidate')) {
+      return
+    }
+
     setIsCreateCandidatePageOpen(false)
   }
 
   function closeCreateApplicantResponsePage() {
+    if (goBackFromCreateScreen('create-applicant-response')) {
+      return
+    }
+
     setIsCreateApplicantResponsePageOpen(false)
   }
 
   function closeCreateOrderPage() {
-    setIsCreateOrderPageOpen(false)
     setActiveView('dashboard')
+    if (goBackFromCreateScreen('create-order')) {
+      return
+    }
+
+    setIsCreateOrderPageOpen(false)
   }
 
   function closeCreateVacancyPage() {
-    setIsCreateVacancyPageOpen(false)
     setCreateVacancyOrderId(null)
+    if (goBackFromCreateScreen('create-vacancy')) {
+      return
+    }
+
+    setIsCreateVacancyPageOpen(false)
   }
 
   return {

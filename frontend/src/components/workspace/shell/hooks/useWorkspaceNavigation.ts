@@ -1,13 +1,18 @@
 import { useCallback } from 'react'
 import type { Location, NavigateFunction } from 'react-router-dom'
 import { routePaths } from '@/app/routePaths'
-import type { WorkspaceCandidate, WorkspaceOrder, WorkspaceRole, WorkspaceView } from '../../model/data'
+import type {
+  WorkspaceCandidate,
+  WorkspaceOrder,
+  WorkspaceRole,
+  WorkspaceView,
+} from '../../model/data'
+import { withWorkspaceHistoryEntry, withoutWorkspaceHistoryEntry } from '../workspaceHistory'
 
 type UseWorkspaceNavigationDependencies = {
   location: Location
   navigate: NavigateFunction
   role: WorkspaceRole
-  openFeed: () => void
   setActiveView: (view: WorkspaceView) => void
   setPreferredOrderId: (value: string | null) => void
   startViewTransition: () => void
@@ -17,16 +22,12 @@ export function useWorkspaceNavigation({
   location,
   navigate,
   role,
-  openFeed,
   setActiveView,
   setPreferredOrderId,
   startViewTransition,
 }: UseWorkspaceNavigationDependencies) {
   const setDetailsInUrl = useCallback(
-    (
-      values: { orderId?: string | null; candidateId?: string | null },
-      replace = false,
-    ) => {
+    (values: { orderId?: string | null; candidateId?: string | null }, replace = false) => {
       const searchParams = new URLSearchParams(location.search)
 
       if (values.orderId !== undefined) {
@@ -46,15 +47,20 @@ export function useWorkspaceNavigation({
       }
 
       const nextSearch = searchParams.toString()
+      const hasDetails = searchParams.has('orderId') || searchParams.has('candidateId')
+      const state =
+        !replace && hasDetails
+          ? withWorkspaceHistoryEntry(location.state, { kind: 'details' })
+          : withoutWorkspaceHistoryEntry(location.state)
       navigate(
         {
           pathname: location.pathname,
           search: nextSearch ? `?${nextSearch}` : '',
         },
-        { replace },
+        { replace, state },
       )
     },
-    [location.pathname, location.search, navigate],
+    [location.pathname, location.search, location.state, navigate],
   )
 
   const handleViewChange = useCallback(
@@ -66,7 +72,6 @@ export function useWorkspaceNavigation({
       } else {
         setActiveView(nextView)
       }
-      openFeed()
       if (isProfileRoute) {
         navigate(routePaths.app, { replace: true })
       } else {
@@ -74,15 +79,7 @@ export function useWorkspaceNavigation({
       }
       startViewTransition()
     },
-    [
-      location.pathname,
-      navigate,
-      openFeed,
-      role,
-      setActiveView,
-      setDetailsInUrl,
-      startViewTransition,
-    ],
+    [location.pathname, navigate, role, setActiveView, setDetailsInUrl, startViewTransition],
   )
 
   const handleOpenOrderDetails = useCallback(

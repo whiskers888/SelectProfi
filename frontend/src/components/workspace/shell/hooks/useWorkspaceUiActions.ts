@@ -42,10 +42,6 @@ type UseWorkspaceUiActionsDependencies = {
           requestedCandidatesCount: string
         }),
   ) => void
-  setDetailsInUrl: (
-    values: { orderId?: string | null; candidateId?: string | null },
-    replace?: boolean,
-  ) => void
   setIsCreateApplicantResponsePageOpen: (value: boolean) => void
   setIsCreateCandidatePageOpen: (value: boolean) => void
   setCreateCandidateVacancyId: (value: string | null) => void
@@ -71,7 +67,6 @@ export function useWorkspaceUiActions({
   setBanner,
   setChatDraft,
   setCreateOrderFormValues,
-  setDetailsInUrl,
   setIsCreateApplicantResponsePageOpen,
   setIsCreateCandidatePageOpen,
   setCreateCandidateVacancyId,
@@ -129,7 +124,6 @@ export function useWorkspaceUiActions({
   }, [activeThread, chatDraft, role, setBanner, setChatDraft, setThreadsByRole, todayTimeLabel])
 
   const handleHeaderCreateAction = useCallback(() => {
-    setDetailsInUrl({ orderId: null, candidateId: null }, true)
     setActiveView('dashboard')
 
     if (role === 'Customer') {
@@ -144,29 +138,22 @@ export function useWorkspaceUiActions({
         }
       })
       setIsCreateOrderPageOpen(true)
-      setIsCreateCandidatePageOpen(false)
-      setIsCreateApplicantResponsePageOpen(false)
       return
     }
 
     if (role === 'Executor') {
       setCreateCandidateVacancyId(null)
       setIsCreateCandidatePageOpen(true)
-      setIsCreateOrderPageOpen(false)
-      setIsCreateApplicantResponsePageOpen(false)
       setActiveView('candidates')
       return
     }
 
     setIsCreateApplicantResponsePageOpen(true)
-    setIsCreateOrderPageOpen(false)
-    setIsCreateCandidatePageOpen(false)
     setActiveView('dashboard')
   }, [
     role,
     customerCompanyName,
     setActiveView,
-    setDetailsInUrl,
     setIsCreateApplicantResponsePageOpen,
     setIsCreateCandidatePageOpen,
     setCreateCandidateVacancyId,
