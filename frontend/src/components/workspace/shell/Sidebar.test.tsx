@@ -21,4 +21,19 @@ describe('Sidebar applicant navigation', () => {
     expect(screen.getByRole('button', { name: 'Вакансии' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Мои заказы' })).toBeNull()
   })
+
+  it('uses the primary action color for active executor projects', () => {
+    render(
+      <Sidebar
+        activeView="dashboard"
+        collapsed={false}
+        counters={{}}
+        onToggleCollapse={vi.fn()}
+        onViewChange={vi.fn()}
+        role="Executor"
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Мои проекты' }).className).toContain('preview11-nav-btn-primary')
+  })
 })

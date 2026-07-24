@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SlidersHorizontal } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
@@ -325,16 +326,17 @@ export function MainFeedPanelView({
             selectedOrderDetails ? 'lg:w-1/3' : 'lg:w-full',
           )}
         >
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div className={cn('mb-3 flex flex-wrap items-center justify-between gap-3', isApplicantRole && 'justify-end')}>
             {!isApplicantRole ? <h3 className="text-base font-semibold text-slate-900">{ordersListTitle}</h3> : null}
             {isApplicantRole ? (
               <button
                 aria-label="Открыть фильтры вакансий"
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50"
                 onClick={() => setIsApplicantVacancyFiltersOpen(true)}
+                title="Фильтры вакансий"
                 type="button"
               >
-                Фильтры
+                <SlidersHorizontal aria-hidden="true" size={18} />
               </button>
             ) : null}
             {!isApplicantRole ? (

@@ -106,7 +106,9 @@ export function Sidebar({
           return (
             <button
               key={view.value}
-              className={`preview11-nav-btn${isActive ? ' preview11-nav-btn-active' : ''}`}
+              className={`preview11-nav-btn${isActive ? ' preview11-nav-btn-active' : ''}${
+                role === 'Executor' && view.value === 'dashboard' && isActive ? ' preview11-nav-btn-primary' : ''
+              }`}
               onClick={() => onViewChange(view.value)}
               type="button"
             >

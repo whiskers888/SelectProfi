@@ -176,18 +176,6 @@ export function OrderDetailsPagePanel({
           >
             Назад
           </Button>
-          {showChatWithCustomerButton ? (
-            <Button
-              aria-label="Перейти в чат с заказчиком"
-              className="h-10 w-10 rounded-xl p-0"
-              onClick={onOpenChat}
-              title="Перейти в чат с заказчиком"
-              type="button"
-              variant="outline"
-            >
-              <MessageCircle aria-hidden="true" size={18} />
-            </Button>
-          ) : null}
           {showChatWithExecutorButton ? (
             <Button
               aria-label="Перейти в чат с исполнителем"
@@ -356,19 +344,33 @@ export function OrderDetailsPagePanel({
             <div className="mb-2 flex items-center gap-2">
               {hasCreateVacancyDraft ? <Badge variant="default">Незавершенный черновик</Badge> : null}
             </div>
-            <Button
-              className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-              onClick={() => {
-                // @dvnull: Ранее из деталей заказа не было перехода к созданию вакансии для назначенного исполнителя.
-                if (!onCreateVacancyFromOrder) {
-                  return
-                }
-                onCreateVacancyFromOrder()
-              }}
-              type="button"
-            >
-              {hasCreateVacancyDraft ? 'Продолжить черновик вакансии' : 'Создать вакансию'}
-            </Button>
+            <div className="flex items-center gap-2">
+              {showChatWithCustomerButton ? (
+                <Button
+                  aria-label="Перейти в чат с заказчиком"
+                  className="h-10 w-10 rounded-xl p-0"
+                  onClick={onOpenChat}
+                  title="Перейти в чат с заказчиком"
+                  type="button"
+                  variant="outline"
+                >
+                  <MessageCircle aria-hidden="true" size={18} />
+                </Button>
+              ) : null}
+              <Button
+                className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                onClick={() => {
+                  // @dvnull: Ранее из деталей заказа не было перехода к созданию вакансии для назначенного исполнителя.
+                  if (!onCreateVacancyFromOrder) {
+                    return
+                  }
+                  onCreateVacancyFromOrder()
+                }}
+                type="button"
+              >
+                {hasCreateVacancyDraft ? 'Продолжить черновик вакансии' : 'Создать вакансию'}
+              </Button>
+            </div>
               </div>
             ) : null}
             {canManageCandidatesFromOrder ? (

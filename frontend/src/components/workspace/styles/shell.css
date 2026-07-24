@@ -922,6 +922,24 @@
   gap: 10px;
 }
 
+.preview11-nav-btn-primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.preview11-nav-btn-primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.preview11-nav-btn-primary .preview11-nav-icon {
+  border-color: #fff;
+  background: #fff;
+  color: #2563eb;
+}
+
 .preview11-order-row-with-selection {
   grid-template-columns: 22px minmax(0, 1fr);
   box-sizing: border-box;

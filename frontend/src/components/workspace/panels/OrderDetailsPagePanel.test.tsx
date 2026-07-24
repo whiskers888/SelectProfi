@@ -66,6 +66,7 @@ describe('OrderDetailsPagePanel', () => {
 
     render(
       <OrderDetailsPagePanel
+        canCreateVacancyFromOrder
         isExecutorViewer
         onBack={() => {}}
         onOpenChat={onOpenChat}
