@@ -233,10 +233,16 @@
 }
 
 .preview11-nav-btn-active {
-  background: var(--p-soft);
-  border-color: var(--p-border);
-  color: var(--primary);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
   font-weight: 700;
+}
+
+.preview11-nav-btn-active:hover {
+  background: var(--primary-h);
+  border-color: var(--primary-h);
+  color: #fff;
 }
 
 .preview11-nav-left {
@@ -266,9 +272,9 @@
 }
 
 .preview11-nav-btn-active .preview11-nav-icon {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: #fff;
+  border-color: #fff;
+  background: #fff;
+  color: var(--primary);
 }
 
 .preview11-nav-label {
@@ -920,24 +926,6 @@
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 10px;
-}
-
-.preview11-nav-btn-primary {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
-}
-
-.preview11-nav-btn-primary:hover {
-  background: var(--primary-h);
-  border-color: var(--primary-h);
-  color: #fff;
-}
-
-.preview11-nav-btn-primary .preview11-nav-icon {
-  border-color: #fff;
-  background: #fff;
-  color: var(--primary);
 }
 
 .preview11-order-row-with-selection {

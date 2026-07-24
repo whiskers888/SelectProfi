@@ -22,7 +22,7 @@ describe('Sidebar applicant navigation', () => {
     expect(screen.queryByRole('button', { name: 'Мои заказы' })).toBeNull()
   })
 
-  it('uses the primary action color for active executor projects', () => {
+  it('uses the green active style for every selected menu section', () => {
     render(
       <Sidebar
         activeView="dashboard"
@@ -34,7 +34,22 @@ describe('Sidebar applicant navigation', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Мои проекты' }).className).toContain('preview11-nav-btn-primary')
+    expect(screen.getByRole('button', { name: 'Мои проекты' }).className).toContain('preview11-nav-btn-active')
     expect(screen.getByRole('button', { name: 'Биржа проектов' })).toBeTruthy()
+
+    cleanup()
+
+    render(
+      <Sidebar
+        activeView="orders"
+        collapsed={false}
+        counters={{}}
+        onToggleCollapse={vi.fn()}
+        onViewChange={vi.fn()}
+        role="Executor"
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Биржа проектов' }).className).toContain('preview11-nav-btn-active')
   })
 })
