@@ -6,6 +6,7 @@ import { clearAuthSession } from '@/app/authSessionSlice'
 import { routePaths } from '@/app/routePaths'
 import type { AppDispatch } from '@/app/store'
 import { useNotifications } from '@/components/ui/useNotifications'
+import { useRefreshRoleSession } from '@/features/auth/model/useRefreshRoleSession'
 import { api } from '@/shared/api/generated/openapi'
 import { useGetMyAuthInfoQuery } from '@/shared/api/auth'
 import {
@@ -216,12 +217,12 @@ function saveApplicantRespondedOrderIds(userId: string, orderIds: string[]): voi
 export function useWorkspaceShellController() {
   const { notify } = useNotifications()
   const dispatch = useDispatch<AppDispatch>()
+  const refreshRoleSession = useRefreshRoleSession()
   const navigate = useNavigate()
   const location = useLocation()
   const {
     data: profile,
     isFetching: isProfileFetching,
-    refetch: refetchProfile,
   } = useGetMyProfileQuery()
   const { data: authMe, isFetching: isAuthMeFetching } = useGetMyAuthInfoQuery()
   const isBootstrapLoading = (isProfileFetching || isAuthMeFetching) && (!profile || !authMe)
@@ -877,7 +878,7 @@ export function useWorkspaceShellController() {
 
     try {
       await switchMyActiveRole({ activeRole: nextRole }).unwrap()
-      await refetchProfile()
+      await refreshRoleSession()
       setBanner({
         variant: 'success',
         message: `Активная роль изменена на «${nextRole === 'Applicant' ? 'Соискатель' : 'Исполнитель'}».`,
@@ -888,7 +889,7 @@ export function useWorkspaceShellController() {
         message: getRequestErrorMessage(error),
       })
     }
-  }, [canSwitchApplicantExecutor, refetchProfile, role, setBanner, switchMyActiveRole])
+  }, [canSwitchApplicantExecutor, refreshRoleSession, role, setBanner, switchMyActiveRole])
   const linkedCreateVacancyOrder =
     (createVacancyOrderId ? baseOrders.find((order) => order.id === createVacancyOrderId) : null) ??
     selectedOrder ??

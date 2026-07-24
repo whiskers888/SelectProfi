@@ -337,6 +337,23 @@ public sealed class AuthFlowHttpTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(switchPayload.Roles);
         Assert.Contains("Applicant", switchPayload.Roles);
         Assert.Contains("Executor", switchPayload.Roles);
+
+        using var refreshResponse = await client.PostAsJsonAsync(
+            "/api/auth/refresh",
+            new RefreshTokenRequest
+            {
+                RefreshToken = registerPayload!.RefreshToken
+            });
+        var refreshedSession = await refreshResponse.Content.ReadFromJsonAsync<RefreshTokenResponse>();
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", refreshedSession?.AccessToken);
+        using var authMeResponse = await client.GetAsync("/api/auth/me");
+        using var authMePayload = JsonDocument.Parse(await authMeResponse.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, authMeResponse.StatusCode);
+        Assert.Equal("Executor", authMePayload.RootElement.GetProperty("role").GetString());
     }
 
     [Fact]

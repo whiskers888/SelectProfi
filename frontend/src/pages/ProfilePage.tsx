@@ -41,6 +41,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useNotifications } from '@/components/ui/useNotifications'
+import { useRefreshRoleSession } from '@/features/auth/model/useRefreshRoleSession'
 
 type DetailItem = {
   label: string
@@ -96,6 +97,7 @@ type SwitchableRole = Extract<UserRole, 'Applicant' | 'Executor'>
 
 export function ProfilePage() {
   const { notify } = useNotifications()
+  const refreshRoleSession = useRefreshRoleSession()
   const {
     data,
     isLoading,
@@ -228,11 +230,11 @@ export function ProfilePage() {
 
     try {
       await switchMyActiveRole({ activeRole: nextRole }).unwrap()
+      await refreshRoleSession()
       notify({
         variant: 'success',
         message: `Активная роль изменена на «${nextRole === 'Applicant' ? 'Соискатель' : 'Исполнитель'}».`,
       })
-      void refetch()
     } catch (switchError) {
       const message = isFetchBaseQueryError(switchError)
         ? getRequestErrorMessage(switchError)
