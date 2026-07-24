@@ -53,6 +53,10 @@ public sealed class OrderVacancyDetailsFlowTests
         Assert.Equal(request.Functional, response.Functional);
         Assert.Equal(request.Requirements, response.Requirements);
         Assert.Equal(request.OtherConditions, response.OtherConditions);
+        Assert.Equal(request.Price, response.GrossAmount);
+        Assert.Equal(15m, response.ServiceCommissionPercent);
+        Assert.Equal(75000m, response.ServiceCommissionAmount);
+        Assert.Equal(425000m, response.ExecutorNetAmount);
     }
 
     private sealed class CapturingCreateOrderPersistence(

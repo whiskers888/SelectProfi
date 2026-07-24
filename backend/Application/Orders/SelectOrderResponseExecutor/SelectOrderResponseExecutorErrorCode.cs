@@ -7,5 +7,6 @@ public enum SelectOrderResponseExecutorErrorCode
     Forbidden = 2,
     ResponseNotFound = 3,
     NotAvailable = 4,
-    Conflict = 5
+    Conflict = 5,
+    PriceRequired = 6
 }

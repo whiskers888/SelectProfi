@@ -8,5 +8,7 @@ public enum UpdateOrderErrorCode
     Conflict = 3,
     ExecutorNotFound = 4,
     // @dvnull: Добавлен код ошибки отсутствующей/неактивной специализации из справочника.
-    SpecializationNotFound = 5
+    SpecializationNotFound = 5,
+    PriceRequired = 6,
+    PriceLocked = 7
 }

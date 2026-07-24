@@ -42,6 +42,8 @@ public sealed class GetOrdersItemResult
 
     public decimal Price { get; init; }
 
+    public decimal? ServiceCommissionRate { get; init; }
+
     public string? CustomerCompanyName { get; init; }
 
     public int RequestedCandidatesCount { get; init; }

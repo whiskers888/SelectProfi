@@ -21,22 +21,17 @@ namespace SelectProfi.backend.Mappings;
 
 public static class OrderResponseMapper
 {
-    private static decimal ToVisiblePrice(decimal price, UserRole requesterRole, OrderPricingOptions pricingOptions)
+    private static decimal ResolveCommissionRate(
+        decimal? storedCommissionRate,
+        OrderPricingOptions pricingOptions)
     {
-        if (price <= 0m)
-            return 0m;
-
-        if (requesterRole != UserRole.Executor)
-            return price;
-
-        var commission = pricingOptions.ServiceCommissionPercent;
-        var clampedCommission = commission < 0m ? 0m : commission > 1m ? 1m : commission;
-        var net = price * (1m - clampedCommission);
-
-        return Math.Round(net, 0, MidpointRounding.ToEven);
+        var commissionRate = storedCommissionRate ?? pricingOptions.ServiceCommissionPercent;
+        return decimal.Clamp(commissionRate, 0m, 1m);
     }
 
-    public static OrderResponse ToResponse(this CreateOrderResult result)
+    public static OrderResponse ToResponse(
+        this CreateOrderResult result,
+        OrderPricingOptions? pricingOptions = null)
     {
         // @dvnull: Ранее response mapper не возвращал specialization/price отдельными полями; добавлено сквозное отображение новых атрибутов заказа.
         return new OrderResponse
@@ -54,6 +49,9 @@ public static class OrderResponseMapper
             SpecializationId = result.SpecializationId,
             Specialization = result.Specialization,
             Price = result.Price,
+            ServiceCommissionRate = ResolveCommissionRate(
+                result.ServiceCommissionRate,
+                pricingOptions ?? new OrderPricingOptions()),
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
@@ -80,6 +78,7 @@ public static class OrderResponseMapper
             SpecializationId = result.SpecializationId,
             Specialization = result.Specialization,
             Price = result.Price,
+            ServiceCommissionRate = ResolveCommissionRate(result.ServiceCommissionRate, new OrderPricingOptions()),
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
@@ -105,7 +104,8 @@ public static class OrderResponseMapper
             OtherConditions = result.OtherConditions,
             SpecializationId = result.SpecializationId,
             Specialization = result.Specialization,
-            Price = ToVisiblePrice(result.Price, requesterRole, pricingOptions),
+            Price = result.Price,
+            ServiceCommissionRate = ResolveCommissionRate(result.ServiceCommissionRate, pricingOptions),
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
@@ -134,6 +134,7 @@ public static class OrderResponseMapper
                 SpecializationId = item.SpecializationId,
                 Specialization = item.Specialization,
                 Price = item.Price,
+                ServiceCommissionRate = ResolveCommissionRate(item.ServiceCommissionRate, new OrderPricingOptions()),
                 CustomerCompanyName = item.CustomerCompanyName,
                 RequestedCandidatesCount = item.RequestedCandidatesCount,
                 Status = MapStatus(item.Status),
@@ -164,7 +165,8 @@ public static class OrderResponseMapper
                 OtherConditions = item.OtherConditions,
                 SpecializationId = item.SpecializationId,
                 Specialization = item.Specialization,
-                Price = ToVisiblePrice(item.Price, requesterRole, pricingOptions),
+                Price = item.Price,
+                ServiceCommissionRate = ResolveCommissionRate(item.ServiceCommissionRate, pricingOptions),
                 CustomerCompanyName = item.CustomerCompanyName,
                 RequestedCandidatesCount = item.RequestedCandidatesCount,
                 Status = MapStatus(item.Status),
@@ -177,7 +179,9 @@ public static class OrderResponseMapper
         };
     }
 
-    public static OrderResponse ToResponse(this UpdateOrderResult result)
+    public static OrderResponse ToResponse(
+        this UpdateOrderResult result,
+        OrderPricingOptions? pricingOptions = null)
     {
         return new OrderResponse
         {
@@ -194,6 +198,9 @@ public static class OrderResponseMapper
             SpecializationId = result.SpecializationId,
             Specialization = result.Specialization,
             Price = result.Price,
+            ServiceCommissionRate = ResolveCommissionRate(
+                result.ServiceCommissionRate,
+                pricingOptions ?? new OrderPricingOptions()),
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),

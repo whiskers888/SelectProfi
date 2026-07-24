@@ -33,6 +33,8 @@ public sealed class CreateOrderResult
 
     public decimal Price { get; init; }
 
+    public decimal? ServiceCommissionRate { get; init; }
+
     public string? CustomerCompanyName { get; init; }
 
     public int RequestedCandidatesCount { get; init; }

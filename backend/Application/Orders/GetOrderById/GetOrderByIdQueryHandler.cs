@@ -33,6 +33,7 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
             SpecializationId = order.SpecializationId,
             Specialization = order.Specialization,
             Price = order.Price,
+            ServiceCommissionRate = order.ServiceCommissionRate,
             CustomerCompanyName = order.CustomerCompanyName,
             RequestedCandidatesCount = order.RequestedCandidatesCount,
             Status = order.Status,

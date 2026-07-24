@@ -96,7 +96,8 @@ public static class OrderRequestMapper
         this UpdateOrderRequest request,
         Guid orderId,
         Guid requesterUserId,
-        UserRole requesterRole)
+        UserRole requesterRole,
+        decimal serviceCommissionRate)
     {
         return new UpdateOrderCommand
         {
@@ -114,6 +115,7 @@ public static class OrderRequestMapper
             Specialization = request.Specialization,
             SpecializationId = request.SpecializationId,
             Price = request.Price,
+            ServiceCommissionRate = serviceCommissionRate,
             ExecutorId = request.ExecutorId,
             Status = request.Status is null ? null : MapStatus(request.Status.Value)
         };
@@ -184,14 +186,16 @@ public static class OrderRequestMapper
     public static SelectOrderResponseExecutorCommand ToSelectOrderResponseExecutorCommand(
         this (Guid orderId, Guid executorId) routeData,
         Guid requesterUserId,
-        UserRole requesterRole)
+        UserRole requesterRole,
+        decimal serviceCommissionRate)
     {
         return new SelectOrderResponseExecutorCommand
         {
             OrderId = routeData.orderId,
             ExecutorId = routeData.executorId,
             RequesterUserId = requesterUserId,
-            RequesterRole = requesterRole
+            RequesterRole = requesterRole,
+            ServiceCommissionRate = serviceCommissionRate
         };
     }
 

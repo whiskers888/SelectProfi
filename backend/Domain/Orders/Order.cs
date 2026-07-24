@@ -54,6 +54,10 @@ public sealed class Order
     // @dvnull: Ранее цена заказа не имела отдельной колонки; добавлено числовое поле для явного бюджетного атрибута.
     public decimal Price { get; set; }
 
+    // Фиксируется при назначении исполнителя, чтобы изменение глобальной комиссии
+    // не меняло уже согласованную сумму к получению.
+    public decimal? ServiceCommissionRate { get; set; }
+
     [MaxLength(255)]
     public string? CustomerCompanyName { get; set; }
 

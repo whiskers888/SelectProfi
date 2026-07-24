@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SelectProfi.backend.Contracts.Orders;
 
 public sealed class OrderResponse
@@ -30,6 +32,21 @@ public sealed class OrderResponse
 
     // @dvnull: Ранее цена заказа не возвращалась отдельным атрибутом; добавлено поле price.
     public decimal Price { get; init; }
+
+    public decimal GrossAmount => Price;
+
+    public decimal ServiceCommissionPercent => ServiceCommissionRate * 100m;
+
+    public decimal ServiceCommissionAmount =>
+        Math.Round(Price * ServiceCommissionRate, 2, MidpointRounding.AwayFromZero);
+
+    public decimal ExecutorNetAmount =>
+        Math.Round(Price - ServiceCommissionAmount, 2, MidpointRounding.AwayFromZero);
+
+    public bool IsPricingLocked => ExecutorId.HasValue;
+
+    [JsonIgnore]
+    public decimal ServiceCommissionRate { get; init; }
 
     public string? CustomerCompanyName { get; init; }
 

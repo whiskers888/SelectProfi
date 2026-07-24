@@ -33,6 +33,8 @@ public sealed class UpdateOrderCommand : ICommand<UpdateOrderResult>
 
     public decimal? Price { get; init; }
 
+    public decimal ServiceCommissionRate { get; init; }
+
     public Guid? ExecutorId { get; init; }
 
     public OrderStatus? Status { get; init; }

@@ -100,6 +100,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             builder.Property(order => order.Price)
                 .HasPrecision(18, 2)
                 .IsRequired();
+            builder.Property(order => order.ServiceCommissionRate)
+                .HasPrecision(6, 5);
             builder.Property(order => order.CustomerCompanyName)
                 .HasMaxLength(255);
             builder.Property(order => order.Location)

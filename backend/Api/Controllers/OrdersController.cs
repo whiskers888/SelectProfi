@@ -52,7 +52,7 @@ public sealed class OrdersController(
             request.ToCommand(RequesterUserId),
             cancellationToken);
 
-        return result.ToActionResult(this);
+        return result.ToActionResult(this, orderPricingOptions.Value);
     }
 
     [HttpGet("{orderId:guid}")]
@@ -125,10 +125,14 @@ public sealed class OrdersController(
         CancellationToken cancellationToken)
     {
         var result = await commandDispatcher.DispatchAsync<UpdateOrderCommand, UpdateOrderResult>(
-            request.ToCommand(orderId, RequesterUserId, RequesterRole),
+            request.ToCommand(
+                orderId,
+                RequesterUserId,
+                RequesterRole,
+                orderPricingOptions.Value.ServiceCommissionPercent),
             cancellationToken);
 
-        return result.ToActionResult(this);
+        return result.ToActionResult(this, orderPricingOptions.Value);
     }
 
     [HttpDelete("{orderId:guid}")]
@@ -210,7 +214,10 @@ public sealed class OrdersController(
         CancellationToken cancellationToken)
     {
         var result = await commandDispatcher.DispatchAsync<SelectOrderResponseExecutorCommand, SelectOrderResponseExecutorResult>(
-            (orderId, executorId).ToSelectOrderResponseExecutorCommand(RequesterUserId, RequesterRole),
+            (orderId, executorId).ToSelectOrderResponseExecutorCommand(
+                RequesterUserId,
+                RequesterRole,
+                orderPricingOptions.Value.ServiceCommissionPercent),
             cancellationToken);
 
         return result.ToActionResult(this);

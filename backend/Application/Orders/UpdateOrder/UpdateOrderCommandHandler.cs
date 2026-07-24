@@ -66,16 +66,23 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             order.Specialization = command.Specialization.Trim();
         }
 
+        if (command.Price.HasValue && order.ExecutorId.HasValue && command.RequesterRole != UserRole.Admin)
+            return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.PriceLocked };
+
         if (command.Price.HasValue)
             order.Price = command.Price.Value;
 
         if (command.ExecutorId.HasValue)
         {
+            if (order.Price <= 0m)
+                return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.PriceRequired };
+
             var executorExists = await persistence.ExecutorExistsAsync(command.ExecutorId.Value, cancellationToken);
             if (!executorExists)
                 return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.ExecutorNotFound };
 
             order.ExecutorId = command.ExecutorId.Value;
+            order.ServiceCommissionRate ??= command.ServiceCommissionRate;
         }
 
         if (command.Status.HasValue)
@@ -103,6 +110,7 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             SpecializationId = order.SpecializationId,
             Specialization = order.Specialization,
             Price = order.Price,
+            ServiceCommissionRate = order.ServiceCommissionRate,
             CustomerCompanyName = order.CustomerCompanyName,
             RequestedCandidatesCount = order.RequestedCandidatesCount,
             Status = order.Status,

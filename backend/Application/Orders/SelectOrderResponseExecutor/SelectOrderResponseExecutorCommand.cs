@@ -12,4 +12,6 @@ public sealed class SelectOrderResponseExecutorCommand : ICommand<SelectOrderRes
     public Guid RequesterUserId { get; init; }
 
     public UserRole RequesterRole { get; init; }
+
+    public decimal ServiceCommissionRate { get; init; }
 }

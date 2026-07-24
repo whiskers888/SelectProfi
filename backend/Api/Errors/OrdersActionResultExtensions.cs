@@ -22,10 +22,13 @@ namespace SelectProfi.backend.Errors;
 
 public static class OrdersActionResultExtensions
 {
-    public static IActionResult ToActionResult(this CreateOrderResult result, ControllerBase controller)
+    public static IActionResult ToActionResult(
+        this CreateOrderResult result,
+        ControllerBase controller,
+        OrderPricingOptions pricingOptions)
     {
         if (result.ErrorCode == CreateOrderErrorCode.None)
-            return controller.Created($"/api/orders/{result.OrderId}", result.ToResponse());
+            return controller.Created($"/api/orders/{result.OrderId}", result.ToResponse(pricingOptions));
 
         return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
     }
@@ -78,10 +81,13 @@ public static class OrdersActionResultExtensions
         return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
     }
 
-    public static IActionResult ToActionResult(this UpdateOrderResult result, ControllerBase controller)
+    public static IActionResult ToActionResult(
+        this UpdateOrderResult result,
+        ControllerBase controller,
+        OrderPricingOptions pricingOptions)
     {
         if (result.ErrorCode == UpdateOrderErrorCode.None)
-            return controller.Ok(result.ToResponse());
+            return controller.Ok(result.ToResponse(pricingOptions));
 
         return controller.ToProblem(OrdersProblemMap.Resolve(result.ErrorCode));
     }

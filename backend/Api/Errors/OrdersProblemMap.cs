@@ -90,6 +90,18 @@ public static class OrdersProblemMap
         "order_conflict",
         "Не удалось обновить заказ из-за конфликта данных.");
 
+    private static readonly ApiProblemDescriptor OrderPriceRequired = new(
+        StatusCodes.Status409Conflict,
+        "Требуется стоимость",
+        "order_price_required",
+        "Укажите стоимость заказа до назначения исполнителя.");
+
+    private static readonly ApiProblemDescriptor OrderPriceLocked = new(
+        StatusCodes.Status409Conflict,
+        "Стоимость зафиксирована",
+        "order_price_locked",
+        "После назначения исполнителя стоимость может изменить только администратор.");
+
     private static readonly ApiProblemDescriptor DeleteOrderConflict = new(
         StatusCodes.Status409Conflict,
         "Конфликт",
@@ -190,6 +202,8 @@ public static class OrdersProblemMap
             UpdateOrderErrorCode.NotFound => OrderNotFound,
             UpdateOrderErrorCode.ExecutorNotFound => ExecutorNotFound,
             UpdateOrderErrorCode.SpecializationNotFound => SpecializationNotFound,
+            UpdateOrderErrorCode.PriceRequired => OrderPriceRequired,
+            UpdateOrderErrorCode.PriceLocked => OrderPriceLocked,
             UpdateOrderErrorCode.Forbidden => OrderAccessForbidden,
             _ => UpdateOrderConflict
         };
@@ -270,6 +284,7 @@ public static class OrdersProblemMap
             SelectOrderResponseExecutorErrorCode.Forbidden => OrderResponsesAccessForbidden,
             SelectOrderResponseExecutorErrorCode.ResponseNotFound => OrderResponseNotFound,
             SelectOrderResponseExecutorErrorCode.NotAvailable => OrderResponseNotAvailable,
+            SelectOrderResponseExecutorErrorCode.PriceRequired => OrderPriceRequired,
             _ => UpdateOrderConflict
         };
     }

@@ -311,6 +311,10 @@ namespace SelectProfi.backend.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<decimal?>("ServiceCommissionRate")
+                        .HasPrecision(6, 5)
+                        .HasColumnType("numeric(6,5)");
+
                     b.Property<string>("Specialization")
                         .IsRequired()
                         .HasMaxLength(200)

@@ -21,6 +21,9 @@ public sealed class SelectOrderResponseExecutorCommandHandler(ISelectOrderRespon
         if (order.Status != OrderStatus.Active || order.ExecutorId.HasValue)
             return new SelectOrderResponseExecutorResult { ErrorCode = SelectOrderResponseExecutorErrorCode.NotAvailable };
 
+        if (order.Price <= 0m)
+            return new SelectOrderResponseExecutorResult { ErrorCode = SelectOrderResponseExecutorErrorCode.PriceRequired };
+
         var responses = await persistence.FindOrderResponsesAsync(command.OrderId, cancellationToken);
         var selectedResponse = responses.FirstOrDefault(response => response.ExecutorId == command.ExecutorId);
         if (selectedResponse is null || selectedResponse.Status != OrderResponseStatus.Pending)
@@ -36,6 +39,7 @@ public sealed class SelectOrderResponseExecutorCommandHandler(ISelectOrderRespon
         }
 
         order.ExecutorId = command.ExecutorId;
+        order.ServiceCommissionRate = command.ServiceCommissionRate;
         order.UpdatedAtUtc = utcNow;
 
         var saveResult = await persistence.SaveChangesAsync(cancellationToken);
