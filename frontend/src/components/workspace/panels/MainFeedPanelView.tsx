@@ -432,6 +432,7 @@ export function MainFeedPanelView({
               isRespondingToOrder={isRespondingToOrder}
               isSelectingOrderExecutor={isSelectingOrderExecutor}
               isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
+              isExecutorViewer={isExecutorRole}
               onBack={onCloseOrderDetails ?? (() => {})}
               onOpenChat={onOpenChat}
               onOpenApplicantResponder={onOpenCandidate}

@@ -216,6 +216,7 @@ export function WorkspaceShellView({
                 isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
                 isAddingCandidateFromBase={isAddingCandidateFromBase}
                 isRemovingVacancyCandidate={isRemovingVacancyCandidate}
+                isExecutorViewer={role === 'Executor'}
                 order={selectedOrderWithResponses ?? selectedOrder}
                 orderResponses={orderResponses}
                 applicantResponders={selectedOrderApplicantResponders}

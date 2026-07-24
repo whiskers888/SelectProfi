@@ -924,6 +924,8 @@
 
 .preview11-order-row-with-selection {
   grid-template-columns: 22px minmax(0, 1fr);
+  box-sizing: border-box;
+  padding-left: 10px;
 }
 
 .preview11-order-select-wrap {

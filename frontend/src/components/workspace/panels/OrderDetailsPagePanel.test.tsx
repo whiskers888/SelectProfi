@@ -1,5 +1,5 @@
-import { cleanup, render } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { WorkspaceOrder } from '../model/data'
 import { OrderDetailsPagePanel } from './OrderDetailsPagePanel'
 
@@ -10,6 +10,7 @@ const order: WorkspaceOrder = {
   customerId: 'customer-1',
   executorId: null,
   price: 500000,
+  executorNetAmount: 425000,
   title: 'Senior React Developer',
   company: 'ООО Альфа',
   location: 'Москва / удалённо',
@@ -58,5 +59,37 @@ describe('OrderDetailsPagePanel', () => {
     )
 
     expect(getAllByText('Не указано')).toHaveLength(5)
+  })
+
+  it('shows the executor payment and chat icon in the header', () => {
+    const onOpenChat = vi.fn()
+
+    render(
+      <OrderDetailsPagePanel
+        isExecutorViewer
+        onBack={() => {}}
+        onOpenChat={onOpenChat}
+        order={order}
+      />,
+    )
+
+    expect(screen.getByText('К получению')).toBeTruthy()
+    expect(screen.getByText(/425\s000 ₽/)).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Перейти в чат с заказчиком' })).toBeTruthy()
+  })
+
+  it('keeps vacancy and candidate actions on one row without the obsolete hint', () => {
+    const { container } = render(
+      <OrderDetailsPagePanel
+        canCreateCandidateFromOrder={false}
+        canCreateVacancyFromOrder
+        canManageCandidatesFromOrder
+        onBack={() => {}}
+        order={order}
+      />,
+    )
+
+    expect(container.querySelector('.mt-3.flex.flex-wrap.items-center.gap-2')).toBeTruthy()
+    expect(screen.queryByText('Сначала создайте и опубликуйте вакансию.')).toBeNull()
   })
 })

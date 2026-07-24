@@ -25,6 +25,7 @@ type OrderDetailsPagePanelProps = {
     updatedAtUtc: string
   } | null
   canManageOrderResponses?: boolean
+  isExecutorViewer?: boolean
   hasRespondedToOrder?: boolean
   canRespondToOrder?: boolean
   isOrderResponsesLoading?: boolean
@@ -68,6 +69,14 @@ function OrderDetailRow({ label, value }: { label: string; value: string }) {
   )
 }
 
+function toExecutorPaymentLabel(amount: number | null | undefined): string {
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+    return 'Стоимость требует уточнения'
+  }
+
+  return `${amount.toLocaleString('ru-RU')} ₽`
+}
+
 export function OrderDetailsPagePanel({
   applicantResponders = [],
   availableCandidates = [],
@@ -79,6 +88,7 @@ export function OrderDetailsPagePanel({
   canPublishVacancyForCustomer = false,
   vacancyPreview = null,
   canManageOrderResponses = false,
+  isExecutorViewer = false,
   hasRespondedToOrder = false,
   canRespondToOrder = false,
   isOrderResponsesLoading = false,
@@ -156,14 +166,41 @@ export function OrderDetailsPagePanel({
           <h3 className="text-base font-semibold text-slate-900">Детали заказа</h3>
           <p className="mt-1 text-sm text-slate-600">{order.updatedAt}</p>
         </div>
-        <Button
-          className="h-10 rounded-xl border-slate-200 text-slate-700"
-          onClick={onBack}
-          type="button"
-          variant="outline"
-        >
-          Назад
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            aria-label="Назад"
+            className="h-10 rounded-xl border-slate-200 text-slate-700"
+            onClick={onBack}
+            type="button"
+            variant="outline"
+          >
+            Назад
+          </Button>
+          {showChatWithCustomerButton ? (
+            <Button
+              aria-label="Перейти в чат с заказчиком"
+              className="h-10 w-10 rounded-xl p-0"
+              onClick={onOpenChat}
+              title="Перейти в чат с заказчиком"
+              type="button"
+              variant="outline"
+            >
+              <MessageCircle aria-hidden="true" size={18} />
+            </Button>
+          ) : null}
+          {showChatWithExecutorButton ? (
+            <Button
+              aria-label="Перейти в чат с исполнителем"
+              className="h-10 w-10 rounded-xl p-0"
+              onClick={onOpenChat}
+              title="Перейти в чат с исполнителем"
+              type="button"
+              variant="outline"
+            >
+              <MessageCircle aria-hidden="true" size={18} />
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <dl className="mt-4 grid gap-3">
@@ -174,6 +211,9 @@ export function OrderDetailsPagePanel({
         <OrderDetailRow label="Функционал" value={order.functional} />
         <OrderDetailRow label="Требования" value={order.requirements} />
         <OrderDetailRow label="Другие условия" value={order.otherConditions} />
+        {isExecutorViewer ? (
+          <OrderDetailRow label="К получению" value={toExecutorPaymentLabel(order.executorNetAmount)} />
+        ) : null}
         <div>
           <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Отклики</dt>
           <dd className="mt-1 text-sm text-slate-900">{order.responses}</dd>
@@ -309,8 +349,10 @@ export function OrderDetailsPagePanel({
                 : 'Откликнуться на заказ'}
           </Button>
         ) : null}
-        {canCreateVacancyFromOrder ? (
-          <div className="mt-3">
+        {canCreateVacancyFromOrder || canManageCandidatesFromOrder ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {canCreateVacancyFromOrder ? (
+              <div>
             <div className="mb-2 flex items-center gap-2">
               {hasCreateVacancyDraft ? <Badge variant="default">Незавершенный черновик</Badge> : null}
             </div>
@@ -327,10 +369,10 @@ export function OrderDetailsPagePanel({
             >
               {hasCreateVacancyDraft ? 'Продолжить черновик вакансии' : 'Создать вакансию'}
             </Button>
-          </div>
-        ) : null}
-        {canManageCandidatesFromOrder ? (
-          <div className="mt-3">
+              </div>
+            ) : null}
+            {canManageCandidatesFromOrder ? (
+              <div>
             <Button
               className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
               onClick={() => setIsCandidatePickerOpen(true)}
@@ -339,8 +381,7 @@ export function OrderDetailsPagePanel({
             >
               Добавить кандидата
             </Button>
-            {!canCreateCandidateFromOrder ? (
-              <p className="mt-2 text-sm text-slate-600">Сначала создайте и опубликуйте вакансию.</p>
+              </div>
             ) : null}
           </div>
         ) : null}
@@ -369,21 +410,6 @@ export function OrderDetailsPagePanel({
           </div>
         ) : null}
       </div>
-
-      {showChatWithCustomerButton ? (
-        <div className="mt-3">
-          <Button className="h-10 rounded-xl" onClick={onOpenChat} type="button" variant="outline">
-            Перейти в чат с заказчиком
-          </Button>
-        </div>
-      ) : null}
-      {showChatWithExecutorButton ? (
-        <div className="mt-3">
-          <Button className="h-10 rounded-xl" onClick={onOpenChat} type="button" variant="outline">
-            Перейти в чат с исполнителем
-          </Button>
-        </div>
-      ) : null}
 
       {canManageOrderResponses ? (
         <div className="mt-6">
