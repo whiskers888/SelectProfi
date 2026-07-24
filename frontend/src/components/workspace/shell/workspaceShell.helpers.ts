@@ -112,6 +112,11 @@ export function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
     customerId: order.customerId,
     executorId: order.executorId ?? null,
     price: order.price,
+    grossAmount: order.grossAmount,
+    serviceCommissionPercent: order.serviceCommissionPercent,
+    serviceCommissionAmount: order.serviceCommissionAmount,
+    executorNetAmount: order.executorNetAmount,
+    isPricingLocked: order.isPricingLocked,
     title: order.title,
     company: order.customerCompanyName?.trim() || 'Компания не указана',
     location: order.location,
@@ -126,7 +131,7 @@ export function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
       : isPaused
         ? 'На паузе'
         : hasExecutor
-          ? 'Исполнитель назначен'
+          ? 'В работе'
           : 'Ожидает назначения',
     statusTone: isArchived ? 'neutral' : isPaused ? 'danger' : hasExecutor ? 'success' : 'warning',
     updatedAt: toOrderUpdatedAtLabel(order.updatedAtUtc),
@@ -144,6 +149,11 @@ export function toWorkspaceOrderFromVacancy(vacancy: VacancyResponse): Workspace
     customerId: vacancy.customerId,
     executorId: vacancy.executorId,
     price: null,
+    grossAmount: null,
+    serviceCommissionPercent: null,
+    serviceCommissionAmount: null,
+    executorNetAmount: null,
+    isPricingLocked: false,
     title: vacancy.title,
     company: toOrderCompanyLabel(vacancy.description),
     location: '',

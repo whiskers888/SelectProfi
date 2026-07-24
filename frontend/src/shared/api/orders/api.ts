@@ -16,6 +16,11 @@ export type OrderResponse = {
   specializationId?: string | null
   specialization: string
   price: number
+  grossAmount: number
+  serviceCommissionPercent: number
+  serviceCommissionAmount: number
+  executorNetAmount: number
+  isPricingLocked: boolean
   customerCompanyName?: string | null
   requestedCandidatesCount: number
   status: OrderStatusContract

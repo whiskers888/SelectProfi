@@ -18,6 +18,11 @@ describe('toWorkspaceOrder', () => {
       specialization: 'Frontend',
       specializationId: 'specialization-1',
       price: 500000,
+      grossAmount: 500000,
+      serviceCommissionPercent: 15,
+      serviceCommissionAmount: 75000,
+      executorNetAmount: 425000,
+      isPricingLocked: false,
       customerCompanyName: 'ООО Альфа',
       requestedCandidatesCount: 3,
       status: 'Active',
@@ -36,5 +41,37 @@ describe('toWorkspaceOrder', () => {
     expect(order.functional).toBe(response.functional)
     expect(order.requirements).toBe(response.requirements)
     expect(order.otherConditions).toBe(response.otherConditions)
+    expect(order.grossAmount).toBe(500000)
+    expect(order.executorNetAmount).toBe(425000)
+  })
+
+  it('maps an assigned active order to the working status', () => {
+    const response: OrderResponse = {
+      id: 'order-2',
+      customerId: 'customer-1',
+      executorId: 'executor-1',
+      title: 'Backend Developer',
+      description: 'Description',
+      location: 'Удалённо',
+      employeeCompensation: '250 000 ₽',
+      functional: 'Разработка',
+      requirements: 'Опыт',
+      otherConditions: 'ДМС',
+      specialization: 'Backend',
+      price: 100000,
+      grossAmount: 100000,
+      serviceCommissionPercent: 15,
+      serviceCommissionAmount: 15000,
+      executorNetAmount: 85000,
+      isPricingLocked: true,
+      customerCompanyName: 'ООО Альфа',
+      requestedCandidatesCount: 3,
+      status: 'Active',
+      createdAtUtc: '2026-07-23T10:00:00Z',
+      updatedAtUtc: '2026-07-23T11:00:00Z',
+      deletedAtUtc: null,
+    }
+
+    expect(toWorkspaceOrder(response).statusLabel).toBe('В работе')
   })
 })

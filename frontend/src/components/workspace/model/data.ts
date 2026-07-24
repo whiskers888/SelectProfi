@@ -21,6 +21,11 @@ export type WorkspaceOrder = {
   customerId?: string
   executorId?: string | null
   price?: number | null
+  grossAmount?: number | null
+  serviceCommissionPercent?: number | null
+  serviceCommissionAmount?: number | null
+  executorNetAmount?: number | null
+  isPricingLocked?: boolean
   title: string
   company: string
   location: string

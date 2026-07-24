@@ -44,7 +44,7 @@ function toneClassName(tone: WorkspaceTone): string {
 
 function toOrderPriceLabel(price: number | null | undefined): string {
   if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) {
-    return 'Цена не указана'
+    return 'Стоимость требует уточнения'
   }
 
   return `${price.toLocaleString('ru-RU')} ₽`
@@ -77,7 +77,6 @@ export function MainFeedPanelView({
   isCandidateFiltersMenuOpen,
   isLoading,
   isOrderResponsesLoading = false,
-  isOrdersArchiving = false,
   isOrdersStateUpdating = false,
   isPublishingVacancyForCustomer = false,
   isRejectingOrderExecutor = false,
@@ -85,7 +84,6 @@ export function MainFeedPanelView({
   isSelectingOrderExecutor = false,
   isUpdatingApplicantResponderStage = false,
   onActivateOrders,
-  onArchiveOrders,
   onCreateVacancyFromOrder,
   onOpenChat,
   onCloseOrderDetails,
@@ -135,6 +133,7 @@ export function MainFeedPanelView({
   const mineOrdersLabel = isExecutorRole ? 'Мои проекты' : 'Мои заказы'
   const exchangeOrdersLabel = isExecutorRole ? 'Биржа проектов' : 'Биржа заказов'
   const orderPriceLabelPrefix = isExecutorRole ? 'К получению' : 'Цена'
+  const canSelectDashboardOrders = canManageOrders && dashboardState !== 'archive'
 
   if (view === 'dashboard') {
     if (!selectedDashboardOrder || orders.length === 0) {
@@ -174,65 +173,52 @@ export function MainFeedPanelView({
         </div>
 
         <div className="preview11-panel-body">
-          <div className="preview11-orders-bulk">
-            <label className="preview11-orders-bulk-left">
-              <input
-                checked={allVisibleChecked}
-                className="preview11-order-select"
-                onChange={(event) => handleSelectAllVisibleOrders(event.target.checked)}
-                type="checkbox"
-              />
-              <span>Выбрать все</span>
-              <span>{checkedVisibleOrderIds.length}</span>
-            </label>
-            <div className="preview11-orders-bulk-actions">
-              {dashboardState !== 'paused' ? (
-                <button
-                  className="preview11-mini-btn"
-                  disabled={checkedVisibleOrderIds.length === 0 || !canManageOrders || isOrdersStateUpdating}
-                  onClick={() => {
-                    if (!onPauseOrders || checkedVisibleOrderIds.length === 0) {
-                      return
-                    }
-                    void onPauseOrders(checkedVisibleOrderIds)
-                  }}
-                  type="button"
-                >
-                  {isOrdersStateUpdating ? 'Обновляем...' : 'На паузу'}
-                </button>
-              ) : null}
-              {dashboardState !== 'archive' ? (
-                <button
-                  className="preview11-mini-btn"
-                  disabled={checkedVisibleOrderIds.length === 0 || !canManageOrders || isOrdersArchiving}
-                  onClick={() => {
-                    if (!onArchiveOrders || checkedVisibleOrderIds.length === 0) {
-                      return
-                    }
-                    void onArchiveOrders(checkedVisibleOrderIds)
-                  }}
-                  type="button"
-                >
-                  {isOrdersArchiving ? 'Архивируем...' : 'В архив'}
-                </button>
-              ) : null}
-              {dashboardState !== 'active' ? (
-                <button
-                  className="preview11-mini-btn"
-                  disabled={checkedVisibleOrderIds.length === 0 || !canManageOrders || isOrdersStateUpdating}
-                  onClick={() => {
-                    if (!onActivateOrders || checkedVisibleOrderIds.length === 0) {
-                      return
-                    }
-                    void onActivateOrders(checkedVisibleOrderIds)
-                  }}
-                  type="button"
-                >
-                  {isOrdersStateUpdating ? 'Обновляем...' : 'Активировать'}
-                </button>
-              ) : null}
+          {canSelectDashboardOrders ? (
+            <div className="preview11-orders-bulk">
+              <label className="preview11-orders-bulk-left">
+                <input
+                  checked={allVisibleChecked}
+                  className="preview11-order-select"
+                  onChange={(event) => handleSelectAllVisibleOrders(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>Выбрать все</span>
+                <span>{checkedVisibleOrderIds.length}</span>
+              </label>
+              <div className="preview11-orders-bulk-actions">
+                {dashboardState === 'active' ? (
+                  <button
+                    className="preview11-mini-btn"
+                    disabled={checkedVisibleOrderIds.length === 0 || isOrdersStateUpdating}
+                    onClick={() => {
+                      if (!onPauseOrders || checkedVisibleOrderIds.length === 0) {
+                        return
+                      }
+                      void onPauseOrders(checkedVisibleOrderIds)
+                    }}
+                    type="button"
+                  >
+                    {isOrdersStateUpdating ? 'Обновляем...' : 'На паузу'}
+                  </button>
+                ) : null}
+                {dashboardState === 'paused' ? (
+                  <button
+                    className="preview11-mini-btn"
+                    disabled={checkedVisibleOrderIds.length === 0 || isOrdersStateUpdating}
+                    onClick={() => {
+                      if (!onActivateOrders || checkedVisibleOrderIds.length === 0) {
+                        return
+                      }
+                      void onActivateOrders(checkedVisibleOrderIds)
+                    }}
+                    type="button"
+                  >
+                    {isOrdersStateUpdating ? 'Обновляем...' : 'Активировать'}
+                  </button>
+                ) : null}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="preview11-orders-layout">
             <div className="preview11-feed preview11-orders-feed">
@@ -242,15 +228,23 @@ export function MainFeedPanelView({
                 </div>
               ) : (
                 visibleDashboardOrders.map((order) => (
-                  <div key={order.id} className="preview11-order-row">
-                    <div className="preview11-order-select-wrap">
-                      <input
-                        checked={checkedOrderIds.includes(order.id)}
-                        className="preview11-order-select"
-                        onChange={(event) => handleToggleOrderChecked(order.id, event.target.checked)}
-                        type="checkbox"
-                      />
-                    </div>
+                  <div
+                    key={order.id}
+                    className={cn(
+                      'preview11-order-row',
+                      canSelectDashboardOrders && 'preview11-order-row-with-selection',
+                    )}
+                  >
+                    {canSelectDashboardOrders ? (
+                      <div className="preview11-order-select-wrap">
+                        <input
+                          checked={checkedOrderIds.includes(order.id)}
+                          className="preview11-order-select"
+                          onChange={(event) => handleToggleOrderChecked(order.id, event.target.checked)}
+                          type="checkbox"
+                        />
+                      </div>
+                    ) : null}
                     <button
                       className={cn('preview11-feed-item', 'preview11-feed-item-hover')}
                       onClick={() => {
@@ -270,7 +264,12 @@ export function MainFeedPanelView({
                           <span className={`preview11-tag ${toneClassName(order.statusTone)}`}>{order.statusLabel}</span>
                           {role !== 'Applicant' ? (
                             <p className="preview11-order-price">
-                              {orderPriceLabelPrefix}: {toOrderPriceLabel(order.price)}
+                              {orderPriceLabelPrefix}:{' '}
+                              {toOrderPriceLabel(
+                                isExecutorRole
+                                  ? order.executorNetAmount
+                                  : (order.grossAmount ?? order.price),
+                              )}
                             </p>
                           ) : null}
                         </div>
