@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
+import { Modal } from '@/components/ui/modal'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import { workspaceToneToBadgeVariant, type WorkspaceTone } from '../model/data'
@@ -120,6 +122,8 @@ export function MainFeedPanelView({
   view,
   visibleDashboardOrders,
 }: MainFeedPanelViewProps) {
+  const [isApplicantVacancyFiltersOpen, setIsApplicantVacancyFiltersOpen] = useState(false)
+
   if (isLoading) {
     return renderLoading()
   }
@@ -324,16 +328,14 @@ export function MainFeedPanelView({
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             {!isApplicantRole ? <h3 className="text-base font-semibold text-slate-900">{ordersListTitle}</h3> : null}
             {isApplicantRole ? (
-              <div
-                aria-label="Фильтры вакансий скоро появятся"
-                className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs text-slate-500"
+              <button
+                aria-label="Открыть фильтры вакансий"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                onClick={() => setIsApplicantVacancyFiltersOpen(true)}
+                type="button"
               >
-                <span className="font-medium text-slate-700">Фильтры</span>
-                <span className="rounded-lg border border-slate-200 bg-white px-2 py-1.5">Специализация</span>
-                <span className="rounded-lg border border-slate-200 bg-white px-2 py-1.5">Формат работы</span>
-                <span className="rounded-lg border border-slate-200 bg-white px-2 py-1.5">Локация</span>
-                <span>Скоро</span>
-              </div>
+                Фильтры
+              </button>
             ) : null}
             {!isApplicantRole ? (
               <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
@@ -505,6 +507,32 @@ export function MainFeedPanelView({
             />
           ) : null}
         </div> : null}
+        <Modal
+          description="Настройка фильтрации вакансий будет добавлена следующим этапом."
+          footer={
+            <div className="flex justify-end">
+              <button
+                className="h-10 rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                onClick={() => setIsApplicantVacancyFiltersOpen(false)}
+                type="button"
+              >
+                Закрыть
+              </button>
+            </div>
+          }
+          onOpenChange={setIsApplicantVacancyFiltersOpen}
+          open={isApplicantRole && isApplicantVacancyFiltersOpen}
+          title="Фильтры вакансий"
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            {['Специализация', 'Формат работы', 'Локация'].map((filterName) => (
+              <div key={filterName} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                <p className="text-sm font-medium text-slate-800">{filterName}</p>
+                <p className="mt-1 text-xs text-slate-500">Скоро появится</p>
+              </div>
+            ))}
+          </div>
+        </Modal>
       </div>
     )
   }

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { WorkspaceOrder } from '../model/data'
 import { MainFeedPanel } from './MainFeedPanel'
@@ -102,7 +102,9 @@ describe('MainFeedPanel projects in work', () => {
     renderApplicant('orders', [])
 
     expect(screen.getByText('Senior разработчик')).toBeTruthy()
-    expect(screen.getByText('Фильтры')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть фильтры вакансий' }))
+    expect(screen.getByRole('dialog', { name: 'Фильтры вакансий' })).toBeTruthy()
+    expect(screen.getAllByText('Скоро появится')).toHaveLength(3)
     expect(screen.queryByRole('button', { name: 'Мои заказы' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Биржа заказов' })).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Вакансии' })).toBeNull()
