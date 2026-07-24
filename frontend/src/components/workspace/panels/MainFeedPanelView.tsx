@@ -100,7 +100,6 @@ export function MainFeedPanelView({
   onRespondToOrder,
   onSelectOrder,
   onSelectOrderExecutor,
-  orderDataScope,
   orderResponses = [],
   orders,
   requesterUserId,
@@ -116,7 +115,6 @@ export function MainFeedPanelView({
   setCandidateStageFilter,
   setDashboardState,
   setIsCandidateFiltersMenuOpen,
-  setOrderDataScope,
   shouldShowBaseCandidateTab,
   shouldShowCandidateFilters,
   shouldShowCandidateScopeSwitcher,
@@ -134,9 +132,6 @@ export function MainFeedPanelView({
   const ordersNoun = isExecutorRole ? 'проектов' : 'заказов'
   const orderNounSingular = isExecutorRole ? 'проект' : 'заказ'
   const ordersInWorkLabel = isExecutorRole ? 'Проекты в работе' : 'Заказы в работе'
-  const ordersListTitle = isExecutorRole ? 'Список проектов' : 'Список заказов'
-  const mineOrdersLabel = isExecutorRole ? 'Мои проекты' : 'Мои заказы'
-  const exchangeOrdersLabel = isExecutorRole ? 'Биржа проектов' : 'Биржа заказов'
   const orderPriceLabelPrefix = isExecutorRole ? 'К получению' : 'Цена'
   const canSelectDashboardOrders = canManageOrders && dashboardState !== 'archive'
 
@@ -327,7 +322,7 @@ export function MainFeedPanelView({
           )}
         >
           <div className={cn('mb-3 flex flex-wrap items-center justify-between gap-3', isApplicantRole && 'justify-end')}>
-            {!isApplicantRole ? <h3 className="text-base font-semibold text-slate-900">{ordersListTitle}</h3> : null}
+            {!isApplicantRole ? <h3 className="text-base font-semibold text-slate-900">Биржа проектов</h3> : null}
             {isApplicantRole ? (
               <button
                 aria-label="Открыть фильтры вакансий"
@@ -338,30 +333,6 @@ export function MainFeedPanelView({
               >
                 <SlidersHorizontal aria-hidden="true" size={18} />
               </button>
-            ) : null}
-            {!isApplicantRole ? (
-              <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
-              <button
-                className={cn(
-                  'h-8 rounded-md px-3 text-xs font-medium',
-                  orderDataScope === 'mine' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100',
-                )}
-                onClick={() => setOrderDataScope('mine')}
-                type="button"
-              >
-                {mineOrdersLabel}
-              </button>
-              <button
-                className={cn(
-                  'h-8 rounded-md px-3 text-xs font-medium',
-                  orderDataScope === 'exchange' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100',
-                )}
-                onClick={() => setOrderDataScope('exchange')}
-                type="button"
-              >
-                {exchangeOrdersLabel}
-              </button>
-            </div>
             ) : null}
           </div>
           <Table>
@@ -380,9 +351,7 @@ export function MainFeedPanelView({
                   <TableCell className="py-8 text-center text-sm text-slate-500" colSpan={isOrderDetailsOpen ? 1 : 5}>
                     {isApplicantRole
                       ? 'На площадке пока нет доступных вакансий.'
-                      : orderDataScope === 'mine'
-                      ? `В разделе "${mineOrdersLabel}" пока нет записей.`
-                      : `В разделе "${exchangeOrdersLabel}" пока нет доступных ${ordersNoun}.`}
+                      : 'На бирже проектов пока нет доступных проектов.'}
                   </TableCell>
                 </TableRow>
               ) : (

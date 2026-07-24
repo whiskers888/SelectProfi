@@ -85,7 +85,6 @@ export function useMainFeedPanelController({
     readInitialCandidateStageFilter,
   )
   const [isCandidateFiltersMenuOpen, setIsCandidateFiltersMenuOpen] = useState(false)
-  const [orderDataScope, setOrderDataScope] = useState<'mine' | 'exchange'>('mine')
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -130,11 +129,10 @@ export function useMainFeedPanelController({
 
   const filteredOrders = orders.filter((order) => {
     if (role === 'Applicant') {
-      const hasResponded = applicantRespondedOrderIds.includes(order.id)
-      return orderDataScope === 'mine' ? hasResponded : !hasResponded
+      return true
     }
 
-    if (orderDataScope === 'exchange') {
+    if (role === 'Executor') {
       return !order.executorId
     }
 
@@ -239,14 +237,12 @@ export function useMainFeedPanelController({
     isApplicantView,
     isBaseScope,
     isCandidateFiltersMenuOpen,
-    orderDataScope,
     selectedDashboardOrder,
     setCandidateDataScope,
     setCandidateSourceFilter,
     setCandidateStageFilter,
     setDashboardState,
     setIsCandidateFiltersMenuOpen,
-    setOrderDataScope,
     shouldShowBaseCandidateTab,
     shouldShowCandidateFilters,
     shouldShowCandidateScopeSwitcher,

@@ -35,5 +35,6 @@ describe('Sidebar applicant navigation', () => {
     )
 
     expect(screen.getByRole('button', { name: 'Мои проекты' }).className).toContain('preview11-nav-btn-primary')
+    expect(screen.getByRole('button', { name: 'Биржа проектов' })).toBeTruthy()
   })
 })

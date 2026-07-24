@@ -69,6 +69,24 @@ function renderApplicant(view: 'dashboard' | 'orders', applicantRespondedOrderId
   )
 }
 
+function renderExecutorExchange() {
+  return render(
+    <MainFeedPanel
+      baseCandidates={[]}
+      candidates={[]}
+      isLoading={false}
+      onOpenCandidate={vi.fn()}
+      onOpenOrder={vi.fn()}
+      onSelectOrder={vi.fn()}
+      orders={[order, { ...order, id: 'exchange-order', executorId: null, title: 'Вакантный проект' }]}
+      requesterUserId={executorId}
+      role="Executor"
+      selectedOrderId={null}
+      view="orders"
+    />,
+  )
+}
+
 describe('MainFeedPanel projects in work', () => {
   it('shows executor net amount and read-only project controls', () => {
     renderDashboard('Executor', false)
@@ -108,5 +126,14 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.queryByRole('button', { name: 'Мои заказы' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Биржа заказов' })).toBeNull()
     expect(screen.queryByRole('heading', { name: 'Вакансии' })).toBeNull()
+  })
+
+  it('shows only available projects on the executor exchange', () => {
+    renderExecutorExchange()
+
+    expect(screen.getByRole('heading', { name: 'Биржа проектов' })).toBeTruthy()
+    expect(screen.getByText('Вакантный проект')).toBeTruthy()
+    expect(screen.queryByText('Senior разработчик')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Мои проекты' })).toBeNull()
   })
 })

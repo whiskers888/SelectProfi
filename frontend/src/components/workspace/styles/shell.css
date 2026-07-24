@@ -923,21 +923,21 @@
 }
 
 .preview11-nav-btn-primary {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--primary);
+  border-color: var(--primary);
   color: #fff;
 }
 
 .preview11-nav-btn-primary:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: var(--primary-h);
+  border-color: var(--primary-h);
   color: #fff;
 }
 
 .preview11-nav-btn-primary .preview11-nav-icon {
   border-color: #fff;
   background: #fff;
-  color: #2563eb;
+  color: var(--primary);
 }
 
 .preview11-order-row-with-selection {

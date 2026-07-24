@@ -31,13 +31,13 @@ const navIconMap: Record<WorkspaceView, LucideIcon> = {
 }
 
 function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
-  // @dvnull: Ранее у исполнителя разделы назывались "Дашборд/Проекты"; переименовано в "Мои проекты/Биржа заказов" по новой продуктовой терминологии.
+  // @dvnull: Ранее у исполнителя разделы назывались "Дашборд/Проекты"; переименовано в "Мои проекты/Биржа проектов" по новой продуктовой терминологии.
   if (role === 'Executor' && view === 'dashboard') {
     return 'Мои проекты'
   }
 
   if (role === 'Executor' && view === 'orders') {
-    return 'Биржа заказов'
+    return 'Биржа проектов'
   }
 
   if (role === 'Applicant' && view === 'dashboard') {
