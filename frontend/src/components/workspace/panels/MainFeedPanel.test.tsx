@@ -51,6 +51,24 @@ function renderDashboard(role: 'Customer' | 'Executor', canManageOrders: boolean
   )
 }
 
+function renderApplicant(view: 'dashboard' | 'orders', applicantRespondedOrderIds: string[]) {
+  return render(
+    <MainFeedPanel
+      applicantRespondedOrderIds={applicantRespondedOrderIds}
+      baseCandidates={[]}
+      candidates={[]}
+      isLoading={false}
+      onOpenCandidate={vi.fn()}
+      onOpenOrder={vi.fn()}
+      onSelectOrder={vi.fn()}
+      orders={[order]}
+      role="Applicant"
+      selectedOrderId={null}
+      view={view}
+    />,
+  )
+}
+
 describe('MainFeedPanel projects in work', () => {
   it('shows executor net amount and read-only project controls', () => {
     renderDashboard('Executor', false)
@@ -72,5 +90,21 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.queryByRole('button', { name: 'Активировать' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'В архив' })).toBeNull()
     expect(container.querySelector('.preview11-order-row-with-selection')).toBeTruthy()
+  })
+
+  it('shows only applicant responses on the dashboard', () => {
+    renderApplicant('dashboard', [])
+
+    expect(screen.getByText('Нет откликов')).toBeTruthy()
+  })
+
+  it('lists platform vacancies without order scope switches for applicants', () => {
+    renderApplicant('orders', [])
+
+    expect(screen.getByText('Senior разработчик')).toBeTruthy()
+    expect(screen.getByText('Фильтры')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Мои заказы' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Биржа заказов' })).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Вакансии' })).toBeNull()
   })
 })

@@ -40,6 +40,10 @@ function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
     return 'Биржа заказов'
   }
 
+  if (role === 'Applicant' && view === 'dashboard') {
+    return 'Мои отклики'
+  }
+
   if (role === 'Applicant' && view === 'orders') {
     return 'Вакансии'
   }

@@ -138,9 +138,9 @@ export function MainFeedPanelView({
   if (view === 'dashboard') {
     if (!selectedDashboardOrder || orders.length === 0) {
       return renderEmptyState(
-        isApplicantRole ? 'Нет данных по вакансиям' : `Нет данных по ${ordersNoun}`,
+        isApplicantRole ? 'Нет откликов' : `Нет данных по ${ordersNoun}`,
         isApplicantRole
-          ? 'Сейчас нет доступных вакансий. Попробуйте обновить страницу позже.'
+          ? 'Вы ещё не откликнулись ни на одну вакансию.'
           : `Создайте новый ${orderNounSingular} или снимите фильтры, чтобы увидеть активные вакансии.`,
       )
     }
@@ -150,10 +150,10 @@ export function MainFeedPanelView({
         <div className="preview11-orders-top">
           <div>
             <h3 className="preview11-panel-title">
-              {isApplicantRole ? 'Вакансии' : ordersInWorkLabel}
+              {isApplicantRole ? 'Мои отклики' : ordersInWorkLabel}
             </h3>
             <p className="preview11-panel-subtitle">
-              {isApplicantRole ? 'Выберите вакансию, чтобы открыть детали.' : `Выберите ${orderNounSingular}, чтобы открыть детали.`}
+              {isApplicantRole ? 'Здесь отображаются только вакансии, на которые вы откликнулись.' : `Выберите ${orderNounSingular}, чтобы открыть детали.`}
             </p>
           </div>
           <div className="preview11-orders-controls">
@@ -310,7 +310,8 @@ export function MainFeedPanelView({
   }
 
   if (view === 'orders') {
-    const isOrderDetailsOpen = Boolean(selectedOrderDetails)
+    const isOrderDetailsOpen = Boolean(selectedOrderDetails) && !isApplicantRole
+    const listedOrders = isApplicantRole ? orders : filteredOrders
 
     return (
       <div className="space-y-4 lg:flex lg:items-start lg:gap-4 lg:space-y-0">
@@ -321,8 +322,21 @@ export function MainFeedPanelView({
           )}
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-slate-900">{ordersListTitle}</h3>
-            <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+            {!isApplicantRole ? <h3 className="text-base font-semibold text-slate-900">{ordersListTitle}</h3> : null}
+            {isApplicantRole ? (
+              <div
+                aria-label="Фильтры вакансий скоро появятся"
+                className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs text-slate-500"
+              >
+                <span className="font-medium text-slate-700">Фильтры</span>
+                <span className="rounded-lg border border-slate-200 bg-white px-2 py-1.5">Специализация</span>
+                <span className="rounded-lg border border-slate-200 bg-white px-2 py-1.5">Формат работы</span>
+                <span className="rounded-lg border border-slate-200 bg-white px-2 py-1.5">Локация</span>
+                <span>Скоро</span>
+              </div>
+            ) : null}
+            {!isApplicantRole ? (
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
               <button
                 className={cn(
                   'h-8 rounded-md px-3 text-xs font-medium',
@@ -344,6 +358,7 @@ export function MainFeedPanelView({
                 {exchangeOrdersLabel}
               </button>
             </div>
+            ) : null}
           </div>
           <Table>
             <TableHeader>
@@ -356,20 +371,25 @@ export function MainFeedPanelView({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.length === 0 ? (
+              {listedOrders.length === 0 ? (
                 <TableRow>
                   <TableCell className="py-8 text-center text-sm text-slate-500" colSpan={isOrderDetailsOpen ? 1 : 5}>
-                    {orderDataScope === 'mine'
+                    {isApplicantRole
+                      ? 'На площадке пока нет доступных вакансий.'
+                      : orderDataScope === 'mine'
                       ? `В разделе "${mineOrdersLabel}" пока нет записей.`
                       : `В разделе "${exchangeOrdersLabel}" пока нет доступных ${ordersNoun}.`}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredOrders.map((order) => (
+                listedOrders.map((order) => (
                   <TableRow
                     key={order.id}
-                    className={cn('cursor-pointer', selectedOrderId === order.id && 'bg-blue-50/70')}
+                    className={cn(!isApplicantRole && 'cursor-pointer', selectedOrderId === order.id && !isApplicantRole && 'bg-blue-50/70')}
                     onClick={() => {
+                      if (isApplicantRole) {
+                        return
+                      }
                       onSelectOrder(order.id)
                       onOpenOrder(order)
                     }}
@@ -404,7 +424,7 @@ export function MainFeedPanelView({
           </Table>
         </Card>
 
-        <div
+        {!isApplicantRole ? <div
           className={cn(
             'transition-all duration-300 ease-out lg:w-2/3',
             selectedOrderDetails
@@ -484,7 +504,7 @@ export function MainFeedPanelView({
               vacancyPreview={selectedOrderVacancyPreview}
             />
           ) : null}
-        </div>
+        </div> : null}
       </div>
     )
   }

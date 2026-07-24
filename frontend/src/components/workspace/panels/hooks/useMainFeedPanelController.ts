@@ -95,9 +95,11 @@ export function useMainFeedPanelController({
   }, [candidateSourceFilter, candidateStageFilter])
 
   const dashboardOrders =
-    role === 'Executor' && requesterUserId
-      ? orders.filter((order) => order.executorId === requesterUserId)
-      : orders
+    role === 'Applicant'
+      ? orders.filter((order) => applicantRespondedOrderIds.includes(order.id))
+      : role === 'Executor' && requesterUserId
+        ? orders.filter((order) => order.executorId === requesterUserId)
+        : orders
   const selectedDashboardOrder =
     dashboardOrders.find((order) => order.id === selectedOrderId) ?? (dashboardOrders.length > 0 ? dashboardOrders[0] : null)
   const scopedDashboardOrders =
