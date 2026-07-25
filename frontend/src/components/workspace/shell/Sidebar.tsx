@@ -86,7 +86,9 @@ export function Sidebar({
         <div className="preview11-mark">SP</div>
         <div className="preview11-brand-copy">
           <div className="preview11-brand-title">SelectProfi</div>
-          <div className="preview11-muted">Платформа подбора специалистов</div>
+          <div className="preview11-muted">
+            {role === 'Applicant' ? 'Платформа поиска работы' : 'Платформа подбора специалистов'}
+          </div>
         </div>
         <button
           aria-label={collapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}

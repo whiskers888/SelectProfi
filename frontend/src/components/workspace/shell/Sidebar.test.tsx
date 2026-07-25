@@ -20,6 +20,7 @@ describe('Sidebar applicant navigation', () => {
     expect(screen.getByRole('button', { name: 'Мои отклики' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Вакансии' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Мои заказы' })).toBeNull()
+    expect(screen.getByText('Платформа поиска работы')).toBeTruthy()
   })
 
   it('uses the green active style for every selected menu section', () => {
