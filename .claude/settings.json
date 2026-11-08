@@ -1,0 +1,10 @@
+{
+  "extraKnownMarketplaces": {
+    "caveman": { "source": { "source": "github", "repo": "JuliusBrussee/caveman" } },
+    "qrspi-local": { "source": { "source": "github", "repo": "dfrysinger/qrspi-plus" } }
+  },
+  "enabledPlugins": {
+    "caveman@caveman": true,
+    "qrspi@qrspi-local": true
+  }
+}
