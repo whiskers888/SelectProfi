@@ -10,6 +10,11 @@ import type {
 
 const candidatesFiltersStorageKey = 'workspace-candidates-filters-v1'
 
+// Used by dashboard "Обзор" buttons: the candidates panel reads this preset when it mounts.
+export function presetCandidateStageFilter(stage: CandidateStageFilter) {
+  window.localStorage.setItem(candidatesFiltersStorageKey, JSON.stringify({ source: 'all', stage }))
+}
+
 function readInitialCandidateSourceFilter(): CandidateSourceFilter {
   if (typeof window === 'undefined') {
     return 'all'
@@ -101,12 +106,15 @@ export function useMainFeedPanelController({
         : orders
   const selectedDashboardOrder =
     dashboardOrders.find((order) => order.id === selectedOrderId) ?? (dashboardOrders.length > 0 ? dashboardOrders[0] : null)
+  // The applicant does not manage pauses: a paused vacancy is shown in the archive until reactivated.
+  const isInArchive = (order: WorkspaceOrder) =>
+    Boolean(order.isArchived) || (role === 'Applicant' && Boolean(order.isPaused))
   const scopedDashboardOrders =
     dashboardState === 'paused'
       ? dashboardOrders.filter((order) => !order.isArchived && Boolean(order.isPaused))
       : dashboardState === 'archive'
-        ? dashboardOrders.filter((order) => order.isArchived)
-        : dashboardOrders.filter((order) => !order.isArchived && !order.isPaused)
+        ? dashboardOrders.filter(isInArchive)
+        : dashboardOrders.filter((order) => !isInArchive(order) && !order.isPaused)
   const sortedDashboardOrders = [...scopedDashboardOrders]
 
   if (dashboardSort === 'responses') {

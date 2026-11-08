@@ -5,6 +5,7 @@ type PipelinePanelProps = {
   errorMessage?: string | null
   onRetry?: () => void
   pipeline: WorkspacePipelineStage[]
+  title: string
 }
 
 function toneClassName(tone: WorkspaceTone): string {
@@ -57,6 +58,7 @@ export function PipelinePanel({
   errorMessage,
   onRetry,
   pipeline,
+  title,
 }: PipelinePanelProps) {
   if (errorMessage) {
     return (
@@ -79,13 +81,17 @@ export function PipelinePanel({
 
   const maxCount = Math.max(...pipeline.map((stage) => stage.count), 1)
 
-  // @dvnull: Pipeline был на generic Card/Badge, переведен на HTML-линейки с цветовой семантикой этапов.
   return (
     <section className="preview11-card">
       <div className="preview11-panel-head">
-        <h3 className="preview11-panel-title">Pipeline вакансий</h3>
-        <p className="preview11-panel-subtitle">Движение кандидатов по этапам с текущей динамикой.</p>
+        <h3 className="preview11-panel-title">{title}</h3>
       </div>
+
+      {pipeline.length === 0 ? (
+        <div className="preview11-empty-state">
+          <p>Данных для статистики пока нет.</p>
+        </div>
+      ) : null}
 
       <div className="preview11-pipeline">
         {pipeline.map((stage) => (

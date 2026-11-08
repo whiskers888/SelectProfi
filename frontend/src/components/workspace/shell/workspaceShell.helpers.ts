@@ -35,7 +35,7 @@ export function createHeaderTitle(role: WorkspaceRole): string {
     return 'Отклики и коммуникации'
   }
 
-  return 'Заказы и отклики'
+  return 'Заказы'
 }
 
 export function createActionLabel(role: WorkspaceRole): string {
@@ -516,14 +516,14 @@ export function deriveWorkspaceViewState({
         id: 'projects',
         label: 'Проекты в работе',
         value: String(executorDashboardStats?.activeProjectsCount ?? 0),
-        note: `${executorDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на этапе согласования`,
+        note: `${executorDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на согласовании`,
         tone: 'default',
       },
       {
         id: 'pipeline',
-        label: 'Кандидаты на рассмотрении',
+        label: 'Кандидаты в работе',
         value: `${executorDashboardStats?.pipelineCandidatesCount ?? 0} чел.`,
-        note: 'Кандидаты ожидают вашего финального решения, выберете одного из них.',
+        note: 'Отклики на вакансии и кандидаты, добавленные вами.',
         tone: resolveCandidateFlowTone(executorDashboardStats?.pipelineCandidatesCount ?? 0),
       },
       {
@@ -540,7 +540,7 @@ export function deriveWorkspaceViewState({
         id: 'projects',
         label: 'Заказы в работе',
         value: String(customerDashboardStats?.activeProjectsCount ?? 0),
-        note: `${customerDashboardStats?.onApprovalVacanciesCount ?? 0} проектов на этапе согласования`,
+        note: '',
         tone: 'default',
       },
       {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { OrderResponse } from '@/shared/api/orders'
-import { toWorkspaceOrder } from './workspaceShell.helpers'
+import { createHeaderTitle, deriveWorkspaceViewState, toWorkspaceOrder } from './workspaceShell.helpers'
 
 describe('toWorkspaceOrder', () => {
   it('maps structured vacancy details without confusing company or salary with legacy fields', () => {
@@ -73,5 +73,65 @@ describe('toWorkspaceOrder', () => {
     }
 
     expect(toWorkspaceOrder(response).statusLabel).toBe('В работе')
+  })
+})
+
+function deriveStats(role: 'Customer' | 'Executor') {
+  const stats = {
+    activeProjectsCount: 2,
+    onApprovalVacanciesCount: 1,
+    pipelineCandidatesCount: 4,
+    shortlistCandidatesCount: 3,
+  }
+
+  return deriveWorkspaceViewState({
+    activeView: 'dashboard',
+    baseOrders: [],
+    canLoadExecutorBaseCandidates: false,
+    canLoadServerCandidates: false,
+    canLoadServerOrders: false,
+    candidateSourceVacancy: null,
+    customerDashboardStats: role === 'Customer' ? stats : undefined,
+    executorDashboardStats: role === 'Executor' ? stats : undefined,
+    executorGlobalBaseCandidates: [],
+    executorGlobalCandidates: [],
+    fallbackCandidates: [],
+    fallbackMeetings: [],
+    fallbackStats: [],
+    isOrdersFetching: false,
+    isVacancyCandidatesError: false,
+    isVacancyCandidatesFetching: false,
+    locationSearch: '',
+    manualCandidates: [],
+    meetings: [],
+    orderFilter: 'all',
+    ordersResponseExists: false,
+    preferredChatId: null,
+    preferredOrderId: null,
+    purchasedCandidateIds: [],
+    role,
+    searchValue: '',
+    serverBaseCandidates: [],
+    serverCandidates: [],
+    threads: [],
+    vacanciesResponseExists: false,
+    vacancyCandidatesItems: null,
+  }).runtimeStats
+}
+
+describe('dashboard stats wording', () => {
+  it('uses executor wording for the executor', () => {
+    const [projects, pipeline] = deriveStats('Executor')
+
+    expect(projects.note).toBe('1 проектов на согласовании')
+    expect(pipeline.label).toBe('Кандидаты в работе')
+    expect(pipeline.note).toContain('Отклики на вакансии')
+  })
+
+  it('does not show the approval note to the customer', () => {
+    const [projects] = deriveStats('Customer')
+
+    expect(projects.note).not.toContain('согласовани')
+    expect(createHeaderTitle('Customer')).toBe('Заказы')
   })
 })

@@ -51,9 +51,6 @@ export function CalendarPanel({ meetings }: CalendarPanelProps) {
     <section className="preview11-card">
       <div className="preview11-panel-head">
         <h3 className="preview11-panel-title">Календарь встреч</h3>
-        <p className="preview11-panel-subtitle">
-          Встречи отображаются таблицей в стиле корпоративных мессенджеров.
-        </p>
       </div>
 
       {rows.length === 0 ? (

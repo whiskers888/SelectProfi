@@ -125,7 +125,38 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.getAllByText('Скоро появится')).toHaveLength(3)
     expect(screen.queryByRole('button', { name: 'Мои заказы' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Биржа заказов' })).toBeNull()
-    expect(screen.queryByRole('heading', { name: 'Вакансии' })).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Список вакансий' })).toBeTruthy()
+  })
+
+  it('moves paused vacancies to the applicant archive and hides the pause tab', () => {
+    render(
+      <MainFeedPanel
+        applicantRespondedOrderIds={['order-1']}
+        baseCandidates={[]}
+        candidates={[]}
+        isLoading={false}
+        onOpenCandidate={vi.fn()}
+        onOpenOrder={vi.fn()}
+        onSelectOrder={vi.fn()}
+        orders={[{ ...order, isPaused: true }]}
+        role="Applicant"
+        selectedOrderId={null}
+        view="dashboard"
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'На паузе' })).toBeNull()
+    expect(screen.queryByText('Senior разработчик')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Архив' }))
+    expect(screen.getByText('Senior разработчик')).toBeTruthy()
+  })
+
+  it('shows salary instead of priority in the applicant vacancy list', () => {
+    renderApplicant('orders', [])
+
+    expect(screen.getByRole('heading', { name: 'Список вакансий' })).toBeTruthy()
+    expect(screen.getByText('250 000 ₽')).toBeTruthy()
+    expect(screen.queryByText('Приоритет')).toBeNull()
   })
 
   it('shows only available projects on the executor exchange', () => {

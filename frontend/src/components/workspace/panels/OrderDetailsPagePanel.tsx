@@ -26,6 +26,7 @@ type OrderDetailsPagePanelProps = {
   } | null
   canManageOrderResponses?: boolean
   isExecutorViewer?: boolean
+  isApplicantViewer?: boolean
   hasRespondedToOrder?: boolean
   canRespondToOrder?: boolean
   isOrderResponsesLoading?: boolean
@@ -89,6 +90,7 @@ export function OrderDetailsPagePanel({
   vacancyPreview = null,
   canManageOrderResponses = false,
   isExecutorViewer = false,
+  isApplicantViewer = false,
   hasRespondedToOrder = false,
   canRespondToOrder = false,
   isOrderResponsesLoading = false,
@@ -163,7 +165,9 @@ export function OrderDetailsPagePanel({
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-slate-900">Детали заказа</h3>
+          <h3 className="text-base font-semibold text-slate-900">
+            {isApplicantViewer ? 'Детали вакансии' : 'Детали заказа'}
+          </h3>
           <p className="mt-1 text-sm text-slate-600">{order.updatedAt}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -202,10 +206,12 @@ export function OrderDetailsPagePanel({
         {isExecutorViewer ? (
           <OrderDetailRow label="К получению" value={toExecutorPaymentLabel(order.executorNetAmount)} />
         ) : null}
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Отклики</dt>
-          <dd className="mt-1 text-sm text-slate-900">{order.responses}</dd>
-        </div>
+        {!isApplicantViewer ? (
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Отклики</dt>
+            <dd className="mt-1 text-sm text-slate-900">{order.responses}</dd>
+          </div>
+        ) : null}
         <div className="pt-1">
           <Badge variant={workspaceToneToBadgeVariant(order.statusTone)}>{order.statusLabel}</Badge>
         </div>
@@ -334,7 +340,9 @@ export function OrderDetailsPagePanel({
               ? 'Вы уже откликнулись'
               : isRespondingToOrder
                 ? 'Отправляем отклик...'
-                : 'Откликнуться на заказ'}
+                : isApplicantViewer
+                  ? 'Откликнуться на вакансию'
+                  : 'Откликнуться на заказ'}
           </Button>
         ) : null}
         {canCreateVacancyFromOrder || canManageCandidatesFromOrder ? (

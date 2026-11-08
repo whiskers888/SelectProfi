@@ -93,4 +93,20 @@ describe('OrderDetailsPagePanel', () => {
     expect(container.querySelector('.mt-3.flex.flex-wrap.items-center.gap-2')).toBeTruthy()
     expect(screen.queryByText('Сначала создайте и опубликуйте вакансию.')).toBeNull()
   })
+
+  it('uses vacancy wording for the applicant and hides the responses counter', () => {
+    render(
+      <OrderDetailsPagePanel
+        canRespondToOrder
+        isApplicantViewer
+        order={order}
+        onBack={() => {}}
+        onRespondToOrder={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Детали вакансии' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Откликнуться на вакансию' })).toBeTruthy()
+    expect(screen.queryByText('Отклики')).toBeNull()
+  })
 })

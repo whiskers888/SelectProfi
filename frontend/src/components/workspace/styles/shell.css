@@ -948,10 +948,12 @@
   gap: 10px;
 }
 
+/* Bulk bar has 1px border + 10px padding: match it so row checkboxes line up with "Выбрать все". */
 .preview11-order-row-with-selection {
   grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
   box-sizing: border-box;
-  padding-left: 10px;
+  padding-left: 11px;
 }
 
 .preview11-order-select-wrap {
@@ -963,13 +965,9 @@
 .preview11-order-select {
   width: 16px;
   height: 16px;
-  margin-top: 12px;
+  margin: 0;
   cursor: pointer;
   accent-color: var(--primary);
-}
-
-.preview11-orders-bulk .preview11-order-select {
-  margin-top: 0;
 }
 
 .preview11-state-rail {

@@ -166,9 +166,6 @@ export function MainFeedPanelView({
               <option value="responses">По числу откликов</option>
               <option value="priority">По приоритету</option>
             </select>
-            <button className="preview11-mini-btn" type="button">
-              Фильтры
-            </button>
           </div>
         </div>
 
@@ -288,13 +285,15 @@ export function MainFeedPanelView({
               >
                 Активные
               </button>
-              <button
-                className={`preview11-state-btn${dashboardState === 'paused' ? ' preview11-state-btn-active' : ''}`}
-                onClick={() => setDashboardState('paused')}
-                type="button"
-              >
-                На паузе
-              </button>
+              {!isApplicantRole ? (
+                <button
+                  className={`preview11-state-btn${dashboardState === 'paused' ? ' preview11-state-btn-active' : ''}`}
+                  onClick={() => setDashboardState('paused')}
+                  type="button"
+                >
+                  На паузе
+                </button>
+              ) : null}
               <button
                 className={`preview11-state-btn${dashboardState === 'archive' ? ' preview11-state-btn-active' : ''}`}
                 onClick={() => setDashboardState('archive')}
@@ -321,8 +320,10 @@ export function MainFeedPanelView({
             selectedOrderDetails ? 'lg:w-1/3' : 'lg:w-full',
           )}
         >
-          <div className={cn('mb-3 flex flex-wrap items-center justify-between gap-3', isApplicantRole && 'justify-end')}>
-            {!isApplicantRole ? <h3 className="text-base font-semibold text-slate-900">Биржа проектов</h3> : null}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-base font-semibold text-slate-900">
+              {isApplicantRole ? 'Список вакансий' : 'Биржа проектов'}
+            </h3>
             {isApplicantRole ? (
               <button
                 aria-label="Открыть фильтры вакансий"
@@ -341,14 +342,18 @@ export function MainFeedPanelView({
                 <TableHead>Вакансия</TableHead>
                 {!isOrderDetailsOpen ? <TableHead>Компания</TableHead> : null}
                 {!isOrderDetailsOpen ? <TableHead>Локация</TableHead> : null}
-                {!isOrderDetailsOpen ? <TableHead>Приоритет</TableHead> : null}
-                {!isOrderDetailsOpen ? <TableHead>Статус</TableHead> : null}
+                {isApplicantRole ? <TableHead>Оплата</TableHead> : null}
+                {!isOrderDetailsOpen && !isApplicantRole ? <TableHead>Приоритет</TableHead> : null}
+                {!isOrderDetailsOpen && !isApplicantRole ? <TableHead>Статус</TableHead> : null}
               </TableRow>
             </TableHeader>
             <TableBody>
               {listedOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell className="py-8 text-center text-sm text-slate-500" colSpan={isOrderDetailsOpen ? 1 : 5}>
+                  <TableCell
+                    className="py-8 text-center text-sm text-slate-500"
+                    colSpan={isOrderDetailsOpen ? 1 : isApplicantRole ? 4 : 5}
+                  >
                     {isApplicantRole
                       ? 'На площадке пока нет доступных вакансий.'
                       : 'На бирже проектов пока нет доступных проектов.'}
@@ -370,7 +375,8 @@ export function MainFeedPanelView({
                     <TableCell className="font-medium">{order.title}</TableCell>
                     {!isOrderDetailsOpen ? <TableCell>{order.company}</TableCell> : null}
                     {!isOrderDetailsOpen ? <TableCell>{order.location}</TableCell> : null}
-                    {!isOrderDetailsOpen ? (
+                    {isApplicantRole ? <TableCell>{order.employeeCompensation || '—'}</TableCell> : null}
+                    {!isOrderDetailsOpen && !isApplicantRole ? (
                       <TableCell>
                         <Badge
                           variant={
@@ -385,7 +391,7 @@ export function MainFeedPanelView({
                         </Badge>
                       </TableCell>
                     ) : null}
-                    {!isOrderDetailsOpen ? (
+                    {!isOrderDetailsOpen && !isApplicantRole ? (
                       <TableCell>
                         <Badge variant={workspaceToneToBadgeVariant(order.statusTone)}>{order.statusLabel}</Badge>
                       </TableCell>

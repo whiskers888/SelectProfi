@@ -6,6 +6,7 @@ import { CandidateDetailsPagePanel } from '../panels/CandidateDetailsPagePanel'
 import { MainFeedPanel } from '../panels/MainFeedPanel'
 import { OrderCreatePagePanel } from '../panels/OrderCreatePagePanel'
 import { OrderDetailsPagePanel } from '../panels/OrderDetailsPagePanel'
+import { presetCandidateStageFilter } from '../panels/hooks/useMainFeedPanelController'
 import { PipelinePanel } from '../panels/PipelinePanel'
 import { StatsGrid } from '../panels/StatsGrid'
 import { VacancyCreatePagePanel } from '../panels/VacancyCreatePagePanel'
@@ -237,6 +238,7 @@ export function WorkspaceShellView({
                 isAddingCandidateFromBase={isAddingCandidateFromBase}
                 isRemovingVacancyCandidate={isRemovingVacancyCandidate}
                 isExecutorViewer={role === 'Executor'}
+                isApplicantViewer={role === 'Applicant'}
                 order={selectedOrderWithResponses ?? selectedOrder}
                 orderResponses={orderResponses}
                 applicantResponders={selectedOrderApplicantResponders}
@@ -312,10 +314,14 @@ export function WorkspaceShellView({
                     {activeView !== 'candidates' ? (
                       <StatsGrid
                         stats={runtimeStats}
-                        onOverview={() => handleViewChange('candidates')}
+                        onOverview={(statId) => {
+                          presetCandidateStageFilter(statId === 'shortlist' ? 'shortlist' : 'all')
+                          handleViewChange('candidates')
+                        }}
                       />
                     ) : null}
                     <MainFeedPanel
+                      key={activeView}
                       baseCandidates={
                         role === 'Executor' ? executorBaseCandidates : filteredBaseCandidates
                       }
@@ -480,6 +486,7 @@ export function WorkspaceShellView({
                     errorMessage={analyticsError}
                     onRetry={handleRetryAnalytics}
                     pipeline={[]}
+                    title={role === 'Applicant' ? 'Статистика поиска работы' : 'Воронка подбора'}
                   />
                 ) : null}
 
