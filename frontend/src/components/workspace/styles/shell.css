@@ -32,8 +32,7 @@
   padding: 18px;
   background:
     radial-gradient(circle at 20% 15%, var(--p-soft) 0%, transparent 52%),
-    radial-gradient(circle at 85% 75%, rgb(189 233 227 / 45%) 0%, transparent 56%),
-    var(--bg);
+    radial-gradient(circle at 85% 75%, rgb(189 233 227 / 45%) 0%, transparent 56%), var(--bg);
 }
 
 .preview11-boot-card {
@@ -98,6 +97,24 @@
 }
 
 .preview11-sidebar-collapsed .preview11-badge {
+  display: none;
+}
+
+.preview11-mobile-nav-toggle {
+  display: none;
+  height: 34px;
+  width: 34px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.preview11-sidebar-backdrop {
   display: none;
 }
 
@@ -224,7 +241,10 @@
   padding: 0 10px;
   color: var(--text2);
   cursor: pointer;
-  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .preview11-nav-btn:hover {
@@ -1302,8 +1322,56 @@
 }
 
 @media (max-width: 900px) {
+  .preview11-mobile-nav-toggle {
+    display: inline-flex;
+  }
+
   .preview11-sidebar {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    height: 100vh;
+    box-shadow: none;
+    transform: translateX(-100%);
+    transition: transform 220ms ease-out;
+  }
+
+  /* На мобильном drawer всегда открывается полным (с подписями), независимо от desktop-состояния collapsed. */
+  .preview11-sidebar.preview11-sidebar-collapsed {
+    width: 260px;
+    padding: 16px;
+  }
+
+  .preview11-sidebar.preview11-sidebar-collapsed .preview11-brand-copy,
+  .preview11-sidebar.preview11-sidebar-collapsed .preview11-nav-label,
+  .preview11-sidebar.preview11-sidebar-collapsed .preview11-footer {
+    display: block;
+  }
+
+  .preview11-sidebar.preview11-sidebar-collapsed .preview11-nav-btn {
+    justify-content: flex-start;
+    padding: 10px 12px;
+  }
+
+  .preview11-sidebar.preview11-sidebar-collapsed .preview11-nav-left {
+    justify-content: flex-start;
+  }
+
+  .preview11-sidebar-mobile-open {
+    transform: translateX(0);
+    box-shadow: 12px 0 32px rgb(15 23 27 / 22%);
+  }
+
+  .preview11-sidebar-backdrop-visible {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    border: 0;
+    padding: 0;
+    background: rgb(15 23 27 / 45%);
+    cursor: default;
   }
 
   .preview11-header {

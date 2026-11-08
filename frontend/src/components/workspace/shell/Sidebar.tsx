@@ -15,6 +15,8 @@ type SidebarProps = {
   activeView: WorkspaceView
   collapsed: boolean
   counters: Partial<Record<WorkspaceView, number>>
+  mobileOpen: boolean
+  onCloseMobile: () => void
   onToggleCollapse: () => void
   onViewChange: (view: WorkspaceView) => void
   role: WorkspaceRole
@@ -70,6 +72,8 @@ function toViewIcon(view: WorkspaceView, role: WorkspaceRole): LucideIcon {
 export function Sidebar({
   activeView,
   collapsed,
+  mobileOpen,
+  onCloseMobile,
   onToggleCollapse,
   onViewChange,
   role,
@@ -80,55 +84,68 @@ export function Sidebar({
       : workspaceViewOptions.filter((view) => view.value !== 'documents')
 
   // @dvnull: Ранее sidebar был собран на blue-tailwind карточках, перевел shell на HTML-паттерн макета.
+  // Мобильный drawer: sidebar остаётся в DOM, на узких экранах едет из-за левого края по классу -mobile-open.
   return (
-    <aside className={`preview11-sidebar${collapsed ? ' preview11-sidebar-collapsed' : ''}`}>
-      <div className="preview11-brand">
-        <div className="preview11-mark">SP</div>
-        <div className="preview11-brand-copy">
-          <div className="preview11-brand-title">SelectProfi</div>
-          <div className="preview11-muted">
-            {role === 'Applicant' ? 'Платформа поиска работы' : 'Платформа подбора специалистов'}
+    <>
+      <button
+        aria-hidden={!mobileOpen}
+        className={`preview11-sidebar-backdrop${mobileOpen ? ' preview11-sidebar-backdrop-visible' : ''}`}
+        onClick={onCloseMobile}
+        tabIndex={mobileOpen ? 0 : -1}
+        type="button"
+        aria-label="Закрыть навигацию"
+      />
+      <aside
+        className={`preview11-sidebar${collapsed ? ' preview11-sidebar-collapsed' : ''}${mobileOpen ? ' preview11-sidebar-mobile-open' : ''}`}
+      >
+        <div className="preview11-brand">
+          <div className="preview11-mark">SP</div>
+          <div className="preview11-brand-copy">
+            <div className="preview11-brand-title">SelectProfi</div>
+            <div className="preview11-muted">
+              {role === 'Applicant' ? 'Платформа поиска работы' : 'Платформа подбора специалистов'}
+            </div>
           </div>
+          <button
+            aria-label={collapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}
+            className="preview11-side-btn"
+            onClick={onToggleCollapse}
+            type="button"
+          >
+            {collapsed ? '⇥' : '⇤'}
+          </button>
         </div>
-        <button
-          aria-label={collapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}
-          className="preview11-side-btn"
-          onClick={onToggleCollapse}
-          type="button"
-        >
-          {collapsed ? '⇥' : '⇤'}
-        </button>
-      </div>
 
-      <nav aria-label="Основные разделы" className="preview11-nav">
-        {visibleViewOptions.map((view) => {
-          const isActive = activeView === view.value
-          const Icon = toViewIcon(view.value, role)
+        <nav aria-label="Основные разделы" className="preview11-nav">
+          {visibleViewOptions.map((view) => {
+            const isActive = activeView === view.value
+            const Icon = toViewIcon(view.value, role)
 
-          return (
-            <button
-              key={view.value}
-              className={`preview11-nav-btn${isActive ? ' preview11-nav-btn-active' : ''}`}
-              onClick={() => onViewChange(view.value)}
-              type="button"
-            >
-              <span className="preview11-nav-left">
-                <span className="preview11-nav-icon" aria-hidden="true">
-                  <Icon size={18} strokeWidth={2} />
+            return (
+              <button
+                key={view.value}
+                className={`preview11-nav-btn${isActive ? ' preview11-nav-btn-active' : ''}`}
+                onClick={() => onViewChange(view.value)}
+                type="button"
+              >
+                <span className="preview11-nav-left">
+                  <span className="preview11-nav-icon" aria-hidden="true">
+                    <Icon size={18} strokeWidth={2} />
+                  </span>
+                  <span className="preview11-nav-label">{toViewLabel(view.value, role)}</span>
                 </span>
-                <span className="preview11-nav-label">{toViewLabel(view.value, role)}</span>
-              </span>
-            </button>
-          )
-        })}
-      </nav>
+              </button>
+            )
+          })}
+        </nav>
 
-      {/* <div className="preview11-footer">
+        {/* <div className="preview11-footer">
         <div className="preview11-hint-card">
           <div className="preview11-hint-title">Следующий шаг</div>
           <div className="preview11-muted">{roleHintMap[role]}</div>
         </div>
       </div> */}
-    </aside>
+      </aside>
+    </>
   )
 }

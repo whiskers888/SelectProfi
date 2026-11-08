@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ApplicantResponseCreatePagePanel } from '../panels/ApplicantResponseCreatePagePanel'
 import { CalendarPanel } from '../panels/CalendarPanel'
 import { CandidateCreatePagePanel } from '../panels/CandidateCreatePagePanel'
@@ -133,6 +134,18 @@ export function WorkspaceShellView({
   toggleSidebar,
   workspaceScreen,
 }: WorkspaceShellViewProps) {
+  // Мобильный drawer навигации (<=900px) — отдельное локальное состояние, не нужно персистить.
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+
+  function closeMobileNav() {
+    setIsMobileNavOpen(false)
+  }
+
+  function handleMobileNavViewChange(view: Parameters<typeof handleViewChange>[0]) {
+    handleViewChange(view)
+    closeMobileNav()
+  }
+
   // Один renderer выбирает единственный полноэкранный surface.
   return (
     <div className="preview11-html">
@@ -141,8 +154,10 @@ export function WorkspaceShellView({
           activeView={activeView}
           collapsed={isSidebarCollapsed}
           counters={counters}
+          mobileOpen={isMobileNavOpen}
+          onCloseMobile={closeMobileNav}
           onToggleCollapse={toggleSidebar}
-          onViewChange={handleViewChange}
+          onViewChange={handleMobileNavViewChange}
           role={role}
         />
 
@@ -157,6 +172,7 @@ export function WorkspaceShellView({
             onOpenNotifications={() => handleViewChange('chats')}
             onMenuAction={handleHeaderMenuAction}
             onSearchChange={setSearchValue}
+            onToggleMobileNav={() => setIsMobileNavOpen((open) => !open)}
             profileDisplayName={profileDisplayName}
             profileEmail={profileEmail}
             profileRoleLabel={profileRoleLabel}
@@ -190,8 +206,12 @@ export function WorkspaceShellView({
                 onOpenChat={() => handleViewChange('chats')}
                 onCreateVacancyFromOrder={() => handleCreateVacancyFromOrder(selectedOrder.id)}
                 onCreateCandidateFromOrder={() => handleCreateCandidateFromOrder(selectedOrder.id)}
-                onAddCandidateFromBase={(candidateId) => handleAddCandidateFromOrder(selectedOrder.id, candidateId)}
-                onRemoveCandidateFromVacancy={(candidateId) => handleRemoveCandidateFromOrder(selectedOrder.id, candidateId)}
+                onAddCandidateFromBase={(candidateId) =>
+                  handleAddCandidateFromOrder(selectedOrder.id, candidateId)
+                }
+                onRemoveCandidateFromVacancy={(candidateId) =>
+                  handleRemoveCandidateFromOrder(selectedOrder.id, candidateId)
+                }
                 onPublishVacancyForCustomer={handlePublishVacancyForSelectedOrder}
                 onRespondToOrder={() => {
                   if (role === 'Applicant') {

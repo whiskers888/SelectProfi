@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Bell, CalendarDays } from 'lucide-react'
+import { ArrowRightLeft, Bell, CalendarDays, Menu } from 'lucide-react'
 import { Dropdown } from '@/components/ui/dropdown'
 import { type WorkspaceRole, type WorkspaceView } from '../model/data'
 
@@ -17,6 +17,7 @@ type HeaderProps = {
   onMenuAction: (action: HeaderMenuAction) => void
   onSearchChange: (value: string) => void
   onSwitchRole: () => void
+  onToggleMobileNav: () => void
   profileDisplayName: string
   profileEmail: string
   profileRoleLabel: string
@@ -56,6 +57,7 @@ export function Header({
   onMenuAction,
   onSearchChange,
   onSwitchRole,
+  onToggleMobileNav,
   profileDisplayName,
   profileEmail,
   profileRoleLabel,
@@ -67,13 +69,25 @@ export function Header({
   return (
     <header className="preview11-header">
       <div className="preview11-header-title">
+        <button
+          aria-label="Открыть навигацию"
+          className="preview11-mobile-nav-toggle"
+          onClick={onToggleMobileNav}
+          type="button"
+        >
+          <Menu size={20} strokeWidth={2} aria-hidden="true" />
+        </button>
         <h1 className="preview11-title">{title}</h1>
         <p className="preview11-subtitle">{subtitle}</p>
       </div>
 
       <div className="preview11-header-right">
         <div className="preview11-header-actions">
-          <button className="preview11-btn preview11-btn-primary" onClick={onCreateAction} type="button">
+          <button
+            className="preview11-btn preview11-btn-primary"
+            onClick={onCreateAction}
+            type="button"
+          >
             {createLabel}
           </button>
           <input

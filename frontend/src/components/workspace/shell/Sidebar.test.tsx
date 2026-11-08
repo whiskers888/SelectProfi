@@ -11,6 +11,8 @@ describe('Sidebar applicant navigation', () => {
         activeView="dashboard"
         collapsed={false}
         counters={{}}
+        mobileOpen={false}
+        onCloseMobile={vi.fn()}
         onToggleCollapse={vi.fn()}
         onViewChange={vi.fn()}
         role="Applicant"
@@ -29,13 +31,17 @@ describe('Sidebar applicant navigation', () => {
         activeView="dashboard"
         collapsed={false}
         counters={{}}
+        mobileOpen={false}
+        onCloseMobile={vi.fn()}
         onToggleCollapse={vi.fn()}
         onViewChange={vi.fn()}
         role="Executor"
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Мои проекты' }).className).toContain('preview11-nav-btn-active')
+    expect(screen.getByRole('button', { name: 'Мои проекты' }).className).toContain(
+      'preview11-nav-btn-active',
+    )
     expect(screen.getByRole('button', { name: 'Биржа проектов' })).toBeTruthy()
 
     cleanup()
@@ -45,12 +51,16 @@ describe('Sidebar applicant navigation', () => {
         activeView="orders"
         collapsed={false}
         counters={{}}
+        mobileOpen={false}
+        onCloseMobile={vi.fn()}
         onToggleCollapse={vi.fn()}
         onViewChange={vi.fn()}
         role="Executor"
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Биржа проектов' }).className).toContain('preview11-nav-btn-active')
+    expect(screen.getByRole('button', { name: 'Биржа проектов' }).className).toContain(
+      'preview11-nav-btn-active',
+    )
   })
 })

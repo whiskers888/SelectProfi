@@ -9,9 +9,9 @@ export type OrdersHeaderSurfaceProps = {
 
 export function OrdersHeaderSurface({ onRefresh, previewPath }: OrdersHeaderSurfaceProps) {
   return (
-    <CardHeader className="flex flex-row items-center justify-between gap-4">
+    <CardHeader className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
       <CardTitle className="text-xl">Заказы</CardTitle>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" onClick={() => void onRefresh()}>
           Обновить
         </Button>

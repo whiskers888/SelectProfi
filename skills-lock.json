@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "kill-slop": {
+      "source": "iCodeCraft/anti-slop",
+      "sourceType": "github",
+      "skillPath": "skills/kill-slop/SKILL.md",
+      "computedHash": "5f4cad29bc501159389b6bf922c20bfa3af60d4cc563b66c8a7689e45190abaf"
+    },
+    "pr-hygiene": {
+      "source": "iCodeCraft/anti-slop",
+      "sourceType": "github",
+      "skillPath": "skills/pr-hygiene/SKILL.md",
+      "computedHash": "29ae2d26b5be57b135ba45eeec2d95b3da654f760884d027f741e64a0fbda60e"
+    },
+    "security-review": {
+      "source": "iCodeCraft/anti-slop",
+      "sourceType": "github",
+      "skillPath": "skills/security-review/SKILL.md",
+      "computedHash": "fdc692fe13b7290605e6471987994bb96c7b889ff5d0273b0c3335e0336ac2f3"
+    }
+  }
+}

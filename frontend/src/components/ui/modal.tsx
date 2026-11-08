@@ -50,7 +50,7 @@ export function Modal({
     <div
       aria-hidden={!open}
       className={cn(
-        'fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-4 py-6',
+        'fixed inset-0 z-50 flex items-center justify-center bg-foreground/45 px-4 py-6',
         'preview-fade-in',
       )}
       onMouseDown={(event) => {
@@ -65,23 +65,23 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         className={cn(
-          'w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl preview-slide-up',
+          'w-full max-w-2xl rounded-2xl border border-border bg-card shadow-2xl preview-slide-up',
           className,
         )}
         role="dialog"
       >
-        <header className="border-b border-slate-200 px-6 py-4">
-          <h2 id="modal-title" className="text-lg font-semibold text-slate-900">
+        <header className="border-b border-border px-6 py-4">
+          <h2 id="modal-title" className="text-lg font-semibold text-card-foreground">
             {title}
           </h2>
           {description ? (
-            <p id="modal-description" className="mt-1 text-sm text-slate-600">
+            <p id="modal-description" className="mt-1 text-sm text-muted-foreground">
               {description}
             </p>
           ) : null}
         </header>
         <div className="px-6 py-5">{children}</div>
-        {footer ? <footer className="border-t border-slate-200 px-6 py-4">{footer}</footer> : null}
+        {footer ? <footer className="border-t border-border px-6 py-4">{footer}</footer> : null}
       </section>
     </div>,
     document.body,

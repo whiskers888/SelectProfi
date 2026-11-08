@@ -49,7 +49,7 @@
   --muted-foreground: 213 27% 84%;
   --accent: 15 75% 28%;
   --accent-foreground: 34 100% 92%;
-  --destructive: 0 84% 60%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 210 40% 98%;
   --border: 215 25% 27%;
   --input: 215 25% 27%;
@@ -63,7 +63,7 @@
   --info: 199 89% 48%;
   --info-foreground: 201 94% 86%;
   --info-muted: 202 80% 24%;
-  --error: 0 84% 60%;
+  --error: 0 72% 51%;
   --error-foreground: 0 96% 89%;
   --error-muted: 0 63% 31%;
   --radius: 0.75rem;

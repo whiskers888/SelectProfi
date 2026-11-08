@@ -96,8 +96,11 @@ export function TiptapTextEditor({
     return null
   }
 
-  const activeFontFamily = (editor.getAttributes('textStyle').fontFamily as string | undefined) ?? fontFamilyOptions[0].value
-  const activeFontSize = (editor.getAttributes('textStyle').fontSize as string | undefined) ?? fontSizeOptions[1].value
+  const activeFontFamily =
+    (editor.getAttributes('textStyle').fontFamily as string | undefined) ??
+    fontFamilyOptions[0].value
+  const activeFontSize =
+    (editor.getAttributes('textStyle').fontSize as string | undefined) ?? fontSizeOptions[1].value
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -136,7 +139,7 @@ export function TiptapTextEditor({
           type="button"
           className={cn(
             'rounded border border-input px-2 py-1 text-xs',
-            editor.isActive('bold') ? 'bg-slate-100' : '',
+            editor.isActive('bold') ? 'bg-muted' : '',
           )}
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={disabled}
@@ -148,7 +151,7 @@ export function TiptapTextEditor({
           type="button"
           className={cn(
             'rounded border border-input px-2 py-1 text-xs italic',
-            editor.isActive('italic') ? 'bg-slate-100' : '',
+            editor.isActive('italic') ? 'bg-muted' : '',
           )}
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={disabled}
@@ -160,7 +163,7 @@ export function TiptapTextEditor({
           type="button"
           className={cn(
             'rounded border border-input px-2 py-1 text-xs underline',
-            editor.isActive('underline') ? 'bg-slate-100' : '',
+            editor.isActive('underline') ? 'bg-muted' : '',
           )}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           disabled={disabled}
@@ -172,7 +175,7 @@ export function TiptapTextEditor({
           type="button"
           className={cn(
             'rounded border border-input px-2 py-1 text-xs line-through',
-            editor.isActive('strike') ? 'bg-slate-100' : '',
+            editor.isActive('strike') ? 'bg-muted' : '',
           )}
           onClick={() => editor.chain().focus().toggleStrike().run()}
           disabled={disabled}
@@ -184,7 +187,7 @@ export function TiptapTextEditor({
           type="button"
           className={cn(
             'rounded border border-input px-2 py-1 text-xs',
-            editor.isActive('bulletList') ? 'bg-slate-100' : '',
+            editor.isActive('bulletList') ? 'bg-muted' : '',
           )}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           disabled={disabled}
@@ -196,7 +199,7 @@ export function TiptapTextEditor({
           type="button"
           className={cn(
             'rounded border border-input px-2 py-1 text-xs',
-            editor.isActive('orderedList') ? 'bg-slate-100' : '',
+            editor.isActive('orderedList') ? 'bg-muted' : '',
           )}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           disabled={disabled}
@@ -208,7 +211,7 @@ export function TiptapTextEditor({
           type="button"
           className={cn(
             'rounded border border-input px-2 py-1 text-xs',
-            editor.isActive('heading', { level: 2 }) ? 'bg-slate-100' : '',
+            editor.isActive('heading', { level: 2 }) ? 'bg-muted' : '',
           )}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           disabled={disabled}
@@ -220,7 +223,7 @@ export function TiptapTextEditor({
           type="button"
           className={cn(
             'rounded border border-input px-2 py-1 text-xs',
-            editor.isActive('blockquote') ? 'bg-slate-100' : '',
+            editor.isActive('blockquote') ? 'bg-muted' : '',
           )}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           disabled={disabled}
