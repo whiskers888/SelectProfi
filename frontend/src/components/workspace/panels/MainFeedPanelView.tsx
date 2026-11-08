@@ -309,7 +309,7 @@ export function MainFeedPanelView({
   }
 
   if (view === 'orders') {
-    const isOrderDetailsOpen = Boolean(selectedOrderDetails) && !isApplicantRole
+    const isOrderDetailsOpen = Boolean(selectedOrderDetails)
     const listedOrders = isApplicantRole ? orders : filteredOrders
 
     return (
@@ -317,7 +317,8 @@ export function MainFeedPanelView({
         <Card
           className={cn(
             'rounded-xl border-slate-200 p-4 shadow-none transition-all duration-300 ease-out lg:flex-shrink-0',
-            selectedOrderDetails ? 'lg:w-1/3' : 'lg:w-full',
+            // Below lg the details replace the list instead of being pushed under it.
+            selectedOrderDetails ? 'max-lg:hidden lg:w-1/3' : 'lg:w-full',
           )}
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -336,13 +337,13 @@ export function MainFeedPanelView({
               </button>
             ) : null}
           </div>
-          <Table>
+          <Table stackOnMobile>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead>Вакансия</TableHead>
                 {!isOrderDetailsOpen ? <TableHead>Компания</TableHead> : null}
                 {!isOrderDetailsOpen ? <TableHead>Локация</TableHead> : null}
-                {isApplicantRole ? <TableHead>Оплата</TableHead> : null}
+                {!isOrderDetailsOpen && isApplicantRole ? <TableHead>Оплата</TableHead> : null}
                 {!isOrderDetailsOpen && !isApplicantRole ? <TableHead>Приоритет</TableHead> : null}
                 {!isOrderDetailsOpen && !isApplicantRole ? <TableHead>Статус</TableHead> : null}
               </TableRow>
@@ -363,19 +364,18 @@ export function MainFeedPanelView({
                 listedOrders.map((order) => (
                   <TableRow
                     key={order.id}
-                    className={cn(!isApplicantRole && 'cursor-pointer', selectedOrderId === order.id && !isApplicantRole && 'bg-blue-50/70')}
+                    className={cn('cursor-pointer', selectedOrderId === order.id && 'bg-blue-50/70')}
                     onClick={() => {
-                      if (isApplicantRole) {
-                        return
-                      }
                       onSelectOrder(order.id)
                       onOpenOrder(order)
                     }}
                   >
                     <TableCell className="font-medium">{order.title}</TableCell>
-                    {!isOrderDetailsOpen ? <TableCell>{order.company}</TableCell> : null}
-                    {!isOrderDetailsOpen ? <TableCell>{order.location}</TableCell> : null}
-                    {isApplicantRole ? <TableCell>{order.employeeCompensation || '—'}</TableCell> : null}
+                    {!isOrderDetailsOpen ? <TableCell data-label="Компания">{order.company}</TableCell> : null}
+                    {!isOrderDetailsOpen ? <TableCell data-label="Локация">{order.location}</TableCell> : null}
+                    {!isOrderDetailsOpen && isApplicantRole ? (
+                      <TableCell data-label="Оплата">{order.employeeCompensation || '—'}</TableCell>
+                    ) : null}
                     {!isOrderDetailsOpen && !isApplicantRole ? (
                       <TableCell>
                         <Badge
@@ -403,7 +403,7 @@ export function MainFeedPanelView({
           </Table>
         </Card>
 
-        {!isApplicantRole ? <div
+        <div
           className={cn(
             'transition-all duration-300 ease-out lg:w-2/3',
             selectedOrderDetails
@@ -432,6 +432,7 @@ export function MainFeedPanelView({
               isSelectingOrderExecutor={isSelectingOrderExecutor}
               isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
               isExecutorViewer={isExecutorRole}
+              isApplicantViewer={isApplicantRole}
               onBack={onCloseOrderDetails ?? (() => {})}
               onOpenChat={onOpenChat}
               onOpenApplicantResponder={onOpenCandidate}
@@ -483,7 +484,7 @@ export function MainFeedPanelView({
               vacancyPreview={selectedOrderVacancyPreview}
             />
           ) : null}
-        </div> : null}
+        </div>
         <Modal
           description="Настройка фильтрации вакансий будет добавлена следующим этапом."
           footer={
@@ -624,7 +625,7 @@ export function MainFeedPanelView({
           {isApplicantView ? 'Резюме пока не добавлены.' : 'Кандидаты по текущим фильтрам не найдены.'}
         </div>
       ) : (
-        <Table>
+        <Table stackOnMobile>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>{isApplicantView ? 'Резюме' : 'Кандидат'}</TableHead>
@@ -637,8 +638,8 @@ export function MainFeedPanelView({
             {filteredCandidateRows.map((candidate) => (
               <TableRow key={candidate.id} className="cursor-pointer" onClick={() => onOpenCandidate(candidate)}>
                 <TableCell className="font-medium">{candidate.name}</TableCell>
-                {!isBaseScope ? <TableCell>{candidate.source}</TableCell> : null}
-                <TableCell>{candidate.rating}</TableCell>
+                {!isBaseScope ? <TableCell data-label="Источник">{candidate.source}</TableCell> : null}
+                <TableCell data-label="Рейтинг">{candidate.rating}</TableCell>
                 {!isBaseScope ? (
                   <TableCell>
                     {candidate.statusLabel.trim() ? (

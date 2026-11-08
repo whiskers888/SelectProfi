@@ -1,10 +1,31 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-const Table = React.forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="w-full overflow-auto rounded-xl border border-border bg-card">
-      <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
+type TableProps = React.TableHTMLAttributes<HTMLTableElement> & {
+  // Below md every row becomes a card; cells show their column name from `data-label`.
+  stackOnMobile?: boolean
+}
+
+const stackedTableClassName = cn(
+  'max-md:block max-md:[&_thead]:hidden max-md:[&_tbody]:block',
+  'max-md:[&_tr:last-child]:border max-md:[&_tr]:mb-2 max-md:[&_tr]:block max-md:[&_tr]:rounded-xl max-md:[&_tr]:border max-md:[&_tr]:border-border max-md:[&_tr]:bg-card max-md:[&_tr]:px-3 max-md:[&_tr]:py-2',
+  'max-md:[&_td]:block max-md:[&_td]:px-0 max-md:[&_td]:py-0.5',
+  'max-md:[&_td[data-label]]:before:text-xs max-md:[&_td[data-label]]:before:text-muted-foreground max-md:[&_td[data-label]]:before:content-[attr(data-label)_":_"]',
+)
+
+const Table = React.forwardRef<HTMLTableElement, TableProps>(
+  ({ className, stackOnMobile = false, ...props }, ref) => (
+    <div
+      className={cn(
+        'w-full overflow-auto rounded-xl border border-border bg-card',
+        stackOnMobile && 'max-md:overflow-visible max-md:border-0 max-md:bg-transparent',
+      )}
+    >
+      <table
+        ref={ref}
+        className={cn('w-full caption-bottom text-sm', stackOnMobile && stackedTableClassName, className)}
+        {...props}
+      />
     </div>
   ),
 )

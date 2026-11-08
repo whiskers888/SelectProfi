@@ -165,7 +165,7 @@ export function WorkspaceShellView({
         <div className="preview11-main">
           <Header
             activeView={activeView}
-            createLabel={createActionLabel(role)}
+            createLabel={workspaceScreen === 'feed' ? createActionLabel(role) : null}
             meetingsCount={0}
             notificationsCount={counters.chats ?? 0}
             onCreateAction={handleHeaderCreateAction}
@@ -311,7 +311,7 @@ export function WorkspaceShellView({
                   activeView === 'orders' ||
                   activeView === 'candidates') && (
                   <>
-                    {activeView !== 'candidates' ? (
+                    {activeView === 'dashboard' ? (
                       <StatsGrid
                         stats={runtimeStats}
                         onOverview={(statId) => {
@@ -402,7 +402,9 @@ export function WorkspaceShellView({
                       </div>
                     ) : filteredThreads.length === 0 ? (
                       <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
-                        По запросу «{searchValue}» чаты не найдены.
+                        {searchValue.trim()
+                          ? `По запросу «${searchValue}» чаты не найдены.`
+                          : 'Чатов пока нет.'}
                       </div>
                     ) : (
                       <div className="mt-4 grid gap-3 lg:grid-cols-[320px_1fr]">

@@ -7,7 +7,8 @@ type HeaderMenuAction = 'profile' | 'settings' | 'logout'
 type HeaderProps = {
   activeView: WorkspaceView
   canSwitchRole: boolean
-  createLabel: string
+  // null hides the create action (e.g. while a create or details screen is open).
+  createLabel: string | null
   isSwitchingRole: boolean
   meetingsCount: number
   notificationsCount: number
@@ -83,13 +84,15 @@ export function Header({
 
       <div className="preview11-header-right">
         <div className="preview11-header-actions">
-          <button
-            className="preview11-btn preview11-btn-primary"
-            onClick={onCreateAction}
-            type="button"
-          >
-            {createLabel}
-          </button>
+          {createLabel ? (
+            <button
+              className="preview11-btn preview11-btn-primary"
+              onClick={onCreateAction}
+              type="button"
+            >
+              {createLabel}
+            </button>
+          ) : null}
           <input
             aria-label="Поиск"
             className="preview11-input preview11-header-search"

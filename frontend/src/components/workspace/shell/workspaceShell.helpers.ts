@@ -77,15 +77,8 @@ export function toRoleLabel(role: WorkspaceRole): string {
   return 'Заказчик'
 }
 
-export function toOrderCompanyLabel(description: string): string {
-  const normalizedDescription = description.trim()
-  if (!normalizedDescription) {
-    return 'Компания не указана'
-  }
-
-  return normalizedDescription.length > 64
-    ? `${normalizedDescription.slice(0, 61)}...`
-    : normalizedDescription
+function toPlainText(html: string): string {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 export function toOrderUpdatedAtLabel(updatedAtUtc: string): string {
@@ -155,10 +148,11 @@ export function toWorkspaceOrderFromVacancy(vacancy: VacancyResponse): Workspace
     executorNetAmount: null,
     isPricingLocked: false,
     title: vacancy.title,
-    company: toOrderCompanyLabel(vacancy.description),
+    // The vacancy contract has no company field; the description is the vacancy text, not a company name.
+    company: 'Компания не указана',
     location: '',
     employeeCompensation: '',
-    functional: '',
+    functional: toPlainText(vacancy.description),
     requirements: '',
     otherConditions: '',
     priority: isPublished ? 'medium' : 'high',
