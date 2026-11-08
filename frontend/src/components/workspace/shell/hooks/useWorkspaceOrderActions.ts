@@ -49,7 +49,6 @@ export function useWorkspaceOrderActions({
     async (orderId: string) => {
       try {
         await respondToOrder(orderId).unwrap()
-        // @dvnull: Ранее после respond обновлялся только список заказов; из-за cache `my-response` кнопка "Вы уже откликнулись" менялась не сразу.
         setBanner({
           variant: 'success',
           message: 'Отклик на заказ отправлен.',

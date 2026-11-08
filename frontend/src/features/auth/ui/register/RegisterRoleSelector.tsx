@@ -21,7 +21,6 @@ type Props = {
 export function RegisterRoleSelector({ registrationRole, errors, onRoleChange }: Props) {
   return (
     <div className="space-y-2">
-      {/* @dvnull: Блок выбора роли вынесен из RegisterPage без изменения desktop/mobile UX и валидационных aria-связок. */}
       <Label className="text-slate-600">Роль</Label>
 
       <div className="md:hidden">

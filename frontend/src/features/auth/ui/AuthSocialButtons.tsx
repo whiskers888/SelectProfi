@@ -11,7 +11,6 @@ type Props = {
 export function AuthSocialButtons({ isLoading, caption, onProviderClick }: Props) {
   return (
     <div className="grid gap-3 pt-1">
-      {/* @dvnull: Ранее social-блок логина был локально в LoginPage; вынесен в общий auth-компонент без изменения списка провайдеров и UX. */}
       <div className="relative text-center text-xs text-slate-500">
         <span className="relative z-10 bg-white px-2">{caption}</span>
         <span className="absolute inset-x-0 top-1/2 -z-0 h-px -translate-y-1/2 bg-slate-200" />

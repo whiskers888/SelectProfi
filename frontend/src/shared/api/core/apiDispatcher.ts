@@ -499,7 +499,6 @@ export const apiDispatcher: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
   let result = await rawBaseQuery(args, api, extraOptions)
 
   if (isTransportUnavailable(result.error)) {
-    // @dvnull: Добавлен единый флаг недоступности backend, чтобы роутер мог показать отдельную страницу вместо частично сломанного UI.
     api.dispatch(setBackendUnavailable())
   } else if (result.data || typeof result.error?.status === 'number') {
     api.dispatch(setBackendAvailable())

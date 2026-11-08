@@ -246,7 +246,6 @@ export function useWorkspaceCreateActions({
       const organization = createOrderFormValues.organization.trim()
       const specializationId = createOrderFormValues.specializationId.trim()
       const selectedSpecialization = orderSpecializationOptions.find((item) => item.id === specializationId)
-      // @dvnull: Ранее специализация всегда отправлялась как свободный текст; добавлен приоритет справочника specializationId с fallback на ручной ввод.
       const specialization = (selectedSpecialization?.name ?? createOrderFormValues.specialization).trim()
       const price = Number.parseFloat(createOrderFormValues.price.trim())
       const location = createOrderFormValues.location.trim()
@@ -256,7 +255,6 @@ export function useWorkspaceCreateActions({
       const otherConditions = createOrderFormValues.otherConditions.trim()
       const requestedCandidatesCount = Number.parseInt(createOrderFormValues.requestedCandidatesCount.trim(), 10)
 
-      // @dvnull: Ранее форма заказа требовала только title/company; добавлены обязательные specialization и price для явной структуры нового заказа.
       if (!title || !organization || !specialization) {
         setBanner({
           variant: 'destructive',
@@ -271,7 +269,6 @@ export function useWorkspaceCreateActions({
         })
         return
       }
-      // @dvnull: Ранее workspace create-order проверял минимум requestedCandidatesCount >=3; обновлено до >=1 под актуальный backend-контракт.
       if (!Number.isFinite(requestedCandidatesCount) || requestedCandidatesCount < 1) {
         setBanner({
           variant: 'destructive',
@@ -286,7 +283,6 @@ export function useWorkspaceCreateActions({
         const createdOrder = await createOrder({
           title,
           description,
-          // @dvnull: Ранее create-order не отправлял specializationId; добавлен проброс выбранного элемента справочника.
           specialization,
           specializationId: selectedSpecialization?.id,
           price,
@@ -396,7 +392,6 @@ export function useWorkspaceCreateActions({
       }
 
       try {
-        // @dvnull: Ранее при повторном сохранении для уже созданной вакансии выполнялся create и возникал 409 из-за дубликата orderId.
         await upsertVacancyForOrder(orderId, title, description)
         clearCreateVacancyDraft(orderId)
         setCreateVacancyFormValues({

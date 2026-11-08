@@ -230,7 +230,6 @@ export function OrderDetailsPagePanel({
             </dt>
             {applicantResponders.length > 0 ? (
               <dd className="mt-2 space-y-2">
-                {/* @dvnull: Ранее исполнитель видел только число откликов без имен; добавлен список с действиями по каждому соискателю. */}
                 {applicantResponders.map((candidate) => {
                   const isShortlist = candidate.statusLabel.trim().toLowerCase() === 'shortlist'
                   return (
@@ -253,7 +252,6 @@ export function OrderDetailsPagePanel({
                             aria-label="Открыть чат с соискателем"
                             className="h-8 w-8 rounded-lg p-0"
                             onClick={() => {
-                              // @dvnull: Добавлена UI-иконка чата для соискателя; действие будет подключено отдельным шагом.
                             }}
                             type="button"
                             variant="outline"
@@ -368,7 +366,6 @@ export function OrderDetailsPagePanel({
               <Button
                 className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
                 onClick={() => {
-                  // @dvnull: Ранее из деталей заказа не было перехода к созданию вакансии для назначенного исполнителя.
                   if (!onCreateVacancyFromOrder) {
                     return
                   }
@@ -475,7 +472,6 @@ export function OrderDetailsPagePanel({
                             className="h-8 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
                             disabled={isSelectingOrderExecutor || isRejectingOrderExecutor}
                             onClick={(event) => {
-                              // @dvnull: Действия в строке отклика не должны переключать раскрытие профиля по клику строки.
                               event.stopPropagation()
                               if (!onSelectOrderExecutor) {
                                 return
@@ -490,7 +486,6 @@ export function OrderDetailsPagePanel({
                             className="h-8 rounded-lg border-red-300 text-red-700 hover:bg-red-50"
                             disabled={isSelectingOrderExecutor || isRejectingOrderExecutor}
                             onClick={(event) => {
-                              // @dvnull: Действия в строке отклика не должны переключать раскрытие профиля по клику строки.
                               event.stopPropagation()
                               if (!onRejectOrderExecutor) {
                                 return
@@ -506,7 +501,6 @@ export function OrderDetailsPagePanel({
                             aria-label="Перейти в чат с исполнителем"
                             className="h-8 w-8 rounded-lg"
                             onClick={(event) => {
-                              // @dvnull: Действия в строке отклика не должны переключать раскрытие профиля по клику строки.
                               event.stopPropagation()
                             }}
                             type="button"

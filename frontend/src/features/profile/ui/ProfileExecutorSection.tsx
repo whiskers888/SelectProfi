@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { ProfileDetails } from '@/features/profile/ui/ProfileDetails'
 
-// @dvnull: Inline-блок роли Executor вынесен из ProfilePage для поэтапной декомпозиции без изменения submit-flow.
 type DetailItem = {
   label: string
   value: string | number

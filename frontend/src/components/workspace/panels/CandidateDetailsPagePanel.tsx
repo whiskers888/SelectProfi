@@ -27,7 +27,6 @@ export function CandidateDetailsPagePanel({
     <Card className="rounded-xl border-slate-200 p-4 shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          {/* @dvnull: Ранее заголовок страницы деталей кандидата был "Профиль"; переименован в "Резюме" под новый UX-сценарий открытия по клику из таблицы кандидатов. */}
           <h3 className="text-base font-semibold text-slate-900">Резюме кандидата</h3>
           {isCommentsLocked ? (
             <p className="mt-1 text-sm text-slate-600">Комментарии рекрутера скрыты до покупки.</p>
@@ -46,7 +45,6 @@ export function CandidateDetailsPagePanel({
       </div>
 
       <Alert>
-        {/* @dvnull: Кнопка покупки теперь отображается всегда в резюме: для купленного/доступного состояния — disabled c явным статусом. */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-sm text-slate-700">
             {canPurchase

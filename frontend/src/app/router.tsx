@@ -19,7 +19,6 @@ export const router = createBrowserRouter([
     path: routePaths.orders,
     element: <AvailabilityRoute element={<Navigate to={routePaths.app} replace />} />,
   },
-  // @dvnull: Ранее route /vacancies открывал отдельный legacy-экран; пользовательский вход перенесен в workspace.
   {
     path: routePaths.vacancies,
     element: <AvailabilityRoute element={<Navigate to={routePaths.app} replace />} />,

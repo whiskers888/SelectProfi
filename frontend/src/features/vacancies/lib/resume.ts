@@ -16,7 +16,6 @@ export function buildResumeContentJson(form: ResumeContentInput): string {
   const richTextHtml = form.resumeRichTextHtml.trim()
   const summary = richTextHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 
-  // @dvnull: Ранее `resumeContentJson` содержал только plain-summary и skills; добавлен richTextHtml с сохранением summary для обратной совместимости payload.
   return JSON.stringify({
     summary,
     skills,

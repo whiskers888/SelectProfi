@@ -46,7 +46,6 @@ function groupedMeetings(meetings: WorkspaceMeeting[]): Array<{ date: string, me
 export function CalendarPanel({ meetings }: CalendarPanelProps) {
   const rows = groupedMeetings(meetings)
 
-  // @dvnull: Ранее календарь рендерился списком карточек; по задаче переведен в отдельную табличную вкладку.
   return (
     <section className="preview11-card">
       <div className="preview11-panel-head">

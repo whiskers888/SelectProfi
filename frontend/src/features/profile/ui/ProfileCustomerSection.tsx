@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ProfileDetails } from '@/features/profile/ui/ProfileDetails'
 
-// @dvnull: Inline-блок роли Customer вынесен из ProfilePage для поэтапной декомпозиции без изменения submit-flow.
 type DetailItem = {
   label: string
   value: string | number

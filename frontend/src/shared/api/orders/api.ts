@@ -97,7 +97,6 @@ export type MyOrderResponseResponse = {
 export type CreateOrderRequest = {
   title: string
   description: string
-  // @dvnull: Ранее create-order frontend-контракт не поддерживал словарь специализаций; добавлены specialization/specializationId/price под новый backend-контракт.
   specialization?: string
   specializationId?: string
   price?: number
@@ -150,7 +149,6 @@ const ordersApi = api.injectEndpoints({
       }),
     }),
     getOrderSpecializations: build.query<OrderSpecializationListResponse, void>({
-      // @dvnull: Ранее фронт не запрашивал справочник специализаций; добавлен endpoint для формы создания заказа.
       query: () => ({
         url: '/api/order-specializations',
         method: 'GET',

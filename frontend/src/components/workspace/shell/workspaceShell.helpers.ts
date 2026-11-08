@@ -24,7 +24,6 @@ type ProblemDetailsPayload = {
   detail?: string
   title?: string
 }
-type OrderFilter = 'all' | 'active' | 'paused';
 
 export function createHeaderTitle(role: WorkspaceRole): string {
   if (role === 'Executor') {
@@ -249,13 +248,6 @@ export function getRequestErrorMessage(error: unknown): string {
   return 'Не удалось выполнить запрос.'
 }
 
-// type DashboardStatsSnapshot = {
-//   activeProjectsCount: number
-//   onApprovalVacanciesCount: number
-//   pipelineCandidatesCount: number
-//   shortlistCandidatesCount: number
-// }
-
 function resolveCandidateFlowTone(count: number): WorkspaceTone {
   if (count <= 0) {
     return 'default'
@@ -299,16 +291,15 @@ type DeriveWorkspaceViewStateInput = {
   executorDashboardStats?: ExecutorDashboardStatsResponse;
   executorGlobalBaseCandidates: WorkspaceCandidate[];
   executorGlobalCandidates: WorkspaceCandidate[];
-  fallbackCandidates: WorkspaceCandidate[];  // ← добавить
-  fallbackMeetings: WorkspaceMeeting[];      // ← добавить
-  fallbackStats: WorkspaceStat[];            // ← добавить
+  fallbackCandidates: WorkspaceCandidate[];
+  fallbackMeetings: WorkspaceMeeting[];
+  fallbackStats: WorkspaceStat[];
   isOrdersFetching: boolean;
   isVacancyCandidatesError: boolean;
   isVacancyCandidatesFetching: boolean;
   locationSearch: string;
   manualCandidates: WorkspaceCandidate[];
   meetings: WorkspaceMeeting[];
-  orderFilter: OrderFilter;
   ordersResponseExists: boolean;
   preferredChatId: string | null;
   preferredOrderId: string | null;
@@ -389,7 +380,6 @@ export function deriveWorkspaceViewState({
   const executorCandidatesForUi = hasExecutorVacancies ? executorGlobalCandidates : [];
   const executorBaseCandidatesForUi = hasExecutorVacancies ? executorGlobalBaseCandidates : [];
 
-  // Определяем, какие кандидаты будут базовыми
   let baseCandidates: WorkspaceCandidate[];
   if (role === 'Executor') {
     baseCandidates = vacanciesResponseExists ? executorCandidatesForUi : fallbackCandidates;
@@ -422,10 +412,6 @@ export function deriveWorkspaceViewState({
 
   const filteredOrders = allOrders.filter((order) => {
     if (activeView !== 'dashboard' && order.isArchived) return false;
-    //const matchesFilter = orderFilter === 'all' ||
-      //(orderFilter === 'active' && order.statusTone !== 'danger') ||
-      //(orderFilter === 'paused' && order.statusTone === 'danger');
-    //if (!matchesFilter) return false;
     if (!normalizedSearch) return true;
     return (
       order.title.toLowerCase().includes(normalizedSearch) ||
@@ -492,7 +478,6 @@ export function deriveWorkspaceViewState({
     ? customerSelectedCandidates.length
     : filteredCandidates.length;
 
-  // Используем переданные meetings вместо dataset.meetings
   const meetingsList = meetings ?? fallbackMeetings ?? [];
 
   const counters: Partial<Record<WorkspaceView, number>> = {

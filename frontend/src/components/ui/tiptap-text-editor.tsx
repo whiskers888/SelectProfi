@@ -60,7 +60,6 @@ export function TiptapTextEditor({
     content: value,
     editable: !disabled,
     onUpdate: ({ editor: currentEditor }) => {
-      // @dvnull: Ранее наружу отдавался только plain-text, из-за чего терялось форматирование; переключено на HTML для tiptap rich-text сценариев.
       onChange(currentEditor.getHTML())
     },
     editorProps: {

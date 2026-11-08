@@ -83,7 +83,6 @@ export function OrderCreatePagePanel({
         </div>
 
         <div className="space-y-2">
-          {/* @dvnull: Ранее форма заказа содержала только company/comment/count; добавлены отдельные поля specialization и price для явного ввода параметров заказа. */}
           <Label className="text-slate-600" htmlFor="workspace-order-specialization">
             Специализация
           </Label>

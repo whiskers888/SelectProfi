@@ -11,7 +11,6 @@ type Props = {
 export function RegisterCommonFields({ errors }: Props) {
   return (
     <>
-      {/* @dvnull: Общие поля регистрации ранее рендерились в RegisterPage; вынесены в feature-компонент без изменения имен form-полей и aria-связок. */}
       <div className="space-y-2">
         <Label htmlFor="register-fullName" className="text-slate-600">
           Имя и фамилия

@@ -21,7 +21,6 @@ function toneClassName(tone: WorkspaceTone): string {
 }
 
 export function ActivityPanel({ activity }: ActivityPanelProps) {
-  // @dvnull: Лента активности была оформлена как generic Card-list, заменена на HTML list/item.
   return (
     <section className="preview11-card">
       <div className="preview11-panel-head">

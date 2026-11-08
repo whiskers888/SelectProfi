@@ -104,7 +104,6 @@ function deriveStats(role: 'Customer' | 'Executor') {
     locationSearch: '',
     manualCandidates: [],
     meetings: [],
-    orderFilter: 'all',
     ordersResponseExists: false,
     preferredChatId: null,
     preferredOrderId: null,

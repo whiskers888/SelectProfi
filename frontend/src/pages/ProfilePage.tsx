@@ -153,7 +153,6 @@ export function ProfilePage() {
   const [applicantFormErrors, setApplicantFormErrors] = useState<ApplicantProfileFormErrors>({})
   const [executorFormErrors, setExecutorFormErrors] = useState<ExecutorProfileFormErrors>({})
 
-  // @dvnull: Ветки loading/error/empty переведены на единый UX-шаблон состояний с явным retry.
   if (isLoading) {
     return (
       <section className="page profile-page">
@@ -210,7 +209,6 @@ export function ProfilePage() {
   }
 
   const profile = data
-  // @dvnull: Ранее страница профиля ориентировалась только на поле role, переключение переведено на activeRole/roles от backend.
   const activeRole = resolveActiveRole(profile)
   const availableRoles = resolveAvailableRoles(profile, activeRole)
   const canSwitchApplicantExecutor =

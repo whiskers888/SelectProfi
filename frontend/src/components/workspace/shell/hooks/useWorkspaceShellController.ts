@@ -77,143 +77,18 @@ import {
   toWorkspaceRole,
 } from '../workspaceShell.helpers'
 import { resolveWorkspaceScreen, type WorkspaceCreateScreen } from '../workspaceScreen'
+import {
+  clearVacancyCreateDraft,
+  readApplicantRespondedOrderIds,
+  readInitialSidebarCollapsedState,
+  readVacancyCreateDraft,
+  saveApplicantRespondedOrderIds,
+  saveVacancyCreateDraft,
+  sidebarCollapsedStorageKey,
+} from '../workspaceStorage'
 
-type OrderFilter = 'all' | 'active' | 'paused'
 const defaultWorkspaceRole: WorkspaceRole = 'Customer'
 const defaultWorkspaceView: WorkspaceView = 'dashboard'
-const sidebarCollapsedStorageKey = 'workspace-sidebar-collapsed-v1'
-const vacancyCreateDraftsStorageKey = 'workspace-vacancy-create-drafts-v1'
-const applicantRespondedVacanciesStorageKey = 'workspace-applicant-responded-vacancies-v1'
-
-type VacancyCreateDraft = {
-  title: string
-  description: string
-  updatedAtUtc: string
-}
-
-type VacancyCreateDraftsMap = Record<string, VacancyCreateDraft>
-type ApplicantRespondedVacanciesMap = Record<string, string[]>
-
-function readInitialSidebarCollapsedState(): boolean {
-  if (typeof window === 'undefined') {
-    return false
-  }
-
-  try {
-    return window.localStorage.getItem(sidebarCollapsedStorageKey) === '1'
-  } catch {
-    return false
-  }
-}
-
-function makeVacancyCreateDraftKey(userId: string, orderId: string): string {
-  return `${userId}:${orderId}`
-}
-
-function readVacancyCreateDraftsMap(): VacancyCreateDraftsMap {
-  if (typeof window === 'undefined') {
-    return {}
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(vacancyCreateDraftsStorageKey)
-    if (!rawValue) {
-      return {}
-    }
-
-    const parsedValue = JSON.parse(rawValue) as VacancyCreateDraftsMap
-    if (typeof parsedValue !== 'object' || parsedValue === null) {
-      return {}
-    }
-
-    return parsedValue
-  } catch {
-    return {}
-  }
-}
-
-function writeVacancyCreateDraftsMap(value: VacancyCreateDraftsMap): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.localStorage.setItem(vacancyCreateDraftsStorageKey, JSON.stringify(value))
-}
-
-function readVacancyCreateDraft(userId: string, orderId: string): VacancyCreateDraft | null {
-  const key = makeVacancyCreateDraftKey(userId, orderId)
-  const draftsMap = readVacancyCreateDraftsMap()
-  return draftsMap[key] ?? null
-}
-
-function saveVacancyCreateDraft(
-  userId: string,
-  orderId: string,
-  formValues: { title: string; description: string },
-): void {
-  const key = makeVacancyCreateDraftKey(userId, orderId)
-  const draftsMap = readVacancyCreateDraftsMap()
-  draftsMap[key] = {
-    title: formValues.title,
-    description: formValues.description,
-    updatedAtUtc: new Date().toISOString(),
-  }
-  writeVacancyCreateDraftsMap(draftsMap)
-}
-
-function clearVacancyCreateDraft(userId: string, orderId: string): void {
-  const key = makeVacancyCreateDraftKey(userId, orderId)
-  const draftsMap = readVacancyCreateDraftsMap()
-  if (!(key in draftsMap)) {
-    return
-  }
-
-  delete draftsMap[key]
-  writeVacancyCreateDraftsMap(draftsMap)
-}
-
-function readApplicantRespondedVacanciesMap(): ApplicantRespondedVacanciesMap {
-  if (typeof window === 'undefined') {
-    return {}
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(applicantRespondedVacanciesStorageKey)
-    if (!rawValue) {
-      return {}
-    }
-
-    const parsedValue = JSON.parse(rawValue) as ApplicantRespondedVacanciesMap
-    if (typeof parsedValue !== 'object' || parsedValue === null) {
-      return {}
-    }
-
-    return parsedValue
-  } catch {
-    return {}
-  }
-}
-
-function writeApplicantRespondedVacanciesMap(value: ApplicantRespondedVacanciesMap): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.localStorage.setItem(applicantRespondedVacanciesStorageKey, JSON.stringify(value))
-}
-
-function readApplicantRespondedOrderIds(userId: string): string[] {
-  const map = readApplicantRespondedVacanciesMap()
-  const value = map[userId]
-  return Array.isArray(value) ? value : []
-}
-
-function saveApplicantRespondedOrderIds(userId: string, orderIds: string[]): void {
-  const map = readApplicantRespondedVacanciesMap()
-  map[userId] = orderIds
-  writeApplicantRespondedVacanciesMap(map)
-}
-
 export function useWorkspaceShellController() {
   const { notify } = useNotifications()
   const dispatch = useDispatch<AppDispatch>()
@@ -302,7 +177,6 @@ export function useWorkspaceShellController() {
   } = useGetOrderSpecializationsQuery(
     role === 'Customer' || role === 'Executor' ? undefined : skipToken,
   )
-  // @dvnull: Ранее форма заказа не имела данных справочника специализаций; добавлена загрузка и нормализация options для select.
   const orderSpecializationOptions =
     orderSpecializationsResponse?.items.map((item) => ({ id: item.id, name: item.name })) ?? []
   const { data: executorDashboardStats } = useGetExecutorDashboardStatsQuery(
@@ -360,7 +234,6 @@ export function useWorkspaceShellController() {
   const isProfileRoute = location.pathname === routePaths.profile
   const [searchValue, setSearchValue] = useState('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(readInitialSidebarCollapsedState)
-  const [orderFilter] = useState<OrderFilter>('all')
   const [isViewLoading, setIsViewLoading] = useState(false)
   const setBanner = useCallback(
     (banner: { message: string; variant: 'default' | 'success' | 'destructive' }) => {
@@ -487,7 +360,6 @@ export function useWorkspaceShellController() {
       createVacancyFormValues.title.trim().length > 0 ||
       createVacancyFormValues.description.trim().length > 0
 
-    // @dvnull: Ранее черновик создания вакансии в workspace не сохранялся между закрытием/повторным открытием формы.
     if (!hasMeaningfulDraft) {
       clearVacancyCreateDraft(userId, orderId)
       return
@@ -600,7 +472,6 @@ export function useWorkspaceShellController() {
           }))
         : manualCandidates,
     meetings: [],
-    orderFilter,
     ordersResponseExists: Boolean(ordersResponse),
     preferredChatId,
     preferredOrderId,
@@ -711,7 +582,6 @@ export function useWorkspaceShellController() {
     canManageCandidatesFromSelectedOrder && selectedOrderVacancy?.status === 'Published'
   const canPublishVacancyForSelectedOrder =
     role === 'Customer' && selectedOrderVacancy?.status === 'OnApproval'
-  // @dvnull: Ранее превью вакансии не прокидывалось в panel деталей заказа, из-за чего заказчик не видел текст перед подтверждением.
   const selectedOrderVacancyPreview = selectedOrderVacancy
     ? {
         title: selectedOrderVacancy.title,
@@ -731,7 +601,6 @@ export function useWorkspaceShellController() {
     }
 
     try {
-      // @dvnull: Ранее в workspace не было действия заказчика для публикации вакансии после этапа OnApproval.
       await updateVacancyStatus({
         vacancyId: selectedOrderVacancy.id,
         body: { status: 'Published' },
@@ -784,7 +653,6 @@ export function useWorkspaceShellController() {
           const nextIds = applicantRespondedOrderIds.includes(orderId)
             ? applicantRespondedOrderIds
             : [...applicantRespondedOrderIds, orderId]
-          // @dvnull: Ранее при 409 на повторном отклике вакансия оставалась в "Бирже"; синхронизируем "Мои заказы" на фронте.
           saveApplicantRespondedOrderIds(authMe.userId, nextIds)
           setBanner({
             variant: 'success',
@@ -834,7 +702,6 @@ export function useWorkspaceShellController() {
               return candidate
             }
 
-            // @dvnull: Ранее после смены стадии отклика в деталях заказа не было мгновенного UI-обновления.
             return {
               ...candidate,
               statusLabel: stage === 'Shortlist' ? 'Shortlist' : 'Pool',
@@ -918,7 +785,6 @@ export function useWorkspaceShellController() {
         return
       }
 
-      // @dvnull: Ранее кнопка в деталях заказа переводила на отдельную страницу /vacancies; переносим создание в workspace-форму.
       setCreateVacancyOrderId(order.id)
       setCreateVacancyFormValues({
         title: existingVacancy?.title ?? savedDraft?.title ?? order.title,
@@ -1067,7 +933,6 @@ export function useWorkspaceShellController() {
         navigate(routePaths.profile)
       },
       onLogout: () => {
-        // @dvnull: Ранее при logout чистилась только auth-сессия; query-cache сохранял профиль прошлого аккаунта до hard reload.
         dispatch(clearAuthSession())
         dispatch(api.util.resetApiState())
         navigate(routePaths.auth, { replace: true })

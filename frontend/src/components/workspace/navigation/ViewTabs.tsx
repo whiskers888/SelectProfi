@@ -15,7 +15,6 @@ export function ViewTabs({
 }: ViewTabsProps) {
   const rootClassName = className ? `preview11-nav-tabs ${className}` : 'preview11-nav-tabs'
 
-  // @dvnull: Ранее навигация строилась через Tabs с blue-активным состоянием, переведено на HTML-кнопки h-tab.
   return (
     <div className={rootClassName}>
       {workspaceViewOptions.map((view) => {

@@ -145,7 +145,6 @@ export function ApplicantResponseCreatePagePanel({
 
         <div className="space-y-2">
           <Label className="text-slate-600">Содержимое резюме</Label>
-          {/* @dvnull: Легаси rich-text-editor на execCommand заменен на tiptap для единого editor-стека. */}
           <TiptapTextEditor
             value={formValues.resumeRichTextHtml}
             onChange={(value) => onFieldChange('resumeRichTextHtml', value)}

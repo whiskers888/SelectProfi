@@ -37,7 +37,6 @@ export function RegisterCustomerFields({
   if (section === 'offer') {
     return (
       <div className="space-y-2">
-        {/* @dvnull: Ранее offer чекбокс и ссылка рендерились внутри RegisterPage; вынесено в feature-компонент без изменения структуры formData. */}
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50/40">
           <input
             name="offerAccepted"
@@ -64,7 +63,6 @@ export function RegisterCustomerFields({
 
   return (
     <>
-      {/* @dvnull: Ранее customer tabs + реквизиты находились в RegisterPage; вынесено в отдельный UI-блок для уменьшения контекста страницы. */}
       <div className="space-y-2">
         <Label className="text-slate-600">Форма заказчика</Label>
         <Tabs

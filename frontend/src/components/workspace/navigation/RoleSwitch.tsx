@@ -13,7 +13,6 @@ export function RoleSwitch({ onRoleChange, role, roles, disabled = false }: Role
     : workspaceRoleOptions
   const activeRole = roleOptions.find((option) => option.value === role)
 
-  // @dvnull: Ранее переключатель ролей был на Tabs с blue-стилями, заменен на HTML-паттерн role-val.
   return (
     <div className="preview11-role-switch">
       <div className="preview11-role-options" role="tablist" aria-label="Роли интерфейса">

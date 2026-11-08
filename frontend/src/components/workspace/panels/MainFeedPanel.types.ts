@@ -1,5 +1,6 @@
 import type { OrderExecutorResponseItemResponse } from '@/shared/api/orders'
 import type { WorkspaceCandidate, WorkspaceOrder, WorkspaceRole } from '../model/data'
+import type { useMainFeedPanelController } from './hooks/useMainFeedPanelController'
 
 export type MainFeedPanelProps = {
   baseCandidates: WorkspaceCandidate[]
@@ -57,3 +58,5 @@ export type DashboardSort = 'updated' | 'responses' | 'priority'
 export type DashboardState = 'active' | 'paused' | 'archive'
 export type CandidateSourceFilter = 'all' | 'registered' | 'recruiter'
 export type CandidateStageFilter = 'all' | 'pool' | 'shortlist' | 'selected' | 'no_stage'
+
+export type MainFeedPanelViewProps = MainFeedPanelProps & ReturnType<typeof useMainFeedPanelController>

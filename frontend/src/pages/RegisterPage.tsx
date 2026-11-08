@@ -69,7 +69,6 @@ export function RegisterPage() {
   function navigateToWorkspaceAfterDelay() {
     clearPendingNavigation()
     timeoutRef.current = window.setTimeout(() => {
-      // @dvnull: Ранее после регистрации активная роль пробрасывалась query-параметром, теперь берём из профиля backend.
       navigate(routePaths.app)
     }, 450)
   }

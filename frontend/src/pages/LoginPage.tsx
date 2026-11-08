@@ -41,7 +41,6 @@ export function LoginPage() {
   function navigateToWorkspaceAfterDelay() {
     clearPendingNavigation()
     timeoutRef.current = window.setTimeout(() => {
-      // @dvnull: Ранее после логина роль жёстко пробрасывалась через query, теперь источник роли — backend profile.
       navigate(routePaths.app)
     }, 400)
   }

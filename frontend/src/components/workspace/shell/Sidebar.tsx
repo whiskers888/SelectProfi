@@ -33,7 +33,6 @@ const navIconMap: Record<WorkspaceView, LucideIcon> = {
 }
 
 function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
-  // @dvnull: Ранее у исполнителя разделы назывались "Дашборд/Проекты"; переименовано в "Мои проекты/Биржа проектов" по новой продуктовой терминологии.
   if (role === 'Executor' && view === 'dashboard') {
     return 'Мои проекты'
   }
@@ -83,7 +82,6 @@ export function Sidebar({
       ? workspaceViewOptions.filter((view) => view.value !== 'orders')
       : workspaceViewOptions.filter((view) => view.value !== 'documents')
 
-  // @dvnull: Ранее sidebar был собран на blue-tailwind карточках, перевел shell на HTML-паттерн макета.
   // Мобильный drawer: sidebar остаётся в DOM, на узких экранах едет из-за левого края по классу -mobile-open.
   return (
     <>
