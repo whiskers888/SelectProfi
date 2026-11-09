@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Рабочий стол</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Palette kept from tokens.json: teal primary, sage neutrals. */
+  :root { --bg:#F4F8F6; --surface:#fff; --line:#D7E5DF; --text:#12201C; --muted:#4E6660; --primary:#0F766E; --soft:#E6F2EF; --warn:#92400E; --warn-bg:#FEF3C7; --ok:#14532D; --ok-bg:#DCFCE7; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 'Golos Text', system-ui, sans-serif; }
+  a { color:inherit; }
+  .app { display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+  aside { border-right:1px solid var(--line); background:var(--surface); padding:20px 16px; }
+  .logo { font-weight:700; letter-spacing:-.01em; margin-bottom:28px; }
+  .logo b { color:var(--primary); }
+  nav a { display:block; padding:7px 10px; border-radius:6px; text-decoration:none; color:var(--muted); }
+  nav a:first-child { background:var(--soft); color:var(--primary); font-weight:600; }
+  .who { margin-top:28px; padding-top:16px; border-top:1px solid var(--line); font-size:13px; color:var(--muted); }
+  .who strong { display:block; color:var(--text); font-size:14px; }
+  main { padding:28px 32px; max-width:1200px; }
+  .top { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+  .top p { margin:0; color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:.06em; }
+  h1 { margin:4px 0 0; font-size:26px; line-height:1.25; font-weight:600; letter-spacing:-.01em; }
+  .btn { background:var(--primary); color:#fff; border:0; border-radius:8px; padding:10px 16px; font:inherit; font-weight:600; cursor:pointer; }
+  .kpi { display:grid; grid-template-columns:repeat(4,1fr); margin:28px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .kpi div { padding:16px 20px 16px 0; }
+  .kpi div + div { border-left:1px solid var(--line); padding-left:20px; }
+  .kpi span { display:block; font-size:13px; color:var(--muted); }
+  .kpi b { display:block; font-size:28px; font-weight:600; margin:2px 0; font-variant-numeric:tabular-nums; }
+  .kpi small { color:var(--muted); }
+  .grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(280px,1fr); gap:28px; align-items:start; }
+  h2 { font-size:15px; margin:0 0 10px; font-weight:600; }
+  table { width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  th, td { text-align:left; padding:11px 14px; border-bottom:1px solid var(--line); font-size:14px; }
+  th { font-size:12px; font-weight:500; color:var(--muted); background:#FAFCFB; }
+  tr:last-child td { border-bottom:0; }
+  td:first-child { font-weight:500; }
+  td:last-child { white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px; vertical-align:middle; background:#BFD5CC; }
+  .dot.ok { background:#16A34A; } .dot.warn { background:#D97706; }
+  .todo { list-style:none; margin:0; padding:0; background:var(--surface); border:1px solid var(--line); border-radius:10px; }
+  .todo li { padding:12px 14px; border-bottom:1px solid var(--line); display:grid; grid-template-columns:18px 1fr; gap:10px; }
+  .todo li:last-child { border-bottom:0; }
+  .todo input { margin:3px 0 0; accent-color:var(--primary); }
+  .todo em { font-style:normal; font-size:12px; color:var(--muted); display:block; }
+  .todo .urgent em { color:var(--warn); font-weight:600; }
+  #role-switch { position:fixed; right:16px; bottom:16px; display:flex; gap:4px; background:var(--text); padding:4px; border-radius:8px; z-index:5; }
+  #role-switch a { color:#fff; text-decoration:none; font-size:12px; padding:5px 10px; border-radius:5px; }
+  #role-switch a[aria-current] { background:var(--primary); }
+  @media (max-width:860px) {
+    .app { grid-template-columns:1fr; }
+    aside { display:flex; align-items:center; gap:12px; padding:12px 16px; overflow-x:auto; border-right:0; border-bottom:1px solid var(--line); }
+    .logo { margin:0; } nav { display:flex; gap:4px; } nav a { white-space:nowrap; } .who { display:none; }
+    main { padding:20px 16px 80px; }
+    .kpi { grid-template-columns:1fr 1fr; } .kpi div:nth-child(3) { border-left:0; padding-left:0; } .kpi div:nth-child(n+3) { border-top:1px solid var(--line); }
+    .grid { grid-template-columns:1fr; } .grid section:last-child { order:-1; }
+    table, thead, tbody, tr, td { display:block; } thead { display:none; }
+    tr { border-bottom:1px solid var(--line); padding:10px 14px; } td { border:0; padding:2px 0; } tr:last-child { border-bottom:0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="logo">Select<b>Profi</b></div>
+    <nav id="nav"></nav>
+    <div class="who" id="who"></div>
+  </aside>
+  <main>
+    <div class="top">
+      <div><p id="date"></p><h1 id="greeting"></h1></div>
+      <button class="btn" id="action"></button>
+    </div>
+    <section class="kpi" id="kpi"></section>
+    <div class="grid">
+      <section><h2 id="list-title"></h2><table id="table"></table></section>
+      <section><h2>Требует внимания</h2><ul class="todo" id="todo"></ul></section>
+    </div>
+  </main>
+</div>
+<div id="role-switch"></div>
+<script src="shared.js"></script>
+<script>
+SP.mount((key, r) => {
+  document.getElementById('nav').innerHTML = r.nav.map((n) => `<a href="#">${n}</a>`).join('')
+  document.getElementById('who').innerHTML = `<strong>${r.user}</strong>${r.company}`
+  document.getElementById('date').textContent = `${r.label} · понедельник, 9 ноября`
+  document.getElementById('greeting').textContent = r.greeting
+  document.getElementById('action').textContent = r.primaryAction
+  document.getElementById('kpi').innerHTML = r.stats.map((s) => `<div><span>${s.label}</span><b>${s.value}</b><small>${s.note}</small></div>`).join('')
+  document.getElementById('list-title').textContent = r.list.title
+  document.getElementById('table').innerHTML =
+    `<thead><tr>${r.list.columns.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>` +
+    r.list.rows.map((row, i) => `<tr>${row.map((cell, j) => `<td>${j === 2 ? `<span class="dot ${r.list.status[i]}"></span>` : ''}${cell}</td>`).join('')}</tr>`).join('') + '</tbody>'
+  document.getElementById('todo').innerHTML = r.todo.map((t) => `<li class="${t.urgent ? 'urgent' : ''}"><input type="checkbox" aria-label="Готово"><div>${t.text}<em>${t.tag} · ${t.meta}</em></div></li>`).join('')
+})
+</script>
+</body>
+</html>

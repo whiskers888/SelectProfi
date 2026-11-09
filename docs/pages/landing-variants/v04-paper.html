@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Газета</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=Golos+Text:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Palette kept (teal + sage), typography changed: editorial serif headlines, hairline rules. */
+  :root { --bg:#F4F8F6; --text:#12201C; --muted:#4E6660; --line:#BFD5CC; --primary:#0F766E; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 'Golos Text', system-ui, sans-serif; }
+  .wrap { max-width:1160px; margin:0 auto; padding:0 28px 80px; }
+  .mast { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--line); font-size:13px; color:var(--muted); gap:12px; flex-wrap:wrap; }
+  .mast nav { display:flex; gap:16px; flex-wrap:wrap; }
+  .mast nav a { color:var(--muted); text-decoration:none; }
+  .mast nav a:first-child { color:var(--primary); font-weight:500; }
+  .title { font-family:Literata, Georgia, serif; font-weight:700; font-size:44px; letter-spacing:-.02em; text-align:center; padding:22px 0 10px; border-bottom:3px double var(--text); margin:0; }
+  .title small { display:block; font:400 13px 'Golos Text', sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-top:4px; }
+  .front { display:grid; grid-template-columns:2fr 1fr 1fr; gap:0; border-bottom:1px solid var(--line); }
+  .front > * { padding:24px 24px 24px 0; }
+  .front > * + * { border-left:1px solid var(--line); padding-left:24px; }
+  .lead h2 { font-family:Literata, Georgia, serif; font-size:32px; line-height:1.15; margin:0 0 12px; font-weight:700; }
+  .lead p { margin:0 0 16px; color:var(--muted); font-size:16px; }
+  .kicker { font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--primary); font-weight:500; }
+  .btn { background:var(--text); color:var(--bg); border:0; padding:10px 18px; font:inherit; font-weight:500; cursor:pointer; }
+  .fig b { display:block; font-family:Literata, Georgia, serif; font-size:40px; line-height:1; margin:8px 0 6px; font-variant-numeric:lining-nums tabular-nums; }
+  .fig p { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  .cols { display:grid; grid-template-columns:1fr 1fr 1fr; border-bottom:1px solid var(--line); }
+  .cols article { padding:22px 24px 22px 0; }
+  .cols article + article { border-left:1px solid var(--line); padding-left:24px; }
+  .cols h3 { font-family:Literata, Georgia, serif; font-size:20px; line-height:1.25; margin:6px 0 8px; font-weight:500; }
+  .cols p { margin:0; color:var(--muted); font-size:14px; }
+  .lower { display:grid; grid-template-columns:2fr 1fr; gap:0; }
+  .lower > section { padding:24px 24px 0 0; }
+  .lower > section + section { border-left:1px solid var(--line); padding-left:24px; }
+  h4 { font-family:Literata, Georgia, serif; font-size:18px; margin:0 0 10px; font-weight:700; border-bottom:1px solid var(--text); padding-bottom:6px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  td { padding:9px 8px 9px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  td:first-child { font-weight:500; }
+  td:last-child { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .chron { list-style:none; padding:0; margin:0; font-size:14px; }
+  .chron li { padding:8px 0; border-bottom:1px solid var(--line); }
+  .chron time { display:block; font-size:12px; color:var(--primary); font-weight:500; }
+  #role-switch { position:fixed; bottom:12px; right:12px; display:flex; gap:10px; background:var(--bg); border:1px solid var(--text); padding:4px 10px; font-size:13px; }
+  #role-switch a { text-decoration:none; color:var(--muted); }
+  #role-switch a[aria-current] { color:var(--text); font-weight:500; text-decoration:underline; text-underline-offset:4px; }
+  @media (max-width:860px) {
+    .wrap { padding:0 16px 60px; }
+    #role-switch { position:static; justify-content:center; border-width:0 0 1px; }
+    .title { font-size:30px; }
+    .front, .cols, .lower { grid-template-columns:1fr; }
+    .front > *, .cols article, .lower > section { padding:18px 0; }
+    .front > * + *, .cols article + article, .lower > section + section { border-left:0; padding-left:0; border-top:1px solid var(--line); }
+    .lead h2 { font-size:26px; }
+  }
+</style>
+</head>
+<body>
+<div id="role-switch"></div>
+<div class="wrap">
+  <div class="mast"><nav id="nav"></nav><span id="who"></span></div>
+  <h1 class="title">SelectProfi<small id="edition"></small></h1>
+  <section class="front">
+    <div class="lead"><span class="kicker">Главное сегодня</span><h2 id="greeting"></h2><p id="leadText"></p><button class="btn" id="action"></button></div>
+    <div class="fig" id="figs1"></div>
+    <div class="fig" id="figs2"></div>
+  </section>
+  <section class="cols" id="stories"></section>
+  <section class="lower">
+    <section><h4 id="list-title"></h4><table id="table"></table></section>
+    <section><h4>Хроника</h4><ul class="chron" id="chron"></ul></section>
+  </section>
+</div>
+<script src="shared.js"></script>
+<script>
+SP.mount((key, r) => {
+  const $ = (id) => document.getElementById(id)
+  $('nav').innerHTML = r.nav.map((n) => `<a href="#">${n}</a>`).join('')
+  $('who').textContent = `${r.user}, ${r.company}`
+  $('edition').textContent = `Выпуск для роли «${r.label}» · 9 ноября 2026`
+  $('greeting').textContent = r.greeting
+  $('leadText').textContent = `${r.todo[0].text}. ${r.todo[0].meta}.`
+  $('action').textContent = r.primaryAction
+  const fig = (s) => `<span class="kicker">${s.label}</span><b>${s.value}</b><p>${s.note}</p>`
+  $('figs1').innerHTML = r.stats.slice(0, 2).map(fig).join('')
+  $('figs2').innerHTML = r.stats.slice(2).map(fig).join('')
+  $('stories').innerHTML = r.todo.slice(1).map((t) => `<article><span class="kicker">${t.tag}</span><h3>${t.text}</h3><p>${t.meta}</p></article>`).join('')
+  $('list-title').textContent = r.list.title
+  $('table').innerHTML = r.list.rows.map((row) => `<tr><td>${row[0]}<br><span style="color:var(--muted);font-weight:400">${row[1]}</span></td><td>${row[2]}</td><td>${row[4]}</td></tr>`).join('')
+  $('chron').innerHTML = r.timeline.map((t) => `<li><time>${t.time}</time>${t.text}</li>`).join('')
+})
+</script>
+</body>
+</html>

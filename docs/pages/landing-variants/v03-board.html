@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Доска</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* Palette kept: teal + sage. Layout: the landing is the pipeline itself, as columns. */
+  :root { --bg:#EDF4F1; --col:#E3ECE8; --card:#fff; --line:#D7E5DF; --text:#12201C; --muted:#4E6660; --primary:#0F766E; --soft:#CCFBF1; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 'Golos Text', system-ui, sans-serif; }
+  header { display:flex; align-items:center; gap:24px; padding:12px 24px; background:var(--card); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .logo { font-weight:600; font-size:15px; }
+  .logo i { font-style:normal; color:var(--primary); }
+  nav { display:flex; gap:4px; overflow-x:auto; }
+  nav a { text-decoration:none; color:var(--muted); padding:6px 10px; border-radius:6px; white-space:nowrap; }
+  nav a:first-child { background:var(--text); color:#fff; }
+  .me { margin-left:auto; font-size:13px; color:var(--muted); }
+  .strip { display:flex; gap:28px; padding:16px 24px; flex-wrap:wrap; align-items:baseline; }
+  .strip h1 { font-size:18px; margin:0 auto 0 0; font-weight:600; }
+  .num { font-size:13px; color:var(--muted); }
+  .num b { font-family:'JetBrains Mono', monospace; color:var(--text); font-size:15px; margin-right:6px; }
+  .board { display:grid; grid-template-columns:repeat(4, minmax(240px,1fr)); gap:12px; padding:0 24px 32px; overflow-x:auto; }
+  .col { background:var(--col); border-radius:10px; padding:10px; min-height:360px; }
+  .col h2 { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; margin:2px 4px 10px; display:flex; justify-content:space-between; color:var(--muted); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:8px; }
+  .card strong { display:block; font-weight:500; }
+  .card span { color:var(--muted); font-size:13px; }
+  .card.hot { border-left:3px solid var(--primary); }
+  .add { width:100%; border:1px dashed #BFD5CC; background:transparent; color:var(--muted); border-radius:8px; padding:8px; font:inherit; cursor:pointer; }
+  .todo .card { border-left:3px solid #D97706; }
+  .todo .card.calm { border-left-color:#BFD5CC; }
+  #role-switch { position:fixed; right:24px; bottom:20px; display:flex; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  #role-switch a { padding:7px 12px; text-decoration:none; color:var(--muted); font-size:13px; }
+  #role-switch a[aria-current] { background:var(--primary); color:#fff; }
+  @media (max-width:760px) {
+    header, .strip { padding-left:16px; padding-right:16px; }
+    .me { display:none; }
+    .board { grid-template-columns:repeat(4, 82vw); padding:0 16px 90px; scroll-snap-type:x mandatory; }
+    .col { scroll-snap-align:start; }
+  }
+</style>
+</head>
+<body>
+<header><div class="logo">Select<i>Profi</i></div><nav id="nav"></nav><div class="me" id="me"></div></header>
+<div class="strip" id="strip"></div>
+<div class="board" id="board"></div>
+<div id="role-switch"></div>
+<script src="shared.js"></script>
+<script>
+SP.mount((key, r) => {
+  const $ = (id) => document.getElementById(id)
+  $('nav').innerHTML = r.nav.map((n) => `<a href="#">${n}</a>`).join('')
+  $('me').textContent = `${r.user} · ${r.label}`
+  $('strip').innerHTML = `<h1>${r.greeting}</h1>` + r.stats.map((s) => `<span class="num"><b>${s.value}</b>${s.label.toLowerCase()}</span>`).join('')
+  const todoCol = `<section class="col todo"><h2>Нужно сделать <span>${r.todo.length}</span></h2>${r.todo.map((t) => `<div class="card ${t.urgent ? '' : 'calm'}"><strong>${t.text}</strong><span>${t.meta}</span></div>`).join('')}</section>`
+  const stageCols = r.pipeline.map((p, i) => {
+    const people = r.people.items.filter((_, j) => j % r.pipeline.length === i)
+    const cards = people.map((c) => `<div class="card ${i === r.pipeline.length - 1 ? 'hot' : ''}"><strong>${c.name}</strong><span>${c.sub}</span></div>`).join('')
+    return `<section class="col"><h2>${p.stage} <span>${p.count}</span></h2>${cards}<button class="add">+ ${i === 0 ? r.primaryAction : 'Перенести сюда'}</button></section>`
+  })
+  $('board').innerHTML = todoCol + stageCols.join('')
+})
+</script>
+</body>
+</html>

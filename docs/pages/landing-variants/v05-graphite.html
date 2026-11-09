@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · Графит</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* New palette: graphite + amber. Keyboard-first, command bar as the entry point. */
+  :root { --bg:#141517; --panel:#1B1C1F; --line:#2A2C30; --text:#ECEAE4; --muted:#9A978F; --accent:#F2A93B; --ok:#7BC47F; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 'IBM Plex Sans', system-ui, sans-serif; }
+  .app { display:grid; grid-template-columns:200px 1fr; min-height:100vh; }
+  aside { border-right:1px solid var(--line); padding:18px 14px; display:flex; flex-direction:column; gap:20px; }
+  .logo { font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--muted); }
+  .logo b { color:var(--accent); font-weight:500; }
+  nav a { display:flex; justify-content:space-between; padding:6px 8px; border-radius:4px; color:var(--muted); text-decoration:none; }
+  nav a:first-child { background:var(--panel); color:var(--text); }
+  nav kbd { font:11px 'IBM Plex Mono', monospace; color:#5F5D58; }
+  main { padding:24px 32px 80px; }
+  .cmd { display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px; color:var(--muted); max-width:640px; }
+  .cmd kbd { margin-left:auto; font:12px 'IBM Plex Mono', monospace; border:1px solid var(--line); padding:1px 6px; border-radius:4px; }
+  h1 { font-size:22px; font-weight:500; margin:28px 0 4px; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  .nums { display:grid; grid-template-columns:repeat(4, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:28px; }
+  .nums div { background:var(--bg); padding:14px 16px; }
+  .nums span { font:12px 'IBM Plex Mono', monospace; color:var(--muted); }
+  .nums b { display:block; font:500 24px 'IBM Plex Mono', monospace; margin:4px 0 2px; }
+  .nums small { color:var(--muted); }
+  .split { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:28px; }
+  h2 { font:500 12px 'IBM Plex Mono', monospace; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin:0 0 8px; }
+  .rows { border:1px solid var(--line); border-radius:8px; }
+  .row { display:grid; grid-template-columns:16px 1fr auto; gap:12px; padding:11px 14px; border-bottom:1px solid var(--line); align-items:center; }
+  .row:last-child { border-bottom:0; }
+  .row:hover { background:var(--panel); }
+  .row i { width:8px; height:8px; border-radius:2px; background:#3A3C41; }
+  .row i.ok { background:var(--ok); } .row i.warn { background:var(--accent); }
+  .row small { display:block; color:var(--muted); }
+  .row code { font:12px 'IBM Plex Mono', monospace; color:var(--muted); white-space:nowrap; }
+  .todo .row { grid-template-columns:auto 1fr; }
+  .todo .row span:first-child { font:11px 'IBM Plex Mono', monospace; color:var(--accent); border:1px solid #4A3A22; padding:1px 6px; border-radius:3px; white-space:nowrap; }
+  .btn { margin-top:14px; background:var(--accent); color:#1B1407; border:0; border-radius:6px; padding:9px 14px; font:inherit; font-weight:600; cursor:pointer; }
+  #role-switch { position:fixed; top:20px; right:24px; display:flex; gap:2px; font:12px 'IBM Plex Mono', monospace; }
+  #role-switch a { color:var(--muted); text-decoration:none; padding:5px 9px; border:1px solid var(--line); border-radius:4px; }
+  #role-switch a[aria-current] { color:var(--bg); background:var(--text); border-color:var(--text); }
+  @media (max-width:860px) {
+    .app { grid-template-columns:1fr; }
+    aside { flex-direction:row; align-items:center; overflow-x:auto; padding:12px 16px; border-right:0; border-bottom:1px solid var(--line); }
+    nav { display:flex; gap:2px; } nav a { white-space:nowrap; } nav kbd { display:none; }
+    main { padding:16px 16px 80px; }
+    #role-switch { top:auto; bottom:14px; right:50%; transform:translateX(50%); background:var(--bg); }
+    .nums { grid-template-columns:1fr 1fr; }
+    .split { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside><div class="logo">select<b>/</b>profi</div><nav id="nav"></nav></aside>
+  <main>
+    <div class="cmd"><span>⌕</span><span>Найти кандидата, заказ или команду…</span><kbd>Ctrl K</kbd></div>
+    <h1 id="greeting"></h1>
+    <p class="sub" id="sub"></p>
+    <div class="nums" id="nums"></div>
+    <div class="split">
+      <section><h2 id="list-title"></h2><div class="rows" id="rows"></div></section>
+      <section class="todo"><h2>Очередь</h2><div class="rows" id="todo"></div><button class="btn" id="action"></button></section>
+    </div>
+  </main>
+</div>
+<div id="role-switch"></div>
+<script src="shared.js"></script>
+<script>
+SP.mount((key, r) => {
+  const $ = (id) => document.getElementById(id)
+  $('nav').innerHTML = r.nav.map((n, i) => `<a href="#">${n}<kbd>G ${i + 1}</kbd></a>`).join('')
+  $('greeting').textContent = r.greeting
+  $('sub').textContent = `${r.user} · ${r.label} · ${r.company}`
+  $('nums').innerHTML = r.stats.map((s) => `<div><span>${s.label}</span><b>${s.value}</b><small>${s.note}</small></div>`).join('')
+  $('list-title').textContent = r.list.title
+  $('rows').innerHTML = r.list.rows.map((row, i) => `<div class="row"><i class="${r.list.status[i]}"></i><span>${row[0]}<small>${row[1]} · ${row[2]}</small></span><code>${row[4]}</code></div>`).join('')
+  $('todo').innerHTML = r.todo.map((t) => `<div class="row"><span>${t.tag}</span><span>${t.text}<small>${t.meta}</small></span></div>`).join('')
+  $('action').textContent = `${r.primaryAction}  ↵`
+})
+</script>
+</body>
+</html>

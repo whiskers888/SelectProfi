@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Варианты главного экрана</title>
+<style>
+  body { margin:0; background:#F4F8F6; color:#12201C; font:15px/1.5 system-ui, sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:32px 20px 60px; }
+  h1 { font-size:24px; margin:0 0 6px; }
+  p { color:#4E6660; margin:0 0 24px; }
+  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid #D7E5DF; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid #D7E5DF; vertical-align:top; }
+  th { font-size:12px; color:#4E6660; font-weight:500; }
+  td a { color:#0F766E; margin-right:10px; white-space:nowrap; }
+  .pal { font-size:12px; color:#4E6660; }
+  @media (max-width:640px) { th:nth-child(3), td:nth-child(3) { display:none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>10 вариантов главного экрана после входа</h1>
+  <p>Прототипы для выбора направления, не связаны с API. В каждом есть переключатель ролей. Варианты 1–4 оставляют текущую палитру токенов (бирюзовый + sage), 5–10 пробуют другие гаммы.</p>
+  <table>
+    <thead><tr><th>Вариант</th><th>Открыть</th><th>Идея</th><th>Палитра</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</main>
+<script>
+const variants = [
+  ['01 Рабочий стол', 'v01-desk.html', 'Плотная таблица и колонка «Требует внимания», цифры без карточек — через тонкие линии.', 'текущая'],
+  ['02 Лента дел', 'v02-inbox.html', 'Без сайдбара, одна колонка для чтения: сначала дела, потом список. Как почта «Входящие».', 'текущая'],
+  ['03 Доска', 'v03-board.html', 'Главный экран — это сама воронка: колонки Pool / Shortlist / Выбран и колонка дел.', 'текущая'],
+  ['04 Газета', 'v04-paper.html', 'Редакционная вёрстка: главная новость, цифры в колонках, хроника событий, засечки.', 'текущая'],
+  ['05 Графит', 'v05-graphite.html', 'Тёмный, клавиатурный: командная строка Ctrl K, горячие клавиши, очередь задач.', 'графит + янтарь'],
+  ['06 Конторская книга', 'v06-ledger.html', 'Разлинованная бумага, поле с красной линией, чек-лист и штамп-кнопка.', 'бумага + чернила'],
+  ['07 Три панели', 'v07-mail.html', 'Как почтовый клиент: меню, лента дел и событий, открытая карточка справа.', 'сланец + индиго'],
+  ['08 Карманный', 'v08-pocket.html', 'Сначала телефон: крупные карточки, нижняя панель вкладок, на ноутбуке узкая колонка.', 'крем + терракота'],
+  ['09 Хронология', 'v09-timeline.html', 'Ось времени: впереди — что сделать, ниже — что уже произошло; сводка сбоку.', 'крем + лесной зелёный'],
+  ['10 Табло', 'v10-board-display.html', 'Вокзальное табло: крупные цифры, строки со статусами, бегущая строка событий.', 'чёрный + жёлтый'],
+]
+document.getElementById('rows').innerHTML = variants.map(([name, file, idea, pal]) =>
+  `<tr><td><b>${name}</b></td><td><a href="${file}?role=Customer">Заказчик</a><a href="${file}?role=Executor">Исполнитель</a><a href="${file}?role=Applicant">Соискатель</a></td><td>${idea}</td><td class="pal">${pal}</td></tr>`).join('')
+</script>
+</body>
+</html>

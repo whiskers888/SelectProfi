@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Хронология</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* New palette: cream + forest green + ochre. The landing is a timeline: what's next, then what happened. */
+  :root { --bg:#F7F3E8; --card:#FFFDF7; --line:#E2DAC6; --text:#1C2A21; --muted:#6B7364; --green:#1F5130; --ochre:#B7791F; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 Onest, system-ui, sans-serif; }
+  header { background:var(--green); color:#EEF3E8; }
+  .hbar { max-width:1120px; margin:0 auto; padding:16px 28px; display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
+  .hbar .brand { font-weight:700; }
+  .hbar nav { display:flex; gap:16px; flex-wrap:wrap; font-size:14px; }
+  .hbar nav a { color:#BFD0BD; text-decoration:none; }
+  .hbar nav a:first-child { color:#fff; }
+  .hbar .me { margin-left:auto; font-size:13px; color:#BFD0BD; }
+  .hero { max-width:1120px; margin:0 auto; padding:32px 28px 8px; }
+  .hero h1 { font-size:32px; line-height:1.15; margin:0; font-weight:700; letter-spacing:-.02em; max-width:720px; }
+  .wrap { max-width:1120px; margin:0 auto; padding:24px 28px 90px; display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:40px; }
+  .axis { position:relative; padding-left:120px; }
+  .axis::before { content:''; position:absolute; left:96px; top:6px; bottom:0; width:2px; background:var(--line); }
+  .group { position:relative; z-index:1; background:var(--bg); padding:2px 0; font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin:8px 0 10px -120px; font-weight:600; }
+  .node { position:relative; margin-bottom:14px; }
+  .node time { position:absolute; left:-120px; width:84px; text-align:right; top:12px; font-size:13px; color:var(--muted); white-space:nowrap; }
+  .node::before { content:''; position:absolute; left:-30px; top:16px; width:12px; height:12px; border-radius:50%; background:var(--bg); border:2px solid var(--muted); }
+  .node.next::before { border-color:var(--green); background:var(--green); }
+  .node.urgent::before { border-color:var(--ochre); background:var(--ochre); }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; }
+  .next .box { border-color:#B9C8B4; }
+  .box b { font-weight:600; }
+  .box small { display:block; color:var(--muted); }
+  .box .act { display:inline-block; margin-top:8px; color:var(--green); font-weight:600; text-decoration:none; font-size:14px; }
+  .past .box { background:transparent; border-style:dashed; }
+  .side { position:sticky; top:20px; align-self:start; display:flex; flex-direction:column; gap:14px; }
+  .sum { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; }
+  .sum h2 { font-size:14px; margin:0 0 10px; }
+  .sum dl { margin:0; display:grid; grid-template-columns:1fr auto; gap:8px 12px; font-size:14px; }
+  .sum dt { color:var(--muted); } .sum dd { margin:0; font-weight:600; text-align:right; font-variant-numeric:tabular-nums; }
+  .btn { background:var(--green); color:#fff; border:0; border-radius:10px; padding:12px; font:inherit; font-weight:600; cursor:pointer; }
+  .bars div { display:flex; justify-content:space-between; font-size:13px; margin-top:8px; }
+  .bars i { display:block; height:6px; border-radius:3px; background:var(--green); margin-top:4px; }
+  #role-switch { display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--card); }
+  #role-switch a { flex:1; text-align:center; padding:8px 4px; font-size:13px; text-decoration:none; color:var(--muted); }
+  #role-switch a[aria-current] { background:var(--text); color:var(--bg); }
+  @media (max-width:860px) {
+    .hbar, .hero { padding-left:16px; padding-right:16px; } .hbar .me { display:none; }
+    .hero h1 { font-size:24px; }
+    .wrap { grid-template-columns:1fr; padding:16px 16px 60px; }
+    .side { position:static; order:-1; }
+    .axis { padding-left:26px; } .axis::before { left:5px; }
+    .group { margin-left:-26px; }
+    .node time { position:static; display:block; text-align:left; width:auto; margin-bottom:4px; }
+    .node::before { left:-26px; top:4px; }
+  }
+</style>
+</head>
+<body>
+<header><div class="hbar"><span class="brand">SelectProfi</span><nav id="nav"></nav><span class="me" id="me"></span></div></header>
+<div class="hero"><h1 id="greeting"></h1></div>
+<div class="wrap">
+  <section class="axis" id="axis"></section>
+  <aside class="side"><div id="role-switch"></div><button class="btn" id="action"></button><div class="sum" id="sum"></div><div class="sum bars" id="bars"></div></aside>
+</div>
+<script src="shared.js"></script>
+<script>
+SP.mount((key, r) => {
+  const $ = (id) => document.getElementById(id)
+  $('nav').innerHTML = r.nav.map((n) => `<a href="#">${n}</a>`).join('')
+  $('me').textContent = `${r.user} · ${r.label}`
+  $('greeting').textContent = r.greeting
+  $('action').textContent = r.primaryAction
+  const slots = ['Сейчас', '12:00', '15:00', 'Вечером']
+  $('axis').innerHTML = `<div class="group">Впереди</div>` +
+    r.todo.map((t, i) => `<div class="node next ${t.urgent ? 'urgent' : ''}"><time>${slots[i]}</time><div class="box"><b>${t.text}</b><small>${t.meta}</small><a class="act" href="#">Сделать →</a></div></div>`).join('') +
+    `<div class="group">Уже произошло</div>` +
+    r.timeline.map((t) => `<div class="node past"><time>${t.time}</time><div class="box">${t.text}</div></div>`).join('')
+  $('sum').innerHTML = `<h2>Сводка</h2><dl>${r.stats.map((s) => `<dt>${s.label}</dt><dd>${s.value}</dd>`).join('')}</dl>`
+  const max = Math.max(...r.pipeline.map((p) => p.count), 1)
+  $('bars').innerHTML = `<h2>Этапы</h2>` + r.pipeline.map((p) => `<div><span>${p.stage}</span><span>${p.count}</span></div><i style="width:${Math.max(6, (p.count / max) * 100)}%"></i>`).join('')
+})
+</script>
+</body>
+</html>
