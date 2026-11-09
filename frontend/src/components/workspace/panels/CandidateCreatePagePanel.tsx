@@ -54,15 +54,15 @@ export function CandidateCreatePagePanel({
     !hasVisibleResumeText
 
   return (
-    <Card className="rounded-xl border-slate-200 p-4 shadow-none">
+    <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-slate-900">Добавление кандидата</h3>
-        <p className="text-sm text-slate-600">Заполните профиль кандидата и данные резюме.</p>
+        <h3 className="text-base font-semibold text-foreground">Добавление кандидата</h3>
+        <p className="text-sm text-muted-foreground">Заполните профиль кандидата и данные резюме.</p>
       </div>
 
       <form className="mt-4 grid gap-4" onSubmit={(event) => onSubmit(event, files)}>
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-candidate-full-name">
+          <Label className="text-muted-foreground" htmlFor="workspace-candidate-full-name">
             ФИО кандидата <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
           <Input
@@ -72,13 +72,13 @@ export function CandidateCreatePagePanel({
             placeholder="Например, Елена Петрова"
             maxLength={200}
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <Label className="text-slate-600" htmlFor="workspace-candidate-birth-date">
+            <Label className="text-muted-foreground" htmlFor="workspace-candidate-birth-date">
               Дата рождения
             </Label>
             <Input
@@ -86,11 +86,11 @@ export function CandidateCreatePagePanel({
               type="date"
               value={formValues.birthDate}
               onChange={(event) => onFieldChange('birthDate', event.target.value)}
-              className="h-11 rounded-xl border-slate-200 text-slate-900"
+              className="h-11 rounded-xl border-border text-foreground"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-600" htmlFor="workspace-candidate-email">
+            <Label className="text-muted-foreground" htmlFor="workspace-candidate-email">
               Email
             </Label>
             <Input
@@ -100,11 +100,11 @@ export function CandidateCreatePagePanel({
               onChange={(event) => onFieldChange('email', event.target.value)}
               placeholder="candidate@example.com"
               maxLength={254}
-              className="h-11 rounded-xl border-slate-200 text-slate-900"
+              className="h-11 rounded-xl border-border text-foreground"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-600" htmlFor="workspace-candidate-phone">
+            <Label className="text-muted-foreground" htmlFor="workspace-candidate-phone">
               Телефон <span aria-hidden="true" className="text-destructive">*</span>
             </Label>
             <Input
@@ -114,13 +114,13 @@ export function CandidateCreatePagePanel({
               placeholder="+7 999 000-00-00"
               maxLength={32}
               required
-              className="h-11 rounded-xl border-slate-200 text-slate-900"
+              className="h-11 rounded-xl border-border text-foreground"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-candidate-specialization">
+          <Label className="text-muted-foreground" htmlFor="workspace-candidate-specialization">
             Позиция / специализация <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
           <select
@@ -133,7 +133,7 @@ export function CandidateCreatePagePanel({
               onFieldChange('specialization', specialization)
             }}
             required
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-slate-900"
+            className="h-11 w-full rounded-xl border border-border bg-card px-3 text-foreground"
           >
             <option value="">Выберите специализацию</option>
             {specializationOptions.map((item) => (
@@ -145,7 +145,7 @@ export function CandidateCreatePagePanel({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-candidate-resume-title">
+          <Label className="text-muted-foreground" htmlFor="workspace-candidate-resume-title">
             Заголовок резюме <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
           <Input
@@ -155,12 +155,12 @@ export function CandidateCreatePagePanel({
             placeholder="Senior Frontend Developer"
             maxLength={200}
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600">
+          <Label className="text-muted-foreground">
             Содержимое резюме <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
           <TiptapTextEditor
@@ -171,7 +171,7 @@ export function CandidateCreatePagePanel({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-candidate-resume-attachments">
+          <Label className="text-muted-foreground" htmlFor="workspace-candidate-resume-attachments">
             Ссылки на вложения
           </Label>
         <ResumeLinksInput
@@ -184,7 +184,7 @@ export function CandidateCreatePagePanel({
 
         <div className="flex flex-wrap justify-end gap-2">
           <Button
-            className="h-10 rounded-xl border-slate-200 text-slate-700"
+            className="h-10 rounded-xl border-border text-muted-foreground"
             onClick={onBack}
             type="button"
             variant="outline"
@@ -192,7 +192,7 @@ export function CandidateCreatePagePanel({
             Назад
           </Button>
           <Button
-            className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
             type="submit"
             disabled={isFormInvalid}
           >

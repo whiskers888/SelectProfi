@@ -49,15 +49,15 @@ export function ApplicantResponseCreatePagePanel({
     !hasVisibleResumeText
 
   return (
-    <Card className="rounded-xl border-slate-200 p-4 shadow-none">
+    <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-slate-900">Добавление резюме</h3>
-        <p className="text-sm text-slate-600">Заполните данные резюме для сохранения в рабочем пространстве.</p>
+        <h3 className="text-base font-semibold text-foreground">Добавление резюме</h3>
+        <p className="text-sm text-muted-foreground">Заполните данные резюме для сохранения в рабочем пространстве.</p>
       </div>
 
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-applicant-full-name">
+          <Label className="text-muted-foreground" htmlFor="workspace-applicant-full-name">
             ФИО
           </Label>
           <Input
@@ -67,13 +67,13 @@ export function ApplicantResponseCreatePagePanel({
             placeholder="Например, Елена Петрова"
             maxLength={200}
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <Label className="text-slate-600" htmlFor="workspace-applicant-birth-date">
+            <Label className="text-muted-foreground" htmlFor="workspace-applicant-birth-date">
               Дата рождения
             </Label>
             <Input
@@ -81,11 +81,11 @@ export function ApplicantResponseCreatePagePanel({
               type="date"
               value={formValues.birthDate}
               onChange={(event) => onFieldChange('birthDate', event.target.value)}
-              className="h-11 rounded-xl border-slate-200 text-slate-900"
+              className="h-11 rounded-xl border-border text-foreground"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-600" htmlFor="workspace-applicant-email">
+            <Label className="text-muted-foreground" htmlFor="workspace-applicant-email">
               Email
             </Label>
             <Input
@@ -95,11 +95,11 @@ export function ApplicantResponseCreatePagePanel({
               onChange={(event) => onFieldChange('email', event.target.value)}
               placeholder="candidate@example.com"
               maxLength={254}
-              className="h-11 rounded-xl border-slate-200 text-slate-900"
+              className="h-11 rounded-xl border-border text-foreground"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-600" htmlFor="workspace-applicant-phone">
+            <Label className="text-muted-foreground" htmlFor="workspace-applicant-phone">
               Телефон
             </Label>
             <Input
@@ -108,13 +108,13 @@ export function ApplicantResponseCreatePagePanel({
               onChange={(event) => onFieldChange('phone', event.target.value)}
               placeholder="+7 999 000-00-00"
               maxLength={32}
-              className="h-11 rounded-xl border-slate-200 text-slate-900"
+              className="h-11 rounded-xl border-border text-foreground"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-applicant-specialization">
+          <Label className="text-muted-foreground" htmlFor="workspace-applicant-specialization">
             Специализация
           </Label>
           <Input
@@ -124,12 +124,12 @@ export function ApplicantResponseCreatePagePanel({
             placeholder="Senior Frontend Developer"
             maxLength={120}
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-applicant-resume-title">
+          <Label className="text-muted-foreground" htmlFor="workspace-applicant-resume-title">
             Заголовок резюме
           </Label>
           <Input
@@ -139,12 +139,12 @@ export function ApplicantResponseCreatePagePanel({
             placeholder="Senior Frontend Developer"
             maxLength={200}
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600">Содержимое резюме</Label>
+          <Label className="text-muted-foreground">Содержимое резюме</Label>
           <TiptapTextEditor
             value={formValues.resumeRichTextHtml}
             onChange={(value) => onFieldChange('resumeRichTextHtml', value)}
@@ -153,7 +153,7 @@ export function ApplicantResponseCreatePagePanel({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-applicant-resume-attachments">
+          <Label className="text-muted-foreground" htmlFor="workspace-applicant-resume-attachments">
             Ссылки на вложения
           </Label>
         <ResumeLinksInput
@@ -170,7 +170,7 @@ export function ApplicantResponseCreatePagePanel({
 
         <div className="flex flex-wrap justify-end gap-2">
           <Button
-            className="h-10 rounded-xl border-slate-200 text-slate-700"
+            className="h-10 rounded-xl border-border text-muted-foreground"
             onClick={onBack}
             type="button"
             variant="outline"
@@ -178,7 +178,7 @@ export function ApplicantResponseCreatePagePanel({
             Назад
           </Button>
           <Button
-            className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
             type="submit"
             disabled={isFormInvalid}
           >

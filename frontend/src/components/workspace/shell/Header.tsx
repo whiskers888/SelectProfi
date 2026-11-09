@@ -1,4 +1,6 @@
-import { ArrowRightLeft, Bell, CalendarDays, Menu } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowRightLeft, Bell, CalendarDays, Menu, Moon, Sun } from 'lucide-react'
+import { applyTheme, getNextTheme, readTheme } from '@/app/theme'
 import { Dropdown } from '@/components/ui/dropdown'
 import { type WorkspaceRole, type WorkspaceView } from '../model/data'
 
@@ -67,6 +69,14 @@ export function Header({
   subtitle,
   title,
 }: HeaderProps) {
+  const [theme, setTheme] = useState(readTheme)
+
+  function toggleTheme() {
+    const nextTheme = getNextTheme(theme)
+    applyTheme(nextTheme)
+    setTheme(nextTheme)
+  }
+
   return (
     <header className="preview11-header">
       <div className="preview11-header-title">
@@ -105,7 +115,19 @@ export function Header({
 
         <div className="preview11-context-tabs">
           <button
+            aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
+            className="preview11-context-tab"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+            type="button"
+          >
+            <span className="preview11-context-icon" aria-hidden="true">
+              {theme === 'dark' ? <Sun size={15} strokeWidth={2} /> : <Moon size={15} strokeWidth={2} />}
+            </span>
+          </button>
+          <button
             className={`preview11-context-tab${activeView === 'meetings' ? ' preview11-context-tab-active' : ''}`}
+            aria-label={`Встречи: ${meetingsCount}`}
             onClick={onOpenMeetings}
             type="button"
           >
@@ -116,6 +138,7 @@ export function Header({
           </button>
           <button
             className={`preview11-context-tab${activeView === 'chats' ? ' preview11-context-tab-active' : ''}`}
+            aria-label={`Уведомления: ${notificationsCount}`}
             onClick={onOpenNotifications}
             type="button"
           >

@@ -9,13 +9,13 @@ export function AuthBrand({ inverted = false }: AuthBrandProps) {
     <div
       className={cn(
         'flex items-center gap-3 text-sm font-semibold tracking-tight',
-        inverted ? 'text-white' : 'text-blue-700',
+        inverted ? 'text-primary-foreground dark:text-secondary-foreground' : 'text-primary',
       )}
     >
       <span
         className={cn(
           'grid h-9 w-9 place-items-center rounded-xl text-xs font-bold',
-          inverted ? 'bg-white/20 text-white' : 'bg-blue-600 text-white',
+          inverted ? 'bg-card/20 text-primary-foreground dark:text-secondary-foreground' : 'bg-primary text-primary-foreground',
         )}
       >
         SP

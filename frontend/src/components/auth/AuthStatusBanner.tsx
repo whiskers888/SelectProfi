@@ -38,10 +38,10 @@ export function AuthStatusBanner({ state }: AuthStatusBannerProps) {
       className={cn(
         'animate-[auth-panel-enter_220ms_ease-out] rounded-xl border px-3 py-2.5 text-sm transition-colors',
         state.status === 'error'
-          ? 'border-red-200 bg-red-50 text-red-700'
+          ? 'border-error/40 bg-error-muted text-destructive'
           : state.status === 'success'
-            ? 'border-green-200 bg-green-50 text-green-700'
-            : 'border-blue-200 bg-blue-50 text-blue-700',
+            ? 'border-success/40 bg-success-muted text-success-foreground'
+            : 'border-primary/30 bg-primary/10 text-primary',
       )}
       role={state.status === 'error' ? 'alert' : 'status'}
     >

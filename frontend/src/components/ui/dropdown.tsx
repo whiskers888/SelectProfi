@@ -84,7 +84,7 @@ export function Dropdown({
             className={cn(
               'block w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors',
               item.tone === 'destructive'
-                ? 'text-red-600 hover:bg-red-50 disabled:text-red-300'
+                ? 'text-destructive hover:bg-error-muted disabled:text-destructive/50'
                 : 'text-popover-foreground hover:bg-muted disabled:text-muted-foreground/60',
             )}
             disabled={item.disabled}

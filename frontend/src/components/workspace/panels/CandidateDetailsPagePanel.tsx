@@ -24,18 +24,18 @@ export function CandidateDetailsPagePanel({
   const isPurchaseButtonDisabled = !canPurchase || isPurchased
 
   return (
-    <Card className="rounded-xl border-slate-200 p-4 shadow-none">
+    <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-slate-900">Резюме кандидата</h3>
+          <h3 className="text-base font-semibold text-foreground">Резюме кандидата</h3>
           {isCommentsLocked ? (
-            <p className="mt-1 text-sm text-slate-600">Комментарии рекрутера скрыты до покупки.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Комментарии рекрутера скрыты до покупки.</p>
           ) : (
-            <p className="mt-1 text-sm text-slate-600">{candidate.comment}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{candidate.comment}</p>
           )}
         </div>
         <Button
-          className="h-10 rounded-xl border-slate-200 text-slate-700"
+          className="h-10 rounded-xl border-border text-muted-foreground"
           onClick={onBack}
           type="button"
           variant="outline"
@@ -46,7 +46,7 @@ export function CandidateDetailsPagePanel({
 
       <Alert>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm text-slate-700">
+          <span className="text-sm text-muted-foreground">
             {canPurchase
               ? candidate.sourceType === 'AddedByExecutor'
                 ? 'Резюме обезличено. Для доступа к полному профилю и комментариям требуется покупка.'
@@ -56,8 +56,8 @@ export function CandidateDetailsPagePanel({
           <Button
             className={
               isPurchaseButtonDisabled
-                ? 'h-10 rounded-xl border-slate-200 text-slate-500'
-                : 'h-10 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700'
+                ? 'h-10 rounded-xl border-border text-muted-foreground'
+                : 'h-10 rounded-xl bg-success text-primary-foreground hover:bg-success/90'
             }
             disabled={isPurchaseButtonDisabled}
             onClick={onPurchase}
@@ -71,20 +71,20 @@ export function CandidateDetailsPagePanel({
 
       <dl className="mt-4 grid gap-3">
         <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Кандидат</dt>
-          <dd className="mt-1 text-sm text-slate-900">{candidate.name}</dd>
+          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Кандидат</dt>
+          <dd className="mt-1 text-sm text-foreground">{candidate.name}</dd>
         </div>
         <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Позиция</dt>
-          <dd className="mt-1 text-sm text-slate-900">{candidate.position}</dd>
+          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Позиция</dt>
+          <dd className="mt-1 text-sm text-foreground">{candidate.position}</dd>
         </div>
         <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Источник</dt>
-          <dd className="mt-1 text-sm text-slate-900">{candidate.source}</dd>
+          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Источник</dt>
+          <dd className="mt-1 text-sm text-foreground">{candidate.source}</dd>
         </div>
         <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Рейтинг</dt>
-          <dd className="mt-1 text-sm text-slate-900">{candidate.rating}</dd>
+          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Рейтинг</dt>
+          <dd className="mt-1 text-sm text-foreground">{candidate.rating}</dd>
         </div>
         {candidate.statusLabel.trim() ? (
           <div className="pt-1">

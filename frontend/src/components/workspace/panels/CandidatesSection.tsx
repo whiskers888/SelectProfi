@@ -26,16 +26,16 @@ export function CandidatesSection({
   shouldShowCandidateScopeSwitcher,
 }: MainFeedPanelViewProps) {
   return (
-    <Card className="rounded-xl border-slate-200 p-4 shadow-none">
+    <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-slate-900">{isApplicantView ? 'Мои резюме' : 'Мои кандидаты'}</h3>
+        <h3 className="text-base font-semibold text-foreground">{isApplicantView ? 'Мои резюме' : 'Мои кандидаты'}</h3>
         <div className="relative flex flex-wrap items-center gap-2">
           {shouldShowCandidateScopeSwitcher ? (
-            <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
               <button
                 className={cn(
                   'h-8 rounded-md px-3 text-xs font-medium',
-                  candidateDataScope === 'mine' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100',
+                  candidateDataScope === 'mine' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
                 )}
                 onClick={() => setCandidateDataScope('mine')}
                 type="button"
@@ -46,7 +46,7 @@ export function CandidatesSection({
                 <button
                   className={cn(
                     'h-8 rounded-md px-3 text-xs font-medium',
-                    candidateDataScope === 'base' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100',
+                    candidateDataScope === 'base' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
                   )}
                   onClick={() => setCandidateDataScope('base')}
                   type="button"
@@ -62,8 +62,8 @@ export function CandidatesSection({
                 className={cn(
                   'h-9 rounded-lg border px-3 text-sm',
                   hasActiveCandidateFilters
-                    ? 'border-blue-300 bg-blue-50 text-blue-700'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-border bg-card text-muted-foreground hover:bg-muted',
                 )}
                 onClick={() => setIsCandidateFiltersMenuOpen((previousValue) => !previousValue)}
                 type="button"
@@ -72,7 +72,7 @@ export function CandidatesSection({
               </button>
               <div
                 className={cn(
-                  'absolute right-0 top-full z-20 mt-2 w-[280px] rounded-xl border border-slate-200 bg-white p-3 shadow-lg transition-all duration-200',
+                  'absolute right-0 top-full z-20 mt-2 w-[280px] rounded-xl border border-border bg-card p-3 shadow-lg transition-all duration-200',
                   isCandidateFiltersMenuOpen
                     ? 'translate-x-0 opacity-100'
                     : 'pointer-events-none translate-x-3 opacity-0',
@@ -80,9 +80,9 @@ export function CandidatesSection({
               >
                 <div className="space-y-3">
                   <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-[0.04em] text-slate-500">Кандидаты</p>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Кандидаты</p>
                     <select
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
+                      className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
                       onChange={(event) => handleCandidateSourceFilterChange(event.target.value)}
                       value={candidateSourceFilter}
                     >
@@ -92,9 +92,9 @@ export function CandidatesSection({
                     </select>
                   </div>
                   <div>
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-[0.04em] text-slate-500">Этапы</p>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Этапы</p>
                     <select
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
+                      className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
                       onChange={(event) => handleCandidateStageFilterChange(event.target.value)}
                       value={candidateStageFilter}
                     >
@@ -107,7 +107,7 @@ export function CandidatesSection({
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <button
-                      className="h-8 rounded-lg border border-slate-200 px-2 text-xs text-slate-700 hover:bg-slate-50"
+                      className="h-8 rounded-lg border border-border px-2 text-xs text-muted-foreground hover:bg-muted"
                       onClick={() => {
                         setCandidateSourceFilter('all')
                         setCandidateStageFilter('all')
@@ -117,7 +117,7 @@ export function CandidatesSection({
                       Сбросить
                     </button>
                     <button
-                      className="h-8 rounded-lg bg-slate-900 px-3 text-xs text-white hover:bg-slate-700"
+                      className="h-8 rounded-lg bg-foreground px-3 text-xs text-primary-foreground hover:bg-foreground/85"
                       onClick={() => setIsCandidateFiltersMenuOpen(false)}
                       type="button"
                     >
@@ -131,7 +131,7 @@ export function CandidatesSection({
         </div>
       </div>
       {filteredCandidateRows.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+        <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
           {isApplicantView ? 'Резюме пока не добавлены.' : 'Кандидаты по текущим фильтрам не найдены.'}
         </div>
       ) : (
@@ -155,7 +155,7 @@ export function CandidatesSection({
                     {candidate.statusLabel.trim() ? (
                       <Badge variant={workspaceToneToBadgeVariant(candidate.statusTone)}>{candidate.statusLabel}</Badge>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-muted-foreground/70">—</span>
                     )}
                   </TableCell>
                 ) : null}

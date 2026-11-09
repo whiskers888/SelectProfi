@@ -18,8 +18,8 @@ export function AuthHeroPanel({ bullets, description, title, variant }: AuthHero
       className={cn(
         'auth-hero-enter flex h-full min-h-[300px] flex-col justify-between gap-10 p-8 md:p-10',
         isLogin
-          ? 'bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 text-white'
-          : 'border-l border-slate-200 bg-gradient-to-br from-blue-50 via-slate-100 to-slate-50 text-slate-900 max-md:border-l-0 max-md:border-t',
+          ? 'bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground dark:from-secondary dark:via-secondary dark:to-card dark:text-secondary-foreground'
+          : 'border-l border-border bg-gradient-to-br from-primary/10 via-muted to-background text-foreground max-md:border-l-0 max-md:border-t',
       )}
     >
       <AuthBrand inverted={isLogin} />
@@ -28,7 +28,7 @@ export function AuthHeroPanel({ bullets, description, title, variant }: AuthHero
         <h2
           className={cn(
             'max-w-xl text-pretty text-3xl font-semibold leading-tight md:text-[2.1rem]',
-            isLogin ? 'text-white' : 'text-slate-900',
+            isLogin ? 'text-primary-foreground dark:text-secondary-foreground' : 'text-foreground',
           )}
         >
           {title}
@@ -36,13 +36,13 @@ export function AuthHeroPanel({ bullets, description, title, variant }: AuthHero
         <p
           className={cn(
             'max-w-lg text-sm leading-relaxed md:text-[0.95rem]',
-            isLogin ? 'text-blue-100' : 'text-slate-600',
+            isLogin ? 'text-primary-foreground/90 dark:text-secondary-foreground/90' : 'text-muted-foreground',
           )}
         >
           {description}
         </p>
 
-        <ul className={cn('grid gap-2.5 text-sm', isLogin ? 'text-blue-50' : 'text-slate-700')}>
+        <ul className={cn('grid gap-2.5 text-sm', isLogin ? 'text-primary-foreground/90 dark:text-secondary-foreground/90' : 'text-muted-foreground')}>
           {bullets.map((bullet, index) => (
             <li
               key={bullet}
@@ -56,7 +56,7 @@ export function AuthHeroPanel({ bullets, description, title, variant }: AuthHero
                 aria-hidden="true"
                 className={cn(
                   'mt-0.5 inline-block h-1.5 w-1.5 rounded-full',
-                  isLogin ? 'bg-blue-200' : 'bg-blue-600',
+                  isLogin ? 'bg-primary/20' : 'bg-primary',
                 )}
               />
               <span>{bullet}</span>

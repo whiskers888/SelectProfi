@@ -82,6 +82,34 @@ export function DashboardOrdersSection({
             </p>
           </div>
           <div className="preview11-orders-controls">
+            <div className="preview11-state-rail">
+              <button
+                aria-pressed={dashboardState === 'active'}
+                  className={`preview11-state-btn${dashboardState === 'active' ? ' preview11-state-btn-active' : ''}`}
+                onClick={() => setDashboardState('active')}
+                type="button"
+              >
+                Активные
+              </button>
+              {!isApplicantRole ? (
+                <button
+                  aria-pressed={dashboardState === 'paused'}
+                  className={`preview11-state-btn${dashboardState === 'paused' ? ' preview11-state-btn-active' : ''}`}
+                  onClick={() => setDashboardState('paused')}
+                  type="button"
+                >
+                  На паузе
+                </button>
+              ) : null}
+              <button
+                aria-pressed={dashboardState === 'archive'}
+                  className={`preview11-state-btn${dashboardState === 'archive' ? ' preview11-state-btn-active' : ''}`}
+                onClick={() => setDashboardState('archive')}
+                type="button"
+              >
+                Архив
+              </button>
+            </div>
             <select
               className="preview11-select preview11-orders-select"
               onChange={(event) => handleDashboardSortChange(event.target.value)}
@@ -202,31 +230,6 @@ export function DashboardOrdersSection({
               )}
             </div>
 
-            <div className="preview11-state-rail">
-              <button
-                className={`preview11-state-btn${dashboardState === 'active' ? ' preview11-state-btn-active' : ''}`}
-                onClick={() => setDashboardState('active')}
-                type="button"
-              >
-                Активные
-              </button>
-              {!isApplicantRole ? (
-                <button
-                  className={`preview11-state-btn${dashboardState === 'paused' ? ' preview11-state-btn-active' : ''}`}
-                  onClick={() => setDashboardState('paused')}
-                  type="button"
-                >
-                  На паузе
-                </button>
-              ) : null}
-              <button
-                className={`preview11-state-btn${dashboardState === 'archive' ? ' preview11-state-btn-active' : ''}`}
-                onClick={() => setDashboardState('archive')}
-                type="button"
-              >
-                Архив
-              </button>
-            </div>
           </div>
         </div>
       </section>

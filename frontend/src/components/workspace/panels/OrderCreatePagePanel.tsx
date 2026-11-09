@@ -44,15 +44,15 @@ export function OrderCreatePagePanel({
     parsedRequestedCandidatesCount < 1
 
   return (
-    <Card className="rounded-xl border-slate-200 p-4 shadow-none">
+    <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-slate-900">Создание заказа</h3>
-        {/* <p className="text-sm text-slate-600">Новый заказ создается сразу в API и появляется в общем списке.</p> */}
+        <h3 className="text-base font-semibold text-foreground">Создание заказа</h3>
+        {/* <p className="text-sm text-muted-foreground">Новый заказ создается сразу в API и появляется в общем списке.</p> */}
       </div>
 
       <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-title">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-title">
             Вакансия
           </Label>
           <Input
@@ -62,12 +62,12 @@ export function OrderCreatePagePanel({
             placeholder="Например, Senior React Developer"
             maxLength={200}
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-organization">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-organization">
             Компания
           </Label>
           <Input
@@ -78,12 +78,12 @@ export function OrderCreatePagePanel({
             required
             readOnly
             tabIndex={-1}
-            className="h-11 select-none rounded-xl border-slate-200 caret-transparent text-slate-900"
+            className="h-11 select-none rounded-xl border-border caret-transparent text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-specialization">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-specialization">
             Специализация
           </Label>
           {hasDictionaryOptions ? (
@@ -91,7 +91,7 @@ export function OrderCreatePagePanel({
               id="workspace-order-specialization"
               value={formValues.specializationId}
               onChange={(event) => onFieldChange('specializationId', event.target.value)}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900"
+              className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground"
               required
               disabled={isSpecializationsLoading}
             >
@@ -112,13 +112,13 @@ export function OrderCreatePagePanel({
               placeholder="Например, Frontend (React)"
               maxLength={120}
               required
-              className="h-11 rounded-xl border-slate-200 text-slate-900"
+              className="h-11 rounded-xl border-border text-foreground"
             />
           )}
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-price">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-price">
             Стоимость заказа
           </Label>
           <Input
@@ -130,12 +130,12 @@ export function OrderCreatePagePanel({
             onChange={(event) => onFieldChange('price', event.target.value)}
             placeholder="Например, 250000"
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-location">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-location">
             Локация
           </Label>
           <Input
@@ -144,12 +144,12 @@ export function OrderCreatePagePanel({
             onChange={(event) => onFieldChange('location', event.target.value)}
             placeholder="Например, Москва / удалённо"
             maxLength={255}
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-employee-compensation">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-employee-compensation">
             Оплата сотрудника
           </Label>
           <Input
@@ -158,12 +158,12 @@ export function OrderCreatePagePanel({
             onChange={(event) => onFieldChange('employeeCompensation', event.target.value)}
             placeholder="Например, 200 000–250 000 ₽ net"
             maxLength={255}
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-functional">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-functional">
             Функционал
           </Label>
           <Textarea
@@ -172,12 +172,12 @@ export function OrderCreatePagePanel({
             onChange={(event) => onFieldChange('functional', event.target.value)}
             placeholder="Основные задачи будущего сотрудника"
             maxLength={4000}
-            className="min-h-28 rounded-xl border-slate-200 text-slate-900"
+            className="min-h-28 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-requirements">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-requirements">
             Требования
           </Label>
           <Textarea
@@ -186,12 +186,12 @@ export function OrderCreatePagePanel({
             onChange={(event) => onFieldChange('requirements', event.target.value)}
             placeholder="Опыт, навыки и обязательные требования"
             maxLength={4000}
-            className="min-h-28 rounded-xl border-slate-200 text-slate-900"
+            className="min-h-28 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-other-conditions">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-other-conditions">
             Другие условия
           </Label>
           <Textarea
@@ -200,12 +200,12 @@ export function OrderCreatePagePanel({
             onChange={(event) => onFieldChange('otherConditions', event.target.value)}
             placeholder="ДМС, техника, бонусы и другие преимущества"
             maxLength={4000}
-            className="min-h-28 rounded-xl border-slate-200 text-slate-900"
+            className="min-h-28 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label className="text-slate-600" htmlFor="workspace-order-requested-candidates-count">
+          <Label className="text-muted-foreground" htmlFor="workspace-order-requested-candidates-count">
             Требуемое количество кандидатов
           </Label>
           <Input
@@ -217,13 +217,13 @@ export function OrderCreatePagePanel({
             onChange={(event) => onFieldChange('requestedCandidatesCount', event.target.value)}
             placeholder="Минимум 1"
             required
-            className="h-11 rounded-xl border-slate-200 text-slate-900"
+            className="h-11 rounded-xl border-border text-foreground"
           />
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">
           <Button
-            className="h-10 rounded-xl border-slate-200 text-slate-700"
+            className="h-10 rounded-xl border-border text-muted-foreground"
             onClick={onBack}
             type="button"
             variant="outline"
@@ -231,7 +231,7 @@ export function OrderCreatePagePanel({
             Назад
           </Button>
           <Button
-            className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
             type="submit"
             disabled={isCreatingOrder || isFormInvalid}
           >

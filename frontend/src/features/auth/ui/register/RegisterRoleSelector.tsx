@@ -21,7 +21,7 @@ type Props = {
 export function RegisterRoleSelector({ registrationRole, errors, onRoleChange }: Props) {
   return (
     <div className="space-y-2">
-      <Label className="text-slate-600">Роль</Label>
+      <Label className="text-muted-foreground">Роль</Label>
 
       <div className="md:hidden">
         <Select name="role" value={registrationRole} onValueChange={onRoleChange}>
@@ -29,7 +29,7 @@ export function RegisterRoleSelector({ registrationRole, errors, onRoleChange }:
             aria-label="Роль"
             aria-invalid={Boolean(errors.role)}
             aria-describedby={errors.role ? 'register-role-error' : undefined}
-            className="h-11 rounded-xl border-slate-200 bg-white text-slate-900 focus:ring-blue-600/30"
+            className="h-11 rounded-xl border-border bg-card text-foreground focus:ring-ring/40"
           >
             <SelectValue placeholder="Выберите роль" />
           </SelectTrigger>
@@ -45,12 +45,12 @@ export function RegisterRoleSelector({ registrationRole, errors, onRoleChange }:
 
       <div className="hidden md:block">
         <Tabs value={registrationRole} onValueChange={onRoleChange}>
-          <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-slate-100 p-1">
+          <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-muted p-1">
             {registrationRoleOptions.map((role) => (
               <TabsTrigger
                 key={role.value}
                 value={role.value}
-                className="h-9 rounded-lg px-2 text-xs text-slate-600 transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
+                className="h-9 rounded-lg px-2 text-xs text-muted-foreground transition-colors data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
               >
                 {role.label}
               </TabsTrigger>
@@ -59,7 +59,7 @@ export function RegisterRoleSelector({ registrationRole, errors, onRoleChange }:
         </Tabs>
       </div>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted-foreground">
         {registrationRoleOptions.find((role) => role.value === registrationRole)?.description}
       </p>
       <FormFieldError id="register-role-error">{errors.role}</FormFieldError>

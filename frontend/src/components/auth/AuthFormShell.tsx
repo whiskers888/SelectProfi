@@ -23,18 +23,18 @@ export function AuthFormShell({
   return (
     <>
       <header className="mb-6 space-y-2">
-        <h1 className="text-3xl font-semibold leading-tight text-slate-900">{title}</h1>
-        <p className="text-sm leading-relaxed text-slate-600">{description}</p>
+        <h1 className="text-3xl font-semibold leading-tight text-foreground">{title}</h1>
+        <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
       </header>
 
       {status ? <div className="mb-5">{status}</div> : null}
 
       <div className="space-y-5">{children}</div>
 
-      <footer className="mt-6 text-center text-sm text-slate-600">
+      <footer className="mt-6 text-center text-sm text-muted-foreground">
         {actionText}{' '}
         <Link
-          className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
+          className="font-semibold text-primary transition-colors hover:text-primary"
           to={actionHref}
         >
           {actionLabel}

@@ -247,12 +247,12 @@ export function RegisterPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="h-11 rounded-xl bg-blue-600 text-white transition-all hover:bg-blue-700 active:translate-y-px disabled:bg-blue-300"
+                className="h-11 rounded-xl bg-primary text-primary-foreground transition-all hover:bg-primary/90 active:translate-y-px disabled:bg-primary/50"
               >
                 {isLoading ? (
                   <span className="inline-flex items-center gap-2">
                     <span
-                      className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white"
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/50 border-t-white"
                       aria-hidden="true"
                     />
                     Регистрируем...

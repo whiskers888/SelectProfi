@@ -37,11 +37,11 @@ export function RegisterCustomerFields({
   if (section === 'offer') {
     return (
       <div className="space-y-2">
-        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50/40">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-muted px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/5">
           <input
             name="offerAccepted"
             type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-white accent-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600/30"
+            className="mt-0.5 h-4 w-4 rounded border-border bg-card accent-primary focus-visible:ring-2 focus-visible:ring-ring/40"
             style={{ colorScheme: 'light' }}
           />
           <span>
@@ -50,7 +50,7 @@ export function RegisterCustomerFields({
               href={offerLink}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-blue-600 underline decoration-blue-300 underline-offset-2"
+              className="font-medium text-primary underline decoration-blue-300 underline-offset-2"
             >
               офертой
             </a>
@@ -64,7 +64,7 @@ export function RegisterCustomerFields({
   return (
     <>
       <div className="space-y-2">
-        <Label className="text-slate-600">Форма заказчика</Label>
+        <Label className="text-muted-foreground">Форма заказчика</Label>
         <Tabs
           value={customerLegalForm}
           onValueChange={(nextValue) => {
@@ -75,12 +75,12 @@ export function RegisterCustomerFields({
             onCustomerLegalFormChange(nextValue)
           }}
         >
-          <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl bg-slate-100 p-1">
+          <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl bg-muted p-1">
             {customerLegalFormOptions.map((option) => (
               <TabsTrigger
                 key={option.value}
                 value={option.value}
-                className="h-9 rounded-lg px-2 text-xs text-slate-600 transition-colors data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
+                className="h-9 rounded-lg px-2 text-xs text-muted-foreground transition-colors data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
               >
                 {option.label}
               </TabsTrigger>
@@ -91,7 +91,7 @@ export function RegisterCustomerFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-companyName" className="text-slate-600">
+        <Label htmlFor="register-companyName" className="text-muted-foreground">
           Название компании
         </Label>
         <Input
@@ -108,7 +108,7 @@ export function RegisterCustomerFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-customerInn" className="text-slate-600">
+        <Label htmlFor="register-customerInn" className="text-muted-foreground">
           ИНН
         </Label>
         <Input
@@ -126,7 +126,7 @@ export function RegisterCustomerFields({
 
       {customerLegalForm === 'Ooo' ? (
         <div className="space-y-2">
-          <Label htmlFor="register-customerEgrn" className="text-slate-600">
+          <Label htmlFor="register-customerEgrn" className="text-muted-foreground">
             ЕГРН
           </Label>
           <Input
@@ -144,7 +144,7 @@ export function RegisterCustomerFields({
 
       {customerLegalForm === 'Ip' ? (
         <div className="space-y-2">
-          <Label htmlFor="register-customerEgrnip" className="text-slate-600">
+          <Label htmlFor="register-customerEgrnip" className="text-muted-foreground">
             ЕГРНИП
           </Label>
           <Input

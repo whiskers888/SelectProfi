@@ -19,8 +19,7 @@ const defaultLoginState: SubmitState = {
 
 const defaultLoginErrors: LoginFormErrors = {}
 const authInputClassName =
-  'h-11 rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-600/30 autofill:[-webkit-text-fill-color:#0f172a] autofill:shadow-[inset_0_0_0px_1000px_#ffffff]'
-const authInputStyle = { WebkitTextFillColor: '#0f172a' } as const
+  'h-11 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-ring/40'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -144,7 +143,7 @@ export function LoginPage() {
       >
         <form noValidate onSubmit={handleSubmit} className="grid gap-4">
           <div className="space-y-2">
-            <Label htmlFor="login-email" className="text-slate-600">
+            <Label htmlFor="login-email" className="text-muted-foreground">
               Email
             </Label>
             <Input
@@ -157,13 +156,12 @@ export function LoginPage() {
               aria-invalid={Boolean(errors.email)}
               aria-describedby={errors.email ? 'login-email-error' : undefined}
               className={authInputClassName}
-              style={authInputStyle}
             />
             <FormFieldError id="login-email-error">{errors.email}</FormFieldError>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="login-password" className="text-slate-600">
+            <Label htmlFor="login-password" className="text-muted-foreground">
               Пароль
             </Label>
             <Input
@@ -176,7 +174,6 @@ export function LoginPage() {
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? 'login-password-error' : undefined}
               className={authInputClassName}
-              style={authInputStyle}
             />
             <FormFieldError id="login-password-error">{errors.password}</FormFieldError>
           </div>
@@ -185,12 +182,12 @@ export function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="h-11 rounded-xl bg-blue-600 text-white transition-all hover:bg-blue-700 active:translate-y-px disabled:bg-blue-300"
+              className="h-11 rounded-xl bg-primary text-primary-foreground transition-all hover:bg-primary/90 active:translate-y-px disabled:bg-primary/50"
             >
               {isLoading ? (
                 <span className="inline-flex items-center gap-2">
                   <span
-                    className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white"
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/50 border-t-white"
                     aria-hidden="true"
                   />
                   Входим...

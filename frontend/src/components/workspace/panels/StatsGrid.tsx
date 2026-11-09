@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react'
+import { Award, BriefcaseBusiness, UsersRound, type LucideIcon } from 'lucide-react'
 import { type WorkspaceStat } from '../model/data'
 
 type StatsGridProps = {
@@ -26,6 +27,12 @@ function resolveStatBadge(stat: WorkspaceStat): null | { tagClassName: 'preview1
   return null
 }
 
+const statIconById: Record<string, LucideIcon> = {
+  projects: BriefcaseBusiness,
+  pipeline: UsersRound,
+  shortlist: Award,
+}
+
 function shouldHighlightProjectsCard(stat: WorkspaceStat): boolean {
   return stat.id === 'projects' || stat.label === 'Проекты в работе' || stat.label === 'Заказы в работе'
 }
@@ -49,6 +56,7 @@ export function StatsGrid({ stats, onOverview }: StatsGridProps) {
     <section className="preview11-stats">
       {stats.map((stat) => {
         const badge = resolveStatBadge(stat)
+        const Icon = statIconById[stat.id]
         const cardClassName = `preview11-card preview-slide-up${
           shouldHighlightProjectsCard(stat) ? ' preview11-card-projects' : ''
         }`
@@ -56,6 +64,11 @@ export function StatsGrid({ stats, onOverview }: StatsGridProps) {
         return (
           <article key={stat.id} className={cardClassName}>
             <div className="preview11-card-top">
+              {Icon ? (
+                <span className="preview11-stat-icon" aria-hidden="true">
+                  <Icon size={18} strokeWidth={2} />
+                </span>
+              ) : null}
               {badge ? (
                 <span className={`preview11-tag ${badge.tagClassName}`}>{stat.label}</span>
               ) : (

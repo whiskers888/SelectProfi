@@ -54,19 +54,19 @@ export function OrdersExchangeSection({
       <div className="space-y-4 lg:flex lg:items-start lg:gap-4 lg:space-y-0">
         <Card
           className={cn(
-            'rounded-xl border-slate-200 p-4 shadow-none transition-all duration-300 ease-out lg:flex-shrink-0',
+            'rounded-xl border-border p-4 shadow-none transition-all duration-300 ease-out lg:flex-shrink-0',
             // Below lg the details replace the list instead of being pushed under it.
             selectedOrderDetails ? 'max-lg:hidden lg:w-1/3' : 'lg:w-full',
           )}
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-slate-900">
+            <h3 className="text-base font-semibold text-foreground">
               {isApplicantRole ? 'Список вакансий' : 'Биржа проектов'}
             </h3>
             {isApplicantRole ? (
               <button
                 aria-label="Открыть фильтры вакансий"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:bg-muted"
                 onClick={() => setIsApplicantVacancyFiltersOpen(true)}
                 title="Фильтры вакансий"
                 type="button"
@@ -90,7 +90,7 @@ export function OrdersExchangeSection({
               {listedOrders.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    className="py-8 text-center text-sm text-slate-500"
+                    className="py-8 text-center text-sm text-muted-foreground"
                     colSpan={isOrderDetailsOpen ? 1 : isApplicantRole ? 4 : 5}
                   >
                     {isApplicantRole
@@ -102,7 +102,7 @@ export function OrdersExchangeSection({
                 listedOrders.map((order) => (
                   <TableRow
                     key={order.id}
-                    className={cn('cursor-pointer', selectedOrderId === order.id && 'bg-blue-50/70')}
+                    className={cn('cursor-pointer', selectedOrderId === order.id && 'bg-primary/10')}
                     onClick={() => {
                       onSelectOrder(order.id)
                       onOpenOrder(order)
@@ -228,7 +228,7 @@ export function OrdersExchangeSection({
           footer={
             <div className="flex justify-end">
               <button
-                className="h-10 rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="h-10 rounded-xl border border-border px-4 text-sm font-medium text-muted-foreground hover:bg-muted"
                 onClick={() => setIsApplicantVacancyFiltersOpen(false)}
                 type="button"
               >
@@ -242,9 +242,9 @@ export function OrdersExchangeSection({
         >
           <div className="grid gap-3 sm:grid-cols-3">
             {['Специализация', 'Формат работы', 'Локация'].map((filterName) => (
-              <div key={filterName} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-                <p className="text-sm font-medium text-slate-800">{filterName}</p>
-                <p className="mt-1 text-xs text-slate-500">Скоро появится</p>
+              <div key={filterName} className="rounded-xl border border-border bg-muted px-3 py-3">
+                <p className="text-sm font-medium text-foreground">{filterName}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Скоро появится</p>
               </div>
             ))}
           </div>

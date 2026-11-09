@@ -12,7 +12,7 @@ export function RegisterCommonFields({ errors }: Props) {
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="register-fullName" className="text-slate-600">
+        <Label htmlFor="register-fullName" className="text-muted-foreground">
           Имя и фамилия
         </Label>
         <Input
@@ -30,7 +30,7 @@ export function RegisterCommonFields({ errors }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-phone" className="text-slate-600">
+        <Label htmlFor="register-phone" className="text-muted-foreground">
           Телефон
         </Label>
         <Input
@@ -48,7 +48,7 @@ export function RegisterCommonFields({ errors }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-email" className="text-slate-600">
+        <Label htmlFor="register-email" className="text-muted-foreground">
           Email
         </Label>
         <Input
@@ -66,7 +66,7 @@ export function RegisterCommonFields({ errors }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="register-password" className="text-slate-600">
+        <Label htmlFor="register-password" className="text-muted-foreground">
           Пароль
         </Label>
         <Input

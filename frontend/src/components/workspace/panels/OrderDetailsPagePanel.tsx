@@ -60,10 +60,10 @@ function OrderDetailRow({ label, value }: { label: string; value: string }) {
 
   return (
     <div className="grid gap-2 md:grid-cols-[10rem_minmax(0,1fr)] md:items-start md:gap-4">
-      <dt className="pt-3 text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
+      <dt className="pt-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
         {label}
       </dt>
-      <dd className="min-h-11 whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-900">
+      <dd className="min-h-11 whitespace-pre-wrap break-words rounded-xl border border-border bg-muted px-4 py-3 text-sm leading-6 text-foreground">
         {visibleValue}
       </dd>
     </div>
@@ -162,18 +162,18 @@ export function OrderDetailsPagePanel({
     : vacancyPreview?.updatedAtUtc
 
   return (
-    <Card className="rounded-xl border-slate-200 p-4 shadow-none">
+    <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-slate-900">
+          <h3 className="text-base font-semibold text-foreground">
             {isApplicantViewer ? 'Детали вакансии' : 'Детали заказа'}
           </h3>
-          <p className="mt-1 text-sm text-slate-600">{order.updatedAt}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{order.updatedAt}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             aria-label="Назад"
-            className="h-10 rounded-xl border-slate-200 text-slate-700"
+            className="h-10 rounded-xl border-border text-muted-foreground"
             onClick={onBack}
             type="button"
             variant="outline"
@@ -208,8 +208,8 @@ export function OrderDetailsPagePanel({
         ) : null}
         {!isApplicantViewer ? (
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Отклики</dt>
-            <dd className="mt-1 text-sm text-slate-900">{order.responses}</dd>
+            <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Отклики</dt>
+            <dd className="mt-1 text-sm text-foreground">{order.responses}</dd>
           </div>
         ) : null}
         <div className="pt-1">
@@ -217,15 +217,15 @@ export function OrderDetailsPagePanel({
         </div>
         {canManageOrderResponses && hasAssignedExecutor ? (
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
+            <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
               Назначенный исполнитель
             </dt>
-            <dd className="mt-1 text-sm text-slate-900">{assignedExecutorName || 'Исполнитель назначен'}</dd>
+            <dd className="mt-1 text-sm text-foreground">{assignedExecutorName || 'Исполнитель назначен'}</dd>
           </div>
         ) : null}
         {canCreateVacancyFromOrder ? (
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">
+            <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
               Откликнувшиеся соискатели
             </dt>
             {applicantResponders.length > 0 ? (
@@ -233,11 +233,11 @@ export function OrderDetailsPagePanel({
                 {applicantResponders.map((candidate) => {
                   const isShortlist = candidate.statusLabel.trim().toLowerCase() === 'shortlist'
                   return (
-                    <div key={candidate.id} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                    <div key={candidate.id} className="rounded-lg border border-border bg-muted p-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <p className="text-sm font-medium text-slate-900">{candidate.name}</p>
-                          <p className="text-xs text-slate-500">Статус: {candidate.statusLabel || 'Pool'}</p>
+                          <p className="text-sm font-medium text-foreground">{candidate.name}</p>
+                          <p className="text-xs text-muted-foreground">Статус: {candidate.statusLabel || 'Pool'}</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <Button
@@ -273,7 +273,7 @@ export function OrderDetailsPagePanel({
                             </svg>
                           </Button>
                           <Button
-                            className="h-8 rounded-lg bg-blue-600 px-2 text-xs text-white hover:bg-blue-700"
+                            className="h-8 rounded-lg bg-primary px-2 text-xs text-primary-foreground hover:bg-primary/90"
                             disabled={isShortlist || isUpdatingApplicantResponderStage}
                             onClick={() => {
                               if (!onMoveApplicantResponderToShortlist) {
@@ -306,7 +306,7 @@ export function OrderDetailsPagePanel({
                 })}
               </dd>
             ) : (
-              <dd className="mt-1 text-sm text-slate-500">Пока нет откликов соискателей.</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">Пока нет откликов соискателей.</dd>
             )}
           </div>
         ) : null}
@@ -314,17 +314,17 @@ export function OrderDetailsPagePanel({
 
       <div className="mt-5">
         {vacancyPreview ? (
-          <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Статус вакансии</p>
-            <p className="mt-2 text-sm font-medium text-slate-900">{vacancyStatusLabel}</p>
+          <div className="mb-4 rounded-xl border border-border bg-muted p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Статус вакансии</p>
+            <p className="mt-2 text-sm font-medium text-foreground">{vacancyStatusLabel}</p>
             {vacancyStatusDate ? (
-              <p className="mt-1 text-xs text-slate-600">{new Date(vacancyStatusDate).toLocaleString('ru-RU')}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{new Date(vacancyStatusDate).toLocaleString('ru-RU')}</p>
             ) : null}
           </div>
         ) : null}
         {canRespondToOrder ? (
           <Button
-            className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
             disabled={isRespondingToOrder || hasRespondedToOrder}
             onClick={() => {
               if (!onRespondToOrder) {
@@ -364,7 +364,7 @@ export function OrderDetailsPagePanel({
                 </Button>
               ) : null}
               <Button
-                className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                 onClick={() => {
                   if (!onCreateVacancyFromOrder) {
                     return
@@ -381,7 +381,7 @@ export function OrderDetailsPagePanel({
             {canManageCandidatesFromOrder ? (
               <div>
             <Button
-              className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+              className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => setIsCandidatePickerOpen(true)}
               type="button"
               disabled={!canCreateCandidateFromOrder}
@@ -393,16 +393,16 @@ export function OrderDetailsPagePanel({
           </div>
         ) : null}
         {canPublishVacancyForCustomer ? (
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.04em] text-slate-600">Вакансия на согласовании</p>
-            <p className="mt-2 text-sm font-medium text-slate-900">
+          <div className="mt-4 rounded-xl border border-border bg-muted p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Вакансия на согласовании</p>
+            <p className="mt-2 text-sm font-medium text-foreground">
               {vacancyPreview?.title || 'Заголовок вакансии не найден'}
             </p>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
               {vacancyDescriptionPreview || 'Описание вакансии отсутствует.'}
             </p>
             <Button
-              className="mt-3 h-10 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+              className="mt-3 h-10 rounded-xl bg-success text-primary-foreground hover:bg-success/90"
               onClick={() => {
                 if (!onPublishVacancyForCustomer) {
                   return
@@ -421,7 +421,7 @@ export function OrderDetailsPagePanel({
       {canManageOrderResponses ? (
         <div className="mt-6">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold text-slate-900">Отклики исполнителей</h4>
+            <h4 className="text-sm font-semibold text-foreground">Отклики исполнителей</h4>
             {hasAssignedExecutor ? (
               <Button
                 aria-label={isResponsesExpanded ? 'Свернуть отклики' : 'Раскрыть отклики'}
@@ -435,17 +435,17 @@ export function OrderDetailsPagePanel({
             ) : null}
           </div>
           {isResponsesExpanded && isOrderResponsesLoading ? (
-            <p className="mt-2 text-sm text-slate-500">Загружаем отклики...</p>
+            <p className="mt-2 text-sm text-muted-foreground">Загружаем отклики...</p>
           ) : null}
           {isResponsesExpanded && !isOrderResponsesLoading && orderResponses.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-500">Пока нет откликов исполнителей.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Пока нет откликов исполнителей.</p>
           ) : null}
           {isResponsesExpanded && !isOrderResponsesLoading && orderResponses.length > 0 ? (
             <div className="mt-3 space-y-2">
               {orderResponses.map((response) => (
                 <div
                   key={response.executorId}
-                  className="cursor-pointer rounded-lg border border-slate-200 p-3"
+                  className="cursor-pointer rounded-lg border border-border p-3"
                   onClick={() => {
                     setExpandedExecutorIds((previousValue) => {
                       const nextValue = new Set(previousValue)
@@ -460,8 +460,8 @@ export function OrderDetailsPagePanel({
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{response.executorFullName || response.executorId}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-sm font-medium text-foreground">{response.executorFullName || response.executorId}</p>
+                      <p className="text-xs text-muted-foreground">
                         {toStatusLabel(response.status)} · {new Date(response.updatedAtUtc).toLocaleString('ru-RU')}
                       </p>
                     </div>
@@ -469,7 +469,7 @@ export function OrderDetailsPagePanel({
                       {response.status === 'Pending' ? (
                         <>
                           <Button
-                            className="h-8 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                            className="h-8 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
                             disabled={isSelectingOrderExecutor || isRejectingOrderExecutor}
                             onClick={(event) => {
                               event.stopPropagation()
@@ -483,7 +483,7 @@ export function OrderDetailsPagePanel({
                             {isSelectingOrderExecutor ? 'Выбираем...' : 'Выбрать исполнителя'}
                           </Button>
                           <Button
-                            className="h-8 rounded-lg border-red-300 text-red-700 hover:bg-red-50"
+                            className="h-8 rounded-lg border-error/40 text-destructive hover:bg-error-muted"
                             disabled={isSelectingOrderExecutor || isRejectingOrderExecutor}
                             onClick={(event) => {
                               event.stopPropagation()
@@ -513,7 +513,7 @@ export function OrderDetailsPagePanel({
                     </div>
                   </div>
                   {expandedExecutorIds.has(response.executorId) ? (
-                    <div className="mt-3 rounded-md bg-slate-50 p-3 text-xs text-slate-700">
+                    <div className="mt-3 rounded-md bg-muted p-3 text-xs text-muted-foreground">
                       <p><span className="font-semibold">Грейд:</span> {response.executorGrade || '—'}</p>
                       <p><span className="font-semibold">Текущий проект:</span> {response.executorProjectTitle || '—'}</p>
                       <p><span className="font-semibold">Компания:</span> {response.executorProjectCompanyName || '—'}</p>
@@ -552,15 +552,15 @@ export function OrderDetailsPagePanel({
         />
         <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
           {matchingCandidates.map((candidate) => (
-            <div key={candidate.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3">
+            <div key={candidate.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3">
               <div>
-                <p className="font-medium text-slate-900">{candidate.name}</p>
-                <p className="text-sm text-slate-600">{candidate.position}</p>
+                <p className="font-medium text-foreground">{candidate.name}</p>
+                <p className="text-sm text-muted-foreground">{candidate.position}</p>
               </div>
               {assignedCandidateIdSet.has(candidate.id) ? (
                 <Button
                   aria-label={`${candidate.name}: кандидат уже добавлен к вакансии`}
-                  className="border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
+                  className="border-error/40 bg-error-muted text-destructive hover:bg-error-muted"
                   disabled={isRemovingVacancyCandidate}
                   onClick={() => void onRemoveCandidateFromVacancy?.(candidate.id)}
                   title="Кандидат уже добавлен к этой вакансии"
@@ -588,7 +588,7 @@ export function OrderDetailsPagePanel({
             </div>
           ))}
           {matchingCandidates.length === 0 ? (
-            <p className="py-6 text-center text-sm text-slate-600">Кандидаты не найдены.</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">Кандидаты не найдены.</p>
           ) : null}
         </div>
       </Modal>

@@ -31,13 +31,13 @@ export function ResumeLinksInput({ id, value, onChange, disabled = false }: Prop
   const update = (next: ResumeLink[]) => onChange(next.length ? JSON.stringify(next) : '')
 
   return <div className="space-y-2">
-    <Label className="text-slate-600" htmlFor={`${id}-url-0`}>Ссылки на вложения</Label>
-    <p className="text-xs text-slate-500">GitHub, портфолио, соцсети или видео-визитка. Необязательно.</p>
+    <Label className="text-muted-foreground" htmlFor={`${id}-url-0`}>Ссылки на вложения</Label>
+    <p className="text-xs text-muted-foreground">GitHub, портфолио, соцсети или видео-визитка. Необязательно.</p>
     {links.map((link, index) => {
       const invalid = Boolean(link.url.trim()) && !isValidUrl(link.url.trim())
       return <div key={`${id}-${index}`} className="space-y-1">
         <div className="grid gap-2 sm:grid-cols-[minmax(10rem,14rem)_1fr_auto]">
-          <select aria-label={`Тип ссылки ${index + 1}`} className="h-11 rounded-xl border border-slate-200 bg-background px-3 text-sm text-slate-900" disabled={disabled} value={link.type} onChange={(event) => update(links.map((item, i) => i === index ? { ...item, type: event.target.value as ResumeLinkType } : item))}>
+          <select aria-label={`Тип ссылки ${index + 1}`} className="h-11 rounded-xl border border-border bg-background px-3 text-sm text-foreground" disabled={disabled} value={link.type} onChange={(event) => update(links.map((item, i) => i === index ? { ...item, type: event.target.value as ResumeLinkType } : item))}>
             {resumeLinkTypes.map((type) => <option key={type} value={type}>{type}</option>)}
           </select>
           <Input id={`${id}-url-${index}`} type="url" inputMode="url" value={link.url} aria-invalid={invalid} disabled={disabled} placeholder="https://..." onChange={(event) => update(links.map((item, i) => i === index ? { ...item, url: event.target.value } : item))} />

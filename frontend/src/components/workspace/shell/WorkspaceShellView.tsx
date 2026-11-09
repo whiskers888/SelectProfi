@@ -389,19 +389,19 @@ export function WorkspaceShellView({
                 {activeView === 'meetings' ? <CalendarPanel meetings={[]} /> : null}
 
                 {activeView === 'chats' ? (
-                  <Card className="rounded-xl border-slate-200 p-4 shadow-none">
-                    <h3 className="text-base font-semibold text-slate-900">Чаты</h3>
+                  <Card className="rounded-xl border-border p-4 shadow-none">
+                    <h3 className="text-base font-semibold text-foreground">Чаты</h3>
 
                     {isViewLoading ? (
-                      <div className="mt-4 flex items-center gap-3 text-sm text-slate-600">
+                      <div className="mt-4 flex items-center gap-3 text-sm text-muted-foreground">
                         <span
                           aria-hidden="true"
-                          className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600"
+                          className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-blue-600"
                         />
                         Загружаем треды...
                       </div>
                     ) : filteredThreads.length === 0 ? (
-                      <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+                      <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
                         {searchValue.trim()
                           ? `По запросу «${searchValue}» чаты не найдены.`
                           : 'Чатов пока нет.'}
@@ -415,28 +415,28 @@ export function WorkspaceShellView({
                               className={cn(
                                 'w-full rounded-xl border p-3 text-left transition-colors',
                                 activeThread?.id === thread.id
-                                  ? 'border-blue-200 bg-blue-50'
-                                  : 'border-slate-200 bg-white hover:bg-slate-50',
+                                  ? 'border-primary/30 bg-primary/10'
+                                  : 'border-border bg-card hover:bg-muted',
                               )}
                               onClick={() => setPreferredChatId(thread.id)}
                               type="button"
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm font-semibold text-slate-900">
+                                <p className="text-sm font-semibold text-foreground">
                                   {thread.participant}
                                 </p>
                                 {thread.unread > 0 ? (
                                   <Badge variant="default">{thread.unread}</Badge>
                                 ) : null}
                               </div>
-                              <p className="mt-1 text-xs text-slate-600">{thread.preview}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">{thread.preview}</p>
                             </button>
                           ))}
                         </div>
 
-                        <div className="rounded-xl border border-slate-200 bg-white">
-                          <div className="border-b border-slate-200 px-4 py-3">
-                            <p className="text-sm font-semibold text-slate-900">
+                        <div className="rounded-xl border border-border bg-card">
+                          <div className="border-b border-border px-4 py-3">
+                            <p className="text-sm font-semibold text-foreground">
                               {activeThread?.participant}
                             </p>
                           </div>
@@ -447,18 +447,18 @@ export function WorkspaceShellView({
                                 className={cn(
                                   'max-w-[78%] rounded-xl px-3 py-2 text-sm leading-relaxed',
                                   message.author === 'me'
-                                    ? 'ml-auto bg-blue-50 text-blue-900'
-                                    : 'bg-slate-100 text-slate-700',
+                                    ? 'ml-auto bg-primary/10 text-primary'
+                                    : 'bg-muted text-muted-foreground',
                                 )}
                               >
                                 <p>{message.text}</p>
-                                <p className="mt-1 text-xs text-slate-500">{message.time}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{message.time}</p>
                               </article>
                             ))}
                           </div>
-                          <div className="flex items-center gap-2 border-t border-slate-200 px-4 py-3">
+                          <div className="flex items-center gap-2 border-t border-border px-4 py-3">
                             <Input
-                              className="h-10 rounded-xl border-slate-200 text-slate-900"
+                              className="h-10 rounded-xl border-border text-foreground"
                               onChange={(event) => setChatDraft(event.target.value)}
                               onKeyDown={(event) => {
                                 if (event.key === 'Enter') {
@@ -470,7 +470,7 @@ export function WorkspaceShellView({
                               value={chatDraft}
                             />
                             <Button
-                              className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                              className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                               onClick={handleSendMessage}
                               type="button"
                             >
@@ -493,12 +493,12 @@ export function WorkspaceShellView({
                 ) : null}
 
                 {activeView === 'documents' ? (
-                  <Card className="rounded-xl border-slate-200 p-4 shadow-none">
-                    <h3 className="text-base font-semibold text-slate-900">Документооборот</h3>
-                    <p className="mt-1 text-sm text-slate-600">
+                  <Card className="rounded-xl border-border p-4 shadow-none">
+                    <h3 className="text-base font-semibold text-foreground">Документооборот</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Управление документами и контрактами по заказам.
                     </p>
-                    <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+                    <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
                       Документы будут отображаться здесь.
                     </div>
                   </Card>

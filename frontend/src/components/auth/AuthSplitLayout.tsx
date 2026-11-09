@@ -16,7 +16,7 @@ export function AuthSplitLayout({
   return (
     <section className="auth-page-bg min-h-screen px-4 py-5 sm:px-6 sm:py-8">
       <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-[1180px] items-center justify-center sm:min-h-[calc(100vh-4rem)]">
-        <Card className="w-full overflow-hidden border-slate-200 bg-white shadow-[0_24px_48px_rgba(15,23,42,0.14)]">
+        <Card className="w-full overflow-hidden border-border bg-card shadow-[0_24px_48px_rgba(15,23,42,0.14)]">
           <div className="grid min-h-[760px] grid-cols-1 md:grid-cols-2">
             <div
               className={cn(
