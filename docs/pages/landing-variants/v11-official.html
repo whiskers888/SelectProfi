@@ -184,7 +184,7 @@
 <body>
 <div id="web">
   <div class="topbar">
-    <div class="brand"><b>SP</b>SelectProfi<small>Подбор персонала</small></div>
+    <div class="brand"><b>КТ</b>КадрыТут<small>Подбор персонала</small></div>
     <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>Поиск по заказам, кандидатам, документам</div>
     <div class="right"><span class="bell"><svg class="i" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20h4"/></svg><i>3</i></span><div class="user" id="user"></div></div>
   </div>
@@ -241,7 +241,7 @@ SP.mount((key) => {
 
   const m = r.mobile
   const tabIcons = ['case', 'search', 'users', 'user']
-  $('pocket').innerHTML = `<div class="m-top"><div class="line1"><div class="brand"><b>SP</b>SelectProfi</div><span class="bell">${icon('chat')}</span></div><h1>Здравствуйте, ${r.user.split(' ')[0]}</h1><p>${r.label} · ${r.position}</p></div>
+  $('pocket').innerHTML = `<div class="m-top"><div class="line1"><div class="brand"><b>КТ</b>КадрыТут</div><span class="bell">${icon('chat')}</span></div><h1>Здравствуйте, ${r.user.split(' ')[0]}</h1><p>${r.label} · ${r.position}</p></div>
     <div class="m-body">
       <section class="hero"><span class="pill ${d.tone}">${m.hero.tag}</span><strong>${m.hero.title}</strong><small>${m.hero.meta}</small><button class="btn primary">${m.hero.action}</button></section>
       <div class="tiles">${m.tiles.map(([v, l]) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('')}</div>

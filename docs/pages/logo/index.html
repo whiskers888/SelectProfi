@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Логотип SelectProfi — концепты</title>
+<title>Логотип КадрыТут — концепты</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -60,7 +60,7 @@
 </head>
 <body>
 <main>
-  <h1>Логотип SelectProfi — 6 концептов</h1>
+  <h1>Логотип «КадрыТут» — 6 концептов</h1>
   <p class="lead">Задача: знак яркий и заметный, как у крупных площадок, но в нашей гамме. Знак — кирпичный (доверие, тепло), сайт — тёмная бирюза «Глубокий». Кирпичный и бирюзовый почти противоположны на цветовом круге, поэтому знак сразу выделяется в шапке и на вкладке браузера. Каждый концепт показан крупно, в шапке сайта, на светлом и тёмном фоне и в размерах favicon 32 и 16 px.</p>
   <div class="palette">
     <span class="sw"><i style="background:#B8452B"></i>Кирпичный #B8452B — знак</span>
@@ -72,11 +72,11 @@
   <div class="grid" id="grid"></div>
 
   <section class="reco">
-    <h2>Рекомендация: 1 «Метка» или 2 «Точка»</h2>
+    <h2>Рекомендация: 1 «Метка»</h2>
     <ul>
-      <li><b>1 «Метка»</b> — ровно идея Ирины: точка внутри капли-указателя «здесь нужный человек». Узнаётся с 16 px, хорошо смотрится на тёмной шапке, легко делать иконку приложения.</li>
-      <li><b>2 «Точка»</b> — самый простой и смелый знак (кирпичный круг и белая точка, смещённая как «выбранная»). Простота как у крупных брендов, но без копирования чужой формы.</li>
-      <li>Название набираем тем же шрифтом, что и интерфейс (IBM Plex Sans), «Profi» — кирпичным: так логотип и сайт выглядят одной системой.</li>
+      <li><b>1 «Метка»</b> — знак и название говорят одно и то же: указатель = «тут», «КадрыТут» = «нужные люди здесь». Это ровно идея Ирины, знак узнаётся с 16 px и хорошо смотрится на тёмной шапке.</li>
+      <li><b>2 «Точка»</b> — запасной вариант: самый простой и смелый знак, но связь с названием слабее.</li>
+      <li>Название набираем тем же шрифтом, что и интерфейс (IBM Plex Sans), «Тут» — кирпичным: вторая часть названия совпадает по цвету со знаком-указателем: так логотип и сайт выглядят одной системой.</li>
       <li>Кирпичный используем только для знака и важных акцентов (например, «требует решения»), кнопки и навигация остаются бирюзовыми — иначе знак перестанет выделяться.</li>
     </ul>
     <div class="mock"><div class="bar"><span class="lock" id="mockLock"></span><small>Подбор персонала</small><span class="search">Поиск по заказам, кандидатам, документам</span></div>
@@ -86,7 +86,7 @@
 <script>
 // Marks are drawn on a 48×48 grid so they stay crisp at 16 px.
 const MARKS = [
-  { name: 'Метка', tag: 'идея Ирины', text: 'Капля-указатель с белой точкой: «нужный человек найден здесь». Знакомая форма из карт, но в нашем цвете и с более плотной геометрией.',
+  { name: 'Метка', tag: 'идея Ирины · «тут»', text: 'Указатель на карте и есть «тут»: знак буквально повторяет название. Белая точка внутри — «нужный человек найден здесь».',
     svg: (c = '#B8452B', dot = '#fff') => `<path fill="${c}" d="M24 3C14.6 3 7 10.4 7 19.6 7 31.6 24 45 24 45s17-13.4 17-25.4C41 10.4 33.4 3 24 3z"/><circle cx="24" cy="19.5" r="6.5" fill="${dot}"/>` },
   { name: 'Точка', tag: 'проще всего', text: 'Кирпичный круг и белая точка, смещённая вверх-вправо — «выбранный из многих». Максимально простой и заметный знак.',
     svg: (c = '#B8452B', dot = '#fff') => `<circle cx="24" cy="24" r="21" fill="${c}"/><circle cx="29" cy="19" r="7" fill="${dot}"/>` },
@@ -94,13 +94,13 @@ const MARKS = [
     svg: (c = '#B8452B', dot = '#7CC4BC') => `<circle cx="8" cy="30" r="4.5" fill="${dot}"/><circle cx="40" cy="30" r="4.5" fill="${dot}"/><circle cx="24" cy="21" r="7" fill="${c}"/><circle cx="24" cy="21" r="12.5" fill="none" stroke="${c}" stroke-width="3"/>` },
   { name: 'Подобран', tag: 'метка + галочка', text: 'Указатель с галочкой: «кандидат подобран». Чуть более «деловой» вариант метки.',
     svg: (c = '#B8452B', dot = '#fff') => `<path fill="${c}" d="M24 3C14.6 3 7 10.4 7 19.6 7 31.6 24 45 24 45s17-13.4 17-25.4C41 10.4 33.4 3 24 3z"/><path d="M16.5 19.5l5 5 10-10.5" fill="none" stroke="${dot}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>` },
-  { name: 'Монограмма', tag: 'классика', text: 'Буквы SP в кирпичном квадрате со скруглением. Строго и официально, но менее запоминающееся.',
-    svg: (c = '#B8452B', dot = '#fff') => `<rect x="3" y="3" width="42" height="42" rx="11" fill="${c}"/><text x="24" y="31.5" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-weight="700" font-size="21" fill="${dot}" letter-spacing="-0.5">SP</text>` },
+  { name: 'Монограмма', tag: 'классика', text: 'Буквы КТ в кирпичном квадрате со скруглением. Строго и официально, но менее запоминающееся.',
+    svg: (c = '#B8452B', dot = '#fff') => `<rect x="3" y="3" width="42" height="42" rx="11" fill="${c}"/><text x="24" y="31.5" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-weight="700" font-size="21" fill="${dot}" letter-spacing="-0.5">КТ</text>` },
   { name: 'Двойная метка', tag: 'спокойнее', text: 'Бирюзовая метка с кирпичной точкой: знак в цвете сайта, акцент — только в центре. Подойдёт, если кирпичного много не хочется.',
     svg: (c = '#0B5C55', dot = '#B8452B') => `<path fill="${c}" d="M24 3C14.6 3 7 10.4 7 19.6 7 31.6 24 45 24 45s17-13.4 17-25.4C41 10.4 33.4 3 24 3z"/><circle cx="24" cy="19.5" r="7.5" fill="#fff"/><circle cx="24" cy="19.5" r="4.5" fill="${dot}"/>` },
 ]
 const svg = (inner) => `<svg viewBox="0 0 48 48" aria-hidden="true">${inner}</svg>`
-const lock = (m, onDark) => `<span class="lock">${svg(onDark && m.name === 'Двойная метка' ? m.svg('#7CC4BC') : onDark ? m.svg('#E0603F') : m.svg())}<span>Select<b>Profi</b></span></span>`
+const lock = (m, onDark) => `<span class="lock">${svg(onDark && m.name === 'Двойная метка' ? m.svg('#7CC4BC') : onDark ? m.svg('#E0603F') : m.svg())}<span>Кадры<b>Тут</b></span></span>`
 document.getElementById('grid').innerHTML = MARKS.map((m, i) => `
   <article class="concept">
     <header><h2><span>${i + 1}</span>${m.name}</h2><span class="tag">${m.tag}</span></header>
