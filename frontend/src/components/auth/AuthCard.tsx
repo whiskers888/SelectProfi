@@ -10,7 +10,7 @@ export function AuthCard({ children, className }: AuthCardProps) {
   return (
     <section
       className={cn(
-        'w-full rounded-lg border border-border bg-card p-5 text-foreground shadow-surface sm:p-7',
+        'w-full rounded-lg border border-border bg-card p-5 text-foreground shadow-surface sm:p-8',
         className,
       )}
     >

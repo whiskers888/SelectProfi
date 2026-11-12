@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, BadgeCheck, Mail } from 'lucide-react'
+import { ArrowRight, Mail } from 'lucide-react'
 import {
   AuthAlert,
   AuthCard,
@@ -59,32 +59,10 @@ export function LoginForm({
 }: LoginFormProps) {
   return (
     <AuthCard className="mx-auto max-w-[420px]">
-      <div className="mb-5 flex items-center gap-3">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
-          <BadgeCheck className="h-[18px] w-[18px]" aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-headline-section font-semibold tracking-tight text-foreground">
-              КадрыТут
-            </span>
-            <span className="rounded-sm bg-secondary px-1.5 py-0.5 text-label-micro uppercase text-secondary-foreground">
-              B2B
-            </span>
-          </div>
-          <p className="m-0 mt-1 text-caption-meta text-muted-foreground">
-            КадрыТут · Подбор персонала
-          </p>
-        </div>
-      </div>
-
       <div className="mb-5">
         <h1 className="m-0 text-display-page-title font-semibold tracking-tight text-foreground">
           Вход в платформу
         </h1>
-        <p className="m-0 mt-1 text-caption-meta text-muted-foreground">
-          Управление подбором, кандидатами и безопасными сделками
-        </p>
       </div>
 
       <LoginIdentifierTabs method={method} onChange={onMethodChange} />
@@ -104,17 +82,9 @@ export function LoginForm({
       >
         {method === 'email' ? (
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <label htmlFor="login-email" className="text-caption-meta font-medium text-foreground">
-                Рабочий email
-              </label>
-              <span
-                aria-hidden="true"
-                className="text-label-micro uppercase tracking-wider text-text-tertiary"
-              >
-                Корпоративный
-              </span>
-            </div>
+            <label htmlFor="login-email" className="text-caption-meta font-medium text-foreground">
+              Рабочий email
+            </label>
             <div className="relative">
               <Input
                 id="login-email"
@@ -142,22 +112,14 @@ export function LoginForm({
             ) : null}
           </div>
         ) : (
-          <div className="relative">
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute right-0 top-0 text-label-micro uppercase tracking-wider text-text-tertiary"
-            >
-              СМС-код
-            </span>
-            <PhoneField
-              id="login-phone"
-              label="Номер телефона"
-              value={phone}
-              error={errors.phone}
-              disabled={isLoading}
-              onChange={onPhoneChange}
-            />
-          </div>
+          <PhoneField
+            id="login-phone"
+            label="Номер телефона"
+            value={phone}
+            error={errors.phone}
+            disabled={isLoading}
+            onChange={onPhoneChange}
+          />
         )}
 
         <PasswordField
@@ -182,7 +144,6 @@ export function LoginForm({
           id="login-remember"
           checked={remember}
           label="Запомнить устройство"
-          description="Безопасное запоминание: мы не храним пароль, только защищённый токен"
           disabled={isLoading}
           onChange={onRememberChange}
         />
