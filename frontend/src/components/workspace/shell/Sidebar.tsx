@@ -97,9 +97,9 @@ export function Sidebar({
         className={`preview11-sidebar${collapsed ? ' preview11-sidebar-collapsed' : ''}${mobileOpen ? ' preview11-sidebar-mobile-open' : ''}`}
       >
         <div className="preview11-brand">
-          <div className="preview11-mark">SP</div>
+          <div className="preview11-mark">КТ</div>
           <div className="preview11-brand-copy">
-            <div className="preview11-brand-title">SelectProfi</div>
+            <div className="preview11-brand-title">КадрыТут</div>
             <div className="preview11-muted">
               {role === 'Applicant' ? 'Платформа поиска работы' : 'Платформа подбора специалистов'}
             </div>

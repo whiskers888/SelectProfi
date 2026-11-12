@@ -37,7 +37,7 @@ function profileInitials(displayName: string): string {
     .filter((part) => part.length > 0)
 
   if (parts.length === 0) {
-    return 'SP'
+    return 'КТ'
   }
 
   if (parts.length === 1) {

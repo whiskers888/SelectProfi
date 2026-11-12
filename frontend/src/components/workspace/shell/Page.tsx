@@ -8,9 +8,9 @@ function ShellBootstrapLoader() {
       <div className="preview11-boot">
         <div className="preview11-boot-card" role="status" aria-live="polite" aria-busy="true">
           <div className="preview11-brand preview11-brand-boot">
-            <div className="preview11-mark">SP</div>
+            <div className="preview11-mark">КТ</div>
             <div className="preview11-brand-copy">
-              <div className="preview11-brand-title">SelectProfi</div>
+              <div className="preview11-brand-title">КадрыТут</div>
               <div className="preview11-muted">Проверяем доступ и подготавливаем рабочее пространство</div>
             </div>
           </div>

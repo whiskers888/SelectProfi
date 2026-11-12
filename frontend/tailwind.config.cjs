@@ -4,12 +4,18 @@ module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"IBM Plex Sans"', 'Segoe UI', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        subsurface: 'hsl(var(--subsurface))',
+        'surface-strong': 'hsl(var(--surface-strong))',
+        'text-tertiary': 'hsl(var(--text-tertiary))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -60,9 +66,23 @@ module.exports = {
         },
       },
       borderRadius: {
+        DEFAULT: '0.25rem',
+        sm: '0.125rem',
+        md: '0.375rem',
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        xl: '0.75rem',
+        full: '9999px',
+      },
+      fontSize: {
+        'label-micro': ['11px', { lineHeight: '14px', letterSpacing: '0.08em', fontWeight: '600' }],
+        'caption-meta': ['12px', { lineHeight: '16px' }],
+        'body-default': ['14px', { lineHeight: '20px' }],
+        'headline-section': ['16px', { lineHeight: '22px', fontWeight: '600' }],
+        'display-page-title': ['22px', { lineHeight: '28px', fontWeight: '600' }],
+      },
+      boxShadow: {
+        surface: '0 4px 12px rgba(18, 32, 28, 0.05)',
+        overlay: '0 4px 16px rgba(18, 32, 28, 0.08)',
       },
     },
   },
