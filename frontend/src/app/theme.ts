@@ -6,25 +6,14 @@ function isTheme(value: string): value is Theme {
   return value === 'light' || value === 'dark'
 }
 
-function getSystemTheme(): Theme {
-  if (typeof window === 'undefined') {
-    return 'light'
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
-
 export function readTheme(): Theme {
   if (typeof window === 'undefined') {
     return 'light'
   }
 
   const storedValue = window.localStorage.getItem(themeStorageKey)
-  if (!storedValue) {
-    return getSystemTheme()
-  }
 
-  return isTheme(storedValue) ? storedValue : getSystemTheme()
+  return storedValue && isTheme(storedValue) ? storedValue : 'light'
 }
 
 export function applyTheme(theme: Theme): void {
