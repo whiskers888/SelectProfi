@@ -154,6 +154,23 @@ All numeric fields—including currency values, salary bands, transaction hashes
 - **Caption / Meta (`12px / 400 & 500`):** Used for auxiliary candidate metadata (e.g., location, experience length, timestamp of last touchpoint).
 - **Micro Label (`11px / 600 / uppercase / 0.08em tracking`):** Strictly used for field category labels, table column headers, verification status tags, and contract stage chips.
 
+### Implementation Mapping (frontend)
+
+The scale above is implemented as Tailwind font-size utilities in `frontend/tailwind.config.cjs`. Always use these classes instead of raw `text-sm` / `text-base` / `text-lg`; the raw Tailwind sizes (16px base) do not match this design system and make the UI look oversized.
+
+| Class | Size / line-height / weight | Use for |
+| --- | --- | --- |
+| `text-display-page-title` | 22 / 28 / 600 | Page and auth-step headings (`h1`) |
+| `text-headline-section` | 16 / 22 / 600 | Section, card and role titles |
+| `text-body-default` | 14 / 20 / 400 | Body copy, descriptions, inputs |
+| `text-body-medium` | 14 / 20 / 500 | Emphasized body, secondary buttons |
+| `text-body-semibold` | 14 / 20 / 600 | Primary buttons, strong inline values |
+| `text-caption-meta` | 12 / 16 / 400 | Captions, hints, step labels, meta |
+| `text-caption-meta-medium` | 12 / 16 / 500 | Emphasized captions, links in captions |
+| `text-label-micro` | 11 / 14 / 600 / 0.08em | Uppercase chips, statuses, column headers |
+
+These classes also set `font-size`, so they must not be combined through `cn()` without registering them in `frontend/src/lib/utils.ts`. `tailwind-merge` treats an unregistered `text-*` class as a text color and silently drops it when a real color class (`text-primary`, `text-muted-foreground`, …) is present in the same call — which inflates the text to the 16px browser default. `text-label-micro`, `text-caption-meta`, `text-caption-meta-medium`, `text-body-default`, `text-body-medium`, `text-body-semibold`, `text-headline-section` and `text-display-page-title` are registered in the `font-size` class group; any new scale class must be added there too.
+
 ## Layout & Spacing
 
 The layout is built for complex, multi-pane workflows requiring simultaneous candidate evaluation, resume viewing, and contract verification without frequent context switching.
@@ -232,7 +249,7 @@ To ensure absolute pixel-perfect consistency across all generated screens, EVERY
 - **Height:** Strictly `56px`. Fixed to top.
 - **Background:** `#12201C`.
 - **Structure (Left to Right):**
-  1. **Logo Area:** `32x32px` square with white "КТ" text + "КадрыТут" (`16px / 600`, color `#E4EEEA`) + a gray badge "PLATFORM" (`11px / 600`, uppercase).
+  1. **Logo Area:** `32x32px` square with white "КТ" text + "КадрыТут" (`16px / 600`, color `#E4EEEA`). No platform badge — do not add "PLATFORM" / "Платформа" chips anywhere in the product UI.
   2. **Global Search:** Max-width `520px`, background `#1D302B`, border `#2E443E`, search icon, placeholder text.
   3. **Right Area:** Bell icon with a yellow badge (e.g., "3"). User Profile block: Name (`14px / 500`), Role (`12px / 400`, color `#9DB3AC`), and a circular `34x34px` Avatar (bg `#0F766E`) with initials.
 
@@ -265,7 +282,7 @@ Used for onboarding (Steps 1-4). Strictly enforce these dimensions:
 - **Completed Step:** Circle bg `#0F766E`, white checkmark icon. Connector line `#0F766E`.
 - **Current Step:** Circle bg `#0F766E`, white step number. `ring-2 ring-[#0F766E]/30`. Connector line to the right is gray.
 - **Future Step:** Circle bg `#E5E7EB`, text color `#6B7280`.
-- **Labels:** `12px / 500` below circles. Do NOT change circle sizes, fonts, or gap spacing between different screens.
+- **Labels:** `12px / 400` (`text-caption-meta`, `500`/`600` for the active step) below circles. Do NOT change circle sizes, fonts, or gap spacing between different screens.
 
 ---
 
@@ -283,6 +300,19 @@ Used for onboarding (Steps 1-4). Strictly enforce these dimensions:
 
 ## 11. Role-Based Content Matrix (Strict Data Dictionary)
 The LLM must strictly follow this data matrix. Never invent menu items, user names, or wallet balances. The UI content depends entirely on the active role.
+
+### Role naming (user-facing labels)
+| Internal value | User-facing label | Allowed legal forms |
+| --- | --- | --- |
+| `Customer` | **Заказчик** (badge «Юрлицо и ИП») | ООО (Юрлицо) и ИП |
+| `Executor` | **Исполнитель** | СМЗ (НПД) и ИП. Physical person (ФЛ) is NOT allowed |
+| `Applicant` | **Соискатель** | any individual, no legal form shown |
+
+Rules:
+- Keep «Заказчик» as the role title, with a «Юрлицо и ИП» badge next to it on the same line.
+- Never offer a physical-person ("ФЛ" / «Физическое лицо») option for `Executor`.
+- Do not show legal-form qualifiers («Физические лица», «Юрлица и ИП») under `Applicant`; the applicant does not pay the platform and does not need a legal form.
+- On the `Executor` legal-status step, always show a note: physical persons cannot take orders directly (join an agency-executor), while an ИП can open their own agency team, hire recruiters and grant them access.
 
 ### Role 1: Customer (Заказчик)
 - **Header Profile:** "Ирина Котова" / "Руководитель отдела персонала"
