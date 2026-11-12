@@ -47,6 +47,7 @@ type RegisterProfileStepProps = {
   onChangeRole: () => void
   onBackToCode: () => void
   onSubmit: () => void
+  onGoToLogin: () => void
 }
 
 export function RegisterProfileStep({
@@ -59,6 +60,7 @@ export function RegisterProfileStep({
   onChangeRole,
   onBackToCode,
   onSubmit,
+  onGoToLogin,
 }: RegisterProfileStepProps) {
   const copy = profileCopy[draft.role]
   const meta = roleMeta[draft.role]
@@ -100,6 +102,15 @@ export function RegisterProfileStep({
               className="mt-2 text-caption-meta font-medium text-primary hover:underline"
             >
               Пройти подтверждение заново
+            </button>
+          ) : null}
+          {formError.action === 'go-to-login' ? (
+            <button
+              type="button"
+              onClick={onGoToLogin}
+              className="mt-2 text-caption-meta font-medium text-primary hover:underline"
+            >
+              Перейти ко входу
             </button>
           ) : null}
         </div>

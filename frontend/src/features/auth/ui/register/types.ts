@@ -5,7 +5,7 @@ export type DraftPatch = (patch: Partial<RegistrationDraft>) => void
 export type RegisterFormError = {
   title: string
   description?: string
-  action?: 'back-to-code'
+  action?: 'back-to-code' | 'go-to-login'
 }
 
 export type VerificationChallenge = {
@@ -15,4 +15,5 @@ export type VerificationChallenge = {
   codeLength: number
   resendAvailableAtUtc: string
   debugCode?: string | null
+  developmentMode?: boolean
 }

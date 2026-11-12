@@ -80,9 +80,19 @@ export function RegisterCodeStep({
           onComplete={onConfirmCode}
         />
         <p className="m-0 mt-2 text-caption-meta text-muted-foreground">
-          Введите {codeLength} цифр из полученного сообщения
+          {challenge?.developmentMode
+            ? 'Демо-режим: введите код 123456'
+            : `Введите ${codeLength} цифр из полученного сообщения`}
         </p>
-        {challenge?.debugCode ? (
+        {challenge?.developmentMode ? (
+          <div className="mt-3 text-left">
+            <AuthAlert
+              tone="warning"
+              title="Демо-режим (development)"
+              description="Отправка SMS и писем отключена. Используйте единый код 123456 — он принимается всегда."
+            />
+          </div>
+        ) : challenge?.debugCode ? (
           <p className="m-0 mt-1 text-caption-meta text-text-tertiary">
             Тестовый код: <span className="tabular-nums font-medium">{challenge.debugCode}</span>
           </p>

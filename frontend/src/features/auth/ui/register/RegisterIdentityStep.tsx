@@ -18,6 +18,7 @@ type RegisterIdentityStepProps = {
   onChangeRole: () => void
   onSubmit: () => void
   onProviderClick: (provider: AuthProviderKey) => void
+  onGoToLogin: () => void
 }
 
 export function RegisterIdentityStep({
@@ -31,6 +32,7 @@ export function RegisterIdentityStep({
   onChangeRole,
   onSubmit,
   onProviderClick,
+  onGoToLogin,
 }: RegisterIdentityStepProps) {
   const meta = roleMeta[draft.role]
   const isPhone = draft.method === 'phone'
@@ -80,7 +82,20 @@ export function RegisterIdentityStep({
       </div>
 
       <div className="mt-4 space-y-4">
-        {formError ? <AuthAlert tone="error" title={formError.title} description={formError.description} /> : null}
+        {formError ? (
+          <div>
+            <AuthAlert tone="error" title={formError.title} description={formError.description} />
+            {formError.action === 'go-to-login' ? (
+              <button
+                type="button"
+                onClick={onGoToLogin}
+                className="mt-2 text-caption-meta font-medium text-primary hover:underline"
+              >
+                Перейти ко входу
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         {infoMessage ? <AuthAlert tone="info" title={infoMessage} /> : null}
 
         {isPhone ? (

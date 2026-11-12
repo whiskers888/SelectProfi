@@ -66,6 +66,10 @@ export function RegisterPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  function hasVerifiedIdentity(): boolean {
+    return draft.verificationToken.trim().length > 0
+  }
+
   function handleRoleChange(role: RegistrationRole) {
     patch({ role })
     setErrors({})
@@ -84,6 +88,7 @@ export function RegisterPage() {
         codeLength: response.codeLength || 6,
         resendAvailableAtUtc: response.resendAvailableAtUtc,
         debugCode: response.debugCode ?? null,
+        developmentMode: response.developmentMode ?? false,
       })
       setCode(codeInitial(response.codeLength || 6))
       setCodeError(null)
@@ -183,13 +188,21 @@ export function RegisterPage() {
 
       if (problemCode === 'email_already_exists') {
         setErrors((previous) => ({ ...previous, email: 'Email уже зарегистрирован' }))
-        setFormError({ title: 'Этот email уже зарегистрирован в системе' })
+        setFormError({
+          title: 'Этот email уже зарегистрирован',
+          description: 'Войдите в существующий аккаунт или используйте другой email.',
+          action: 'go-to-login',
+        })
         return
       }
 
       if (problemCode === 'phone_already_exists') {
         setErrors((previous) => ({ ...previous, phone: 'Телефон уже зарегистрирован' }))
-        setFormError({ title: 'Такой номер уже зарегистрирован в системе' })
+        setFormError({
+          title: 'Этот номер уже зарегистрирован',
+          description: 'Войдите в существующий аккаунт или используйте другой номер.',
+          action: 'go-to-login',
+        })
         return
       }
 
@@ -249,7 +262,6 @@ export function RegisterPage() {
             ogrnip: currentDraft.executorOgrnip.trim() || undefined,
           }
         : undefined
-
     try {
       await updateMyProfile({
         firstName: currentDraft.firstName.trim(),
@@ -300,7 +312,7 @@ export function RegisterPage() {
               const nextErrors = validateRoleStep(draft.role)
               setErrors(nextErrors)
               if (Object.keys(nextErrors).length === 0) {
-                goTo(1)
+                goTo(hasVerifiedIdentity() ? 3 : 1)
               }
             }}
             onLoginClick={() => navigate(routePaths.auth)}
@@ -319,6 +331,7 @@ export function RegisterPage() {
             onChangeRole={() => goTo(0)}
             onSubmit={handleIdentitySubmit}
             onProviderClick={handleProviderClick}
+            onGoToLogin={() => navigate(routePaths.auth)}
           />
         ) : null}
 
@@ -349,13 +362,14 @@ export function RegisterPage() {
             onChangeRole={() => goTo(0)}
             onBackToCode={handleBackToCode}
             onSubmit={handleProfileSubmit}
+            onGoToLogin={() => navigate(routePaths.auth)}
           />
         ) : null}
       </AuthCard>
 
       {stepIndex === 2 ? (
         <p className="m-0 mt-4 text-center text-caption-meta text-muted-foreground">
-          256-битное шифрование · Защита данных 152-ФЗ · Платформа КадрыТут
+          256-битное шифрование · Защита данных 152-ФЗ · КадрыТут
         </p>
       ) : null}
     </AuthLayout>
@@ -365,15 +379,17 @@ export function RegisterPage() {
 function mapVerificationError(code: string | null, data: unknown): RegisterFormError {
   if (code === 'phone_already_exists') {
     return {
-      title: 'Такой номер уже зарегистрирован в системе',
-      description: 'Воспользуйтесь входом в личный кабинет или восстановите доступ.',
+      title: 'Этот номер уже зарегистрирован',
+      description: 'Войдите в существующий аккаунт или используйте другой номер.',
+      action: 'go-to-login',
     }
   }
 
   if (code === 'email_already_exists') {
     return {
-      title: 'Этот email уже зарегистрирован в системе',
-      description: 'Воспользуйтесь входом в личный кабинет или восстановите доступ.',
+      title: 'Этот email уже зарегистрирован',
+      description: 'Войдите в существующий аккаунт или используйте другой email.',
+      action: 'go-to-login',
     }
   }
 

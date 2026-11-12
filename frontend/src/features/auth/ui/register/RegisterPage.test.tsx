@@ -64,6 +64,7 @@ function createChallengeResponse() {
     expiresAtUtc: new Date(Date.now() + 300000).toISOString(),
     resendAvailableAtUtc: new Date(Date.now() + 60000).toISOString(),
     debugCode: '123456',
+    developmentMode: true,
   }
 }
 
@@ -83,6 +84,7 @@ describe('RegisterPage', () => {
     renderRegisterPage()
 
     expect(screen.getByText('Заказчик')).toBeInTheDocument()
+    expect(screen.getByText('Юрлицо и ИП')).toBeInTheDocument()
     expect(screen.getByText('Исполнитель')).toBeInTheDocument()
     expect(screen.getByText('Соискатель')).toBeInTheDocument()
 
@@ -138,5 +140,54 @@ describe('RegisterPage', () => {
     expect(
       await screen.findByRole('heading', { name: 'Подтверждение номера' }, { timeout: 2000 }),
     ).toBeInTheDocument()
+    expect(screen.getByText('Демо-режим (development)')).toBeInTheDocument()
+    expect(screen.getByText(/введите код 123456/i)).toBeInTheDocument()
+  })
+
+  it('returns to the profile step after changing the role when the identity is already verified', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createJsonResponse(createChallengeResponse()))
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          verificationToken: 'token-123',
+          channel: 'Phone',
+          target: '+79264923810',
+          verifiedAtUtc: new Date().toISOString(),
+        }),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderRegisterPage()
+
+    fireEvent.click(screen.getByRole('button', { name: /Продолжить/ }))
+    fireEvent.change(screen.getByLabelText(/Номер телефона/), {
+      target: { value: '9264923810' },
+    })
+    fireEvent.change(screen.getByLabelText(/Пароль для входа/), {
+      target: { value: 'Passw0rd!' },
+    })
+    fireEvent.click(screen.getByRole('checkbox', { name: /Я принимаю условия/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Получить SMS-код подтверждения/ }))
+
+    await screen.findByRole('heading', { name: 'Подтверждение номера' }, { timeout: 2000 })
+
+    const digits = screen.getAllByLabelText(/Цифра/)
+    fireEvent.change(digits[0], { target: { value: '123456' } })
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+
+    await screen.findByRole('heading', { name: 'Расскажите о вашей компании' }, { timeout: 2000 })
+
+    fireEvent.click(screen.getByRole('button', { name: /Сменить/ }))
+
+    expect(screen.getByRole('heading', { name: 'Как вы планируете работать?' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Продолжить/ }))
+
+    expect(
+      screen.getByRole('heading', { name: 'Расскажите о вашей компании' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Создайте аккаунт' })).not.toBeInTheDocument()
   })
 })
