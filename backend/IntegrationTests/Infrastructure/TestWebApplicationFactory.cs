@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SelectProfi.backend.Application.Auth.Login;
@@ -17,6 +18,14 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.ConfigureAppConfiguration((_, configuration) =>
+        {
+            configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AuthFeatureFlags:RequireEmailVerification"] = "false",
+                ["AuthFeatureFlags:RequirePhoneVerification"] = "false"
+            });
+        });
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<IRegisterUserPersistence>();

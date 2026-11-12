@@ -7,4 +7,6 @@ public sealed class ConfirmVerificationCodeCommand : ICommand<ConfirmVerificatio
     public Guid ChallengeId { get; init; }
 
     public string Code { get; init; } = string.Empty;
+
+    public bool AllowDevelopmentCode { get; init; }
 }

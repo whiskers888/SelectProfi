@@ -255,6 +255,37 @@ public sealed class AuthVerificationHttpTests : IClassFixture<TestWebApplication
         Assert.Equal("Senior Frontend-разработчик (React)", getPayload.ApplicantProfile.ResumeTitle);
     }
 
+    [Fact]
+    public async Task Confirm_WithDevelopmentCode_AcceptsAgainstAnyChallenge()
+    {
+        using var client = _factory.CreateClient();
+        var phone = BuildUniquePhone();
+
+        using var sendResponse = await client.PostAsJsonAsync(
+            "/api/auth/verification/send",
+            new SendVerificationCodeRequest
+            {
+                Channel = VerificationChannelContract.Phone,
+                Target = phone
+            });
+        var sendPayload = await sendResponse.Content.ReadFromJsonAsync<SendVerificationCodeResponse>();
+
+        using var confirmResponse = await client.PostAsJsonAsync(
+            "/api/auth/verification/confirm",
+            new ConfirmVerificationCodeRequest
+            {
+                ChallengeId = sendPayload!.ChallengeId,
+                Code = "123456"
+            });
+        var confirmPayload = await confirmResponse.Content.ReadFromJsonAsync<ConfirmVerificationCodeResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, sendResponse.StatusCode);
+        Assert.True(sendPayload.DevelopmentMode);
+        Assert.Equal("123456", sendPayload.DebugCode);
+        Assert.Equal(HttpStatusCode.OK, confirmResponse.StatusCode);
+        Assert.False(string.IsNullOrWhiteSpace(confirmPayload?.VerificationToken));
+    }
+
     private static async Task<RegisterUserResponse> RegisterAsync(
         HttpClient client,
         RegisterUserRole role)

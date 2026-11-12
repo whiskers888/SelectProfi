@@ -20,7 +20,14 @@ public sealed class RegisterUserCommandHandler(
 
         var utcNow = DateTime.UtcNow;
 
-        if (command.VerificationToken is not null &&
+        var requiresVerificationToken =
+            (normalizedEmail is not null && command.RequireEmailVerification) ||
+            (normalizedPhone is not null && command.RequirePhoneVerification);
+
+        if (requiresVerificationToken && string.IsNullOrWhiteSpace(command.VerificationToken))
+            return new RegisterUserResult { ErrorCode = RegisterUserErrorCode.VerificationRequired };
+
+        if (!string.IsNullOrWhiteSpace(command.VerificationToken) &&
             !IsVerificationTokenValid(command, normalizedEmail, normalizedPhone, utcNow))
             return new RegisterUserResult { ErrorCode = RegisterUserErrorCode.VerificationTokenMismatch };
 

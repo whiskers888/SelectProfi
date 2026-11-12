@@ -15,4 +15,6 @@ public sealed class SendVerificationCodeResponse
     public DateTime ResendAvailableAtUtc { get; init; }
 
     public string? DebugCode { get; init; }
+
+    public bool DevelopmentMode { get; init; }
 }

@@ -18,22 +18,27 @@ public static partial class AuthRequestMapper
 
     public static SendVerificationCodeCommand ToCommand(
         this SendVerificationCodeRequest request,
-        bool includeDebugCode)
+        bool isDevelopment)
     {
         return new SendVerificationCodeCommand
         {
             Channel = MapVerificationChannel(request.Channel),
             Target = request.Target,
-            IncludeDebugCode = includeDebugCode
+            IncludeDebugCode = isDevelopment,
+            UseDevelopmentCode = isDevelopment,
+            RejectExistingTarget = true
         };
     }
 
-    public static ConfirmVerificationCodeCommand ToCommand(this ConfirmVerificationCodeRequest request)
+    public static ConfirmVerificationCodeCommand ToCommand(
+        this ConfirmVerificationCodeRequest request,
+        bool isDevelopment)
     {
         return new ConfirmVerificationCodeCommand
         {
             ChallengeId = request.ChallengeId,
-            Code = request.Code
+            Code = request.Code,
+            AllowDevelopmentCode = isDevelopment
         };
     }
 

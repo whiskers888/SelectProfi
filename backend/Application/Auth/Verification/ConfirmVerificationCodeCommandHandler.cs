@@ -27,8 +27,13 @@ public sealed class ConfirmVerificationCodeCommandHandler(
                 RemainingAttempts = 0
             };
 
-        var submittedHash = VerificationTargets.ComputeCodeHash(command.Code.Trim());
-        if (!IsCodeMatch(challenge.CodeHash, submittedHash))
+        var submittedCode = command.Code.Trim();
+        var isDevelopmentCode =
+            command.AllowDevelopmentCode &&
+            string.Equals(submittedCode, SendVerificationCodeCommandHandler.DevelopmentCode, StringComparison.Ordinal);
+
+        var submittedHash = VerificationTargets.ComputeCodeHash(submittedCode);
+        if (!isDevelopmentCode && !IsCodeMatch(challenge.CodeHash, submittedHash))
         {
             challenge.Attempts++;
             await persistence.UpdateAsync(challenge, cancellationToken);

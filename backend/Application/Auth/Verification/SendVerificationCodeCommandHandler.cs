@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using SelectProfi.backend.Application.Auth.Register;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
@@ -6,9 +7,11 @@ namespace SelectProfi.backend.Application.Auth.Verification;
 
 public sealed class SendVerificationCodeCommandHandler(
     IVerificationChallengePersistence persistence,
-    IVerificationCodeSender codeSender) : ICommandHandler<SendVerificationCodeCommand, SendVerificationCodeResult>
+    IVerificationCodeSender codeSender,
+    IRegisterUserPersistence userPersistence) : ICommandHandler<SendVerificationCodeCommand, SendVerificationCodeResult>
 {
     public const int CodeLength = 6;
+    public const string DevelopmentCode = "123456";
     private static readonly TimeSpan ChallengeLifetime = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan ResendWindow = TimeSpan.FromSeconds(60);
 
@@ -26,6 +29,13 @@ public sealed class SendVerificationCodeCommandHandler(
         if (target is null || !IsValidTarget(command.Channel, target))
             return new SendVerificationCodeResult { ErrorCode = SendVerificationCodeErrorCode.InvalidTarget };
 
+        if (command.RejectExistingTarget && await TargetExistsAsync(command.Channel, target, cancellationToken))
+            return new SendVerificationCodeResult
+            {
+                ErrorCode = SendVerificationCodeErrorCode.TargetAlreadyRegistered,
+                Channel = command.Channel.ToString()
+            };
+
         var utcNow = DateTime.UtcNow;
         var activeChallenge = await persistence.FindLatestActiveByTargetAsync(target, cancellationToken);
         if (activeChallenge is not null && activeChallenge.ResendAvailableAtUtc > utcNow)
@@ -33,7 +43,7 @@ public sealed class SendVerificationCodeCommandHandler(
 
         await persistence.SupersedeActiveAsync(target, utcNow, cancellationToken);
 
-        var code = GenerateCode();
+        var code = command.UseDevelopmentCode ? DevelopmentCode : GenerateCode();
         var challenge = new VerificationChallenge
         {
             Id = Guid.NewGuid(),
@@ -61,7 +71,21 @@ public sealed class SendVerificationCodeCommandHandler(
             CodeLength = CodeLength,
             ExpiresAtUtc = challenge.ExpiresAtUtc,
             ResendAvailableAtUtc = challenge.ResendAvailableAtUtc,
-            DebugCode = command.IncludeDebugCode ? code : null
+            DebugCode = command.IncludeDebugCode ? code : null,
+            DevelopmentMode = command.UseDevelopmentCode
+        };
+    }
+
+    private Task<bool> TargetExistsAsync(
+        VerificationChannel channel,
+        string target,
+        CancellationToken cancellationToken)
+    {
+        return channel switch
+        {
+            VerificationChannel.Phone => userPersistence.PhoneExistsAsync(target, cancellationToken),
+            VerificationChannel.Email => userPersistence.EmailExistsAsync(target, cancellationToken),
+            _ => Task.FromResult(false)
         };
     }
 

@@ -10,4 +10,8 @@ public sealed class SendVerificationCodeCommand : ICommand<SendVerificationCodeR
     public string Target { get; init; } = string.Empty;
 
     public bool IncludeDebugCode { get; init; }
+
+    public bool UseDevelopmentCode { get; init; }
+
+    public bool RejectExistingTarget { get; init; }
 }

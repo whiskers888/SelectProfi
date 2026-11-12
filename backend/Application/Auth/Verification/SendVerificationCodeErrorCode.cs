@@ -4,5 +4,6 @@ public enum SendVerificationCodeErrorCode
 {
     None = 0,
     InvalidTarget = 1,
-    ResendTooSoon = 2
+    ResendTooSoon = 2,
+    TargetAlreadyRegistered = 3
 }

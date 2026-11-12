@@ -7,5 +7,6 @@ public enum RegisterUserErrorCode
     PhoneAlreadyExists = 2,
     UserAlreadyExists = 3,
     VerificationTokenMismatch = 4,
-    IdentifierRequired = 5
+    IdentifierRequired = 5,
+    VerificationRequired = 6
 }

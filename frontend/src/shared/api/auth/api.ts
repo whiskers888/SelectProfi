@@ -31,6 +31,7 @@ export type SendVerificationCodeResponse = {
   expiresAtUtc: string
   resendAvailableAtUtc: string
   debugCode?: string | null
+  developmentMode?: boolean
 }
 
 export type ConfirmVerificationCodeRequest = {

@@ -55,6 +55,9 @@ public sealed class AuthController(
             RegisterUserErrorCode.VerificationTokenMismatch => BadRequest(CreateBadRequestProblem(
                 "verification_token_mismatch",
                 "Данные подтверждения не совпадают.")),
+            RegisterUserErrorCode.VerificationRequired => BadRequest(CreateBadRequestProblem(
+                "verification_required",
+                "Подтвердите email или телефон перед регистрацией.")),
             _ => Conflict(CreateConflictProblem("user_already_exists", "Пользователь уже существует."))
         };
     }
@@ -90,8 +93,9 @@ public sealed class AuthController(
         [FromBody] SendVerificationCodeRequest request,
         CancellationToken cancellationToken)
     {
+        var isDevelopment = hostEnvironment.IsDevelopment();
         var result = await commandDispatcher.DispatchAsync<SendVerificationCodeCommand, SendVerificationCodeResult>(
-            request.ToCommand(hostEnvironment.IsDevelopment()),
+            request.ToCommand(isDevelopment),
             cancellationToken);
 
         return result.ErrorCode switch
@@ -105,6 +109,10 @@ public sealed class AuthController(
                 CreateTooManyRequestsProblem(
                     "verification_resend_too_soon",
                     "Код уже отправлен. Повторите попытку позже.")),
+            SendVerificationCodeErrorCode.TargetAlreadyRegistered => Conflict(CreateConflictProblem(
+                IsPhoneChannel(result) ? "phone_already_exists" : "email_already_exists",
+                IsPhoneChannel(result) ? "Телефон уже зарегистрирован." : "Email уже зарегистрирован.",
+                IsPhoneChannel(result) ? "phone" : "email")),
             _ => BadRequest(CreateBadRequestProblem(
                 "invalid_verification_target",
                 "Некорректный адрес подтверждения."))
@@ -120,7 +128,7 @@ public sealed class AuthController(
         CancellationToken cancellationToken)
     {
         var result = await commandDispatcher.DispatchAsync<ConfirmVerificationCodeCommand, ConfirmVerificationCodeResult>(
-            request.ToCommand(),
+            request.ToCommand(hostEnvironment.IsDevelopment()),
             cancellationToken);
 
         return result.ErrorCode switch
@@ -224,6 +232,11 @@ public sealed class AuthController(
         }
 
         return problemDetails;
+    }
+
+    private static bool IsPhoneChannel(SendVerificationCodeResult result)
+    {
+        return string.Equals(result.Channel, "Phone", StringComparison.Ordinal);
     }
 
     private ProblemDetails CreateBadRequestProblem(string code, string detail)

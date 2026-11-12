@@ -27,7 +27,8 @@ public static class AuthResponseMapper
             CodeLength = result.CodeLength,
             ExpiresAtUtc = result.ExpiresAtUtc,
             ResendAvailableAtUtc = result.ResendAvailableAtUtc,
-            DebugCode = result.DebugCode
+            DebugCode = result.DebugCode,
+            DevelopmentMode = result.DevelopmentMode
         };
     }
 
