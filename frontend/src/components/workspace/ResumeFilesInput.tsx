@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,18 +36,42 @@ export function ResumeFilesInput({ id, value: files, onChange, disabled = false 
 
   return (
     <div className="space-y-2">
-      <Label className="text-muted-foreground">Прикреплённые файлы</Label>
-      <p className="text-xs text-muted-foreground">PDF, документы, изображения и видео. До 25 MB на файл.</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col">
+          <Label className="text-muted-foreground">Прикреплённые файлы</Label>
+          <p className="text-xs text-muted-foreground">PDF, документы, изображения и видео. До 25 MB на файл.</p>
+        </div>
+        <span
+          className={
+            files.length > 0
+              ? 'inline-flex shrink-0 items-center gap-1 rounded bg-success-muted px-2 py-0.5 text-label-micro uppercase text-success-foreground'
+              : 'inline-flex shrink-0 items-center gap-1 rounded bg-error-muted px-2 py-0.5 text-label-micro uppercase text-error-foreground'
+          }
+        >
+          {files.length > 0 ? 'Загружено' : 'Требуется загрузка'}
+        </span>
+      </div>
       <Button type="button" variant="outline" disabled={disabled} onClick={() => inputRef.current?.click()}>
         📎 Прикрепить файлы
       </Button>
       <input ref={inputRef} id={id} className="sr-only" type="file" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.mp4,.webm" onChange={(event) => addFiles(event.target.files)} disabled={disabled} />
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {files.length === 0 ? <p className="text-xs text-muted-foreground">Файл не выбран</p> : null}
       {files.map((item, index) => (
         <div key={`${item.file.name}-${index}`} className="space-y-2 rounded-xl border border-border p-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span>📄 {item.file.name} <span className="text-muted-foreground">· {formatSize(item.file.size)}</span></span>
-            <Button type="button" variant="ghost" size="sm" disabled={disabled} onClick={() => onChange(files.filter((_, i) => i !== index))}>Удалить</Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Удалить файл"
+              className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-destructive"
+              disabled={disabled}
+              onClick={() => onChange(files.filter((_, i) => i !== index))}
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </Button>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <select aria-label={`Тип файла ${index + 1}`} className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground" value={item.type} disabled={disabled} onChange={(event) => onChange(files.map((currentItem, i) => i === index ? { ...currentItem, type: event.target.value as ResumeFileType } : currentItem))}>
