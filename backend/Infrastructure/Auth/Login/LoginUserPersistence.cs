@@ -12,6 +12,11 @@ public sealed class LoginUserPersistence(AppDbContext dbContext) : ILoginUserPer
         return dbContext.Users.FirstOrDefaultAsync(user => user.NormalizedEmail == normalizedEmail, cancellationToken);
     }
 
+    public Task<User?> FindByNormalizedPhoneAsync(string normalizedPhone, CancellationToken cancellationToken)
+    {
+        return dbContext.Users.FirstOrDefaultAsync(user => user.NormalizedPhone == normalizedPhone, cancellationToken);
+    }
+
     public async Task SaveRefreshSessionAsync(RefreshSession refreshSession, CancellationToken cancellationToken)
     {
         dbContext.RefreshSessions.Add(refreshSession);

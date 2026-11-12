@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
+using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
 using SelectProfi.backend.Application.Profile.UpdateMyProfile;
 
@@ -23,13 +24,16 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IRefreshAuthSessionPersistence>();
             services.RemoveAll<IProfileReadPersistence>();
             services.RemoveAll<IProfileWritePersistence>();
+            services.RemoveAll<IVerificationChallengePersistence>();
 
             services.AddSingleton<InMemoryAuthStore>();
+            services.AddSingleton<InMemoryVerificationChallengeStore>();
             services.AddScoped<IRegisterUserPersistence, InMemoryRegisterUserPersistence>();
             services.AddScoped<ILoginUserPersistence, InMemoryLoginUserPersistence>();
             services.AddScoped<IRefreshAuthSessionPersistence, InMemoryRefreshAuthSessionPersistence>();
             services.AddScoped<IProfileReadPersistence, InMemoryProfileReadPersistence>();
             services.AddScoped<IProfileWritePersistence, InMemoryProfileWritePersistence>();
+            services.AddScoped<IVerificationChallengePersistence, InMemoryVerificationChallengePersistence>();
 
             services.AddControllers()
                 .PartManager.ApplicationParts.Add(new AssemblyPart(typeof(TestErrorContractController).Assembly));

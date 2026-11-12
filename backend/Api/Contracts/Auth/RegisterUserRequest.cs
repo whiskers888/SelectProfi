@@ -5,13 +5,12 @@ namespace SelectProfi.backend.Contracts.Auth;
 
 public sealed class RegisterUserRequest : IValidatableObject
 {
-    [Required]
     [EmailAddress]
     [MaxLength(254)]
-    public string Email { get; init; } = string.Empty;
+    public string? Email { get; init; }
 
     [Required]
-    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$")]
+    [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,128}$")]
     public string Password { get; init; } = string.Empty;
 
     [Required]
@@ -33,6 +32,8 @@ public sealed class RegisterUserRequest : IValidatableObject
     public CustomerRegistrationRequest? CustomerRegistration { get; init; }
 
     public OfferAcceptanceRequest? OfferAcceptance { get; init; }
+
+    public string? VerificationToken { get; init; }
 
     public IReadOnlyList<RegisterUserRole> ResolveRoles()
     {
@@ -59,6 +60,14 @@ public sealed class RegisterUserRequest : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (string.IsNullOrWhiteSpace(Email) && string.IsNullOrWhiteSpace(Phone))
+        {
+            yield return new ValidationResult(
+                "Email or phone is required.",
+                [nameof(Email), nameof(Phone)]);
+            yield break;
+        }
+
         var resolvedRoles = ResolveRoles();
         if (resolvedRoles.Count == 0)
         {

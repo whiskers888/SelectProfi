@@ -4,7 +4,7 @@ public sealed class MyProfileResponse
 {
     public Guid UserId { get; init; }
 
-    public string Email { get; init; } = string.Empty;
+    public string? Email { get; init; }
 
     public string? Phone { get; init; }
 

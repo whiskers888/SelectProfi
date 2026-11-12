@@ -2,6 +2,7 @@ using Riok.Mapperly.Abstractions;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
+using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Configuration;
 using SelectProfi.backend.Contracts.Auth;
 using SelectProfi.backend.Domain.Users;
@@ -14,6 +15,27 @@ public static partial class AuthRequestMapper
     public static partial LoginUserCommand ToCommand(this LoginUserRequest request);
 
     public static partial RefreshAuthSessionCommand ToCommand(this RefreshTokenRequest request);
+
+    public static SendVerificationCodeCommand ToCommand(
+        this SendVerificationCodeRequest request,
+        bool includeDebugCode)
+    {
+        return new SendVerificationCodeCommand
+        {
+            Channel = MapVerificationChannel(request.Channel),
+            Target = request.Target,
+            IncludeDebugCode = includeDebugCode
+        };
+    }
+
+    public static ConfirmVerificationCodeCommand ToCommand(this ConfirmVerificationCodeRequest request)
+    {
+        return new ConfirmVerificationCodeCommand
+        {
+            ChallengeId = request.ChallengeId,
+            Code = request.Code
+        };
+    }
 
     public static RegisterUserCommand ToCommand(this RegisterUserRequest request, AuthFeatureFlagsOptions featureFlags)
     {
@@ -32,6 +54,7 @@ public static partial class AuthRequestMapper
             Roles = resolvedRoles,
             CustomerRegistration = MapCustomerRegistration(request.CustomerRegistration),
             OfferAcceptance = MapOfferAcceptance(request.OfferAcceptance),
+            VerificationToken = request.VerificationToken,
             RequireEmailVerification = featureFlags.RequireEmailVerification,
             RequirePhoneVerification = featureFlags.RequirePhoneVerification
         };
@@ -45,6 +68,16 @@ public static partial class AuthRequestMapper
             RegisterUserRole.Executor => UserRole.Executor,
             RegisterUserRole.Customer => UserRole.Customer,
             _ => throw new ArgumentOutOfRangeException(nameof(role), role, "Unsupported role.")
+        };
+    }
+
+    private static VerificationChannel MapVerificationChannel(VerificationChannelContract channel)
+    {
+        return channel switch
+        {
+            VerificationChannelContract.Phone => VerificationChannel.Phone,
+            VerificationChannelContract.Email => VerificationChannel.Email,
+            _ => throw new ArgumentOutOfRangeException(nameof(channel), channel, "Unsupported verification channel.")
         };
     }
 

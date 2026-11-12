@@ -1,3 +1,4 @@
+using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
@@ -6,27 +7,36 @@ namespace SelectProfi.backend.Application.Auth.Register;
 public sealed class RegisterUserCommandHandler(
     IRegisterUserPersistence persistence,
     IPasswordHasher passwordHasher,
-    ITokenPairIssuer tokenPairIssuer) : ICommandHandler<RegisterUserCommand, RegisterUserResult>
+    ITokenPairIssuer tokenPairIssuer,
+    IVerificationTokenIssuer verificationTokenIssuer) : ICommandHandler<RegisterUserCommand, RegisterUserResult>
 {
     public async Task<RegisterUserResult> HandleAsync(RegisterUserCommand command, CancellationToken cancellationToken)
     {
-        var normalizedEmail = NormalizeEmail(command.Email);
-        var normalizedPhone = NormalizePhone(command.Phone);
+        var normalizedEmail = VerificationTargets.NormalizeEmail(command.Email);
+        var normalizedPhone = VerificationTargets.NormalizePhone(command.Phone);
 
-        if (await persistence.EmailExistsAsync(normalizedEmail, cancellationToken))
+        if (normalizedEmail is null && normalizedPhone is null)
+            return new RegisterUserResult { ErrorCode = RegisterUserErrorCode.IdentifierRequired };
+
+        var utcNow = DateTime.UtcNow;
+
+        if (command.VerificationToken is not null &&
+            !IsVerificationTokenValid(command, normalizedEmail, normalizedPhone, utcNow))
+            return new RegisterUserResult { ErrorCode = RegisterUserErrorCode.VerificationTokenMismatch };
+
+        if (normalizedEmail is not null && await persistence.EmailExistsAsync(normalizedEmail, cancellationToken))
             return new RegisterUserResult { ErrorCode = RegisterUserErrorCode.EmailAlreadyExists };
 
         if (normalizedPhone is not null && await persistence.PhoneExistsAsync(normalizedPhone, cancellationToken))
             return new RegisterUserResult { ErrorCode = RegisterUserErrorCode.PhoneAlreadyExists };
 
-        var utcNow = DateTime.UtcNow;
         var normalizedCustomerRegistration = NormalizeCustomerRegistration(command.CustomerRegistration);
         var normalizedOfferAcceptance = NormalizeOfferAcceptance(command.OfferAcceptance);
 
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = command.Email.Trim(),
+            Email = normalizedEmail is null ? null : command.Email!.Trim(),
             NormalizedEmail = normalizedEmail,
             Phone = normalizedPhone,
             NormalizedPhone = normalizedPhone,
@@ -42,7 +52,7 @@ public sealed class RegisterUserCommandHandler(
             CustomerOfferAccepted = normalizedOfferAcceptance?.Accepted ?? false,
             CustomerOfferVersion = normalizedOfferAcceptance?.Accepted == true ? normalizedOfferAcceptance.Version : null,
             CustomerOfferAcceptedAtUtc = normalizedOfferAcceptance?.Accepted == true ? utcNow : null,
-            IsEmailVerified = !command.RequireEmailVerification,
+            IsEmailVerified = normalizedEmail is null || !command.RequireEmailVerification,
             IsPhoneVerified = normalizedPhone is null || !command.RequirePhoneVerification,
             CreatedAtUtc = utcNow
         };
@@ -69,17 +79,24 @@ public sealed class RegisterUserCommandHandler(
         };
     }
 
-    private static string NormalizeEmail(string email)
+    private bool IsVerificationTokenValid(
+        RegisterUserCommand command,
+        string? normalizedEmail,
+        string? normalizedPhone,
+        DateTime utcNow)
     {
-        return email.Trim().ToUpperInvariant();
-    }
+        var payload = verificationTokenIssuer.Validate(command.VerificationToken!, utcNow);
+        if (payload is null)
+            return false;
 
-    private static string? NormalizePhone(string? phone)
-    {
-        if (string.IsNullOrWhiteSpace(phone))
-            return null;
-
-        return phone.Trim();
+        return payload.Channel switch
+        {
+            VerificationChannel.Phone => normalizedPhone is not null &&
+                                         string.Equals(payload.Target, normalizedPhone, StringComparison.Ordinal),
+            VerificationChannel.Email => normalizedEmail is not null &&
+                                         string.Equals(payload.Target, normalizedEmail, StringComparison.Ordinal),
+            _ => false
+        };
     }
 
     private static RegisterCustomerPayload? NormalizeCustomerRegistration(RegisterCustomerPayload? payload)

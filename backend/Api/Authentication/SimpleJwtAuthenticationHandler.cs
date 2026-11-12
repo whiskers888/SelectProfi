@@ -82,7 +82,6 @@ public sealed class SimpleJwtAuthenticationHandler(
             return TokenValidationResult.Invalid;
 
         if (!TryGetString(payload, "sub", out var subject) ||
-            !TryGetString(payload, "email", out var email) ||
             !TryGetString(payload, "role", out var role))
             return TokenValidationResult.Invalid;
 
@@ -94,9 +93,14 @@ public sealed class SimpleJwtAuthenticationHandler(
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, subject),
-            new(ClaimTypes.Email, email),
             new(ClaimTypes.Role, parsedRole.ToString())
         };
+
+        if (TryGetString(payload, "email", out var email))
+            claims.Add(new Claim(ClaimTypes.Email, email));
+
+        if (TryGetString(payload, "phone", out var phone))
+            claims.Add(new Claim(ClaimTypes.MobilePhone, phone));
 
         return TokenValidationResult.Valid(claims);
     }

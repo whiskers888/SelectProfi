@@ -1,3 +1,4 @@
+using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Domain.Users;
 
@@ -10,8 +11,23 @@ public sealed class LoginUserCommandHandler(
 {
     public async Task<LoginUserResult> HandleAsync(LoginUserCommand command, CancellationToken cancellationToken)
     {
-        var normalizedEmail = NormalizeEmail(command.Email);
-        var user = await persistence.FindByNormalizedEmailAsync(normalizedEmail, cancellationToken);
+        var normalizedEmail = VerificationTargets.NormalizeEmail(command.Email);
+        var normalizedPhone = VerificationTargets.NormalizePhone(command.Phone);
+
+        User? user;
+
+        if (normalizedEmail is not null)
+        {
+            user = await persistence.FindByNormalizedEmailAsync(normalizedEmail, cancellationToken);
+        }
+        else if (normalizedPhone is not null)
+        {
+            user = await persistence.FindByNormalizedPhoneAsync(normalizedPhone, cancellationToken);
+        }
+        else
+        {
+            return new LoginUserResult { ErrorCode = LoginUserErrorCode.IdentifierRequired };
+        }
 
         if (user is null || !passwordVerifier.VerifyPassword(command.Password, user.PasswordHash))
             return new LoginUserResult { ErrorCode = LoginUserErrorCode.InvalidCredentials };
@@ -36,10 +52,5 @@ public sealed class LoginUserCommandHandler(
             AccessToken = tokens.AccessToken,
             RefreshToken = tokens.RefreshToken
         };
-    }
-
-    private static string NormalizeEmail(string email)
-    {
-        return email.Trim().ToUpperInvariant();
     }
 }

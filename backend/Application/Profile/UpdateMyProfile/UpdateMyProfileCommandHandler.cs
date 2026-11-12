@@ -17,6 +17,7 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
     private const int ApplicantEducationMaxLength = 1000;
     private const int ApplicantPortfolioUrlMaxLength = 512;
     private const int ApplicantAboutMaxLength = 2000;
+    private const int ApplicantJobSearchStatusMaxLength = 32;
     private const int ApplicantListSerializedMaxLength = 4000;
 
     private const int CustomerInnMaxLength = 12;
@@ -32,12 +33,15 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
     private const int ExecutorAchievementsMaxLength = 2000;
     private const int ExecutorGradeMaxLength = 50;
     private const int ExecutorExtraInfoMaxLength = 2000;
+    private const int ExecutorInnMaxLength = 12;
+    private const int ExecutorOgrnipMaxLength = 15;
     private const int ExecutorCertificatesSerializedMaxLength = 4000;
 
     private const int ListItemMaxLength = 256;
     private static readonly Regex InnRegex = new(@"^\d{10}(\d{2})?$", RegexOptions.Compiled);
     private static readonly Regex EgrnRegex = new(@"^\d{13}$", RegexOptions.Compiled);
     private static readonly Regex EgrnipRegex = new(@"^\d{15}$", RegexOptions.Compiled);
+    private static readonly Regex ExecutorOgrnipRegex = new(@"^\d{15}$", RegexOptions.Compiled);
     private static readonly decimal MaxDesiredSalary = 9_999_999_999_999_999.99m;
 
     public async Task<UpdateMyProfileResult> HandleAsync(UpdateMyProfileCommand command, CancellationToken cancellationToken)
@@ -91,6 +95,7 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
             ApplicantPortfolioUrl = user.ApplicantPortfolioUrl,
             ApplicantAbout = user.ApplicantAbout,
             ApplicantDesiredSalary = user.ApplicantDesiredSalary,
+            ApplicantJobSearchStatus = user.ApplicantJobSearchStatus,
             CustomerInn = user.CustomerInn,
             CustomerLegalForm = user.CustomerLegalForm,
             CustomerEgrn = user.CustomerEgrn,
@@ -107,7 +112,9 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
             ExecutorAchievements = user.ExecutorAchievements,
             ExecutorCertificates = user.ExecutorCertificates,
             ExecutorGrade = user.ExecutorGrade,
-            ExecutorExtraInfo = user.ExecutorExtraInfo
+            ExecutorExtraInfo = user.ExecutorExtraInfo,
+            ExecutorInn = user.ExecutorInn,
+            ExecutorOgrnip = user.ExecutorOgrnip
         };
     }
 
@@ -184,6 +191,7 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
         user.ApplicantPortfolioUrl = NormalizeOptional(payload.PortfolioUrl);
         user.ApplicantAbout = NormalizeOptional(payload.About);
         user.ApplicantDesiredSalary = payload.DesiredSalary;
+        user.ApplicantJobSearchStatus = NormalizeOptional(payload.JobSearchStatus);
     }
 
     private static void ApplyCustomerProfile(CustomerProfileUpdatePayload? payload, User user)
@@ -227,6 +235,8 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
         user.ExecutorCertificates = SerializeStringList(payload.Certificates);
         user.ExecutorGrade = NormalizeOptional(payload.Grade);
         user.ExecutorExtraInfo = NormalizeOptional(payload.ExtraInfo);
+        user.ExecutorInn = NormalizeOptional(payload.Inn);
+        user.ExecutorOgrnip = NormalizeOptional(payload.Ogrnip);
     }
 
     private static string? NormalizeOptional(string? value)
@@ -265,7 +275,8 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
             !IsValidOptionalMaxLength(payload.Achievements, ApplicantAchievementsMaxLength) ||
             !IsValidOptionalMaxLength(payload.Education, ApplicantEducationMaxLength) ||
             !IsValidOptionalUrl(payload.PortfolioUrl, ApplicantPortfolioUrlMaxLength) ||
-            !IsValidOptionalMaxLength(payload.About, ApplicantAboutMaxLength))
+            !IsValidOptionalMaxLength(payload.About, ApplicantAboutMaxLength) ||
+            !IsValidOptionalMaxLength(payload.JobSearchStatus, ApplicantJobSearchStatusMaxLength))
             return false;
 
         if (!IsValidOptionalStringList(payload.Skills, ApplicantListSerializedMaxLength) ||
@@ -325,6 +336,14 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
             return false;
 
         if (!IsValidOptionalStringList(payload.Certificates, ExecutorCertificatesSerializedMaxLength))
+            return false;
+
+        var inn = NormalizeOptional(payload.Inn);
+        if (inn is not null && (!InnRegex.IsMatch(inn) || inn.Length > ExecutorInnMaxLength))
+            return false;
+
+        var ogrnip = NormalizeOptional(payload.Ogrnip);
+        if (ogrnip is not null && (!ExecutorOgrnipRegex.IsMatch(ogrnip) || ogrnip.Length > ExecutorOgrnipMaxLength))
             return false;
 
         return true;

@@ -62,7 +62,8 @@ public static class ProfileResponseMapper
             result.ApplicantCertificates,
             result.ApplicantPortfolioUrl,
             result.ApplicantAbout,
-            result.ApplicantDesiredSalary);
+            result.ApplicantDesiredSalary,
+            result.ApplicantJobSearchStatus);
     }
 
     private static ApplicantProfileResponse? BuildApplicantProfile(UpdateMyProfileResult result)
@@ -78,7 +79,8 @@ public static class ProfileResponseMapper
             result.ApplicantCertificates,
             result.ApplicantPortfolioUrl,
             result.ApplicantAbout,
-            result.ApplicantDesiredSalary);
+            result.ApplicantDesiredSalary,
+            result.ApplicantJobSearchStatus);
     }
 
     private static CustomerProfileResponse? BuildCustomerProfile(GetMyProfileResult result)
@@ -119,7 +121,9 @@ public static class ProfileResponseMapper
             result.ExecutorAchievements,
             result.ExecutorCertificates,
             result.ExecutorGrade,
-            result.ExecutorExtraInfo);
+            result.ExecutorExtraInfo,
+            result.ExecutorInn,
+            result.ExecutorOgrnip);
     }
 
     private static ExecutorProfileResponse? BuildExecutorProfile(UpdateMyProfileResult result)
@@ -132,7 +136,9 @@ public static class ProfileResponseMapper
             result.ExecutorAchievements,
             result.ExecutorCertificates,
             result.ExecutorGrade,
-            result.ExecutorExtraInfo);
+            result.ExecutorExtraInfo,
+            result.ExecutorInn,
+            result.ExecutorOgrnip);
     }
 
     private static ApplicantProfileResponse? BuildApplicantProfile(
@@ -146,7 +152,8 @@ public static class ProfileResponseMapper
         string? certificates,
         string? portfolioUrl,
         string? about,
-        decimal? desiredSalary)
+        decimal? desiredSalary,
+        string? jobSearchStatus)
     {
         if (string.IsNullOrWhiteSpace(resumeTitle) &&
             string.IsNullOrWhiteSpace(previousCompanyName) &&
@@ -158,7 +165,8 @@ public static class ProfileResponseMapper
             string.IsNullOrWhiteSpace(certificates) &&
             string.IsNullOrWhiteSpace(portfolioUrl) &&
             string.IsNullOrWhiteSpace(about) &&
-            desiredSalary is null)
+            desiredSalary is null &&
+            string.IsNullOrWhiteSpace(jobSearchStatus))
             return null;
 
         return new ApplicantProfileResponse
@@ -173,7 +181,8 @@ public static class ProfileResponseMapper
             Certificates = DeserializeStringList(certificates),
             PortfolioUrl = portfolioUrl,
             About = about,
-            DesiredSalary = desiredSalary
+            DesiredSalary = desiredSalary,
+            JobSearchStatus = jobSearchStatus
         };
     }
 
@@ -221,7 +230,9 @@ public static class ProfileResponseMapper
         string? achievements,
         string? certificates,
         string? grade,
-        string? extraInfo)
+        string? extraInfo,
+        string? inn,
+        string? ogrnip)
     {
         if (employmentType is null &&
             string.IsNullOrWhiteSpace(projectTitle) &&
@@ -230,7 +241,9 @@ public static class ProfileResponseMapper
             string.IsNullOrWhiteSpace(achievements) &&
             string.IsNullOrWhiteSpace(certificates) &&
             string.IsNullOrWhiteSpace(grade) &&
-            string.IsNullOrWhiteSpace(extraInfo))
+            string.IsNullOrWhiteSpace(extraInfo) &&
+            string.IsNullOrWhiteSpace(inn) &&
+            string.IsNullOrWhiteSpace(ogrnip))
             return null;
 
         return new ExecutorProfileResponse
@@ -242,7 +255,9 @@ public static class ProfileResponseMapper
             Achievements = achievements,
             Certificates = DeserializeStringList(certificates),
             Grade = grade,
-            ExtraInfo = extraInfo
+            ExtraInfo = extraInfo,
+            Inn = inn,
+            Ogrnip = ogrnip
         };
     }
 

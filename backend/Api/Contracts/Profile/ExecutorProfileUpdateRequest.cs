@@ -20,4 +20,10 @@ public sealed class ExecutorProfileUpdateRequest
     public string? Grade { get; init; }
 
     public string? ExtraInfo { get; init; }
+
+    [RegularExpression(@"^\d{10}(\d{2})?$")]
+    public string? Inn { get; init; }
+
+    [RegularExpression(@"^\d{15}$")]
+    public string? Ogrnip { get; init; }
 }

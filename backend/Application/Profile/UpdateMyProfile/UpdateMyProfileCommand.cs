@@ -43,6 +43,8 @@ public sealed class ApplicantProfileUpdatePayload
     public string? About { get; init; }
 
     public decimal? DesiredSalary { get; init; }
+
+    public string? JobSearchStatus { get; init; }
 }
 
 public sealed class CustomerProfileUpdatePayload
@@ -81,4 +83,8 @@ public sealed class ExecutorProfileUpdatePayload
     public string? Grade { get; init; }
 
     public string? ExtraInfo { get; init; }
+
+    public string? Inn { get; init; }
+
+    public string? Ogrnip { get; init; }
 }

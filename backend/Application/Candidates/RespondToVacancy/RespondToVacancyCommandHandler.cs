@@ -70,6 +70,7 @@ public sealed class RespondToVacancyCommandHandler(IRespondToVacancyPersistence 
     {
         var fullName = BuildFullName(applicant);
         var normalizedFullName = fullName.ToUpperInvariant();
+        var hasEmail = !string.IsNullOrWhiteSpace(applicant.Email);
 
         return new Candidate
         {
@@ -80,8 +81,8 @@ public sealed class RespondToVacancyCommandHandler(IRespondToVacancyPersistence 
             NormalizedFullName = normalizedFullName,
             BirthDate = null,
             PublicAlias = fullName,
-            Email = applicant.Email,
-            NormalizedEmail = applicant.NormalizedEmail,
+            Email = hasEmail ? applicant.Email : null,
+            NormalizedEmail = hasEmail ? applicant.NormalizedEmail : null,
             Phone = applicant.Phone,
             NormalizedPhone = applicant.NormalizedPhone,
             ContactsOwnerExecutorId = null,
@@ -98,7 +99,10 @@ public sealed class RespondToVacancyCommandHandler(IRespondToVacancyPersistence 
         if (!string.IsNullOrWhiteSpace(fullName))
             return fullName;
 
-        return applicant.Email;
+        if (!string.IsNullOrWhiteSpace(applicant.Phone))
+            return applicant.Phone;
+
+        return $"applicant-{applicant.Id:N}";
     }
 }
 

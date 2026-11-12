@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SelectProfi.backend.Contracts.Profile;
 
 public sealed class ApplicantProfileUpdateRequest
@@ -23,4 +25,7 @@ public sealed class ApplicantProfileUpdateRequest
     public string? About { get; init; }
 
     public decimal? DesiredSalary { get; init; }
+
+    [MaxLength(32)]
+    public string? JobSearchStatus { get; init; }
 }

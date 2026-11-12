@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
+using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Configuration;
@@ -20,6 +21,7 @@ namespace Api.Controllers;
 // @dvnull: Сообщения ProblemDetails переведены на русский для корректного отображения на фронтенде.
 public sealed class AuthController(
     IOptions<AuthFeatureFlagsOptions> authFeatureFlagsOptions,
+    IHostEnvironment hostEnvironment,
     ICommandDispatcher commandDispatcher) : ControllerBase
 {
     [HttpPost("register")]
@@ -47,6 +49,12 @@ public sealed class AuthController(
                 "phone_already_exists",
                 "Телефон уже зарегистрирован.",
                 "phone")),
+            RegisterUserErrorCode.IdentifierRequired => BadRequest(CreateBadRequestProblem(
+                "auth_identifier_required",
+                "Укажите email или телефон.")),
+            RegisterUserErrorCode.VerificationTokenMismatch => BadRequest(CreateBadRequestProblem(
+                "verification_token_mismatch",
+                "Данные подтверждения не совпадают.")),
             _ => Conflict(CreateConflictProblem("user_already_exists", "Пользователь уже существует."))
         };
     }
@@ -67,7 +75,67 @@ public sealed class AuthController(
         if (result.ErrorCode == LoginUserErrorCode.InvalidCredentials)
             return Unauthorized(CreateUnauthorizedProblem("invalid_credentials", "Неверный email или пароль."));
 
+        if (result.ErrorCode == LoginUserErrorCode.IdentifierRequired)
+            return BadRequest(CreateBadRequestProblem("auth_identifier_required", "Укажите email или телефон."));
+
         return Ok(result.ToResponse());
+    }
+
+    [HttpPost("verification/send")]
+    [Produces("application/json", "application/problem+json")]
+    [ProducesResponseType(typeof(SendVerificationCodeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> SendVerificationCode(
+        [FromBody] SendVerificationCodeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<SendVerificationCodeCommand, SendVerificationCodeResult>(
+            request.ToCommand(hostEnvironment.IsDevelopment()),
+            cancellationToken);
+
+        return result.ErrorCode switch
+        {
+            SendVerificationCodeErrorCode.None => Ok(result.ToResponse()),
+            SendVerificationCodeErrorCode.InvalidTarget => BadRequest(CreateBadRequestProblem(
+                "invalid_verification_target",
+                "Некорректный адрес подтверждения.")),
+            SendVerificationCodeErrorCode.ResendTooSoon => StatusCode(
+                StatusCodes.Status429TooManyRequests,
+                CreateTooManyRequestsProblem(
+                    "verification_resend_too_soon",
+                    "Код уже отправлен. Повторите попытку позже.")),
+            _ => BadRequest(CreateBadRequestProblem(
+                "invalid_verification_target",
+                "Некорректный адрес подтверждения."))
+        };
+    }
+
+    [HttpPost("verification/confirm")]
+    [Produces("application/json", "application/problem+json")]
+    [ProducesResponseType(typeof(ConfirmVerificationCodeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ConfirmVerificationCode(
+        [FromBody] ConfirmVerificationCodeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<ConfirmVerificationCodeCommand, ConfirmVerificationCodeResult>(
+            request.ToCommand(),
+            cancellationToken);
+
+        return result.ErrorCode switch
+        {
+            ConfirmVerificationCodeErrorCode.None => Ok(result.ToResponse()),
+            ConfirmVerificationCodeErrorCode.InvalidCode => BadRequest(CreateBadRequestProblem(
+                "invalid_verification_code",
+                $"Неверный код. Осталось {result.RemainingAttempts} попыток")),
+            ConfirmVerificationCodeErrorCode.AttemptsExceeded => BadRequest(CreateBadRequestProblem(
+                "verification_attempts_exceeded",
+                "Превышено количество попыток. Запросите новый код.")),
+            _ => BadRequest(CreateBadRequestProblem(
+                "verification_challenge_expired",
+                "Срок действия кода истёк. Запросите новый код."))
+        };
     }
 
     [HttpPost("refresh")]
@@ -98,10 +166,10 @@ public sealed class AuthController(
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = User.FindFirstValue(ClaimTypes.Email);
+        var phone = User.FindFirstValue(ClaimTypes.MobilePhone);
         var role = User.FindFirstValue(ClaimTypes.Role);
 
         if (string.IsNullOrWhiteSpace(userId) ||
-            string.IsNullOrWhiteSpace(email) ||
             string.IsNullOrWhiteSpace(role))
             return Unauthorized(CreateUnauthorizedProblem("invalid_access_token", "Недействительный токен доступа."));
 
@@ -109,6 +177,7 @@ public sealed class AuthController(
         {
             userId,
             email,
+            phone,
             role
         });
     }
@@ -153,6 +222,40 @@ public sealed class AuthController(
                 }
             };
         }
+
+        return problemDetails;
+    }
+
+    private ProblemDetails CreateBadRequestProblem(string code, string detail)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Type = "https://httpstatuses.com/400",
+            Title = "Некорректный запрос",
+            Status = StatusCodes.Status400BadRequest,
+            Detail = detail,
+            Instance = HttpContext.Request.Path
+        };
+
+        problemDetails.Extensions["code"] = code;
+        problemDetails.Extensions["traceId"] = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+
+        return problemDetails;
+    }
+
+    private ProblemDetails CreateTooManyRequestsProblem(string code, string detail)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Type = "https://httpstatuses.com/429",
+            Title = "Слишком много запросов",
+            Status = StatusCodes.Status429TooManyRequests,
+            Detail = detail,
+            Instance = HttpContext.Request.Path
+        };
+
+        problemDetails.Extensions["code"] = code;
+        problemDetails.Extensions["traceId"] = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
         return problemDetails;
     }

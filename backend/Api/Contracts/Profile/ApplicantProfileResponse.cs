@@ -23,4 +23,6 @@ public sealed class ApplicantProfileResponse
     public string? About { get; init; }
 
     public decimal? DesiredSalary { get; init; }
+
+    public string? JobSearchStatus { get; init; }
 }

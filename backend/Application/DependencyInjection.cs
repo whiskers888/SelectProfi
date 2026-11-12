@@ -14,6 +14,7 @@ using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
+using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Dashboard.GetCustomerDashboardStats;
@@ -56,6 +57,8 @@ public static class
         services.AddScoped<ICommandHandler<RegisterUserCommand, RegisterUserResult>, RegisterUserCommandHandler>();
         services.AddScoped<ICommandHandler<LoginUserCommand, LoginUserResult>, LoginUserCommandHandler>();
         services.AddScoped<ICommandHandler<RefreshAuthSessionCommand, RefreshAuthSessionResult>, RefreshAuthSessionCommandHandler>();
+        services.AddScoped<ICommandHandler<SendVerificationCodeCommand, SendVerificationCodeResult>, SendVerificationCodeCommandHandler>();
+        services.AddScoped<ICommandHandler<ConfirmVerificationCodeCommand, ConfirmVerificationCodeResult>, ConfirmVerificationCodeCommandHandler>();
         services.AddScoped<ICommandHandler<CreateOrderCommand, CreateOrderResult>, CreateOrderCommandHandler>();
         // @dvnull: Ранее справочник специализаций создавался напрямую в контроллере; добавлен CQRS-command для create specialization.
         services.AddScoped<ICommandHandler<CreateOrderSpecializationCommand, CreateOrderSpecializationResult>, CreateOrderSpecializationCommandHandler>();

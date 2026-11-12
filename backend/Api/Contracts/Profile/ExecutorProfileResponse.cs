@@ -17,4 +17,8 @@ public sealed class ExecutorProfileResponse
     public string? Grade { get; init; }
 
     public string? ExtraInfo { get; init; }
+
+    public string? Inn { get; init; }
+
+    public string? Ogrnip { get; init; }
 }

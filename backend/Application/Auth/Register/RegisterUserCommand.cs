@@ -5,7 +5,7 @@ namespace SelectProfi.backend.Application.Auth.Register;
 
 public sealed class RegisterUserCommand : ICommand<RegisterUserResult>
 {
-    public string Email { get; init; } = string.Empty;
+    public string? Email { get; init; }
 
     public string? Phone { get; init; }
 
@@ -22,6 +22,8 @@ public sealed class RegisterUserCommand : ICommand<RegisterUserResult>
     public RegisterCustomerPayload? CustomerRegistration { get; init; }
 
     public RegisterOfferAcceptancePayload? OfferAcceptance { get; init; }
+
+    public string? VerificationToken { get; init; }
 
     public bool RequireEmailVerification { get; init; }
 

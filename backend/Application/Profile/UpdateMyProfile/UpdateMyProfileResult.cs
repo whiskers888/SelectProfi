@@ -8,7 +8,7 @@ public sealed class UpdateMyProfileResult
 
     public Guid UserId { get; init; }
 
-    public string Email { get; init; } = string.Empty;
+    public string? Email { get; init; }
 
     public string? Phone { get; init; }
 
@@ -48,6 +48,8 @@ public sealed class UpdateMyProfileResult
 
     public decimal? ApplicantDesiredSalary { get; init; }
 
+    public string? ApplicantJobSearchStatus { get; init; }
+
     public string? CustomerInn { get; init; }
 
     public CustomerLegalForm? CustomerLegalForm { get; init; }
@@ -81,4 +83,8 @@ public sealed class UpdateMyProfileResult
     public string? ExecutorGrade { get; init; }
 
     public string? ExecutorExtraInfo { get; init; }
+
+    public string? ExecutorInn { get; init; }
+
+    public string? ExecutorOgrnip { get; init; }
 }

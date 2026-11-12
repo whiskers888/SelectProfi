@@ -4,9 +4,9 @@ public sealed class User
 {
     public Guid Id { get; set; }
 
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; }
 
-    public string NormalizedEmail { get; set; } = string.Empty;
+    public string? NormalizedEmail { get; set; }
 
     public string? Phone { get; set; }
 
@@ -48,6 +48,8 @@ public sealed class User
 
     public decimal? ApplicantDesiredSalary { get; set; }
 
+    public string? ApplicantJobSearchStatus { get; set; }
+
     public string? CustomerInn { get; set; }
 
     public CustomerLegalForm? CustomerLegalForm { get; set; }
@@ -81,6 +83,10 @@ public sealed class User
     public string? ExecutorGrade { get; set; }
 
     public string? ExecutorExtraInfo { get; set; }
+
+    public string? ExecutorInn { get; set; }
+
+    public string? ExecutorOgrnip { get; set; }
 
     public ICollection<RefreshSession> RefreshSessions { get; set; } = new List<RefreshSession>();
 }

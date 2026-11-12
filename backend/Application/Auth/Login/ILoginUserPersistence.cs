@@ -6,5 +6,7 @@ public interface ILoginUserPersistence
 {
     Task<User?> FindByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken);
 
+    Task<User?> FindByNormalizedPhoneAsync(string normalizedPhone, CancellationToken cancellationToken);
+
     Task SaveRefreshSessionAsync(RefreshSession refreshSession, CancellationToken cancellationToken);
 }

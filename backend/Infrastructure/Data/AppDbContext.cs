@@ -26,6 +26,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<RefreshSession> RefreshSessions => Set<RefreshSession>();
 
+    public DbSet<VerificationChallenge> VerificationChallenges => Set<VerificationChallenge>();
+
     // @dvnull: Ранее контекст содержал только Users/RefreshSessions; добавлен Vacancy DbSet для PRI-74.
     public DbSet<Vacancy> Vacancies => Set<Vacancy>();
 
@@ -37,8 +39,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             builder.HasKey(user => user.Id);
             builder.Property(user => user.Id).ValueGeneratedNever();
 
-            builder.Property(user => user.Email).HasMaxLength(254).IsRequired();
-            builder.Property(user => user.NormalizedEmail).HasMaxLength(254).IsRequired();
+            builder.Property(user => user.Email).HasMaxLength(254);
+            builder.Property(user => user.NormalizedEmail).HasMaxLength(254);
             builder.Property(user => user.Phone).HasMaxLength(16);
             builder.Property(user => user.NormalizedPhone).HasMaxLength(16);
             builder.Property(user => user.PasswordHash).HasMaxLength(512).IsRequired();
@@ -56,6 +58,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             builder.Property(user => user.ApplicantPortfolioUrl).HasMaxLength(512);
             builder.Property(user => user.ApplicantAbout).HasMaxLength(2000);
             builder.Property(user => user.ApplicantDesiredSalary).HasPrecision(18, 2);
+            builder.Property(user => user.ApplicantJobSearchStatus).HasMaxLength(32);
             builder.Property(user => user.CustomerInn).HasMaxLength(12);
             builder.Property(user => user.CustomerLegalForm).HasConversion<string>().HasMaxLength(16);
             builder.Property(user => user.CustomerEgrn).HasMaxLength(13);
@@ -71,9 +74,29 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             builder.Property(user => user.ExecutorCertificates).HasMaxLength(4000);
             builder.Property(user => user.ExecutorGrade).HasMaxLength(50);
             builder.Property(user => user.ExecutorExtraInfo).HasMaxLength(2000);
+            builder.Property(user => user.ExecutorInn).HasMaxLength(12);
+            builder.Property(user => user.ExecutorOgrnip).HasMaxLength(15);
 
-            builder.HasIndex(user => user.NormalizedEmail).IsUnique();
+            builder.HasIndex(user => user.NormalizedEmail)
+                .IsUnique()
+                .HasFilter("\"NormalizedEmail\" IS NOT NULL");
             builder.HasIndex(user => user.NormalizedPhone).IsUnique();
+        });
+
+        modelBuilder.Entity<VerificationChallenge>(builder =>
+        {
+            builder.HasKey(challenge => challenge.Id);
+            builder.Property(challenge => challenge.Id).ValueGeneratedNever();
+
+            builder.Property(challenge => challenge.Channel)
+                .HasConversion<string>()
+                .HasMaxLength(16)
+                .IsRequired();
+            builder.Property(challenge => challenge.Target).HasMaxLength(254).IsRequired();
+            builder.Property(challenge => challenge.CodeHash).HasMaxLength(128).IsRequired();
+
+            builder.HasIndex(challenge => new { challenge.Target, challenge.CreatedAtUtc });
+            builder.HasIndex(challenge => challenge.ExpiresAtUtc);
         });
 
         modelBuilder.Entity<RefreshSession>(builder =>

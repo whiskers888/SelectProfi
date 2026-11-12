@@ -9,11 +9,17 @@ public sealed class RegisterUserPersistence(AppDbContext dbContext) : IRegisterU
 {
     public Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(normalizedEmail))
+            return Task.FromResult(false);
+
         return dbContext.Users.AnyAsync(user => user.NormalizedEmail == normalizedEmail, cancellationToken);
     }
 
     public Task<bool> PhoneExistsAsync(string normalizedPhone, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(normalizedPhone))
+            return Task.FromResult(false);
+
         return dbContext.Users.AnyAsync(user => user.NormalizedPhone == normalizedPhone, cancellationToken);
     }
 
@@ -42,8 +48,7 @@ public sealed class RegisterUserPersistence(AppDbContext dbContext) : IRegisterU
         if (innerException is null)
             return false;
 
-        var sqlStateProperty = innerException.GetType().GetProperty("SqlState");
-        var sqlStateValue = sqlStateProperty?.GetValue(innerException) as string;
+        var sqlStateValue = innerException.GetType().GetProperty("SqlState")?.GetValue(innerException) as string;
 
         return string.Equals(sqlStateValue, "23505", StringComparison.Ordinal);
     }

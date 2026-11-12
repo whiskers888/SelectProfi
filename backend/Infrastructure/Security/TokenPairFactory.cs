@@ -52,18 +52,25 @@ public sealed class TokenPairFactory(IOptions<JwtOptions> jwtOptions) : ITokenPa
         var headerJson = JsonSerializer.Serialize(new { alg = "HS256", typ = "JWT" });
         var expiresAt = utcNow.AddMinutes(options.AccessTokenLifetimeMinutes);
 
-        var payloadJson = JsonSerializer.Serialize(new
+        var claims = new Dictionary<string, object?>
         {
-            sub = user.Id.ToString(),
-            email = user.Email,
-            role = user.Role.ToString(),
-            iss = options.Issuer,
-            aud = options.Audience,
-            iat = ToUnixSeconds(utcNow),
-            nbf = ToUnixSeconds(utcNow),
-            exp = ToUnixSeconds(expiresAt),
-            jti = Guid.NewGuid().ToString("N")
-        });
+            ["sub"] = user.Id.ToString(),
+            ["role"] = user.Role.ToString(),
+            ["iss"] = options.Issuer,
+            ["aud"] = options.Audience,
+            ["iat"] = ToUnixSeconds(utcNow),
+            ["nbf"] = ToUnixSeconds(utcNow),
+            ["exp"] = ToUnixSeconds(expiresAt),
+            ["jti"] = Guid.NewGuid().ToString("N")
+        };
+
+        if (!string.IsNullOrWhiteSpace(user.Email))
+            claims["email"] = user.Email;
+
+        if (!string.IsNullOrWhiteSpace(user.NormalizedPhone))
+            claims["phone"] = user.NormalizedPhone;
+
+        var payloadJson = JsonSerializer.Serialize(claims);
 
         var header = Base64UrlEncode(Encoding.UTF8.GetBytes(headerJson));
         var payload = Base64UrlEncode(Encoding.UTF8.GetBytes(payloadJson));

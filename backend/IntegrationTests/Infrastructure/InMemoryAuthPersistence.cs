@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
+using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
 using SelectProfi.backend.Application.Profile.UpdateMyProfile;
 using SelectProfi.backend.Domain.Users;
@@ -36,13 +37,16 @@ public sealed class InMemoryRegisterUserPersistence(InMemoryAuthStore store) : I
         RefreshSession refreshSession,
         CancellationToken cancellationToken)
     {
-        if (!store.UserIdByNormalizedEmail.TryAdd(user.NormalizedEmail, user.Id))
+        if (user.NormalizedEmail is not null &&
+            !store.UserIdByNormalizedEmail.TryAdd(user.NormalizedEmail, user.Id))
             return Task.FromResult(RegisterUserPersistenceResult.Conflict);
 
         if (user.NormalizedPhone is not null &&
             !store.UserIdByNormalizedPhone.TryAdd(user.NormalizedPhone, user.Id))
         {
-            store.UserIdByNormalizedEmail.TryRemove(user.NormalizedEmail, out _);
+            if (user.NormalizedEmail is not null)
+                store.UserIdByNormalizedEmail.TryRemove(user.NormalizedEmail, out _);
+
             return Task.FromResult(RegisterUserPersistenceResult.Conflict);
         }
 
@@ -59,6 +63,15 @@ public sealed class InMemoryLoginUserPersistence(InMemoryAuthStore store) : ILog
     public Task<User?> FindByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
     {
         if (!store.UserIdByNormalizedEmail.TryGetValue(normalizedEmail, out var userId))
+            return Task.FromResult<User?>(null);
+
+        store.Users.TryGetValue(userId, out var user);
+        return Task.FromResult(user);
+    }
+
+    public Task<User?> FindByNormalizedPhoneAsync(string normalizedPhone, CancellationToken cancellationToken)
+    {
+        if (!store.UserIdByNormalizedPhone.TryGetValue(normalizedPhone, out var userId))
             return Task.FromResult<User?>(null);
 
         store.Users.TryGetValue(userId, out var user);
@@ -87,6 +100,74 @@ public sealed class InMemoryRefreshAuthSessionPersistence(InMemoryAuthStore stor
     {
         nextSession.User = currentSession.User;
         store.RefreshSessionsByTokenHash[nextSession.TokenHash] = nextSession;
+        return Task.CompletedTask;
+    }
+}
+
+public sealed class InMemoryVerificationChallengeStore
+{
+    public ConcurrentDictionary<Guid, VerificationChallenge> Challenges { get; } = new();
+
+    public object SyncRoot { get; } = new();
+}
+
+public sealed class InMemoryVerificationChallengePersistence(InMemoryVerificationChallengeStore store)
+    : IVerificationChallengePersistence
+{
+    public Task<VerificationChallenge?> FindLatestActiveByTargetAsync(
+        string target,
+        CancellationToken cancellationToken)
+    {
+        lock (store.SyncRoot)
+        {
+            var challenge = store.Challenges.Values
+                .Where(item => string.Equals(item.Target, target, StringComparison.Ordinal) &&
+                               item.ConsumedAtUtc is null)
+                .OrderByDescending(item => item.CreatedAtUtc)
+                .FirstOrDefault();
+
+            return Task.FromResult(challenge);
+        }
+    }
+
+    public Task<VerificationChallenge?> FindByIdAsync(Guid challengeId, CancellationToken cancellationToken)
+    {
+        lock (store.SyncRoot)
+        {
+            store.Challenges.TryGetValue(challengeId, out var challenge);
+            return Task.FromResult(challenge);
+        }
+    }
+
+    public Task SupersedeActiveAsync(string target, DateTime utcNow, CancellationToken cancellationToken)
+    {
+        lock (store.SyncRoot)
+        {
+            foreach (var challenge in store.Challenges.Values)
+            {
+                if (!string.Equals(challenge.Target, target, StringComparison.Ordinal) ||
+                    challenge.ConsumedAtUtc is not null)
+                    continue;
+
+                challenge.ConsumedAtUtc = utcNow;
+
+                if (challenge.ExpiresAtUtc > utcNow)
+                    challenge.ExpiresAtUtc = utcNow;
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+
+    public Task AddAsync(VerificationChallenge challenge, CancellationToken cancellationToken)
+    {
+        store.Challenges[challenge.Id] = challenge;
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateAsync(VerificationChallenge challenge, CancellationToken cancellationToken)
+    {
+        store.Challenges[challenge.Id] = challenge;
         return Task.CompletedTask;
     }
 }

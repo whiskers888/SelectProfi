@@ -39,6 +39,7 @@ public sealed class GetMyProfileQueryHandler(IProfileReadPersistence persistence
             ApplicantPortfolioUrl = user.ApplicantPortfolioUrl,
             ApplicantAbout = user.ApplicantAbout,
             ApplicantDesiredSalary = user.ApplicantDesiredSalary,
+            ApplicantJobSearchStatus = user.ApplicantJobSearchStatus,
             CustomerInn = user.CustomerInn,
             CustomerLegalForm = user.CustomerLegalForm,
             CustomerEgrn = user.CustomerEgrn,
@@ -55,7 +56,9 @@ public sealed class GetMyProfileQueryHandler(IProfileReadPersistence persistence
             ExecutorAchievements = user.ExecutorAchievements,
             ExecutorCertificates = user.ExecutorCertificates,
             ExecutorGrade = user.ExecutorGrade,
-            ExecutorExtraInfo = user.ExecutorExtraInfo
+            ExecutorExtraInfo = user.ExecutorExtraInfo,
+            ExecutorInn = user.ExecutorInn,
+            ExecutorOgrnip = user.ExecutorOgrnip
         };
     }
 }

@@ -80,7 +80,9 @@ public static partial class ProfileRequestMapper
             Achievements = request.Achievements,
             Certificates = request.Certificates,
             Grade = request.Grade,
-            ExtraInfo = request.ExtraInfo
+            ExtraInfo = request.ExtraInfo,
+            Inn = request.Inn,
+            Ogrnip = request.Ogrnip
         };
     }
 

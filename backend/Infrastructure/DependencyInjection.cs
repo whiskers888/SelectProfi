@@ -15,6 +15,7 @@ using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
 using SelectProfi.backend.Application.Auth.Register;
+using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Dashboard.GetCustomerDashboardStats;
 using SelectProfi.backend.Application.Dashboard.GetExecutorDashboardStats;
@@ -47,6 +48,7 @@ using SelectProfi.backend.HealthChecks;
 using SelectProfi.backend.Infrastructure.Auth.Login;
 using SelectProfi.backend.Infrastructure.Auth.Refresh;
 using SelectProfi.backend.Infrastructure.Auth.Register;
+using SelectProfi.backend.Infrastructure.Auth.Verification;
 using SelectProfi.backend.Infrastructure.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Infrastructure.Candidates.RemoveVacancyCandidate;
 using SelectProfi.backend.Infrastructure.Candidates.CreateCandidateResume;
@@ -107,6 +109,9 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenHasher, RefreshTokenHasherAdapter>();
         services.AddScoped<IRefreshTokenPairIssuer, RefreshTokenPairIssuerAdapter>();
         services.AddScoped<IRefreshAuthSessionPersistence, RefreshAuthSessionPersistence>();
+        services.AddScoped<IVerificationChallengePersistence, VerificationChallengePersistence>();
+        services.AddScoped<IVerificationCodeSender, NoOpVerificationCodeSender>();
+        services.AddScoped<IVerificationTokenIssuer, VerificationTokenIssuer>();
         services.AddScoped<ICreateOrderPersistence, CreateOrderPersistence>();
         // @dvnull: Ранее create specialization шёл напрямую через контроллер; добавлена persistence-реализация под CQRS-command.
         services.AddScoped<ICreateOrderSpecializationPersistence, CreateOrderSpecializationPersistence>();
