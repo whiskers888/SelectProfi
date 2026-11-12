@@ -10,6 +10,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 import { workspaceViewOptions, type WorkspaceRole, type WorkspaceView } from '../model/data'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 type SidebarProps = {
   activeView: WorkspaceView
@@ -97,7 +98,7 @@ export function Sidebar({
         className={`preview11-sidebar${collapsed ? ' preview11-sidebar-collapsed' : ''}${mobileOpen ? ' preview11-sidebar-mobile-open' : ''}`}
       >
         <div className="preview11-brand">
-          <div className="preview11-mark">КТ</div>
+          <BrandLogo className="h-[34px] w-[34px]" alt="" />
           <div className="preview11-brand-copy">
             <div className="preview11-brand-title">КадрыТут</div>
             <div className="preview11-muted">

@@ -1,4 +1,5 @@
 import '../styles/shell.css'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { WorkspaceShellView } from './WorkspaceShellView'
 import { useWorkspaceShellController } from './hooks/useWorkspaceShellController'
 
@@ -8,7 +9,7 @@ function ShellBootstrapLoader() {
       <div className="preview11-boot">
         <div className="preview11-boot-card" role="status" aria-live="polite" aria-busy="true">
           <div className="preview11-brand preview11-brand-boot">
-            <div className="preview11-mark">КТ</div>
+            <BrandLogo className="h-[34px] w-[34px]" alt="" />
             <div className="preview11-brand-copy">
               <div className="preview11-brand-title">КадрыТут</div>
               <div className="preview11-muted">Проверяем доступ и подготавливаем рабочее пространство</div>
