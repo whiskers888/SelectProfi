@@ -2,12 +2,10 @@ import type { CustomerLegalForm, ExecutorEmploymentType } from '@/features/profi
 
 export function toEmploymentTypeLabel(value: ExecutorEmploymentType | null | undefined): string {
   switch (value) {
-    case 'Fl':
-      return 'Физлицо'
     case 'Smz':
-      return 'Самозанятый'
+      return 'Самозанятый (НПД)'
     case 'Ip':
-      return 'ИП'
+      return 'Индивидуальный предприниматель'
     default:
       return '—'
   }

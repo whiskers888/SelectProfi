@@ -9,19 +9,19 @@ type RoleMeta = {
 export const roleMeta: Record<RegistrationRole, RoleMeta> = {
   Customer: {
     label: 'Заказчик',
-    qualifier: 'Юрлица и ИП',
+    qualifier: 'Юрлицо и ИП',
     identitySubtitle:
       'Заполните контактные данные для входа в кабинет заказчика, доступа к пулу кандидатов и резервирования выплат по 152-ФЗ.',
   },
   Executor: {
     label: 'Исполнитель',
-    qualifier: 'Самозанятые, ИП, Агентства',
+    qualifier: 'СМЗ и ИП',
     identitySubtitle:
       'Заполните контактные данные для доступа к бирже заказов, работы с кандидатами и получения выплат по закрытым вакансиям.',
   },
   Applicant: {
     label: 'Соискатель',
-    qualifier: 'Физические лица',
+    qualifier: '',
     identitySubtitle:
       'Заполните контактные данные для доступа к проверенным вакансиям, откликов без спама и приглашений на интервью.',
   },
@@ -36,5 +36,5 @@ export const stepDefinitions = [
 
 export function roleTitle(role: RegistrationRole): string {
   const meta = roleMeta[role]
-  return `${meta.label} (${meta.qualifier})`
+  return meta.qualifier ? `${meta.label} (${meta.qualifier})` : meta.label
 }

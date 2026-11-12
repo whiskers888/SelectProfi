@@ -327,6 +327,9 @@ public sealed class UpdateMyProfileCommandHandler(IProfileWritePersistence persi
         if (payload is null)
             return true;
 
+        if (payload.EmploymentType is ExecutorEmploymentType.Fl)
+            return false;
+
         if (!IsValidOptionalMaxLength(payload.ProjectTitle, ExecutorProjectTitleMaxLength) ||
             !IsValidOptionalMaxLength(payload.ProjectCompanyName, ExecutorProjectCompanyNameMaxLength) ||
             !IsValidOptionalMaxLength(payload.ExperienceSummary, ExecutorExperienceSummaryMaxLength) ||

@@ -17,25 +17,25 @@ const roleOptions: RoleOption[] = [
   {
     value: 'Customer',
     title: 'Заказчик',
-    badge: 'Юрлица и ИП',
+    badge: 'Юрлицо и ИП',
     description:
       'Ищу сотрудников — открываю вакансии, резервирую оплату в эскроу и отбираю финалистов',
-    hint: 'Потребуется указать ИНН на следующем шаге.',
+    hint: 'Потребуется указать ИНН и ОГРН/ОГРНИП на следующем шаге.',
     icon: Building2,
   },
   {
     value: 'Executor',
     title: 'Исполнитель',
-    badge: 'Самозанятые, ИП, Агентства',
+    badge: 'СМЗ и ИП',
     description:
       'Подбираю персонал — беру заказы в работу, веду кандидатов и получаю выплаты',
-    hint: 'Потребуется подтвердить статус самозанятого или ИП на следующем шаге.',
+    hint: 'Работа доступна как самозанятому (НПД) или индивидуальному предпринимателю.',
     icon: UserRoundSearch,
   },
   {
     value: 'Applicant',
     title: 'Соискатель',
-    badge: 'Физические лица',
+    badge: '',
     description:
       'Ищу работу — откликаюсь на проверенные вакансии и прохожу интервью без спама',
     hint: 'Потребуется прикрепить резюме или заполнить опыт на следующем шаге.',
@@ -115,16 +115,18 @@ export function RegisterRoleStep({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-headline-section text-foreground">{option.title}</span>
-                  <span
-                    className={cn(
-                      'rounded px-1.5 py-0.5 text-label-micro uppercase',
-                      isSelected
-                        ? 'bg-secondary text-secondary-foreground'
-                        : 'bg-muted text-muted-foreground',
-                    )}
-                  >
-                    {option.badge}
-                  </span>
+                  {option.badge ? (
+                    <span
+                      className={cn(
+                        'rounded px-1.5 py-0.5 text-label-micro uppercase',
+                        isSelected
+                          ? 'bg-secondary text-secondary-foreground'
+                          : 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {option.badge}
+                    </span>
+                  ) : null}
                 </div>
                 <p className="m-0 mt-1 text-body-default text-muted-foreground">
                   {option.description}

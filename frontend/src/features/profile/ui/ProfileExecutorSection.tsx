@@ -86,12 +86,15 @@ export function ProfileExecutorSection({
                     <SelectValue placeholder="Выберите формат" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Fl">Физлицо</SelectItem>
-                    <SelectItem value="Smz">Самозанятый</SelectItem>
-                    <SelectItem value="Ip">ИП</SelectItem>
+                    <SelectItem value="Smz">Самозанятый (НПД)</SelectItem>
+                    <SelectItem value="Ip">Индивидуальный предприниматель</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormFieldError id="executor-employmentType-error">{executorFormErrors.employmentType}</FormFieldError>
+                <p className="m-0 text-caption-meta text-muted-foreground">
+                  Работаем только с СМЗ и ИП. Физлицу нужно агентство-исполнитель; ИП может открыть
+                  свою команду и выдать доступ рекрутерам.
+                </p>
               </div>
 
               <div className="space-y-2">

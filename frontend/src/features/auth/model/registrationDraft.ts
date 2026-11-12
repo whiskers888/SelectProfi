@@ -21,7 +21,7 @@ export type RegistrationDraft = {
   customerCompanyName: string
   applicantJobTitle: string
   applicantJobSearchStatus: JobSearchStatus
-  executorEmploymentType: '' | 'Fl' | 'Smz' | 'Ip'
+  executorEmploymentType: '' | 'Smz' | 'Ip'
   executorInn: string
   executorOgrnip: string
   executorLegalName: string
