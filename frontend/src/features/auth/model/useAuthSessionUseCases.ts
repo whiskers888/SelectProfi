@@ -3,18 +3,17 @@ import { setAuthSession, type AuthSession } from '@/app/authSessionSlice'
 import { api } from '@/shared/api/generated/openapi'
 import {
   isFetchBaseQueryError,
+  type ConfirmVerificationCodeRequest,
+  type ConfirmVerificationCodeResponse,
   type LoginUserRequest,
   type RegisterUserRequest,
+  type SendVerificationCodeRequest,
+  type SendVerificationCodeResponse,
+  useConfirmVerificationCodeMutation,
   useLoginUserMutation,
   useRegisterUserMutation,
+  useSendVerificationCodeMutation,
 } from '@/shared/api/auth'
-
-function createDemoSession(): AuthSession {
-  return {
-    accessToken: `demo-access-token-${Date.now()}`,
-    refreshToken: `demo-refresh-token-${Date.now()}`,
-  }
-}
 
 export function useLoginUseCase() {
   const dispatch = useDispatch()
@@ -27,16 +26,8 @@ export function useLoginUseCase() {
     return session
   }
 
-  function executeDemoLogin(): AuthSession {
-    const session = createDemoSession()
-    dispatch(api.util.resetApiState())
-    dispatch(setAuthSession(session))
-    return session
-  }
-
   return {
     executeLogin,
-    executeDemoLogin,
     isApiError: isFetchBaseQueryError,
     isLoading,
   }
@@ -53,17 +44,34 @@ export function useRegisterUseCase() {
     return session
   }
 
-  function executeDemoRegistration(): AuthSession {
-    const session = createDemoSession()
-    dispatch(api.util.resetApiState())
-    dispatch(setAuthSession(session))
-    return session
-  }
-
   return {
-    executeDemoRegistration,
     executeRegister,
     isApiError: isFetchBaseQueryError,
     isLoading,
+  }
+}
+
+export function useVerificationUseCases() {
+  const [sendCode, sendState] = useSendVerificationCodeMutation()
+  const [confirmCode, confirmState] = useConfirmVerificationCodeMutation()
+
+  async function sendVerification(
+    payload: SendVerificationCodeRequest,
+  ): Promise<SendVerificationCodeResponse> {
+    return sendCode(payload).unwrap()
+  }
+
+  async function confirmVerification(
+    payload: ConfirmVerificationCodeRequest,
+  ): Promise<ConfirmVerificationCodeResponse> {
+    return confirmCode(payload).unwrap()
+  }
+
+  return {
+    sendVerification,
+    confirmVerification,
+    isSending: sendState.isLoading,
+    isConfirming: confirmState.isLoading,
+    isApiError: isFetchBaseQueryError,
   }
 }

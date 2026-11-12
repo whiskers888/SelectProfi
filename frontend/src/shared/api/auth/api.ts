@@ -3,6 +3,7 @@ import { api } from '../generated/openapi'
 
 export type RegisterUserRole = 'Applicant' | 'Executor' | 'Customer'
 export type CustomerLegalForm = 'Ooo' | 'Ip' | 1 | 2
+export type VerificationChannel = 'Phone' | 'Email'
 
 export type RegisterCustomerRequest = {
   inn: string
@@ -17,8 +18,35 @@ export type RegisterOfferAcceptanceRequest = {
   version: string
 }
 
+export type SendVerificationCodeRequest = {
+  channel: VerificationChannel
+  target: string
+}
+
+export type SendVerificationCodeResponse = {
+  challengeId: string
+  channel: VerificationChannel
+  maskedTarget: string
+  codeLength: number
+  expiresAtUtc: string
+  resendAvailableAtUtc: string
+  debugCode?: string | null
+}
+
+export type ConfirmVerificationCodeRequest = {
+  challengeId: string
+  code: string
+}
+
+export type ConfirmVerificationCodeResponse = {
+  verificationToken: string
+  channel: VerificationChannel
+  target: string
+  verifiedAtUtc: string
+}
+
 export type RegisterUserRequest = {
-  email: string
+  email?: string
   phone?: string
   password: string
   firstName: string
@@ -26,6 +54,7 @@ export type RegisterUserRequest = {
   role: RegisterUserRole
   customerRegistration?: RegisterCustomerRequest
   offerAcceptance?: RegisterOfferAcceptanceRequest
+  verificationToken: string
 }
 
 export type RegisterUserResponse = {
@@ -34,7 +63,8 @@ export type RegisterUserResponse = {
 }
 
 export type LoginUserRequest = {
-  email: string
+  email?: string
+  phone?: string
   password: string
 }
 
@@ -54,7 +84,8 @@ export type RefreshSessionResponse = {
 
 export type MyAuthInfoResponse = {
   userId: string
-  email: string
+  email: string | null
+  phone: string | null
   role: RegisterUserRole | 'Admin'
 }
 
@@ -64,6 +95,26 @@ export type CustomerAreaResponse = {
 
 const authApi = api.injectEndpoints({
   endpoints: (build) => ({
+    sendVerificationCode: build.mutation<
+      SendVerificationCodeResponse,
+      SendVerificationCodeRequest
+    >({
+      query: (body) => ({
+        url: '/api/auth/verification/send',
+        method: 'POST',
+        body,
+      }),
+    }),
+    confirmVerificationCode: build.mutation<
+      ConfirmVerificationCodeResponse,
+      ConfirmVerificationCodeRequest
+    >({
+      query: (body) => ({
+        url: '/api/auth/verification/confirm',
+        method: 'POST',
+        body,
+      }),
+    }),
     registerUser: build.mutation<RegisterUserResponse, RegisterUserRequest>({
       query: (body) => ({
         url: '/api/auth/register',
@@ -102,6 +153,8 @@ const authApi = api.injectEndpoints({
 })
 
 export const {
+  useSendVerificationCodeMutation,
+  useConfirmVerificationCodeMutation,
   useRegisterUserMutation,
   useLoginUserMutation,
   useRefreshSessionMutation,

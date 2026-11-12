@@ -1,210 +1,135 @@
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { routePaths } from '@/app/routePaths'
-import { AuthFormShell, AuthHeroPanel, AuthSplitLayout, AuthStatusBanner } from '@/components/auth'
-import { FormFieldError } from '@/components/ui/form-feedback'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { parseLoginServerError } from '@/features/auth/error-parsing'
+import { AuthLayout, normalizeRuPhoneForApi, type AuthProviderKey } from '@/components/auth'
 import { useLoginUseCase } from '@/features/auth/model'
-import type { LoginFormErrors, SubmitState } from '@/features/auth/types'
-import { AuthSocialButtons } from '@/features/auth/ui/AuthSocialButtons'
-import { validateLoginValues } from '@/features/auth/validation'
+import { validateLoginForm, type FieldErrors } from '@/features/auth/lib/registrationValidation'
+import { routePaths } from '@/app/routePaths'
+import { LoginForm, LoginLegalNote, providerLabels, resolveLoginError } from '@/features/auth/ui/login'
+import type { LoginAlert, LoginMethod } from '@/features/auth/ui/login'
 
-const defaultLoginState: SubmitState = {
-  status: 'idle',
-  message: '',
-}
+const successAlertDelayMs = 300
 
-const defaultLoginErrors: LoginFormErrors = {}
-const authInputClassName =
-  'h-11 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-ring/40'
+const emptyErrors: FieldErrors = {}
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { executeLogin, isApiError, isLoading } = useLoginUseCase()
-  const [errors, setErrors] = useState<LoginFormErrors>(defaultLoginErrors)
-  const [submitState, setSubmitState] = useState<SubmitState>(defaultLoginState)
+  const { executeLogin, isLoading, isApiError } = useLoginUseCase()
+  const [method, setMethod] = useState<LoginMethod>('email')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(true)
+  const [errors, setErrors] = useState<FieldErrors>(emptyErrors)
+  const [alert, setAlert] = useState<LoginAlert>(null)
   const timeoutRef = useRef<number | null>(null)
-
-  function clearPendingNavigation() {
-    if (!timeoutRef.current) {
-      return
-    }
-
-    window.clearTimeout(timeoutRef.current)
-    timeoutRef.current = null
-  }
-
-  function navigateToWorkspaceAfterDelay() {
-    clearPendingNavigation()
-    timeoutRef.current = window.setTimeout(() => {
-      navigate(routePaths.app)
-    }, 400)
-  }
 
   useEffect(
     () => () => {
-      if (!timeoutRef.current) {
-        return
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current)
       }
-
-      window.clearTimeout(timeoutRef.current)
     },
     [],
   )
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const formElement = event.currentTarget
-
-    const formData = new FormData(formElement)
-
-    const values = {
-      email: String(formData.get('email') ?? '').trim(),
-      password: String(formData.get('password') ?? '').trim(),
-    }
-
-    const nextErrors = validateLoginValues(values)
-
-    setSubmitState(defaultLoginState)
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors)
-      setSubmitState({
-        status: 'error',
-        message: 'Проверьте поля формы и повторите отправку.',
-      })
+  function handleMethodChange(nextMethod: LoginMethod) {
+    if (nextMethod === method) {
       return
     }
 
-    setErrors(defaultLoginErrors)
-    setSubmitState({
-      status: 'loading',
-      message: 'Проверяем данные и открываем рабочее пространство...',
+    setMethod(nextMethod)
+    setAlert(null)
+    setErrors((previous) => ({ ...previous, [method]: undefined }))
+  }
+
+  function handleEmailChange(value: string) {
+    setEmail(value)
+    setErrors((previous) => ({ ...previous, email: undefined }))
+  }
+
+  function handlePhoneChange(value: string) {
+    setPhone(value)
+    setErrors((previous) => ({ ...previous, phone: undefined }))
+  }
+
+  function handlePasswordChange(value: string) {
+    setPassword(value)
+    setErrors((previous) => ({ ...previous, password: undefined }))
+  }
+
+  function handleRecoveryClick() {
+    setAlert({ tone: 'info', title: 'Восстановление пароля пока недоступно' })
+  }
+
+  function handleProviderClick(provider: AuthProviderKey) {
+    setAlert({
+      tone: 'info',
+      title: `Вход через ${providerLabels[provider]} пока недоступен. Используйте email и пароль.`,
     })
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const nextErrors = validateLoginForm({ method, email, phone, password })
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors)
+      setAlert({ tone: 'error', title: 'Проверьте поля формы и повторите отправку.' })
+      return
+    }
+
+    setErrors(emptyErrors)
+    setAlert(null)
 
     try {
       await executeLogin({
-        email: values.email,
-        password: values.password,
+        email: method === 'email' ? email.trim() : undefined,
+        phone: method === 'phone' ? normalizeRuPhoneForApi(phone) : undefined,
+        password,
       })
-      formElement.reset()
-      setSubmitState({
-        status: 'success',
-        message: 'Вход выполнен успешно. Перенаправляем в рабочее пространство.',
-      })
-      navigateToWorkspaceAfterDelay()
+
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current)
+      }
+
+      timeoutRef.current = window.setTimeout(() => {
+        navigate(routePaths.app)
+      }, successAlertDelayMs)
     } catch (error) {
-      if (isApiError(error) && typeof error.status === 'number') {
-        const parsedError = parseLoginServerError(error.status, error.data)
-        setErrors(parsedError.fieldErrors)
-        setSubmitState({ status: 'error', message: parsedError.formMessage })
+      if (isApiError(error)) {
+        const status = typeof error.status === 'number' ? error.status : undefined
+        const resolved = resolveLoginError(status, error.data)
+        setErrors(resolved.fieldErrors)
+        setAlert({ tone: 'error', title: resolved.title })
         return
       }
 
-      setSubmitState({
-        status: 'error',
-        message: 'Не удалось выполнить вход. Повторите попытку.',
-      })
+      setAlert({ tone: 'error', title: 'Не удалось выполнить вход. Повторите попытку.' })
     }
   }
 
-  function handleSocialLogin(providerName: string) {
-    setSubmitState({
-      status: 'error',
-      message: `Вход через ${providerName} пока недоступен. Используйте email и пароль.`,
-    })
-  }
-
   return (
-    <AuthSplitLayout
-      hero={
-        <AuthHeroPanel
-          variant="login"
-          title="Вход в рабочее пространство подбора персонала"
-          description="Управляйте заказами на вакансии, откликами и встречами в едином интерфейсе заказчика."
-          bullets={[
-            'Поиск и фильтрация кандидатов',
-            'Командная работа с исполнителями',
-            'Контроль воронки закрытия вакансий',
-          ]}
-        />
-      }
-    >
-      <AuthFormShell
-        title="Войти"
-        description="Введите email и пароль рабочего аккаунта."
-        status={submitState.status !== 'idle' ? <AuthStatusBanner state={submitState} /> : null}
-        actionText="Нет аккаунта?"
-        actionLabel="Зарегистрироваться"
-        actionHref={routePaths.authJoin}
-      >
-        <form noValidate onSubmit={handleSubmit} className="grid gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="login-email" className="text-muted-foreground">
-              Email
-            </Label>
-            <Input
-              id="login-email"
-              type="email"
-              name="email"
-              required
-              autoComplete="email"
-              placeholder="you@company.ru"
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'login-email-error' : undefined}
-              className={authInputClassName}
-            />
-            <FormFieldError id="login-email-error">{errors.email}</FormFieldError>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="login-password" className="text-muted-foreground">
-              Пароль
-            </Label>
-            <Input
-              id="login-password"
-              type="password"
-              name="password"
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              aria-invalid={Boolean(errors.password)}
-              aria-describedby={errors.password ? 'login-password-error' : undefined}
-              className={authInputClassName}
-            />
-            <FormFieldError id="login-password-error">{errors.password}</FormFieldError>
-          </div>
-
-          <div className="grid gap-2 pt-1">
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="h-11 rounded-xl bg-primary text-primary-foreground transition-all hover:bg-primary/90 active:translate-y-px disabled:bg-primary/50"
-            >
-              {isLoading ? (
-                <span className="inline-flex items-center gap-2">
-                  <span
-                    className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/50 border-t-white"
-                    aria-hidden="true"
-                  />
-                  Входим...
-                </span>
-              ) : (
-                'Войти'
-              )}
-            </Button>
-          </div>
-
-          <AuthSocialButtons
-            isLoading={isLoading}
-            caption="или войти через"
-            onProviderClick={handleSocialLogin}
-          />
-        </form>
-      </AuthFormShell>
-    </AuthSplitLayout>
+    <AuthLayout footerNote="© 2026 КадрыТут — платформа автоматизации подбора персонала.">
+      <LoginForm
+        method={method}
+        email={email}
+        phone={phone}
+        password={password}
+        remember={remember}
+        errors={errors}
+        alert={alert}
+        isLoading={isLoading}
+        onMethodChange={handleMethodChange}
+        onEmailChange={handleEmailChange}
+        onPhoneChange={handlePhoneChange}
+        onPasswordChange={handlePasswordChange}
+        onRememberChange={setRemember}
+        onSubmit={handleSubmit}
+        onRecoveryClick={handleRecoveryClick}
+        onProviderClick={handleProviderClick}
+      />
+      <LoginLegalNote />
+    </AuthLayout>
   )
 }
