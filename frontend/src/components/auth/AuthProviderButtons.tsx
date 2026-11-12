@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export type AuthProviderKey = 'vk' | 'yandex' | 'telegram' | 'sber'
+export type AuthProviderKey = 'vk' | 'yandex' | 'gosuslugi' | 'sber'
 
 type AuthProviderButtonsProps = {
   disabled?: boolean
@@ -9,46 +9,26 @@ type AuthProviderButtonsProps = {
   onProviderClick: (provider: AuthProviderKey) => void
 }
 
-const providers: Array<{ key: AuthProviderKey; label: string; glyph: React.ReactNode }> = [
+const providers: Array<{ key: AuthProviderKey; label: string; icon: string }> = [
   {
     key: 'vk',
     label: 'VK ID',
-    glyph: (
-      <span className="grid h-5 w-5 place-items-center rounded bg-[#0077FF] text-[11px] font-bold text-white">
-        VK
-      </span>
-    ),
+    icon: '/providers/vk.svg',
   },
   {
     key: 'yandex',
     label: 'Яндекс ID',
-    glyph: (
-      <span className="grid h-5 w-5 place-items-center rounded-full bg-[#FC3F1D] text-[11px] font-bold text-white">
-        Я
-      </span>
-    ),
+    icon: '/providers/yandex.svg',
   },
   {
-    key: 'telegram',
-    label: 'Telegram',
-    glyph: (
-      <span className="grid h-5 w-5 place-items-center rounded-full bg-[#2AABEE] text-white">
-        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
-          <path d="M21 4L2.5 11.2l5.1 1.7L9 19l3.2-3.4 4.6 3.2L21 4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-        </svg>
-      </span>
-    ),
+    key: 'gosuslugi',
+    label: 'Госуслуги / ЕСИА',
+    icon: '/providers/gosuslugi.svg',
   },
   {
     key: 'sber',
     label: 'Sber ID',
-    glyph: (
-      <span className="grid h-5 w-5 place-items-center rounded-full bg-[#21A038] text-white">
-        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
-          <path d="M6 12.5l4 4L18 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </span>
-    ),
+    icon: '/providers/sber.svg',
   },
 ]
 
@@ -80,7 +60,7 @@ export function AuthProviderButtons({
             onClick={() => onProviderClick(provider.key)}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-2 text-caption-meta font-medium text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
           >
-            {provider.glyph}
+            <img src={provider.icon} alt="" width={20} height={20} className="h-5 w-5 shrink-0" />
             <span className="truncate">{provider.label}</span>
           </button>
         ))}
