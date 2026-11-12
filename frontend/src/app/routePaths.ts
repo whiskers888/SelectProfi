@@ -3,6 +3,7 @@ export const routePaths = {
   auth: '/auth',
   authJoin: '/auth/join',
   dashboardEntry: '/dashboard',
+  faq: '/faq',
   legacyApp: '/preview',
   legacyLogin: '/login',
   legacyRegister: '/register',

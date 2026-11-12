@@ -2,6 +2,7 @@ import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { AvailabilityRoute, ProtectedRoute, SessionEntryRedirect } from './RouteGuards'
 import { routePaths } from './routePaths'
 import { LoginPage } from '@/pages/LoginPage'
+import { FaqPage } from '@/pages/FaqPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { ServiceUnavailablePage } from '@/pages/ServiceUnavailablePage'
 import { WorkspacePage } from '@/pages/WorkspacePage'
@@ -11,6 +12,7 @@ export const router = createBrowserRouter([
   { path: routePaths.dashboardEntry, element: <SessionEntryRedirect /> },
   { path: routePaths.auth, element: <AvailabilityRoute element={<LoginPage />} /> },
   { path: routePaths.authJoin, element: <AvailabilityRoute element={<RegisterPage />} /> },
+  { path: routePaths.faq, element: <AvailabilityRoute element={<FaqPage />} /> },
   {
     path: routePaths.app,
     element: <AvailabilityRoute element={<ProtectedRoute element={<WorkspacePage />} />} />,
