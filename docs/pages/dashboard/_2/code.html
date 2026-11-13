@@ -1,0 +1,1085 @@
+<!DOCTYPE html><html lang="ru"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>КадрыТут · Дашборд Заказчика</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F8F6;
+    --surface: #ffffff;
+    --sub: #F7FAF9;
+    --line: #D7E5DF;
+    --line-strong: #BFD5CC;
+    --text: #12201C;
+    --muted: #4E6660;
+    --faint: #7F9690;
+    --primary: #0F766E;
+    --primary-strong: #115E59;
+    --primary-soft: #E6F2EF;
+    --primary-mid: #7CC4BC;
+    --top: #12201C;
+    --top-2: #1D302B;
+    --top-line: #2E443E;
+    --top-muted: #9DB3AC;
+    --top-text: #E4EEEA;
+    --ava: #0F766E;
+    --ok: #1E6E47;
+    --ok-bg: #E5F3EB;
+    --warn: #9A5B08;
+    --warn-bg: #FCF1DC;
+    --info: #0F766E;
+    --info-bg: #E6F2EF;
+    --idle: #4E6660;
+    --idle-bg: #EDF4F1;
+    --shadow: rgba(18, 32, 28, 0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .material-symbols-outlined {
+    font-size: 18px;
+    vertical-align: middle;
+  }
+  /* Topbar */
+  .topbar {
+    background: var(--top);
+    color: var(--top-text);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 20px;
+    height: 56px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--top-line);
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: .01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #ffffff;
+    color: var(--top);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .brand-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.12);
+    color: #A3E5D8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .brand small {
+    font-weight: 400;
+    color: var(--top-muted);
+    border-left: 1px solid var(--top-line);
+    padding-left: 10px;
+    font-size: 13px;
+  }
+  .search-box {
+    flex: 1;
+    max-width: 520px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--top-2);
+    border: 1px solid var(--top-line);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: var(--top-muted);
+    font-size: 13px;
+  }
+  .search-box input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--top-text);
+    width: 100%;
+    font: inherit;
+  }
+  .search-box input::placeholder {
+    color: var(--top-muted);
+  }
+  .top-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .bell {
+    position: relative;
+    color: var(--top-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  .bell .badge {
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    background: #E0A43A;
+    color: var(--top);
+    font-size: 10px;
+    font-weight: 700;
+    height: 16px;
+    min-width: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 8px;
+    padding: 0 4px;
+  }
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: right;
+    font-size: 13px;
+  }
+  .user-profile small {
+    display: block;
+    color: var(--top-muted);
+    font-size: 11px;
+  }
+  .ava {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--ava);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1.5px solid rgba(255,255,255,0.2);
+  }
+
+  /* Three Panes Layout */
+  .panes {
+    display: grid;
+    grid-template-columns: 232px 380px minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Navigation Sidebar (232px) */
+  .nav-pane {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 10px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .role-indicator {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--faint);
+    padding: 4px 10px 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .role-badge {
+    background: #E6F2EF;
+    color: #0F766E;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+  .btn-create {
+    width: 100%;
+    margin: 4px 0 14px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn-create:hover { background: var(--primary-strong); }
+  .nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    list-style: none;
+  }
+  .nav-menu a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+  .nav-menu a:hover {
+    background: var(--sub);
+    color: var(--text);
+  }
+  .nav-menu a.active {
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .nav-menu a .counter {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--faint);
+    background: rgba(0,0,0,0.04);
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+  .nav-menu a.active .counter {
+    color: var(--primary);
+    background: rgba(15, 118, 110, 0.12);
+    font-weight: 600;
+  }
+  .wallet-card {
+    margin-top: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--sub);
+  }
+  .wallet-card .wallet-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--faint);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .wallet-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .wallet-row + .wallet-row {
+    margin-top: 6px;
+  }
+  .wallet-row span {
+    color: var(--muted);
+  }
+  .wallet-row b {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .wallet-org {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* List Pane (380px) */
+  .list-pane {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .list-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .list-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .list-title-row h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .sort-select {
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 2px 6px;
+    background: var(--surface);
+    outline: none;
+  }
+  .filter-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .filter-chip {
+    font-size: 12px;
+    padding: 3px 9px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    background: var(--surface);
+  }
+  .filter-chip.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-soft);
+    font-weight: 500;
+  }
+  .list-scroll {
+    overflow-y: auto;
+    flex: 1;
+  }
+  .list-group-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--faint);
+    padding: 12px 16px 6px;
+    background: var(--sub);
+    border-bottom: 1px solid var(--line);
+    font-weight: 600;
+  }
+  .order-row {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    display: grid;
+    gap: 4px;
+    transition: background 0.1s ease;
+  }
+  .order-row:hover { background: var(--sub); }
+  .order-row.active {
+    background: var(--primary-soft);
+    box-shadow: inset 3px 0 0 var(--primary);
+  }
+  .row-meta-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--faint);
+  }
+  .order-row strong {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .row-meta-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .pill.warn { color: var(--warn); background: var(--warn-bg); }
+  .pill.ok { color: var(--ok); background: var(--ok-bg); }
+  .pill.info { color: var(--info); background: var(--info-bg); }
+
+  /* Detail Pane */
+  .detail-pane {
+    overflow-y: auto;
+    padding: 20px 28px 40px;
+    background: var(--bg);
+    min-width: 0;
+  }
+  .breadcrumbs {
+    font-size: 12px;
+    color: var(--faint);
+    margin-bottom: 8px;
+  }
+  .breadcrumbs b {
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .detail-header h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.25;
+  }
+  .detail-header .order-number {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .notice-banner {
+    display: flex;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--warn);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+  .notice-banner p {
+    font-size: 13.5px;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1.45;
+  }
+  .notice-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+  }
+  .btn.primary:hover { background: var(--primary-strong); }
+  .btn:hover:not(.primary) { background: var(--sub); }
+
+  /* Steps / Process Bar */
+  .steps-bar {
+    display: flex;
+    margin-bottom: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    list-style: none;
+  }
+  .steps-bar li {
+    flex: 1;
+    font-size: 12px;
+    padding: 9px 8px 9px 12px;
+    color: var(--faint);
+    border-right: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .steps-bar li:last-child { border-right: none; }
+  .steps-bar li.done { color: var(--muted); }
+  .steps-bar li.done .check-icon { color: var(--ok); font-size: 14px; font-weight: 700; }
+  .steps-bar li.now {
+    color: var(--primary);
+    font-weight: 600;
+    background: var(--primary-soft);
+  }
+
+  /* Facts Grid */
+  .facts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .fact-cell {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+  .fact-cell:nth-child(3n) { border-right: none; }
+  .fact-cell:nth-last-child(-n+3) { border-bottom: none; }
+  .fact-cell dt { font-size: 11.5px; color: var(--faint); }
+  .fact-cell dd { font-size: 13px; font-weight: 500; color: var(--text); margin-top: 2px; }
+
+  /* Tabs & Main Content */
+  .detail-tabs {
+    display: flex;
+    gap: 20px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+  .detail-tab {
+    padding: 8px 2px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .detail-tab.active {
+    color: var(--text);
+    font-weight: 600;
+    border-color: var(--primary);
+  }
+
+  /* Split layout for Table + Side */
+  .detail-body-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 18px;
+    align-items: start;
+  }
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .table-title {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--sub);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .table-title .badge-alias {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    background: rgba(0,0,0,0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.data-table th, table.data-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  table.data-table th {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--surface);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr:hover td { background: var(--sub); }
+  .candidate-alias {
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .candidate-alias .lock-icon {
+    font-size: 14px;
+    color: var(--faint);
+  }
+  .score-badge {
+    color: var(--ok);
+    font-weight: 600;
+    background: var(--ok-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .table-footer-note {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 10px 14px;
+    background: #FAFCFB;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Aside Cards (Docs & History) */
+  .aside-section h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .aside-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .doc-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .doc-item:last-child { border-bottom: none; }
+  .doc-item .doc-icon {
+    color: var(--primary);
+    font-size: 18px;
+    margin-top: 1px;
+  }
+  .doc-item .doc-name {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .doc-item .doc-meta {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .history-list {
+    list-style: none;
+    padding: 6px 12px;
+  }
+  .history-list li {
+    padding: 6px 0 6px 12px;
+    border-left: 2px solid var(--line);
+    position: relative;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .history-list li::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 10px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--line-strong);
+  }
+  .history-list time {
+    display: block;
+    font-size: 10.5px;
+    color: var(--faint);
+  }
+</style>
+</head>
+<body>
+<!-- Topbar -->
+<header class="topbar"><div class="brand" style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px;"><div class="brand-badge" style="width: 30px; height: 30px; border-radius: 6px; background: rgb(255, 255, 255); color: rgb(18, 32, 28); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;">КТ</div><div style="display: flex; flex-direction: column;"><span style="color:#E4EEEA; font-weight:700; font-size:15px; line-height:1.2;">КадрыТут</span><span style="font-size:11px; font-weight:400; color:#9DB3AC; line-height:1.2;">Маркетплейс подбора персонала</span></div></div>
+<div class="search-box" style="flex: 1 1 0%; max-width: 520px; display: flex; align-items: center; gap: 8px; background: rgb(29, 48, 43); border: 1px solid rgb(46, 68, 62); border-radius: 6px; padding: 6px 12px; color: rgb(157, 179, 172); font-size: 13px;">
+  <span class="material-symbols-outlined" style="font-size:18px;">search</span>
+  <input placeholder="Поиск по заказам, кандидатам, вакансиям (Ctrl + K)" type="text" style="background:transparent; border:none; outline:none; color:#E4EEEA; width:100%; font:inherit;">
+</div>
+<div class="top-right" style="margin-left: auto; display: flex; align-items: center; gap: 18px;">
+  <div class="bell" title="Уведомления" style="position:relative; color:#E4EEEA; cursor:pointer; display:flex; align-items:center;">
+    <span class="material-symbols-outlined" style="font-size:20px;">notifications</span>
+    <span class="badge" style="position:absolute; top:-5px; right:-6px; background:#E0A43A; color:#12201C; font-size:10px; font-weight:700; height:16px; min-width:16px; line-height:16px; text-align:center; border-radius:8px; padding:0 4px;">3</span>
+  </div>
+  <div class="user-profile" style="display:flex; align-items:center; gap:10px; text-align:right; font-size:13px;">
+    <div>
+      <strong style="color:#E4EEEA; font-weight:600; display:block;">Ирина Котова</strong>
+      <small style="display:block; color:#9DB3AC; font-size:11px;">Заказчик · ООО «Альфа Логистик»</small>
+    </div>
+    <div class="ava" style="width:34px; height:34px; border-radius:50%; background:#0F766E; color:#fff; display:grid; place-items:center; font-weight:600; font-size:13px; border:1.5px solid rgba(255,255,255,0.2);">ИК</div>
+  </div>
+</div></header>
+<!-- Panes Container -->
+<div class="panes">
+<!-- Nav Sidebar (232px) -->
+<aside class="nav-pane"><div class="role-indicator" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(127, 150, 144); padding: 4px 8px 10px; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+  <span>РОЛЬ АККАУНТА</span>
+  <span class="role-badge" style="background:#f0fdfa; color:#0f766e; font-weight:600; font-size:11px; padding:2px 8px; border-radius:4px; text-transform:uppercase;">ЗАКАЗЧИК</span>
+</div>
+<button class="btn-create" style="width: 100%; margin: 2px 0px 14px; background: rgb(15, 118, 110); color: rgb(255, 255, 255); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 8px; padding: 10px 12px; font-weight: 500; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+  <span class="material-symbols-outlined" style="font-size:20px;">add_circle</span>
+  Создать заказ
+</button>
+<ul class="nav-menu" style="display: flex; flex-direction: column; gap: 3px; list-style: none;">
+  <li>
+    <a class="active" href="#" style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; background:#f0fdfa; color:#115e59; font-weight:600; text-decoration:none; font-size:13px;">
+      <span class="material-symbols-outlined" style="font-size:20px;">work_outline</span>
+      <span>Мои заказы</span>
+      <span class="counter" style="margin-left:auto; font-size:11px; font-weight:600; color:#0f766e; background:rgba(15, 118, 110, 0.12); padding:2px 7px; border-radius:10px;">4</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; color:#4E6660; font-weight:500; text-decoration:none; font-size:13px;">
+      <span class="material-symbols-outlined" style="font-size:20px;">group</span>
+      <span>Кандидаты</span>
+      <span class="counter" style="margin-left:auto; font-size:11px; font-weight:500; color:#7F9690; background:rgba(0,0,0,0.05); padding:2px 7px; border-radius:10px;">2</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; color:#4E6660; font-weight:500; text-decoration:none; font-size:13px;">
+      <span class="material-symbols-outlined" style="font-size:20px;">calendar_today</span>
+      <span>Встречи</span>
+      <span class="counter" style="margin-left:auto; font-size:11px; font-weight:500; color:#7F9690; background:rgba(0,0,0,0.05); padding:2px 7px; border-radius:10px;">1</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; color:#4E6660; font-weight:500; text-decoration:none; font-size:13px;">
+      <span class="material-symbols-outlined" style="font-size:20px;">chat_bubble_outline</span>
+      <span>Сообщения</span>
+      <span class="counter" style="margin-left:auto; font-size:11px; font-weight:500; color:#7F9690; background:rgba(0,0,0,0.05); padding:2px 7px; border-radius:10px;">3</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; color:#4E6660; font-weight:500; text-decoration:none; font-size:13px;">
+      <span class="material-symbols-outlined" style="font-size:20px;">description</span>
+      <span>Документы</span>
+    </a>
+  </li>
+  <li>
+    <a href="#" style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; color:#4E6660; font-weight:500; text-decoration:none; font-size:13px;">
+      <span class="material-symbols-outlined" style="font-size:20px;">insert_chart_outlined</span>
+      <span>Аналитика</span>
+    </a>
+  </li>
+</ul>
+<div class="wallet-card" style="margin-top: auto; border: 1px solid rgb(215, 229, 223); border-radius: 8px; padding: 12px; background: rgb(247, 250, 249);">
+  <div class="wallet-title" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#7F9690; margin-bottom:8px; display:flex; align-items:center; gap:5px;">
+    <span class="material-symbols-outlined" style="font-size:15px; color:#0F766E;">account_balance_wallet</span>
+    Эскроу-кошелек
+  </div>
+  <div class="wallet-row" style="display:flex; justify-content:space-between; font-size:12px; line-height:1.4;">
+    <span style="color:#4E6660;">Зарезервировано:</span>
+    <b style="color:#12201C; font-weight:600;">360 000 ₽</b>
+  </div>
+  <div class="wallet-row" style="display:flex; justify-content:space-between; font-size:12px; line-height:1.4; margin-top:6px;">
+    <span style="color:#4E6660;">Свободный остаток:</span>
+    <b style="color:#12201C; font-weight:600;">140 000 ₽</b>
+  </div>
+  <div class="wallet-org" style="margin-top:10px; padding-top:8px; border-top:1px solid #D7E5DF; font-size:11px; color:#4E6660; line-height:1.4;">
+    <div>ООО «Альфа Логистик»</div>
+    <div>ИНН 7704123456</div>
+  </div>
+</div></aside>
+<!-- List Pane (380px) -->
+<section class="list-pane">
+<header class="list-header">
+<div class="list-title-row">
+<h1>Заказы на подбор</h1>
+<select class="sort-select">
+<option>По сроку решения</option>
+<option>По дате создания</option>
+<option>По бюджету</option>
+</select>
+</div>
+<div class="filter-chips">
+<span class="filter-chip active">Все (4)</span>
+<span class="filter-chip">Требуют решения (2)</span>
+<span class="filter-chip">В работе (1)</span>
+<span class="filter-chip">Архив</span>
+</div>
+</header>
+<div class="list-scroll">
+<!-- Group 1 -->
+<div class="list-group-title">Требуют вашего решения · 2</div>
+<div class="order-row active">
+<div class="row-meta-top">
+<span>№ З-1042</span>
+<span>до 12.11 (осталось 3 дня)</span>
+</div>
+<strong>Senior React-разработчик</strong>
+<div class="row-meta-bottom">
+<span>Исполнитель: А. Ершова</span>
+<span class="pill warn">Выбор финалиста</span>
+</div>
+</div>
+<div class="order-row">
+<div class="row-meta-top">
+<span>№ З-1047</span>
+<span>до 14.11</span>
+</div>
+<strong>Product Designer</strong>
+<div class="row-meta-bottom">
+<span>4 отклика рекрутеров</span>
+<span class="pill warn">Выбор исполнителя</span>
+</div>
+</div>
+<!-- Group 2 -->
+<div class="list-group-title">В работе · 2</div>
+<div class="order-row">
+<div class="row-meta-top">
+<span>№ З-1045</span>
+<span>до 20.11</span>
+</div>
+<strong>Бухгалтер на первичку</strong>
+<div class="row-meta-bottom">
+<span>Исполнитель: О. Мирный</span>
+<span class="pill info">На согласовании</span>
+</div>
+</div>
+<div class="order-row">
+<div class="row-meta-top">
+<span>№ З-1039</span>
+<span>до 30.11</span>
+</div>
+<strong>Менеджер по продажам B2B</strong>
+<div class="row-meta-bottom">
+<span>Исполнитель: А. Ершова</span>
+<span class="pill ok">Pool · 5 кандидатов</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Detail Pane (Right Wide) -->
+<main class="detail-pane">
+<div class="breadcrumbs">
+      Мои заказы / <b>З-1042 · Senior React-разработчик</b>
+</div>
+<div class="detail-header">
+<div>
+<h2>Senior React-разработчик</h2>
+<div class="order-number">Заказ № З-1042 от 02.11.2026 · Заключен через платформу КадрыТут</div>
+</div>
+<span class="pill warn" style="font-size: 13px; padding: 4px 10px;">Выбор финалиста</span>
+</div>
+<!-- Alert / Notice Banner -->
+<div class="notice-banner">
+<span class="material-symbols-outlined" style="color:var(--warn); font-size:24px;">info</span>
+<div style="flex:1;">
+<p><strong>Исполнитель подготовил Shortlist из 3 кандидатов.</strong> Выберите одного кандидата — после подтверждения вам мгновенно откроются прямые контакты (телефон, Telegram, email) и сформируется закрывающий акт.</p>
+<div class="notice-actions">
+<button class="btn primary">
+<span class="material-symbols-outlined">how_to_reg</span>
+            Выбрать финалиста
+          </button>
+<button class="btn">
+<span class="material-symbols-outlined">cached</span>
+            Запросить ещё кандидатов
+          </button>
+<button class="btn">
+<span class="material-symbols-outlined">chat</span>
+            Написать исполнителю
+          </button>
+</div>
+</div>
+</div>
+<!-- Steps -->
+<ol class="steps-bar">
+<li class="done"><span class="check-icon">✓</span> 1. Заказ</li>
+<li class="done"><span class="check-icon">✓</span> 2. Исполнитель</li>
+<li class="done"><span class="check-icon">✓</span> 3. Вакансия</li>
+<li class="done"><span class="check-icon">✓</span> 4. Скрининг</li>
+<li class="now">5. Выбор финалиста</li>
+<li>6. Оффер</li>
+<li>7. Закрытие и акт</li>
+</ol>
+<!-- Facts Grid -->
+<dl class="facts-grid">
+<div class="fact-cell">
+<dt>Исполнитель заказа</dt>
+<dd>Анна Ершова · рейтинг 4,8 ★ (23 закрытых)</dd>
+</div>
+<div class="fact-cell">
+<dt>Стоимость услуги подбора</dt>
+<dd>120 000 ₽ · зарезервировано на эскроу</dd>
+</div>
+<div class="fact-cell">
+<dt>Зарплатная вилка кандидата</dt>
+<dd>250 000 – 300 000 ₽ net</dd>
+</div>
+<div class="fact-cell">
+<dt>Формат и график</dt>
+<dd>5/2, гибрид 3/2 (офис м. Курская)</dd>
+</div>
+<div class="fact-cell">
+<dt>Гарантийный период</dt>
+<dd>90 дней с даты выхода кандидата</dd>
+</div>
+<div class="fact-cell">
+<dt>Крайний срок этапа</dt>
+<dd>12.11.2026 · осталось 3 дня</dd>
+</div>
+</dl>
+<!-- Tabs -->
+<div class="detail-tabs">
+<div class="detail-tab active">Shortlist кандидатов (3)</div>
+<div class="detail-tab">Описание вакансии</div>
+<div class="detail-tab">Документы и счета (2)</div>
+<div class="detail-tab">История согласований</div>
+</div>
+<!-- Two-column: Table + Side widgets -->
+<div class="detail-body-split">
+<!-- Left side: Table -->
+<section>
+<div class="table-card">
+<div class="table-title">
+<span>Кандидаты в шортлисте</span>
+<span class="badge-alias">Анонимные профили до выбора</span>
+</div>
+<table class="data-table">
+<thead>
+<tr>
+<th>Кандидат (псевдоним)</th>
+<th>Опыт и стек</th>
+<th>Ожидания</th>
+<th>Соответствие</th>
+<th>Добавлен</th>
+<th>Действие</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<div class="candidate-alias">
+<span class="material-symbols-outlined lock-icon">shield</span>
+                    Внимательный Frontend
+                  </div>
+</td>
+<td>6 лет · React, TypeScript, Redux, Next.js</td>
+<td>280 000 ₽</td>
+<td><span class="score-badge">92%</span></td>
+<td>06.11</td>
+<td><button class="btn" style="padding:4px 8px; font-size:12px;">Резюме</button></td>
+</tr>
+<tr>
+<td>
+<div class="candidate-alias">
+<span class="material-symbols-outlined lock-icon">shield</span>
+                    Системный Frontend
+                  </div>
+</td>
+<td>4 года · React, Webpack, Tailwind, REST</td>
+<td>260 000 ₽</td>
+<td><span class="score-badge">85%</span></td>
+<td>07.11</td>
+<td><button class="btn" style="padding:4px 8px; font-size:12px;">Резюме</button></td>
+</tr>
+<tr>
+<td>
+<div class="candidate-alias">
+<span class="material-symbols-outlined lock-icon">shield</span>
+                    Аккуратный Frontend
+                  </div>
+</td>
+<td>5 лет · Vue 3 → React, MobX, CI/CD</td>
+<td>250 000 ₽</td>
+<td><span class="score-badge">81%</span></td>
+<td>08.11</td>
+<td><button class="btn" style="padding:4px 8px; font-size:12px;">Резюме</button></td>
+</tr>
+</tbody>
+</table>
+<div class="table-footer-note">
+<span class="material-symbols-outlined" style="font-size: 16px; color: var(--primary);">verified_user</span>
+<span>ФИО, контакты и портфолио станут мгновенно доступны заказчику сразу после нажатия кнопки «Выбрать финалиста».</span>
+</div>
+</div>
+</section>
+<!-- Right side: Documents & History -->
+<aside class="aside-section">
+<h3>Документы по заказу</h3>
+<div class="aside-box">
+<div class="doc-item">
+<span class="material-symbols-outlined doc-icon">description</span>
+<div>
+<div class="doc-name">Договор-оферта № 1042</div>
+<div class="doc-meta">Подписан ПЭП 02.11.2026 · Статус: OK</div>
+</div>
+</div>
+<div class="doc-item">
+<span class="material-symbols-outlined doc-icon">receipt_long</span>
+<div>
+<div class="doc-name">Акт оказания услуг подбора</div>
+<div class="doc-meta">Сформируется после утверждения финалиста</div>
+</div>
+</div>
+</div>
+<h3>История изменений</h3>
+<div class="aside-box">
+<ul class="history-list">
+<li>
+<time>09.11, 09:40</time>
+<strong>А. Ершова</strong> добавила 2 кандидатов в Shortlist
+            </li>
+<li>
+<time>05.11, 16:12</time>
+<strong>Вы</strong> согласовали описание требований
+            </li>
+<li>
+<time>03.11, 11:05</time>
+<strong>Система</strong> назначила рекрутера А. Ершову
+            </li>
+<li>
+<time>02.11, 10:30</time>
+<strong>Вы</strong> создали заказ, 120 000 ₽ зарезервировано
+            </li>
+</ul>
+</div>
+</aside>
+</div>
+</main>
+</div>
+
+
+
+
+</body></html>

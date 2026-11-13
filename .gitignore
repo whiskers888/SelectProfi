@@ -5,3 +5,6 @@
 .env
 .playwright-mcp/
 .aider*
+
+# CodeXRay
+.codexray/
