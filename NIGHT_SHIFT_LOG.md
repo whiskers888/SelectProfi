@@ -28,5 +28,16 @@
 Изменения: добавлен Applicant CQRS endpoint; customer/executor получили данные Wallet/Notification; добавлены точные маршруты /customer, /executor, /applicant с сохранением старых stats aliases.
 Ошибки: первый build выявил CS0246 для GetApplicantDashboardStatsPersistence из-за пропущенного using в Infrastructure DI; using добавлен, повторный build прошёл.
 Проверка: dotnetdevmcp backend/Api/Api.csproj — success, 0 errors, 0 warnings; reviewer: no material findings. HTTP/SQL execution не запускались.
-Коммит: feature/night-shift-refactor / feat: NS-02 Dashboard API и Applicant CQRS endpoint.
+Коммит: feature/night-shift-refactor / feat: NS-02 Dashboard API и Applicant CQRS endpoint / f299e308129380597d3d43a428206c7f2ee8e03a.
+
+
+
+## NS-03 | Политика псевдонимов кандидатов для заказчика
+Старт: 2026-11-14 02:13:06 +03:00
+Окончание: 2026-11-14 02:19:14 +03:00
+Статус: Review
+Изменения: customer responses теперь всегда псевдонимны в `DisplayName` и `PublicAlias`; добавлен стабильный CandidatePublicAlias для registered/legacy записей; новый applicant candidate получает alias при создании; executor/admin и отдельный selected-candidate contacts path сохранены.
+Ошибки: первый перевод задачи в YouGile не прошёл из-за одной ошибочной буквы в UUID; исправлен правильным ID. Кодовых ошибок после сборки нет.
+Проверка: dotnetdevmcp backend/Api/Api.csproj — success, 0 errors, 0 warnings; static reviewer — no material findings.
+Коммит: feature/night-shift-refactor / feat: NS-03 политика псевдонимов кандидатов для заказчика.
 

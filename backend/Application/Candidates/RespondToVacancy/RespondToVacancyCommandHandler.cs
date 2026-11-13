@@ -68,19 +68,20 @@ public sealed class RespondToVacancyCommandHandler(IRespondToVacancyPersistence 
 
     private static Candidate BuildRegisteredCandidate(Domain.Users.User applicant, DateTime utcNow)
     {
+        var candidateId = Guid.NewGuid();
         var fullName = BuildFullName(applicant);
         var normalizedFullName = fullName.ToUpperInvariant();
         var hasEmail = !string.IsNullOrWhiteSpace(applicant.Email);
 
         return new Candidate
         {
-            Id = Guid.NewGuid(),
+            Id = candidateId,
             UserId = applicant.Id,
             CreatedByExecutorId = null,
             FullName = fullName,
             NormalizedFullName = normalizedFullName,
             BirthDate = null,
-            PublicAlias = fullName,
+            PublicAlias = CandidatePublicAlias.ForCandidate(candidateId),
             Email = hasEmail ? applicant.Email : null,
             NormalizedEmail = hasEmail ? applicant.NormalizedEmail : null,
             Phone = applicant.Phone,

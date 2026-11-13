@@ -1,5 +1,7 @@
 using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Application.Cqrs;
+using SelectProfi.backend.Domain.Candidates;
+using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Candidates.GetVacancyCandidates;
 
@@ -38,11 +40,11 @@ public sealed class GetVacancyCandidatesQueryHandler(IGetVacancyCandidatesPersis
             {
                 VacancyCandidateId = vacancyCandidate.Id,
                 CandidateId = vacancyCandidate.CandidateId,
-                PublicAlias = vacancyCandidate.Candidate.PublicAlias,
-                DisplayName = ResolveDisplayName(vacancyCandidate.Candidate, query.RequesterUserId),
+                PublicAlias = ResolvePublicAlias(vacancyCandidate.Candidate, query.RequesterRole),
+                DisplayName = ResolveDisplayName(vacancyCandidate.Candidate, query.RequesterRole, query.RequesterUserId),
                 Source = vacancyCandidate.Candidate.Source,
                 IsOwnedByRequester = IsOwnedByRequester(vacancyCandidate.Candidate, query.RequesterUserId),
-                IsAnonymized = IsAnonymized(vacancyCandidate.Candidate, query.RequesterUserId),
+                IsAnonymized = IsAnonymized(vacancyCandidate.Candidate, query.RequesterRole, query.RequesterUserId),
                 Stage = vacancyCandidate.Stage,
                 AddedAtUtc = vacancyCandidate.AddedAtUtc,
                 UpdatedAtUtc = vacancyCandidate.UpdatedAtUtc,
@@ -66,9 +68,14 @@ public sealed class GetVacancyCandidatesQueryHandler(IGetVacancyCandidatesPersis
                || candidate.ContactsOwnerExecutorId == requesterUserId;
     }
 
-    private static bool IsAnonymized(Domain.Candidates.Candidate candidate, Guid requesterUserId)
+    private static bool IsAnonymized(Candidate candidate, UserRole requesterRole, Guid requesterUserId)
     {
-        if (candidate.Source == Domain.Candidates.CandidateSource.RegisteredUser)
+        if (requesterRole == UserRole.Customer)
+        {
+            return true;
+        }
+
+        if (candidate.Source == CandidateSource.RegisteredUser)
         {
             return false;
         }
@@ -76,8 +83,26 @@ public sealed class GetVacancyCandidatesQueryHandler(IGetVacancyCandidatesPersis
         return !IsOwnedByRequester(candidate, requesterUserId);
     }
 
-    private static string ResolveDisplayName(Domain.Candidates.Candidate candidate, Guid requesterUserId)
+    private static string ResolvePublicAlias(Candidate candidate, UserRole requesterRole)
     {
-        return IsAnonymized(candidate, requesterUserId) ? candidate.PublicAlias : candidate.FullName;
+        if (requesterRole != UserRole.Customer)
+        {
+            return candidate.PublicAlias;
+        }
+
+        if (string.IsNullOrWhiteSpace(candidate.PublicAlias) ||
+            string.Equals(candidate.PublicAlias, candidate.FullName, StringComparison.OrdinalIgnoreCase))
+        {
+            return CandidatePublicAlias.ForCandidate(candidate.Id);
+        }
+
+        return candidate.PublicAlias;
+    }
+
+    private static string ResolveDisplayName(Candidate candidate, UserRole requesterRole, Guid requesterUserId)
+    {
+        return IsAnonymized(candidate, requesterRole, requesterUserId)
+            ? ResolvePublicAlias(candidate, requesterRole)
+            : candidate.FullName;
     }
 }
