@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using SelectProfi.backend.Domain.Candidates;
+using SelectProfi.backend.Domain.Notifications;
 using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Domain.Users;
 using SelectProfi.backend.Domain.Vacancies;
+using SelectProfi.backend.Domain.Wallets;
 
 namespace SelectProfi.backend.Infrastructure.Data;
 
@@ -27,6 +29,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<RefreshSession> RefreshSessions => Set<RefreshSession>();
 
     public DbSet<VerificationChallenge> VerificationChallenges => Set<VerificationChallenge>();
+
+    public DbSet<Wallet> Wallets => Set<Wallet>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     // @dvnull: Ранее контекст содержал только Users/RefreshSessions; добавлен Vacancy DbSet для PRI-74.
     public DbSet<Vacancy> Vacancies => Set<Vacancy>();
@@ -111,6 +117,47 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .WithMany(user => user.RefreshSessions)
                 .HasForeignKey(session => session.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Wallet>(builder =>
+        {
+            builder.HasKey(wallet => wallet.Id);
+            builder.Property(wallet => wallet.AvailableBalance)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m)
+                .IsRequired();
+            builder.Property(wallet => wallet.ReservedBalance)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m)
+                .IsRequired();
+            builder.Property(wallet => wallet.CurrencyCode)
+                .HasMaxLength(3)
+                .HasDefaultValue("RUB")
+                .IsRequired();
+
+            builder.HasOne(wallet => wallet.User)
+                .WithOne()
+                .HasForeignKey<Wallet>(wallet => wallet.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Notification>(builder =>
+        {
+            builder.HasKey(notification => notification.Id);
+            builder.Property(notification => notification.Title)
+                .HasMaxLength(200)
+                .IsRequired();
+            builder.Property(notification => notification.Message)
+                .HasMaxLength(1000)
+                .IsRequired();
+
+            builder.HasOne(notification => notification.User)
+                .WithMany()
+                .HasForeignKey(notification => notification.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(notification => new
+                { notification.UserId, notification.ReadAtUtc, notification.CreatedAtUtc });
         });
 
         modelBuilder.Entity<Order>(builder =>

@@ -9,7 +9,9 @@ using SelectProfi.backend.Application;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Configuration;
+using SelectProfi.backend.Domain.Notifications;
 using SelectProfi.backend.Domain.Users;
+using SelectProfi.backend.Domain.Wallets;
 using SelectProfi.backend.Infrastructure;
 using SelectProfi.backend.Infrastructure.Data;
 using SelectProfi.backend.Middlewares;
@@ -178,10 +180,14 @@ static async Task SeedDevelopmentUsersAsync(IServiceProvider services)
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var passwordHashingService = scope.ServiceProvider.GetRequiredService<IPasswordHashingService>();
 
+    await using var seedTransaction = await dbContext.Database.BeginTransactionAsync();
+    await dbContext.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(1397771345, 1)");
+
     var seedUsers = new[]
     {
         new DevelopmentUserSeed("executor@selectprofi.local", "Test", "Executor", UserRole.Executor),
-        new DevelopmentUserSeed("customer@selectprofi.local", "Test", "Customer", UserRole.Customer)
+        new DevelopmentUserSeed("customer@selectprofi.local", "Test", "Customer", UserRole.Customer),
+        new DevelopmentUserSeed("applicant@selectprofi.local", "Test", "Applicant", UserRole.Applicant)
     };
 
     foreach (var seedUser in seedUsers)
@@ -223,8 +229,61 @@ static async Task SeedDevelopmentUsersAsync(IServiceProvider services)
     }
 
     await dbContext.SaveChangesAsync();
+
+    var notificationSeeds = new[]
+    {
+        new DevelopmentNotificationSeed(UserRole.Executor, Guid.Parse("d4b1c501-f4d1-4de0-b001-000000000001"), "Новые отклики", "Проверьте новые отклики по заказам."),
+        new DevelopmentNotificationSeed(UserRole.Executor, Guid.Parse("d4b1c501-f4d1-4de0-b001-000000000002"), "Изменён статус заказа", "Один из заказов обновлён."),
+        new DevelopmentNotificationSeed(UserRole.Executor, Guid.Parse("d4b1c501-f4d1-4de0-b001-000000000003"), "Напоминание", "Проверьте актуальность профиля."),
+        new DevelopmentNotificationSeed(UserRole.Customer, Guid.Parse("d4b1c501-f4d1-4de0-b002-000000000001"), "Новые кандидаты", "В shortlist добавлены кандидаты."),
+        new DevelopmentNotificationSeed(UserRole.Customer, Guid.Parse("d4b1c501-f4d1-4de0-b002-000000000002"), "Изменён статус заказа", "Один из заказов обновлён."),
+        new DevelopmentNotificationSeed(UserRole.Customer, Guid.Parse("d4b1c501-f4d1-4de0-b002-000000000003"), "Напоминание", "Проверьте актуальность заказа."),
+        new DevelopmentNotificationSeed(UserRole.Applicant, Guid.Parse("d4b1c501-f4d1-4de0-b003-000000000001"), "Отклик отправлен", "Ваш отклик сохранён."),
+        new DevelopmentNotificationSeed(UserRole.Applicant, Guid.Parse("d4b1c501-f4d1-4de0-b003-000000000002"), "Обновление профиля", "Проверьте актуальность резюме."),
+        new DevelopmentNotificationSeed(UserRole.Applicant, Guid.Parse("d4b1c501-f4d1-4de0-b003-000000000003"), "Напоминание", "Проверьте свои отклики.")
+    };
+
+    foreach (var seedUser in seedUsers)
+    {
+        var normalizedEmail = seedUser.Email.Trim().ToUpperInvariant();
+        var user = await dbContext.Users.SingleAsync(candidate => candidate.NormalizedEmail == normalizedEmail);
+        var nowUtc = DateTime.UtcNow;
+
+        if (!await dbContext.Wallets.AnyAsync(wallet => wallet.UserId == user.Id))
+        {
+            dbContext.Wallets.Add(new Wallet
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                AvailableBalance = 0m,
+                ReservedBalance = 0m,
+                CurrencyCode = "RUB",
+                CreatedAtUtc = nowUtc,
+                UpdatedAtUtc = nowUtc
+            });
+        }
+
+        foreach (var notificationSeed in notificationSeeds.Where(seed => seed.Role == user.Role))
+        {
+            if (await dbContext.Notifications.AnyAsync(notification => notification.Id == notificationSeed.Id))
+                continue;
+
+            dbContext.Notifications.Add(new Notification
+            {
+                Id = notificationSeed.Id,
+                UserId = user.Id,
+                Title = notificationSeed.Title,
+                Message = notificationSeed.Message,
+                CreatedAtUtc = nowUtc
+            });
+        }
+    }
+
+    await dbContext.SaveChangesAsync();
+    await seedTransaction.CommitAsync();
 }
 
 readonly record struct DevelopmentUserSeed(string Email, string FirstName, string LastName, UserRole Role);
+readonly record struct DevelopmentNotificationSeed(UserRole Role, Guid Id, string Title, string Message);
 
 public partial class Program;

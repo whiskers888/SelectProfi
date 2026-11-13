@@ -251,6 +251,38 @@ namespace SelectProfi.backend.Migrations
                     b.ToTable("VacancyCandidates");
                 });
 
+            modelBuilder.Entity("SelectProfi.backend.Domain.Notifications.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "ReadAtUtc", "CreatedAtUtc");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("SelectProfi.backend.Domain.Orders.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -745,6 +777,48 @@ namespace SelectProfi.backend.Migrations
                     b.ToTable("Vacancies");
                 });
 
+            modelBuilder.Entity("SelectProfi.backend.Domain.Wallets.Wallet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AvailableBalance")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasDefaultValue("RUB");
+
+                    b.Property<decimal>("ReservedBalance")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Wallets");
+                });
+
             modelBuilder.Entity("SelectProfi.backend.Domain.Candidates.Candidate", b =>
                 {
                     b.HasOne("SelectProfi.backend.Domain.Users.User", "ContactsOwnerExecutor")
@@ -834,6 +908,17 @@ namespace SelectProfi.backend.Migrations
                     b.Navigation("Vacancy");
                 });
 
+            modelBuilder.Entity("SelectProfi.backend.Domain.Notifications.Notification", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SelectProfi.backend.Domain.Orders.Order", b =>
                 {
                     b.HasOne("SelectProfi.backend.Domain.Users.User", "Customer")
@@ -921,6 +1006,17 @@ namespace SelectProfi.backend.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("SelectedCandidate");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Wallets.Wallet", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "User")
+                        .WithOne()
+                        .HasForeignKey("SelectProfi.backend.Domain.Wallets.Wallet", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Candidates.Candidate", b =>
