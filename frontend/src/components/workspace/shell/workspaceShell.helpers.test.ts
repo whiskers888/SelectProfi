@@ -82,6 +82,10 @@ function deriveStats(role: 'Customer' | 'Executor') {
     onApprovalVacanciesCount: 1,
     pipelineCandidatesCount: 4,
     shortlistCandidatesCount: 3,
+    availableBalance: 0,
+    reservedBalance: 0,
+    currencyCode: 'RUB',
+    unreadNotificationsCount: 0,
   }
 
   return deriveWorkspaceViewState({

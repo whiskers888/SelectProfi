@@ -50,5 +50,15 @@
 Изменения: React/ReactDOM и типы выровнены на 18; lockfile обновлён без несвязанных Floating UI/set-cookie-parser изменений; переиспользован tailwind.config.cjs и design token generator, border/input приведены к #D7E5DF.
 Ошибки: один npm install по ошибке запускался в корне; созданные им пустые package files удалены, типы установлены из frontend. npm build сообщает только устаревший Browserslist и большой существующий JS chunk.
 Проверка: frontend `npm run build` — success (tsc + Vite); React runtime/types версии согласованы; reviewer — no material findings.
-Коммит: feature/night-shift-refactor / feat: NS-04 React 18 и dashboard design tokens.
+Коммит: feature/night-shift-refactor / feat: NS-04 React 18 и dashboard design tokens / 30f2deec300be5b67c94597e69eda50a722b7b8f.
 
+
+
+## NS-05 | Типы и клиент dashboard API для трёх ролей
+Старт: 2026-11-14 02:33:45 +03:00
+Окончание: 2026-11-14 02:48:44 +03:00
+Статус: Review
+Изменения: добавлены строгие DTO-типы и Applicant dashboard query; данные соискателя отображаются только из API, отклик инвалидирует Applicant stats cache. Кнопки обзора Applicant скрыты без поддерживаемого маршрута.
+Ошибки: первый build выявил отсутствующие новые поля в тестовых fixtures — добавлены. Ревью нашло устаревание Applicant stats после отклика и неверный маршрут кнопок; исправлено. Финальная сборка прошла, остались предупреждения об устаревшем Browserslist и крупном JS chunk.
+Проверка: frontend `npm run build` — success (tsc + Vite, 2012 modules); `git diff --check` — success; независимое ревью — no issues. Тесты не запускались.
+Коммит: feature/night-shift-refactor / feat: NS-05 | Типы и клиент dashboard API для трёх ролей / pending.

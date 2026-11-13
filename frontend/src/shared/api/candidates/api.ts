@@ -174,6 +174,7 @@ const candidatesApi = api.injectEndpoints({
         url: `/api/vacancies/${vacancyId}/respond`,
         method: 'POST',
       }),
+      invalidatesTags: ['VacancyCandidate'],
     }),
     getVacancyCandidates: build.query<VacancyCandidatesResponse, { vacancyId: string }>({
       query: ({ vacancyId }) => ({

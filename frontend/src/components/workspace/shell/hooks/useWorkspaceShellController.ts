@@ -26,6 +26,7 @@ import {
   useUpdateVacancyCandidateStageMutation,
 } from '@/shared/api/candidates'
 import {
+  useGetApplicantDashboardStatsQuery,
   useGetCustomerDashboardStatsQuery,
   useGetExecutorDashboardStatsQuery,
 } from '@/shared/api/dashboard'
@@ -146,7 +147,9 @@ export function useWorkspaceShellController() {
   const profileRoleLabel = toRoleLabel(role)
   const canManageOrder = authMe?.role === 'Customer' || authMe?.role === 'Admin'
   const dashboardRole =
-    authMe?.role === 'Customer' || authMe?.role === 'Executor' ? authMe.role : null
+    authMe?.role === 'Customer' || authMe?.role === 'Executor' || authMe?.role === 'Applicant'
+      ? authMe.role
+      : null
   const dataset = { orders: [] }
   const canLoadServerOrders = !isBootstrapLoading && role !== 'Applicant'
   const shouldLoadMyOrders = role === 'Executor' && activeView === 'dashboard'
@@ -184,6 +187,9 @@ export function useWorkspaceShellController() {
   )
   const { data: customerDashboardStats } = useGetCustomerDashboardStatsQuery(
     dashboardRole === 'Customer' ? undefined : skipToken,
+  )
+  const { data: applicantDashboardStats } = useGetApplicantDashboardStatsQuery(
+    dashboardRole === 'Applicant' ? undefined : skipToken,
   )
   const canLoadServerVacancies = true
   const canLoadServerCandidates = role !== 'Applicant'
@@ -444,6 +450,7 @@ export function useWorkspaceShellController() {
     canLoadServerCandidates,
     canLoadServerOrders,
     candidateSourceVacancy,
+    applicantDashboardStats,
     customerDashboardStats,
     executorDashboardStats,
     executorGlobalBaseCandidates,

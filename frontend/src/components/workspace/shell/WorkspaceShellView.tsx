@@ -314,10 +314,16 @@ export function WorkspaceShellView({
                     {activeView === 'dashboard' ? (
                       <StatsGrid
                         stats={runtimeStats}
-                        onOverview={(statId) => {
-                          presetCandidateStageFilter(statId === 'shortlist' ? 'shortlist' : 'all')
-                          handleViewChange('candidates')
-                        }}
+                        onOverview={
+                          role === 'Applicant'
+                            ? undefined
+                            : (statId) => {
+                                presetCandidateStageFilter(
+                                  statId === 'shortlist' ? 'shortlist' : 'all',
+                                )
+                                handleViewChange('candidates')
+                              }
+                        }
                       />
                     ) : null}
                     <MainFeedPanel

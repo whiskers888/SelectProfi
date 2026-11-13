@@ -4,7 +4,7 @@ import { type WorkspaceStat } from '../model/data'
 
 type StatsGridProps = {
   stats: WorkspaceStat[]
-  onOverview: (statId: string) => void
+  onOverview?: (statId: string) => void
 }
 
 function resolveStatBadge(stat: WorkspaceStat): null | { tagClassName: 'preview11-tag-ok' | 'preview11-tag-warn' } {
@@ -74,7 +74,7 @@ export function StatsGrid({ stats, onOverview }: StatsGridProps) {
               ) : (
                 <p className="preview11-card-meta">{stat.label}</p>
               )}
-              {stat.id !== 'projects' && stat.id !== 'balance' ? (
+              {stat.id !== 'projects' && stat.id !== 'balance' && onOverview ? (
                 <button className="preview11-mini-btn" onClick={() => onOverview(stat.id)} type="button">
                   Обзор
                 </button>

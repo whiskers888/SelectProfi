@@ -6,6 +6,7 @@ import type {
 } from '@/shared/api/candidates'
 import type { VacancyResponse } from '@/shared/api/vacancies'
 import type {
+  ApplicantDashboardStatsResponse,
   CustomerDashboardStatsResponse,
   ExecutorDashboardStatsResponse,
 } from '@/shared/api/dashboard'
@@ -311,6 +312,7 @@ type DeriveWorkspaceViewStateInput = {
   threads: WorkspaceChatThread[];
   vacanciesResponseExists: boolean;
   vacancyCandidatesItems: VacancyCandidatesItemResponse[] | null;
+  applicantDashboardStats?: ApplicantDashboardStatsResponse;
   customerDashboardStats?: CustomerDashboardStatsResponse;
 };
 
@@ -349,6 +351,7 @@ export function deriveWorkspaceViewState({
   canLoadServerCandidates,
   canLoadServerOrders,
   candidateSourceVacancy,
+  applicantDashboardStats,
   executorDashboardStats,
   executorGlobalBaseCandidates,
   executorGlobalCandidates,
@@ -537,6 +540,34 @@ export function deriveWorkspaceViewState({
         tone: resolveIncomingFromExecutorTone(customerDashboardStats?.shortlistCandidatesCount ?? 0),
       },
     ];
+  } else if (role === 'Applicant' && applicantDashboardStats) {
+    runtimeStats = [
+      {
+        id: 'applications',
+        label: 'Мои отклики',
+        value: `${applicantDashboardStats.applicationsCount} шт.`,
+        note: applicantDashboardStats.resumeTitle
+          ? `Резюме: ${applicantDashboardStats.resumeTitle}`
+          : 'Резюме не заполнено',
+        tone: 'default',
+      },
+      {
+        id: 'shortlist',
+        label: 'В shortlist',
+        value: `${applicantDashboardStats.shortlistCandidatesCount} шт.`,
+        note: 'Отклики, перешедшие к следующему этапу.',
+        tone: resolveCandidateFlowTone(applicantDashboardStats.shortlistCandidatesCount),
+      },
+      {
+        id: 'notifications',
+        label: 'Непрочитанные уведомления',
+        value: String(applicantDashboardStats.unreadNotificationsCount),
+        note: '',
+        tone: applicantDashboardStats.unreadNotificationsCount > 0 ? 'warning' : 'neutral',
+      },
+    ];
+  } else if (role === 'Applicant') {
+    runtimeStats = []
   } else {
     runtimeStats = fallbackStats ?? [];
   }
