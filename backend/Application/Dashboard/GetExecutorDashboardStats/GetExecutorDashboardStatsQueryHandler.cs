@@ -23,7 +23,11 @@ public sealed class GetExecutorDashboardStatsQueryHandler(IGetExecutorDashboardS
             ActiveProjectsCount = stats.ActiveProjectsCount,
             PipelineCandidatesCount = stats.PipelineCandidatesCount,
             ShortlistCandidatesCount = stats.ShortlistCandidatesCount,
-            OnApprovalVacanciesCount = stats.OnApprovalVacanciesCount
+            OnApprovalVacanciesCount = stats.OnApprovalVacanciesCount,
+            AvailableBalance = stats.AvailableBalance,
+            ReservedBalance = stats.ReservedBalance,
+            CurrencyCode = stats.CurrencyCode,
+            UnreadNotificationsCount = stats.UnreadNotificationsCount
         };
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Dashboard.GetCustomerDashboardStats;
 using SelectProfi.backend.Application.Dashboard.GetExecutorDashboardStats;
+using SelectProfi.backend.Application.Dashboard.GetApplicantDashboardStats;
 using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Contracts.Dashboard;
 
@@ -16,6 +17,7 @@ namespace SelectProfi.backend.Controllers;
 public sealed class DashboardController(IQueryDispatcher queryDispatcher) : AuthorizedControllerBase
 {
     [HttpGet("customer-stats")]
+    [HttpGet("customer")]
     [Authorize(Policy = AuthorizationPolicies.CustomerOnly)]
     [ProducesResponseType(typeof(CustomerDashboardStatsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -39,11 +41,16 @@ public sealed class DashboardController(IQueryDispatcher queryDispatcher) : Auth
             ActiveProjectsCount = result.ActiveProjectsCount,
             PipelineCandidatesCount = result.PipelineCandidatesCount,
             ShortlistCandidatesCount = result.ShortlistCandidatesCount,
-            OnApprovalVacanciesCount = result.OnApprovalVacanciesCount
+            OnApprovalVacanciesCount = result.OnApprovalVacanciesCount,
+            AvailableBalance = result.AvailableBalance,
+            ReservedBalance = result.ReservedBalance,
+            CurrencyCode = result.CurrencyCode,
+            UnreadNotificationsCount = result.UnreadNotificationsCount
         });
     }
 
     [HttpGet("executor-stats")]
+    [HttpGet("executor")]
     [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
     [ProducesResponseType(typeof(ExecutorDashboardStatsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -67,7 +74,39 @@ public sealed class DashboardController(IQueryDispatcher queryDispatcher) : Auth
             ActiveProjectsCount = result.ActiveProjectsCount,
             PipelineCandidatesCount = result.PipelineCandidatesCount,
             ShortlistCandidatesCount = result.ShortlistCandidatesCount,
-            OnApprovalVacanciesCount = result.OnApprovalVacanciesCount
+            OnApprovalVacanciesCount = result.OnApprovalVacanciesCount,
+            AvailableBalance = result.AvailableBalance,
+            ReservedBalance = result.ReservedBalance,
+            CurrencyCode = result.CurrencyCode,
+            UnreadNotificationsCount = result.UnreadNotificationsCount
+        });
+    }
+
+    [HttpGet("applicant")]
+    [Authorize(Policy = AuthorizationPolicies.ApplicantOnly)]
+    [ProducesResponseType(typeof(ApplicantDashboardStatsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetApplicantStats(CancellationToken cancellationToken)
+    {
+        var result = await queryDispatcher.DispatchAsync<GetApplicantDashboardStatsQuery, GetApplicantDashboardStatsResult>(
+            new GetApplicantDashboardStatsQuery
+            {
+                RequesterUserId = RequesterUserId,
+                RequesterRole = RequesterRole
+            },
+            cancellationToken);
+
+        if (result.ErrorCode == GetApplicantDashboardStatsErrorCode.Forbidden)
+        {
+            return Forbid();
+        }
+
+        return Ok(new ApplicantDashboardStatsResponse
+        {
+            ApplicationsCount = result.ApplicationsCount,
+            ShortlistCandidatesCount = result.ShortlistCandidatesCount,
+            UnreadNotificationsCount = result.UnreadNotificationsCount,
+            ResumeTitle = result.ResumeTitle
         });
     }
 }

@@ -17,5 +17,16 @@
 Изменения: добавлены Wallet и Notification с FK/index/precision; создана EF migration; development seed обеспечивает кошелёк и три уведомления для demo-ролей, включая Applicant; seed защищён PostgreSQL transaction advisory lock.
 Ошибки: ревью выявило race condition check-then-insert; устранён транзакционной advisory lock. Не осталось.
 Проверка: dotnet ef migrations add AddDashboardWalletAndNotifications — success; dotnetdevmcp build backend/Api/Api.csproj — success, 0 errors, 0 warnings. Миграция к БД в этом шаге не применялась.
-Коммит: feature/night-shift-refactor / feat: NS-01 модели Wallet и Notification, миграция и seed.
+Коммит: feature/night-shift-refactor / feat: NS-01 модели Wallet и Notification, миграция и seed / e1788e9166061d7abeff208018836318fe9c884e.
+
+
+
+## NS-02 | Dashboard API и Applicant CQRS endpoint
+Старт: 2026-11-14 02:05:37 +03:00
+Окончание: 2026-11-14 02:12:20 +03:00
+Статус: Review
+Изменения: добавлен Applicant CQRS endpoint; customer/executor получили данные Wallet/Notification; добавлены точные маршруты /customer, /executor, /applicant с сохранением старых stats aliases.
+Ошибки: первый build выявил CS0246 для GetApplicantDashboardStatsPersistence из-за пропущенного using в Infrastructure DI; using добавлен, повторный build прошёл.
+Проверка: dotnetdevmcp backend/Api/Api.csproj — success, 0 errors, 0 warnings; reviewer: no material findings. HTTP/SQL execution не запускались.
+Коммит: feature/night-shift-refactor / feat: NS-02 Dashboard API и Applicant CQRS endpoint.
 

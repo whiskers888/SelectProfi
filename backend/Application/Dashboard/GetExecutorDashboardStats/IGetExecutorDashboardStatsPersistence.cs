@@ -16,4 +16,12 @@ public sealed class ExecutorDashboardStatsSnapshot
     public int ShortlistCandidatesCount { get; init; }
 
     public int OnApprovalVacanciesCount { get; init; }
+
+    public decimal AvailableBalance { get; init; }
+
+    public decimal ReservedBalance { get; init; }
+
+    public string CurrencyCode { get; init; } = "RUB";
+
+    public int UnreadNotificationsCount { get; init; }
 }

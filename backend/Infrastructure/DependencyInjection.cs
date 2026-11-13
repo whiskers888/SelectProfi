@@ -19,6 +19,7 @@ using SelectProfi.backend.Application.Auth.Verification;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Dashboard.GetCustomerDashboardStats;
 using SelectProfi.backend.Application.Dashboard.GetExecutorDashboardStats;
+using SelectProfi.backend.Application.Dashboard.GetApplicantDashboardStats;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
@@ -66,6 +67,7 @@ using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment
 using SelectProfi.backend.Infrastructure.Data;
 using SelectProfi.backend.Infrastructure.Dashboard.GetCustomerDashboardStats;
 using SelectProfi.backend.Infrastructure.Dashboard.GetExecutorDashboardStats;
+using SelectProfi.backend.Infrastructure.Dashboard.GetApplicantDashboardStats;
 using SelectProfi.backend.Infrastructure.Orders.CreateOrder;
 using SelectProfi.backend.Infrastructure.Orders.DeleteOrder;
 using SelectProfi.backend.Infrastructure.Orders.GetOrderById;
@@ -131,6 +133,7 @@ public static class DependencyInjection
         services.AddScoped<IGetCustomerDashboardStatsPersistence, GetCustomerDashboardStatsPersistence>();
         // @dvnull: Добавлена persistence-агрегация dashboard-статистики исполнителя для endpoint /api/dashboard/executor-stats.
         services.AddScoped<IGetExecutorDashboardStatsPersistence, GetExecutorDashboardStatsPersistence>();
+        services.AddScoped<IGetApplicantDashboardStatsPersistence, GetApplicantDashboardStatsPersistence>();
         services.AddScoped<IUpdateOrderPersistence, UpdateOrderPersistence>();
         // @dvnull: Ранее update specialization шёл напрямую через контроллер; добавлена persistence-реализация под CQRS-command.
         services.AddScoped<IUpdateOrderSpecializationPersistence, UpdateOrderSpecializationPersistence>();

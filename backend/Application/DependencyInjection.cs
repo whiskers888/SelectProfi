@@ -19,6 +19,7 @@ using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Candidates.CreateCandidateResume;
 using SelectProfi.backend.Application.Dashboard.GetCustomerDashboardStats;
 using SelectProfi.backend.Application.Dashboard.GetExecutorDashboardStats;
+using SelectProfi.backend.Application.Dashboard.GetApplicantDashboardStats;
 using SelectProfi.backend.Application.Orders.CreateOrder;
 using SelectProfi.backend.Application.Orders.DeleteOrder;
 using SelectProfi.backend.Application.Orders.GetOrderById;
@@ -101,6 +102,7 @@ public static class
         services.AddScoped<IQueryHandler<GetCustomerDashboardStatsQuery, GetCustomerDashboardStatsResult>, GetCustomerDashboardStatsQueryHandler>();
         // @dvnull: Добавлен query-handler серверной агрегации dashboard-метрик исполнителя для отдельного frontend-запроса статистики.
         services.AddScoped<IQueryHandler<GetExecutorDashboardStatsQuery, GetExecutorDashboardStatsResult>, GetExecutorDashboardStatsQueryHandler>();
+        services.AddScoped<IQueryHandler<GetApplicantDashboardStatsQuery, GetApplicantDashboardStatsResult>, GetApplicantDashboardStatsQueryHandler>();
         services.AddScoped<IQueryHandler<GetVacancyByIdQuery, GetVacancyByIdResult>, GetVacancyByIdQueryHandler>();
         services.AddScoped<IQueryHandler<GetVacanciesQuery, GetVacanciesResult>, GetVacanciesQueryHandler>();
         // @dvnull: Добавлен query получения контактов кандидата для назначенного рекрутера с проверкой owner+TTL.

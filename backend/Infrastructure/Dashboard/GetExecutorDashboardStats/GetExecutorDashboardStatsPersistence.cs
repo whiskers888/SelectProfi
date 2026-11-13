@@ -60,12 +60,28 @@ public sealed class GetExecutorDashboardStatsPersistence(AppDbContext dbContext)
                     pair.vacancyCandidate.Stage == VacancyCandidateStage.Shortlist,
                 cancellationToken);
 
+        var wallet = await dbContext.Wallets
+            .AsNoTracking()
+            .Where(item => item.UserId == executorUserId)
+            .Select(item => new { item.AvailableBalance, item.ReservedBalance, item.CurrencyCode })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        var unreadNotificationsCount = await dbContext.Notifications
+            .AsNoTracking()
+            .CountAsync(
+                notification => notification.UserId == executorUserId && notification.ReadAtUtc == null,
+                cancellationToken);
+
         return new ExecutorDashboardStatsSnapshot
         {
             ActiveProjectsCount = activeProjectsCount,
             PipelineCandidatesCount = pipelineCandidatesCount,
             ShortlistCandidatesCount = shortlistCandidatesCount,
-            OnApprovalVacanciesCount = onApprovalVacanciesCount
+            OnApprovalVacanciesCount = onApprovalVacanciesCount,
+            AvailableBalance = wallet?.AvailableBalance ?? 0m,
+            ReservedBalance = wallet?.ReservedBalance ?? 0m,
+            CurrencyCode = wallet?.CurrencyCode ?? "RUB",
+            UnreadNotificationsCount = unreadNotificationsCount
         };
     }
 }
