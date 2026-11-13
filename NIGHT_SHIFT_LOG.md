@@ -39,5 +39,16 @@
 Изменения: customer responses теперь всегда псевдонимны в `DisplayName` и `PublicAlias`; добавлен стабильный CandidatePublicAlias для registered/legacy записей; новый applicant candidate получает alias при создании; executor/admin и отдельный selected-candidate contacts path сохранены.
 Ошибки: первый перевод задачи в YouGile не прошёл из-за одной ошибочной буквы в UUID; исправлен правильным ID. Кодовых ошибок после сборки нет.
 Проверка: dotnetdevmcp backend/Api/Api.csproj — success, 0 errors, 0 warnings; static reviewer — no material findings.
-Коммит: feature/night-shift-refactor / feat: NS-03 политика псевдонимов кандидатов для заказчика.
+Коммит: feature/night-shift-refactor / feat: NS-03 политика псевдонимов кандидатов для заказчика / aa4a0c743fd8031119fa8a3f65b7be05b582b839.
+
+
+
+## NS-04 | Совместимость frontend с React 18 и дизайн-токены dashboard
+Старт: 2026-11-14 02:20:00 +03:00
+Окончание: 2026-11-14 02:33:08 +03:00
+Статус: Review
+Изменения: React/ReactDOM и типы выровнены на 18; lockfile обновлён без несвязанных Floating UI/set-cookie-parser изменений; переиспользован tailwind.config.cjs и design token generator, border/input приведены к #D7E5DF.
+Ошибки: один npm install по ошибке запускался в корне; созданные им пустые package files удалены, типы установлены из frontend. npm build сообщает только устаревший Browserslist и большой существующий JS chunk.
+Проверка: frontend `npm run build` — success (tsc + Vite); React runtime/types версии согласованы; reviewer — no material findings.
+Коммит: feature/night-shift-refactor / feat: NS-04 React 18 и dashboard design tokens.
 
