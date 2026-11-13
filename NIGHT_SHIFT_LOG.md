@@ -61,4 +61,4 @@
 Изменения: добавлены строгие DTO-типы и Applicant dashboard query; данные соискателя отображаются только из API, отклик инвалидирует Applicant stats cache. Кнопки обзора Applicant скрыты без поддерживаемого маршрута.
 Ошибки: первый build выявил отсутствующие новые поля в тестовых fixtures — добавлены. Ревью нашло устаревание Applicant stats после отклика и неверный маршрут кнопок; исправлено. Финальная сборка прошла, остались предупреждения об устаревшем Browserslist и крупном JS chunk.
 Проверка: frontend `npm run build` — success (tsc + Vite, 2012 modules); `git diff --check` — success; независимое ревью — no issues. Тесты не запускались.
-Коммит: feature/night-shift-refactor / feat: NS-05 | Типы и клиент dashboard API для трёх ролей / pending.
+Коммит: feature/night-shift-refactor / feat: NS-05 | Типы и клиент dashboard API для трёх ролей / c971722.
