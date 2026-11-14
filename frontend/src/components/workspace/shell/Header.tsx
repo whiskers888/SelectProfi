@@ -2,19 +2,17 @@ import { useState } from 'react'
 import { ArrowRightLeft, Bell, CalendarDays, Menu, Moon, Sun } from 'lucide-react'
 import { applyTheme, getNextTheme, readTheme } from '@/app/theme'
 import { Dropdown } from '@/components/ui/dropdown'
-import { type WorkspaceRole, type WorkspaceView } from '../model/data'
+import { BrandLogo } from '@/components/brand/BrandLogo'
+import { type WorkspaceView } from '../model/data'
 
 type HeaderMenuAction = 'profile' | 'settings' | 'logout'
 
-type HeaderProps = {
+interface HeaderProps {
   activeView: WorkspaceView
   canSwitchRole: boolean
-  // null hides the create action (e.g. while a create or details screen is open).
-  createLabel: string | null
   isSwitchingRole: boolean
   meetingsCount: number
   notificationsCount: number
-  onCreateAction: () => void
   onOpenMeetings: () => void
   onOpenNotifications: () => void
   onMenuAction: (action: HeaderMenuAction) => void
@@ -24,10 +22,7 @@ type HeaderProps = {
   profileDisplayName: string
   profileEmail: string
   profileRoleLabel: string
-  role: WorkspaceRole
   searchValue: string
-  title: string
-  subtitle: string
 }
 
 function profileInitials(displayName: string): string {
@@ -50,11 +45,9 @@ function profileInitials(displayName: string): string {
 export function Header({
   activeView,
   canSwitchRole,
-  createLabel,
   isSwitchingRole,
   meetingsCount,
   notificationsCount,
-  onCreateAction,
   onOpenMeetings,
   onOpenNotifications,
   onMenuAction,
@@ -64,10 +57,7 @@ export function Header({
   profileDisplayName,
   profileEmail,
   profileRoleLabel,
-  role,
   searchValue,
-  subtitle,
-  title,
 }: HeaderProps) {
   const [theme, setTheme] = useState(readTheme)
 
@@ -79,7 +69,7 @@ export function Header({
 
   return (
     <header className="preview11-header">
-      <div className="preview11-header-title">
+      <div className="preview11-header-title preview11-header-brand flex items-center gap-2">
         <button
           aria-label="Открыть навигацию"
           className="preview11-mobile-nav-toggle"
@@ -88,26 +78,20 @@ export function Header({
         >
           <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
-        <h1 className="preview11-title">{title}</h1>
-        <p className="preview11-subtitle">{subtitle}</p>
+        <BrandLogo className="h-[34px] w-[34px] shrink-0" alt="" />
+        <div className="preview11-brand-copy">
+          <div className="preview11-brand-title">КадрыТут</div>
+          <div className="preview11-muted">Маркетплейс подбора персонала</div>
+        </div>
       </div>
 
       <div className="preview11-header-right">
         <div className="preview11-header-actions">
-          {createLabel ? (
-            <button
-              className="preview11-btn preview11-btn-primary"
-              onClick={onCreateAction}
-              type="button"
-            >
-              {createLabel}
-            </button>
-          ) : null}
           <input
             aria-label="Поиск"
             className="preview11-input preview11-header-search"
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={role === 'Executor' ? 'Поиск...' : 'Поиск...'}
+            placeholder="Поиск по заказам, кандидатам и вакансиям"
             type="search"
             value={searchValue}
           />

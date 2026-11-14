@@ -55,7 +55,7 @@
   display: flex;
   flex: 1;
   min-width: 0;
-  min-height: 100vh;
+  min-height: 0;
   flex-direction: column;
 }
 
@@ -1383,13 +1383,7 @@
     cursor: default;
   }
 
-  /*
-   * Compact header for phones and tablets, two rows:
-   *   [menu + title ............] [avatar + role switch]
-   *   [search ..................] [meetings/chats]
-   * The create action becomes a floating button at the bottom right (thumb zone).
-   * header-right/header-actions are flattened so their children join the header grid.
-   */
+  /* Compact top bar for phones and tablets. Keep the brand, search, and account actions visible. */
   .preview11-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1424,22 +1418,6 @@
   .preview11-header-right,
   .preview11-header-actions {
     display: contents;
-  }
-
-  .preview11-header-actions > .preview11-btn {
-    position: fixed;
-    right: 16px;
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    z-index: 30;
-    height: 48px;
-    border-radius: 999px;
-    padding: 0 20px;
-    box-shadow: 0 8px 24px rgb(15 23 27 / 24%);
-  }
-
-  /* Keep the last card reachable above the floating create button. */
-  .preview11-content {
-    padding-bottom: 88px;
   }
 
   .preview11-stats {

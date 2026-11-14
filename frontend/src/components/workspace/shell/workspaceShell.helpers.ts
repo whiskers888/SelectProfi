@@ -484,7 +484,12 @@ export function deriveWorkspaceViewState({
   const meetingsList = meetings ?? fallbackMeetings ?? [];
 
   const counters: Partial<Record<WorkspaceView, number>> = {
-    dashboard: meetingsList.length,
+    dashboard:
+      role === 'Applicant'
+        ? (applicantDashboardStats?.applicationsCount ?? 0)
+        : role === 'Executor'
+          ? (executorDashboardStats?.activeProjectsCount ?? 0)
+          : (customerDashboardStats?.activeProjectsCount ?? 0),
     orders: filteredOrders.length,
     candidates: candidatesCounter,
     meetings: meetingsList.length,

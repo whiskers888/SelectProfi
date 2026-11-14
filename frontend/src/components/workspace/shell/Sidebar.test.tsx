@@ -11,10 +11,13 @@ describe('Sidebar applicant navigation', () => {
         activeView="dashboard"
         collapsed={false}
         counters={{}}
+        createLabel={null}
         mobileOpen={false}
         onCloseMobile={vi.fn()}
+        onCreateAction={vi.fn()}
         onToggleCollapse={vi.fn()}
         onViewChange={vi.fn()}
+        roleLabel="Соискатель"
         role="Applicant"
       />,
     )
@@ -22,7 +25,8 @@ describe('Sidebar applicant navigation', () => {
     expect(screen.getByRole('button', { name: 'Мои отклики' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Вакансии' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Мои заказы' })).toBeNull()
-    expect(screen.getByText('Платформа поиска работы')).toBeTruthy()
+    expect(screen.getByText('Роль аккаунта')).toBeTruthy()
+    expect(screen.getByText('Соискатель')).toBeTruthy()
   })
 
   it('uses the green active style for every selected menu section', () => {
@@ -31,10 +35,13 @@ describe('Sidebar applicant navigation', () => {
         activeView="dashboard"
         collapsed={false}
         counters={{}}
+        createLabel={null}
         mobileOpen={false}
         onCloseMobile={vi.fn()}
+        onCreateAction={vi.fn()}
         onToggleCollapse={vi.fn()}
         onViewChange={vi.fn()}
+        roleLabel="Исполнитель"
         role="Executor"
       />,
     )
@@ -51,10 +58,13 @@ describe('Sidebar applicant navigation', () => {
         activeView="orders"
         collapsed={false}
         counters={{}}
+        createLabel={null}
         mobileOpen={false}
         onCloseMobile={vi.fn()}
+        onCreateAction={vi.fn()}
         onToggleCollapse={vi.fn()}
         onViewChange={vi.fn()}
+        roleLabel="Исполнитель"
         role="Executor"
       />,
     )

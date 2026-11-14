@@ -142,6 +142,11 @@ export function WorkspaceShellView({
     setIsMobileNavOpen(false)
   }
 
+  function handleSidebarCreateAction() {
+    closeMobileNav()
+    handleHeaderCreateAction()
+  }
+
   function handleMobileNavViewChange(view: Parameters<typeof handleViewChange>[0]) {
     handleViewChange(view)
     closeMobileNav()
@@ -150,43 +155,51 @@ export function WorkspaceShellView({
   // Один renderer выбирает единственный полноэкранный surface.
   return (
     <div className="preview11-html">
-      <div className="preview11-app">
-        <Sidebar
+      <div className="preview11-app flex min-h-screen flex-col">
+        <Header
           activeView={activeView}
-          collapsed={isSidebarCollapsed}
-          counters={counters}
-          mobileOpen={isMobileNavOpen}
-          onCloseMobile={closeMobileNav}
-          onToggleCollapse={toggleSidebar}
-          onViewChange={handleMobileNavViewChange}
-          role={role}
+          meetingsCount={counters.meetings ?? 0}
+          notificationsCount={counters.chats ?? 0}
+          onOpenMeetings={() => handleViewChange('meetings')}
+          onOpenNotifications={() => handleViewChange('chats')}
+          onMenuAction={handleHeaderMenuAction}
+          onSearchChange={setSearchValue}
+          onToggleMobileNav={() => setIsMobileNavOpen((open) => !open)}
+          profileDisplayName={profileDisplayName}
+          profileEmail={profileEmail}
+          profileRoleLabel={profileRoleLabel}
+          canSwitchRole={canSwitchApplicantExecutor}
+          isSwitchingRole={isSwitchingRole}
+          onSwitchRole={() => void handleToggleRole()}
+          searchValue={searchValue}
         />
 
-        <div className="preview11-main">
-          <Header
+        <div className="flex min-h-0 flex-1">
+          <Sidebar
             activeView={activeView}
+            collapsed={isSidebarCollapsed}
+            counters={counters}
             createLabel={workspaceScreen === 'feed' ? createActionLabel(role) : null}
-            meetingsCount={0}
-            notificationsCount={counters.chats ?? 0}
-            onCreateAction={handleHeaderCreateAction}
-            onOpenMeetings={() => handleViewChange('meetings')}
-            onOpenNotifications={() => handleViewChange('chats')}
-            onMenuAction={handleHeaderMenuAction}
-            onSearchChange={setSearchValue}
-            onToggleMobileNav={() => setIsMobileNavOpen((open) => !open)}
-            profileDisplayName={profileDisplayName}
-            profileEmail={profileEmail}
-            profileRoleLabel={profileRoleLabel}
-            canSwitchRole={canSwitchApplicantExecutor}
-            isSwitchingRole={isSwitchingRole}
-            onSwitchRole={() => void handleToggleRole()}
+            mobileOpen={isMobileNavOpen}
+            onCloseMobile={closeMobileNav}
+            onCreateAction={handleSidebarCreateAction}
+            onToggleCollapse={toggleSidebar}
+            onViewChange={handleMobileNavViewChange}
+            roleLabel={profileRoleLabel}
             role={role}
-            searchValue={searchValue}
-            subtitle={workspaceScreen === 'profile' ? 'Личные данные и настройки роли' : ''}
-            title={workspaceScreen === 'profile' ? 'Мой профиль' : createHeaderTitle(role)}
           />
 
+          <div className="preview11-main">
+
           <main className="preview11-content flex-1 space-y-4">
+            <div className="space-y-1">
+              <h1 className="text-xl font-extrabold leading-tight text-foreground">
+                {workspaceScreen === 'profile' ? 'Мой профиль' : createHeaderTitle(role)}
+              </h1>
+              {workspaceScreen === 'profile' ? (
+                <p className="text-sm text-muted-foreground">Личные данные и настройки роли</p>
+              ) : null}
+            </div>
             {workspaceScreen === 'order-details' && selectedOrder ? (
               <OrderDetailsPagePanel
                 key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}
@@ -513,6 +526,7 @@ export function WorkspaceShellView({
             ) : null}
           </main>
         </div>
+      </div>
       </div>
     </div>
   )
