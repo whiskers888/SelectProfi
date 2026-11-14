@@ -1444,6 +1444,7 @@
     align-items: center;
     gap: 4px;
     width: auto;
+    max-width: 100%;
     min-width: 0;
   }
 
@@ -1461,15 +1462,38 @@
   }
 
   .preview11-profile-role-pill {
-    width: 34px;
-    height: 34px;
+    width: auto;
+    max-width: 100%;
+    height: auto;
     min-height: 34px;
     border-radius: 8px;
     border-top: 1px solid var(--ws-primary);
+    gap: 4px;
+    padding: 4px 6px;
   }
 
   .preview11-profile-role-label {
-    display: none;
+    width: auto;
+    max-width: 100%;
+    font-size: 10px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .preview11-profile-role-arrows {
+    position: static;
+    flex: 0 0 auto;
+    transform: none;
+  }
+
+  .preview11-profile-role-arrow {
+    width: 18px;
+    height: 18px;
+  }
+
+  .preview11-profile-role-arrow svg {
+    width: 14px;
+    height: 14px;
   }
 
   .preview11-content {

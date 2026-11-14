@@ -170,7 +170,7 @@ export function Header({
               disabled={isSwitchingRole}
               onClick={onSwitchRole}
               type="button"
-              aria-label="Переключить активную роль"
+              aria-label={`Переключить активную роль. Сейчас: ${profileRoleLabel}`}
             >
               <span className="preview11-profile-role-label">{profileRoleLabel}</span>
               <span className="preview11-profile-role-arrows" aria-hidden="true">
