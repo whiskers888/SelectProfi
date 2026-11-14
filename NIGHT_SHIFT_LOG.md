@@ -93,3 +93,12 @@
 Ошибки: промежуточная сборка нашла незаведённый проп `executorDashboardCandidates` в controller/view; проп протянут по цепочке. Финальная сборка без ошибок.
 Проверка: frontend `npm run build` — success (tsc + Vite, 2012 modules); `git diff --check` — success; независимое ревью — без оставшихся замечаний. Предупреждения сборки: устаревший Browserslist и JS chunk >500 kB. Браузерные и runtime API сценарии не запускались.
 Коммит: feature/night-shift-refactor / feat: NS-08 | Dashboard исполнителя: кошелёк, Pool и Shortlist / 35cef5f.
+
+## NS-09 | Dashboard соискателя: отклики и активность резюме
+Старт реализации: не зафиксирован в предыдущем фрагменте; финализация после продолжения: 2026-11-14 13:37:06 +03:00
+Окончание: 2026-11-14 13:40:14 +03:00
+Статус: Review
+Изменения: добавлены API-данные Applicant dashboard по откликам и активности резюме, provenance подачи отклика с миграцией, типизированный frontend раздел «Мои отклики» со статусами и состояниями загрузки/ошибки/пустого результата. Событие возврата к dashboard обновляет данные только при активном Applicant-запросе (`dashboardRole`).
+Ошибки: ревью выявило потенциальный refetch для пропущенного query при различии profile role и auth role; условие обновления синхронизировано с `dashboardRole`. Других замечаний нет.
+Проверка: dotnetdevmcp `backend/Api/Api.csproj` — success, 0 errors, 0 warnings; frontend `npm run build` — success (2013 modules); `git diff --check` — success; повторное ревью — без замечаний. Build warnings: устаревший Browserslist, bundle 1,091.94 kB, plugin timing. Runtime API и применение миграции к БД не выполнялись.
+Коммит: `feature/night-shift-refactor` / `feat: NS-09 Dashboard соискателя: отклики и активность резюме` / `2ae87e7`.
