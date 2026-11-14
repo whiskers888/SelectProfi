@@ -28,6 +28,7 @@ export function WorkspaceShellView({
   activeView,
   analyticsError,
   applicantDashboardStats,
+  applicantDashboardVacancies,
   authMe,
   applicantRespondedOrderIds,
   canLoadExecutorBaseCandidates,
@@ -461,6 +462,7 @@ export function WorkspaceShellView({
                       }
                       applicantRespondedOrderIds={applicantRespondedOrderIds}
                       applicantDashboardApplications={applicantDashboardStats?.applications ?? []}
+                      applicantDashboardVacancies={applicantDashboardVacancies}
                       unclassifiedCandidateLinksCount={
                         applicantDashboardStats?.unclassifiedCandidateLinksCount ?? 0
                       }

@@ -54,6 +54,7 @@ export function MainFeedPanelView(props: MainFeedPanelViewProps) {
         {isApplicant ? (
           <ApplicantApplicationsSection
             applications={props.applicantDashboardApplications ?? []}
+            vacancies={props.applicantDashboardVacancies ?? []}
             isError={props.isApplicantDashboardStatsError ?? false}
             isLoading={props.isApplicantDashboardStatsLoading ?? false}
             onRetry={props.onRetryApplicantDashboardStats}

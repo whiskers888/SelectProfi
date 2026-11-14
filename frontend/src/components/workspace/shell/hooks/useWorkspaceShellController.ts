@@ -236,6 +236,13 @@ export function useWorkspaceShellController() {
     role === 'Applicant' && vacanciesResponse
       ? vacanciesResponse.items.map(toWorkspaceOrderFromVacancy)
       : []
+  const applicantDashboardVacancies = useMemo(
+    () =>
+      role === 'Applicant'
+        ? (vacanciesResponse?.items.filter((vacancy) => vacancy.status === 'Published') ?? [])
+        : [],
+    [role, vacanciesResponse],
+  )
   const serverOrders = ordersResponse?.items.map(toWorkspaceOrder) ?? []
   const baseOrders =
     role === 'Applicant'
@@ -1256,6 +1263,7 @@ export function useWorkspaceShellController() {
     createVacancyFormValues,
     dataset,
     applicantDashboardStats,
+    applicantDashboardVacancies,
     executorBaseCandidates,
     executorDashboardCandidates,
     executorMyCandidates,

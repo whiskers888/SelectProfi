@@ -1,11 +1,13 @@
 import type { OrderExecutorResponseItemResponse } from '@/shared/api/orders'
 import type { ApplicantDashboardApplicationResponse } from '@/shared/api/dashboard/api'
+import type { VacancyResponse } from '@/shared/api/vacancies'
 import type { WorkspaceCandidate, WorkspaceOrder, WorkspaceRole } from '../model/data'
 import type { useMainFeedPanelController } from './hooks/useMainFeedPanelController'
 
 export type MainFeedPanelProps = {
   baseCandidates: WorkspaceCandidate[]
   applicantDashboardApplications?: ApplicantDashboardApplicationResponse[]
+  applicantDashboardVacancies?: VacancyResponse[]
   unclassifiedCandidateLinksCount?: number
   isApplicantDashboardStatsLoading?: boolean
   isApplicantDashboardStatsError?: boolean
