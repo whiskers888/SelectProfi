@@ -10,9 +10,11 @@
    - Для понимания логики достаточно взять **основные (главные) страницы** из папок каждой роли.
 
 ## 🛠 ТЕХНОЛОГИЧЕСКИЙ СТЕК (СТРОГО)
-- **Backend:** .NET 8, C#, Entity Framework Core, PostgreSQL.
+- **Backend:** .NET 10, C#, Entity Framework Core, PostgreSQL.
 - **Frontend:** React 18 (TypeScript), Vite, Tailwind CSS (никакого чистого CSS и inline-стилей).
 - **DevOps:** Docker, docker-compose, Nginx.
+
+Примечание: текущая целевая версия backend-проектов — .NET 10. Понижение до .NET 8 не входит в задачу настройки dashboard Docker: все backend-проекты сейчас нацелены на `net10.0`, а поддержка .NET 8 завершилась 10 ноября 2026 года.
 
 ---
 

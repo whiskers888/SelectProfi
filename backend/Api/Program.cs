@@ -1,7 +1,9 @@
+using System.Net;
 using System.Diagnostics;
 using FluentValidation;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -19,6 +21,23 @@ using SelectProfi.backend.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 const string clientAppCorsPolicy = "ClientAppCors";
+
+var trustedProxyAddresses = builder.Configuration
+    .GetSection("ForwardedHeaders:KnownProxies")
+    .GetChildren()
+    .Select(proxy => proxy.Value)
+    .Where(address => !string.IsNullOrWhiteSpace(address))
+    .Select(address => IPAddress.Parse(address!))
+    .ToArray();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 2;
+
+    foreach (var proxyAddress in trustedProxyAddresses)
+        options.KnownProxies.Add(proxyAddress);
+});
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -164,6 +183,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseForwardedHeaders();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseCors(clientAppCorsPolicy);
 if (!app.Environment.IsDevelopment())

@@ -4,11 +4,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_HTTP_PORTS: "8080"
-      ConnectionStrings__Postgres: ${POSTGRES_CONNECTION_STRING:-Host=postgres;Port=5432;Database=selectprofi;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres};SSL Mode=Disable}
+      ForwardedHeaders__KnownProxies__0: ${CADDY_PROXY_IP:-172.28.253.2}
+      ForwardedHeaders__KnownProxies__1: ${FRONTEND_PROXY_IP:-172.28.253.3}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in the local .env file}
+      ConnectionStrings__Postgres: ${POSTGRES_CONNECTION_STRING:-Host=postgres;Port=5432;Database=selectprofi;Username=postgres;Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the local .env file};SSL Mode=Disable}
       ConnectionStrings__Redis: redis:6379
-      ConnectionStrings__RabbitMq: amqp://guest:guest@rabbitmq:5672/
+      ConnectionStrings__RabbitMq: amqp://${RABBITMQ_DEFAULT_USER:-selectprofi}:${RABBITMQ_DEFAULT_PASS:?Set URL-safe RABBITMQ_DEFAULT_PASS in the local .env file}@rabbitmq:5672/
       S3__ENDPOINT: ${S3__ENDPOINT}
       S3__REGION: ${S3__REGION}
       S3__BUCKET: ${S3__BUCKET}
@@ -17,32 +20,44 @@ services:
       # @dvnull: Фиксируем минимум кандидатов через env, чтобы исключить падение API при дрейфе конфигов.
       OrderCandidateRequirements__MinRequestedCandidatesCount: "1"
     ports:
-      - "${BACKEND_PORT:-5268}:8080"
+      - "127.0.0.1:${BACKEND_PORT:-5268}:8080"
+    networks:
+      api_proxy:
+        ipv4_address: ${APP_PROXY_IP:-172.28.253.4}
+      data: {}
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health/dependencies > /dev/null || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     restart: unless-stopped
 
   frontend:
-    image: node:22
-    working_dir: /workspace
-    environment:
-      FRONTEND_PORT: "5173"
-      VITE_API_BASE_URL: /
-      VITE_PROXY_TARGET: http://app:8080
-    command: sh -c "if [ ! -x node_modules/.bin/vite ]; then npm ci; fi; npm run dev -- --host 0.0.0.0 --port 5173"
-    volumes:
-      - ./frontend:/workspace
-      - frontend_node_modules:/workspace/node_modules
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "${FRONTEND_PORT:-5173}:5173"
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
+    networks:
+      api_proxy:
+        ipv4_address: ${FRONTEND_PROXY_IP:-172.28.253.3}
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://127.0.0.1/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     depends_on:
       app:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   caddy:
@@ -56,11 +71,14 @@ services:
       - ./infra/archlinux.tail2006cc.ts.net.key:/etc/caddy/certs/archlinux.tail2006cc.ts.net.key:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      api_proxy:
+        ipv4_address: ${CADDY_PROXY_IP:-172.28.253.2}
     depends_on:
       frontend:
-        condition: service_started
+        condition: service_healthy
       app:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   postgres:
@@ -68,7 +86,7 @@ services:
     environment:
       POSTGRES_DB: selectprofi
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the local .env file}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -76,29 +94,47 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - data
     restart: unless-stopped
 
   redis:
     image: redis:7
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data
     restart: unless-stopped
 
   rabbitmq:
     image: rabbitmq:3-management
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-selectprofi}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?Set URL-safe RABBITMQ_DEFAULT_PASS in the local .env file}
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - data
     restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
-  frontend_node_modules:
   caddy_data:
   caddy_config:
+
+networks:
+  api_proxy:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${PROXY_NETWORK_SUBNET:-172.28.253.0/24}
+  data: {}

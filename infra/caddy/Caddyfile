@@ -1,9 +1,15 @@
 archlinux.tail2006cc.ts.net {
 	tls /etc/caddy/certs/archlinux.tail2006cc.ts.net.crt /etc/caddy/certs/archlinux.tail2006cc.ts.net.key
-	reverse_proxy frontend:5173
+	reverse_proxy frontend:80
 }
 
 api.archlinux.tail2006cc.ts.net {
 	tls /etc/caddy/certs/archlinux.tail2006cc.ts.net.crt /etc/caddy/certs/archlinux.tail2006cc.ts.net.key
-	reverse_proxy app:8080
+	@dependencyHealth path_regexp dependencyHealth (?i)^/health/dependencies/?$
+	handle @dependencyHealth {
+		respond 404
+	}
+	handle {
+		reverse_proxy app:8080
+	}
 }
