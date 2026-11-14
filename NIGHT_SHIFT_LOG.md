@@ -213,3 +213,12 @@
 Ошибки/ограничения: контейнер backend работает с `ASPNETCORE_ENVIRONMENT=Production` и внешней БД Neon, поэтому dev-seed (`Program.cs:197-249`) не выполняется. В этой БД `executor@selectprofi.local` аутентифицируется с ролью `Applicant` (и JWT, и `/api/auth/me`), из-за чего `dashboard/executor` возвращает 403. Маппинг ролей в коде (`RegisterUserRequest.NormalizeRoles`, клейм в `SimpleJwtAuthenticationHandler`) корректен, расхождение относится к данным БД; Executor UI остаётся непроверенным. Автоматическая сверка текста с макетами даёт много ложных «пропусков», так как макеты содержат вымышленные ФИО, номера и суммы; учитывались только структурные элементы.
 Проверка: `npm run build` — success (2016 modules); полный frontend suite — 73/73 в 17 файлах; `git diff --check` — success. Playwright: Customer и Applicant вошли реальной сессией, `/app` открылся, JS/console errors 0, горизонтального overflow нет при 1365×900 и 390×844. Customer: 4 реальных заказа, 9 кандидатов на рассмотрении, выбранный заказ с деталями и shortlist. Applicant: 0 подтверждённых откликов, «Резюме не заполнено», честное сообщение о 3 записях без сохранённого источника. Скриншоты вне репозитория в `%LOCALAPPDATA%\Temp\opencode\dashboard-smoke\`.
 Коммит: feature/night-shift-refactor / feat: AUDIT-01 вознаграждение исполнителя в sidebar / d503635; docs: добавить ТЗ аудита Dashboard / 23396fa.
+
+## AUDIT-01 follow-up | Повторная проверка Sidebar исполнителя
+Старт: 2026-11-15 00:43 +03:00
+Окончание: 2026-11-15 00:52 +03:00
+Статус: Done
+Изменения: повторно проверена карточка «Вознаграждение» из `d503635`; Sidebar получает готовые доступный и резервный балансы из Executor `runtimeStats`, без вымышленных выплат/рейтинговых/налоговых значений.
+Ошибки/ограничения: MCP Playwright после перезапуска всё ещё не находит Chrome. Живая тестовая учётная запись backend определяется как Applicant, поэтому Executor authorization/live DTO не подтверждены.
+Проверка: `Sidebar.test.tsx` — 4/4; `npm run build` — success (2016 modules); Playwright 1.65.1 + Edge с API fixtures: карточка видна, keyboard-фильтры Shortlist/Pool работают, viewport 1365×900 и 390×844 без overflow, page errors — 0; reviewer — без замечаний.
+Коммит кода: feature/night-shift-refactor / feat: AUDIT-01 вознаграждение исполнителя в sidebar / d503635.

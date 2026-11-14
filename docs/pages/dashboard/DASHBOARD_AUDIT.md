@@ -134,3 +134,13 @@
 - Повторные Customer/Applicant Edge fixtures также прошли; детали, shortlist, Active/Archive, default selection и мобильное stacking сохранились.
 - Проверки: frontend suite — 71/71 в 17 файлах; `npm run build` — success, 2016 modules; ESLint `WorkspaceShellView.tsx` — без замечаний; `git diff --check` — success; независимый reviewer — замечаний нет.
 - Ограничение: все роли проверены с изолированными API fixtures, поэтому фактическая backend authorization, live DB ответы и мутации не подтверждены. Build предупреждает об устаревшем Browserslist, крупном JS chunk и plugin timings.
+
+
+## Повторная проверка Executor после восстановления Sidebar reward
+
+Дата: 2026-11-15.
+
+- После коммита `d503635` карточка вознаграждения проверена на Executor API fixture: Sidebar показывает доступный баланс и сумму в резерве из существующего dashboard DTO. Тест не подставляет месячные выплаты, рейтинг или налоговые данные, поскольку API их не предоставляет.
+- Playwright 1.65.1 через установленный Edge прошёл на `http://127.0.0.1:5175/app`: project dashboard и выбранный проект отображаются, переходы клавиатурой Shortlist → Pool → общий список работают, JS errors и horizontal overflow нет при 1365×900 и 390×844.
+- `Sidebar.test.tsx` — 4/4; `npm run build` — success, 2016 modules; независимый reviewer — замечаний нет. MCP Playwright после перезапуска всё ещё требует отсутствующий Chrome; UI fixture-проверка выполнялась локальным Playwright с Edge.
+- Ограничение live-сессии остаётся: тестовая учётная запись backend аутентифицируется как Applicant, поэтому реальный Executor API/authorization этим прогоном не подтверждён.
