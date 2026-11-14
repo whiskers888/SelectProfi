@@ -43,7 +43,6 @@ export function WorkspaceShellView({
   canRespondToSelectedOrder,
   candidateViewOrders,
   candidateViewSelectedOrderId,
-  chatDraft,
   closeCandidateDetails,
   closeCreateApplicantResponsePage,
   closeCreateCandidatePage,
@@ -153,7 +152,6 @@ export function WorkspaceShellView({
   selectedOrderCandidateIds,
   selectedOrderVacancyPreview,
   selectedOrderWithResponses,
-  setChatDraft,
   setPreferredChatId,
   setPreferredOrderId,
   setSearchValue,
@@ -558,7 +556,7 @@ export function WorkspaceShellView({
                   </>
                 )}
 
-                {activeView === 'meetings' ? <CalendarPanel meetings={[]} /> : null}
+                {activeView === 'meetings' ? <CalendarPanel meetings={null} /> : null}
 
                 {activeView === 'chats' ? (
                   <Card className="rounded-xl border-border p-4 shadow-none">
@@ -570,13 +568,11 @@ export function WorkspaceShellView({
                           aria-hidden="true"
                           className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-blue-600"
                         />
-                        Загружаем треды...
+                          Открываем раздел...
                       </div>
                     ) : filteredThreads.length === 0 ? (
-                      <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
-                        {searchValue.trim()
-                          ? `По запросу «${searchValue}» чаты не найдены.`
-                          : 'Чатов пока нет.'}
+                      <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground" role="status">
+                        Чаты пока не подключены. История и отправка сообщений недоступны.
                       </div>
                     ) : (
                       <div className="mt-4 grid gap-3 lg:grid-cols-[320px_1fr]">
@@ -607,6 +603,9 @@ export function WorkspaceShellView({
                         </div>
 
                         <div className="rounded-xl border border-border bg-card">
+                          <p className="border-b border-border px-4 py-3 text-sm text-muted-foreground" role="status">
+                            Отправка сообщений недоступна: чат не подключён.
+                          </p>
                           <div className="border-b border-border px-4 py-3">
                             <p className="text-sm font-semibold text-foreground">
                               {activeThread?.participant}
@@ -631,19 +630,15 @@ export function WorkspaceShellView({
                           <div className="flex items-center gap-2 border-t border-border px-4 py-3">
                             <Input
                               className="h-10 rounded-xl border-border text-foreground"
-                              onChange={(event) => setChatDraft(event.target.value)}
-                              onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                  event.preventDefault()
-                                  handleSendMessage()
-                                }
-                              }}
-                              placeholder="Написать сообщение..."
-                              value={chatDraft}
+                              aria-label="Сообщение"
+                              disabled
+                              placeholder="Чат не подключён"
+                              value=""
                             />
                             <Button
                               className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                               onClick={handleSendMessage}
+                              disabled
                               type="button"
                             >
                               Отправить

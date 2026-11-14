@@ -1,7 +1,7 @@
 import { type WorkspaceMeeting, type WorkspaceTone } from '../model/data'
 
 type CalendarPanelProps = {
-  meetings: WorkspaceMeeting[]
+  meetings: WorkspaceMeeting[] | null
 }
 
 function toneClassName(tone: WorkspaceTone): string {
@@ -44,7 +44,7 @@ function groupedMeetings(meetings: WorkspaceMeeting[]): Array<{ date: string, me
 }
 
 export function CalendarPanel({ meetings }: CalendarPanelProps) {
-  const rows = groupedMeetings(meetings)
+  const rows = meetings === null ? null : groupedMeetings(meetings)
 
   return (
     <section className="preview11-card">
@@ -52,8 +52,12 @@ export function CalendarPanel({ meetings }: CalendarPanelProps) {
         <h3 className="preview11-panel-title">Календарь встреч</h3>
       </div>
 
-      {rows.length === 0 ? (
-        <div className="preview11-empty-state">
+      {rows === null ? (
+        <div className="preview11-empty-state" role="status">
+          <p>Раздел встреч пока не подключён.</p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="preview11-empty-state" role="status">
           <p>В расписании пока нет встреч.</p>
         </div>
       ) : (

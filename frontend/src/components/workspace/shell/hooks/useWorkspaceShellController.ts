@@ -71,7 +71,6 @@ import {
   deriveWorkspaceViewState,
   getRequestErrorMessage,
   toRoleLabel,
-  todayTimeLabel,
   toWorkspaceBaseCandidate,
   toWorkspaceCandidate,
   updateWorkspaceCandidateStage,
@@ -348,9 +347,8 @@ export function useWorkspaceShellController() {
     description: '',
   })
   const [createVacancyOrderId, setCreateVacancyOrderId] = useState<string | null>(null)
-  const [chatDraft, setChatDraft] = useState('')
   const [preferredChatId, setPreferredChatId] = useState<string | null>(null)
-  const [threadsByRole, setThreadsByRole] = useState<Record<WorkspaceRole, WorkspaceChatThread[]>>({
+  const [threadsByRole] = useState<Record<WorkspaceRole, WorkspaceChatThread[]>>({
     Customer: [],
     Executor: [],
     Applicant: [],
@@ -1017,20 +1015,15 @@ export function useWorkspaceShellController() {
 
   const { handleHeaderCreateAction, handleHeaderMenuAction, handleSendMessage } =
     useWorkspaceUiActions({
-      activeThread,
-      chatDraft,
       customerCompanyName,
       role,
       setActiveView,
       setBanner,
-      setChatDraft,
       setCreateOrderFormValues,
       setIsCreateApplicantResponsePageOpen,
       setIsCreateCandidatePageOpen,
       setCreateCandidateVacancyId,
       setIsCreateOrderPageOpen,
-      setThreadsByRole,
-      todayTimeLabel,
       onOpenProfile: () => {
         navigate(routePaths.profile)
       },
@@ -1246,7 +1239,6 @@ export function useWorkspaceShellController() {
     applicantRespondedOrderIds,
     candidateViewOrders,
     candidateViewSelectedOrderId,
-    chatDraft,
     closeCandidateDetails,
     closeCreateApplicantResponsePage,
     closeCreateCandidatePage,
@@ -1288,6 +1280,7 @@ export function useWorkspaceShellController() {
     handleCreateVacancyFromOrder,
     handleHeaderCreateAction,
     handleHeaderMenuAction,
+    handleSendMessage,
     handleOpenCandidateDetails,
     handleOpenOrderDetails,
     handlePauseOrders,
@@ -1306,7 +1299,6 @@ export function useWorkspaceShellController() {
     handleRetryCustomerShortlist,
     handleRetryExecutorCandidates,
     handleSelectOrderExecutor,
-    handleSendMessage,
     handleToggleRole,
     handleViewChange,
     hasRespondedToSelectedOrder,
@@ -1361,7 +1353,6 @@ export function useWorkspaceShellController() {
     selectedOrderVacancyPreview,
     selectedOrderWithResponses,
     workspaceScreen,
-    setChatDraft,
     setPreferredChatId,
     setPreferredOrderId,
     setSearchValue,
