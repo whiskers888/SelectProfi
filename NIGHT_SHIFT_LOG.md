@@ -240,3 +240,12 @@
 Ошибки/ограничения: backend не поддерживает самостоятельное Applicant-резюме. Безопасный Applicant путь — отклик на конкретную опубликованную вакансию через Applicant-only endpoint; реальную отправку отклика в этом UI-прогоне не выполнял.
 Проверка: `useWorkspaceUiActions.test.ts` + `workspaceShell.helpers.test.ts` — 13/13; `npm run build` — success (2016 modules); ESLint затронутых файлов и `git diff --check` — success; Playwright 1.65.1 + Edge fixtures подтвердил CTA, переход на активную вкладку вакансий, доступность тестовой вакансии, отсутствие формы ложного резюме, page errors — 0.
 Коммит: feature/night-shift-refactor / feat: перепроверить кнопки создания/добавления / 3b9e7c6.
+
+## PRI-132 | Индикатор роли и переключение Applicant/Executor
+Старт: 2026-11-15 01:33 +03:00
+Окончание: 2026-11-15 01:47 +03:00
+Статус: Review
+Изменения: яркий role pill под профилем уже переключал Applicant↔Executor на desktop; исправлен mobile-вариант, который скрывал название роли и оставлял одну иконку. На ширине до 900 px теперь видны роль и стрелки; accessible name сообщает текущую роль.
+Ошибки/ограничения: реальную смену роли на пользовательской backend-сессии не выполнял. Существующая controller/backend логика поддерживает оба направления; frontend fixture проверил отображение обоих ролей, а backend integration coverage содержит переход Applicant→Executor.
+Проверка: Playwright 1.65.1 + Edge fixtures для Applicant и Executor при 1365×900, 390×844 и 320×844: подписи видны, overflow нет, page errors — 0; ESLint `Header.tsx`, `npm run build` (2016 modules) и `git diff --check` успешны.
+Коммит: feature/night-shift-refactor / feat: добавить яркий переключатель роли / 022c1ba.

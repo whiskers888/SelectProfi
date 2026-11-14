@@ -160,3 +160,11 @@
 - Прежний Applicant CTA «Добавить резюме» открывал форму, submit которой создавал только локальную запись и сообщал об успехе. Самостоятельный Applicant resume endpoint отсутствует; `POST /api/candidates/resumes` ограничен ролью Executor. Вакансия-специфичный Applicant отклик уже поддержан отдельным Applicant-only endpoint, поэтому его действие выполняется на странице вакансий.
 - Покрытие: role routing и подписи action CTA проверены unit-тестами; Playwright fixture подтвердил переход к опубликованным вакансиям без вызова неподдерживаемой формы. Реальный submit vacancy response не выполнялся.
 - Проверки этапа: 13/13 focused tests; frontend build, ESLint и `git diff --check` успешны; Playwright Edge без JS errors и horizontal overflow.
+
+
+## PRI-132 | Индикатор активной роли
+
+- Header уже имел яркую кнопку Applicant/Executor под карточкой профиля на desktop. На viewport до 900 px CSS скрывал подпись и оставлял один значок переключения; теперь мобильная кнопка показывает полное имя текущей роли рядом со стрелками и сообщает её в accessible name.
+- Playwright Edge с отдельными Applicant/Executor fixtures проверил role label на 1365×900, 390×844 и 320×844; horizontal overflow и JS errors отсутствуют.
+- Смена роли в реальной сессии не запускалась. Controller вызывает авторизованный `POST /api/profile/me/active-role`, а backend проверяет разрешённую пару Applicant↔Executor; integration test для Applicant→Executor существует.
+- Проверки: ESLint `Header.tsx`, frontend build и `git diff --check` успешны.
