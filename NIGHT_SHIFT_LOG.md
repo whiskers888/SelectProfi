@@ -130,7 +130,7 @@
 Изменения: создан `docs/pages/dashboard/DASHBOARD_AUDIT.md` с картой текущей архитектуры, сравнением ролей `_1`–`_3`, подтверждёнными gaps, baseline-проверками и последовательным планом. Код не менялся; существующие dashboard tasks проверены в YouGile, дубли не создавались.
 Ошибки/ограничения: frontend baseline — 4 существующих падения MainFeedPanel tests; backend integration tests — 42 из 52 не проходят из-за DB authentication failure пользователя `neondb_owner`; авторизованная сессия Dashboard не открылась, `/app` перенаправил на `/auth`.
 Проверка: `dotnetdevmcp` build `backend/Api/Api.csproj` — success, 0 errors/warnings; `npm run build` — success (2016 modules); frontend tests — 40/44 passed; backend integration tests — 10/52 passed; Playwright 1.65.1 через Edge: auth page HTTP 200, без JS errors и horizontal overflow при viewport 1365 px; `git diff --check` — success.
-Коммит: будет указан после фиксации этапа.
+Коммит: feature/night-shift-refactor / feat: NS-00 Полный аудит Dashboard / 4655df6
 
 ## NS-08 follow-up | Дашборд исполнителя по макету _1
 Старт: 2026-11-14 15:38:42 +03:00
@@ -149,4 +149,13 @@
 Изменения: в executor dashboard подключены существующая stage mutation для Pool/Shortlist, кнопки обоих переходов с блокировкой на время запроса и явный переход к полным деталям проекта. Stage update вынесен в чистый helper с областью действия orderId + candidateId; исходная заметка кандидата больше не перезаписывается псевдо-временем. Устаревшие тесты текущего shell обновлены на проверяемые сценарии.
 Ошибки/заметки: первый запуск проверок выявил устаревшие assertions в MainFeedPanel и неоднозначное ожидание одинаковой цены у двух карточек; тесты исправлены через реальные доступные роли и проверку выбранного orderId.
 Проверка: `npm run build` — success (2016 modules); helper и dashboard panel тесты — 18/18; полный frontend suite — 51/51, 14/14 файлов; `git diff --check` — success; reviewer — без замечаний. Dashboard browser view не подтверждён: /app перенаправляет на /auth.
-Коммит: будет указан после фиксации этапа.
+Коммит: feature/night-shift-refactor / feat: NS-08 Действия кандидатов в Dashboard исполнителя / 8e8e269
+
+## NS-08 follow-up | Выбор финалиста в Dashboard заказчика
+Старт: 2026-11-14 20:02 +03:00
+Окончание: 2026-11-14 20:20 +03:00
+Статус: Done
+Изменения: подключена существующая Customer-only RTK mutation выбора финалиста. Действие доступно только для Shortlist кандидата текущей опубликованной вакансии; обработчик повторно сверяет роль, order/vacancy, актуальный ответ API, стадию и отсутствие выбранного финалиста. После успеха RTK invalidation обновляет список; pending блокирует действие, ошибки попадают в существующее уведомление. Customer по-прежнему видит `publicAlias`; добавлена проверка helper mapping и UI-контрактов.
+Ошибки/ограничения: Playwright MCP не смог найти Chrome; `npx playwright install chrome` завершился ошибкой привилегий. Playwright 1.65.1 запущен напрямую с установленным Edge: `/app` перенаправляет на `/auth`; доступная страница входа не показала JS errors и горизонтального переполнения при ширине 1365 px. Авторизованный Dashboard и сетевой mutation flow не проверены.
+Проверка: `npm run build` — success (2016 modules); полный frontend suite — 56/56, 14/14 файлов; `git diff --check` — success; cavecrew reviewer — без замечаний. Build warnings: Browserslist устарел, bundle 1,143.02 kB, plugin timings.
+Коммит: feature/night-shift-refactor / feat: NS-08 выбор финалиста заказчиком / 0f4bdc9
