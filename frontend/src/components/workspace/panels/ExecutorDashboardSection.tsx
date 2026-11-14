@@ -29,13 +29,12 @@ function orderCompensation(order: WorkspaceOrder): string {
 export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSectionProps) {
   const [stageFilter, setStageFilter] = useState<CandidateFilter>('all')
   const selectedOrder = viewProps.selectedDashboardOrder
-  const candidates = viewProps.executorDashboardCandidates ?? []
-  const orderCandidates = useMemo(
-    () => selectedOrder
+  const orderCandidates = useMemo(() => {
+    const candidates = viewProps.executorDashboardCandidates ?? []
+    return selectedOrder
       ? candidates.filter((candidate) => candidate.orderId === selectedOrder.id && candidateStage(candidate) !== null)
-      : [],
-    [candidates, selectedOrder],
-  )
+      : []
+  }, [viewProps.executorDashboardCandidates, selectedOrder])
   const stageCounts: Record<CandidateStage, number> = {
     pool: orderCandidates.filter((candidate) => candidateStage(candidate) === 'pool').length,
     shortlist: orderCandidates.filter((candidate) => candidateStage(candidate) === 'shortlist').length,
