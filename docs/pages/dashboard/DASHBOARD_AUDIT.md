@@ -152,3 +152,11 @@
 - В той же панели кнопки фильтруют полный набор кандидатов выбранного проекта: «Обзор всех кандидатов» включает Pool/Shortlist/Selected, «Обзор финалистов» ограничивает список Shortlist. Фильтр Pool и отдельный этап «Выбран» сохранены.
 - Макет `_1` не содержит KPI-карточек или глобальных кнопок «Обзор»; изменения остаются в существующей таблице и не возвращают удалённый KPI-ряд.
 - Проверка: `MainFeedPanel.test.tsx` — 22/22; build, ESLint, `git diff --check` успешны; Edge Playwright fixture подтвердил переключение фильтров и отсутствие горизонтального overflow/JS errors на desktop и mobile.
+
+
+## PRI-133 | Кнопки создания и добавления
+
+- Проверены role-specific действия: Customer создаёт заказ через существующий orders API; Executor открывает добавление кандидата через существующий create flow; Applicant CTA теперь говорит «Найти вакансию» и открывает список вакансий.
+- Прежний Applicant CTA «Добавить резюме» открывал форму, submit которой создавал только локальную запись и сообщал об успехе. Самостоятельный Applicant resume endpoint отсутствует; `POST /api/candidates/resumes` ограничен ролью Executor. Вакансия-специфичный Applicant отклик уже поддержан отдельным Applicant-only endpoint, поэтому его действие выполняется на странице вакансий.
+- Покрытие: role routing и подписи action CTA проверены unit-тестами; Playwright fixture подтвердил переход к опубликованным вакансиям без вызова неподдерживаемой формы. Реальный submit vacancy response не выполнялся.
+- Проверки этапа: 13/13 focused tests; frontend build, ESLint и `git diff --check` успешны; Playwright Edge без JS errors и horizontal overflow.
