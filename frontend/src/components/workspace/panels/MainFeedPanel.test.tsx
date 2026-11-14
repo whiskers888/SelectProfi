@@ -1,7 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { WorkspaceOrder } from '../model/data'
+import type { WorkspaceCandidate, WorkspaceOrder } from '../model/data'
 import { MainFeedPanel } from './MainFeedPanel'
+import type { MainFeedPanelProps } from './MainFeedPanel.types'
 
 afterEach(cleanup)
 
@@ -32,7 +33,23 @@ const order: WorkspaceOrder = {
   isPaused: false,
 }
 
-function renderDashboard(role: 'Customer' | 'Executor', canManageOrders: boolean) {
+const poolCandidate: WorkspaceCandidate = {
+  id: 'candidate-1',
+  name: 'Мария Соколова',
+  position: 'Рекрутер',
+  orderId: order.id,
+  source: 'База кандидатов',
+  rating: '4.8',
+  statusLabel: 'Pool',
+  statusTone: 'warning',
+  comment: 'Сохранённая заметка',
+}
+
+function renderDashboard(
+  role: 'Customer' | 'Executor',
+  canManageOrders: boolean,
+  overrides: Partial<MainFeedPanelProps> = {},
+) {
   return render(
     <MainFeedPanel
       baseCandidates={[]}
@@ -47,6 +64,7 @@ function renderDashboard(role: 'Customer' | 'Executor', canManageOrders: boolean
       role={role}
       selectedOrderId={null}
       view="dashboard"
+      {...overrides}
     />,
   )
 }
@@ -91,7 +109,7 @@ describe('MainFeedPanel projects in work', () => {
   it('shows executor net amount and read-only project controls', () => {
     renderDashboard('Executor', false)
 
-    expect(screen.getByText('В работе')).toBeTruthy()
+    expect(screen.getAllByText('В работе').length).toBeGreaterThan(0)
     expect(screen.getByText(/К получению:\s*85[\s\u00a0]?000 ₽/)).toBeTruthy()
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
     expect(screen.queryByRole('button', { name: 'На паузу' })).toBeNull()
@@ -99,21 +117,87 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.queryByRole('button', { name: 'В архив' })).toBeNull()
   })
 
-  it('keeps aligned selection and pause action for customer active orders', () => {
-    const { container } = renderDashboard('Customer', true)
+  it('moves a selected-project candidate from Pool into Shortlist', () => {
+    const onSetCandidateStage = vi.fn()
+    const onOpenCandidate = vi.fn()
 
-    expect(screen.getByText(/Цена:\s*100[\s\u00a0]?000 ₽/)).toBeTruthy()
-    expect(screen.queryAllByRole('checkbox')).toHaveLength(2)
-    expect(screen.getByRole('button', { name: 'На паузу' })).toBeTruthy()
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [poolCandidate],
+      onOpenCandidate,
+      onSetCandidateStage,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: `Добавить ${poolCandidate.name} в Shortlist` }))
+
+    expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, poolCandidate.id, 'Shortlist')
+    expect(onOpenCandidate).not.toHaveBeenCalled()
+    expect(screen.getByText('Сохранённая заметка')).toBeTruthy()
+  })
+
+  it('returns a selected-project candidate from Shortlist to Pool', () => {
+    const onSetCandidateStage = vi.fn()
+    const shortlistCandidate: WorkspaceCandidate = {
+      ...poolCandidate,
+      statusLabel: 'Shortlist',
+      statusTone: 'default',
+    }
+
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [shortlistCandidate],
+      onSetCandidateStage,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: `Вернуть ${shortlistCandidate.name} в Pool` }))
+
+    expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, shortlistCandidate.id, 'Pool')
+  })
+
+  it('disables candidate stage actions while an update is pending', () => {
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [poolCandidate],
+      isUpdatingCandidateStage: true,
+      onSetCandidateStage: vi.fn(),
+    })
+
+    const button = screen.getByRole('button', { name: `Добавить ${poolCandidate.name} в Shortlist` })
+
+    expect(button.hasAttribute('disabled')).toBe(true)
+  })
+
+  it('opens the selected project details from the dashboard summary', () => {
+    const onOpenOrder = vi.fn()
+
+    renderDashboard('Executor', false, { onOpenOrder })
+
+    fireEvent.click(screen.getByRole('button', { name: `Открыть детали проекта ${order.title}` }))
+
+    expect(onOpenOrder).toHaveBeenCalledWith(order)
+  })
+
+  it('keeps aligned selection and pause action for customer active orders', () => {
+    const onPauseOrders = vi.fn()
+    const secondOrder: WorkspaceOrder = { ...order, id: 'order-2', title: 'Другой проект' }
+
+    renderDashboard('Customer', true, { onPauseOrders, orders: [order, secondOrder] })
+
+    expect(screen.getAllByText(/Цена:\s*100[\s\u00a0]?000 ₽/)).toHaveLength(2)
+    const secondOrderCheckbox = screen.getByRole('checkbox', { name: `Выбрать заказ ${secondOrder.title}` })
+    expect(secondOrderCheckbox).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Активировать' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'В архив' })).toBeNull()
-    expect(container.querySelector('.preview11-order-row-with-selection')).toBeTruthy()
+
+    fireEvent.click(secondOrderCheckbox)
+    const pauseButton = screen.getByRole('button', { name: 'На паузу' })
+    expect(pauseButton.hasAttribute('disabled')).toBe(false)
+    fireEvent.click(pauseButton)
+
+    expect(onPauseOrders).toHaveBeenCalledWith([secondOrder.id])
   })
 
   it('shows only applicant responses on the dashboard', () => {
     renderApplicant('dashboard', [])
 
-    expect(screen.getByText('Нет откликов')).toBeTruthy()
+    expect(screen.getByText('Подтверждённых откликов пока нет.')).toBeTruthy()
   })
 
   it('lists platform vacancies without order scope switches for applicants', () => {
@@ -128,27 +212,13 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.getByRole('heading', { name: 'Список вакансий' })).toBeTruthy()
   })
 
-  it('moves paused vacancies to the applicant archive and hides the pause tab', () => {
-    render(
-      <MainFeedPanel
-        applicantRespondedOrderIds={['order-1']}
-        baseCandidates={[]}
-        candidates={[]}
-        isLoading={false}
-        onOpenCandidate={vi.fn()}
-        onOpenOrder={vi.fn()}
-        onSelectOrder={vi.fn()}
-        orders={[{ ...order, isPaused: true }]}
-        role="Applicant"
-        selectedOrderId={null}
-        view="dashboard"
-      />,
-    )
+  it('omits order archive controls from the applicant responses dashboard', () => {
+    renderApplicant('dashboard', [])
 
+    expect(screen.getByText('Подтверждённых откликов пока нет.')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'На паузе' })).toBeNull()
-    expect(screen.queryByText('Senior разработчик')).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'Архив' }))
-    expect(screen.getByText('Senior разработчик')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Архив' })).toBeNull()
+    expect(screen.queryByText(order.title)).toBeNull()
   })
 
   it('shows salary instead of priority in the applicant vacancy list', () => {

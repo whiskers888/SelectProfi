@@ -73,6 +73,7 @@ import {
   todayTimeLabel,
   toWorkspaceBaseCandidate,
   toWorkspaceCandidate,
+  updateWorkspaceCandidateStage,
   toWorkspaceOrder,
   toWorkspaceOrderFromVacancy,
   toWorkspaceRole,
@@ -747,18 +748,7 @@ export function useWorkspaceShellController() {
           body: { stage },
         }).unwrap()
         setExecutorGlobalCandidates((previousCandidates) =>
-          previousCandidates.map((candidate) => {
-            if (candidate.id !== candidateId || candidate.orderId !== orderId) {
-              return candidate
-            }
-
-            return {
-              ...candidate,
-              statusLabel: stage === 'Shortlist' ? 'Shortlist' : 'Pool',
-              statusTone: stage === 'Shortlist' ? 'default' : 'warning',
-              comment: `Обновлено ${new Date().toLocaleString('ru-RU')}`,
-            }
-          }),
+          updateWorkspaceCandidateStage(previousCandidates, orderId, candidateId, stage),
         )
         if (candidateSourceVacancy?.id === vacancy.id) {
           await refetchVacancyCandidates()

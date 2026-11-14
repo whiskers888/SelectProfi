@@ -184,6 +184,25 @@ function toCandidateStatusTone(
   return stage === 'Shortlist' ? 'default' : 'warning'
 }
 
+export function updateWorkspaceCandidateStage(
+  candidates: WorkspaceCandidate[],
+  orderId: string,
+  candidateId: string,
+  stage: 'Pool' | 'Shortlist',
+): WorkspaceCandidate[] {
+  return candidates.map((candidate) => {
+    if (candidate.orderId !== orderId || candidate.id !== candidateId) {
+      return candidate
+    }
+
+    return {
+      ...candidate,
+      statusLabel: stage,
+      statusTone: stage === 'Shortlist' ? 'default' : 'warning',
+    }
+  })
+}
+
 export function toWorkspaceCandidate(
   item: VacancyCandidatesItemResponse,
   vacancy: VacancyResponse,

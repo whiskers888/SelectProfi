@@ -1,6 +1,49 @@
 import { describe, expect, it } from 'vitest'
 import type { OrderResponse } from '@/shared/api/orders'
-import { createHeaderTitle, deriveWorkspaceViewState, toWorkspaceOrder } from './workspaceShell.helpers'
+import {
+  createHeaderTitle,
+  deriveWorkspaceViewState,
+  toWorkspaceOrder,
+  updateWorkspaceCandidateStage,
+} from './workspaceShell.helpers'
+import type { WorkspaceCandidate } from '../model/data'
+
+const makeCandidate = (id: string, orderId: string): WorkspaceCandidate => ({
+  id,
+  name: `Candidate ${id}`,
+  position: 'Developer',
+  orderId,
+  source: 'Test source',
+  rating: '—',
+  statusLabel: 'Pool',
+  statusTone: 'warning',
+  comment: 'Original comment',
+})
+
+describe('updateWorkspaceCandidateStage', () => {
+  it('updates the matching candidate and preserves its comment and other fields', () => {
+    const candidate = makeCandidate('candidate-1', 'order-1')
+    const updated = updateWorkspaceCandidateStage([candidate], 'order-1', 'candidate-1', 'Shortlist')
+
+    expect(updated[0]).toEqual({ ...candidate, statusLabel: 'Shortlist', statusTone: 'default' })
+    expect(updated[0].comment).toBe('Original comment')
+  })
+
+  it('leaves the same candidate ID on a different order unchanged', () => {
+    const candidate = makeCandidate('candidate-1', 'order-2')
+
+    expect(updateWorkspaceCandidateStage([candidate], 'order-1', 'candidate-1', 'Shortlist')[0]).toBe(candidate)
+  })
+
+  it('leaves unrelated candidates unchanged', () => {
+    const matching = makeCandidate('candidate-1', 'order-1')
+    const unrelated = makeCandidate('candidate-2', 'order-1')
+    const updated = updateWorkspaceCandidateStage([matching, unrelated], 'order-1', 'candidate-1', 'Shortlist')
+
+    expect(updated[1]).toBe(unrelated)
+    expect(updated[1]).toEqual(unrelated)
+  })
+})
 
 describe('toWorkspaceOrder', () => {
   it('maps structured vacancy details without confusing company or salary with legacy fields', () => {

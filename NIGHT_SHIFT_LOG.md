@@ -141,3 +141,12 @@
 Ошибки: проверка браузером не выполнена — CUA browser access host недоступен. Сборки прошли; остались предупреждения Browserslist (caniuse-lite устарел на 8 месяцев) и крупного JS bundle (1,139.45 kB).
 Проверка: reviewer — без существенных замечаний; `npm run build` — success (2016 modules); `docker compose build frontend` — success; пересоздан только frontend через `docker compose up -d --no-deps --force-recreate frontend`; `http://127.0.0.1:5173/app` — HTTP 200, новый bundle содержит Pool/Shortlist/«Выбранный проект»; frontend/backend/PostgreSQL healthy, БД не перезапускалась; `git diff --check` — success.
 Коммит: feature/night-shift-refactor / feat: NS-08 Дашборд исполнителя _1 / 5a9c86b
+
+## NS-08 follow-up | Действия кандидатов в Dashboard исполнителя
+Старт: 2026-11-14 16:45 +03:00
+Окончание: 2026-11-14 19:54 +03:00
+Статус: Review
+Изменения: в executor dashboard подключены существующая stage mutation для Pool/Shortlist, кнопки обоих переходов с блокировкой на время запроса и явный переход к полным деталям проекта. Stage update вынесен в чистый helper с областью действия orderId + candidateId; исходная заметка кандидата больше не перезаписывается псевдо-временем. Устаревшие тесты текущего shell обновлены на проверяемые сценарии.
+Ошибки/заметки: первый запуск проверок выявил устаревшие assertions в MainFeedPanel и неоднозначное ожидание одинаковой цены у двух карточек; тесты исправлены через реальные доступные роли и проверку выбранного orderId.
+Проверка: `npm run build` — success (2016 modules); helper и dashboard panel тесты — 18/18; полный frontend suite — 51/51, 14/14 файлов; `git diff --check` — success; reviewer — без замечаний. Dashboard browser view не подтверждён: /app перенаправляет на /auth.
+Коммит: будет указан после фиксации этапа.

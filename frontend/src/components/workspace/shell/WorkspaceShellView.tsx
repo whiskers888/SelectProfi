@@ -541,6 +541,8 @@ export function WorkspaceShellView({
                       }
                       selectedOrderVacancyPreview={selectedOrderVacancyPreview}
                       isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
+                      isUpdatingCandidateStage={isUpdatingApplicantResponderStage}
+                      onSetCandidateStage={handleSetApplicantResponderStage}
                       view={activeView === 'dashboard' ? 'dashboard' : activeView}
                     />
                   </>

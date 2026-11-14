@@ -89,7 +89,25 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
                   <div className="rounded-lg border p-3"><p className="text-xs font-semibold text-muted-foreground">Требования</p><p className="mt-1 whitespace-pre-line text-sm">{selectedOrder.requirements || 'Не указаны'}</p></div>
                 </div>
                 {selectedOrder.otherConditions && <p className="text-sm text-muted-foreground">{selectedOrder.otherConditions}</p>}
-                {viewProps.onOpenChat && <button type="button" onClick={viewProps.onOpenChat} className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted">Перейти к чатам</button>}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    aria-label={`Открыть детали проекта ${selectedOrder.title}`}
+                    onClick={() => viewProps.onOpenOrder(selectedOrder)}
+                    className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+                  >
+                    Детали проекта
+                  </button>
+                  {viewProps.onOpenChat && (
+                    <button
+                      type="button"
+                      onClick={viewProps.onOpenChat}
+                      className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+                    >
+                      Перейти к чатам
+                    </button>
+                  )}
+                </div>
               </>
             ) : <p className="text-sm text-muted-foreground">Нет доступных заказов для отображения.</p>}
           </CardContent>
@@ -121,8 +139,75 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
               <p className="py-8 text-center text-sm text-muted-foreground">На этом этапе пока нет кандидатов.</p>
             ) : (
               <Table stackOnMobile>
-                <TableHeader><TableRow><TableHead>Кандидат</TableHead><TableHead>Источник</TableHead><TableHead>Рейтинг</TableHead><TableHead>Статус</TableHead></TableRow></TableHeader>
-                <TableBody>{filteredCandidates.map((candidate) => <TableRow key={candidate.id} className="cursor-pointer" onClick={() => viewProps.onOpenCandidate(candidate)}><TableCell data-label="Кандидат"><button type="button" className="text-left font-medium text-primary hover:underline" onClick={(event) => { event.stopPropagation(); viewProps.onOpenCandidate(candidate) }}>{candidate.name}</button><p className="text-xs text-muted-foreground">{candidate.position}</p>{candidate.comment && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{candidate.comment}</p>}</TableCell><TableCell data-label="Источник">{candidate.source || '—'}</TableCell><TableCell data-label="Рейтинг">{candidate.rating || '—'}</TableCell><TableCell data-label="Статус"><Badge variant={workspaceToneToBadgeVariant(candidate.statusTone)}>{candidate.statusLabel}</Badge></TableCell></TableRow>)}</TableBody>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Кандидат</TableHead>
+                    <TableHead>Источник</TableHead>
+                    <TableHead>Рейтинг</TableHead>
+                    <TableHead>Статус</TableHead>
+                    <TableHead>Действие</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCandidates.map((candidate) => {
+                    const stage = candidateStage(candidate)
+                    const nextStage = stage === 'pool' ? 'Shortlist' : stage === 'shortlist' ? 'Pool' : null
+
+                    return (
+                      <TableRow
+                        key={candidate.id}
+                        className="cursor-pointer"
+                        onClick={() => viewProps.onOpenCandidate(candidate)}
+                      >
+                        <TableCell data-label="Кандидат">
+                          <button
+                            type="button"
+                            className="text-left font-medium text-primary hover:underline"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              viewProps.onOpenCandidate(candidate)
+                            }}
+                          >
+                            {candidate.name}
+                          </button>
+                          <p className="text-xs text-muted-foreground">{candidate.position}</p>
+                          {candidate.comment && (
+                            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{candidate.comment}</p>
+                          )}
+                        </TableCell>
+                        <TableCell data-label="Источник">{candidate.source || '—'}</TableCell>
+                        <TableCell data-label="Рейтинг">{candidate.rating || '—'}</TableCell>
+                        <TableCell data-label="Статус">
+                          <Badge variant={workspaceToneToBadgeVariant(candidate.statusTone)}>
+                            {candidate.statusLabel}
+                          </Badge>
+                        </TableCell>
+                        <TableCell data-label="Действие">
+                          {nextStage && viewProps.onSetCandidateStage ? (
+                            <button
+                              type="button"
+                              aria-label={
+                                nextStage === 'Shortlist'
+                                  ? `Добавить ${candidate.name} в Shortlist`
+                                  : `Вернуть ${candidate.name} в Pool`
+                              }
+                              disabled={viewProps.isUpdatingCandidateStage}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                void viewProps.onSetCandidateStage?.(selectedOrder.id, candidate.id, nextStage)
+                              }}
+                              className="rounded-md border border-primary/40 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {nextStage === 'Shortlist' ? 'Добавить в Shortlist' : 'Вернуть в Pool'}
+                            </button>
+                          ) : stage === 'selected' ? (
+                            <span className="text-xs text-muted-foreground">Финалист выбран</span>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
               </Table>
             )}
           </CardContent>

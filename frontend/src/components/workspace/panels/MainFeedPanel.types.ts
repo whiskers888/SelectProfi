@@ -31,6 +31,11 @@ export type MainFeedPanelProps = {
   onArchiveOrders?: (orderIds: string[]) => void | Promise<void>
   onCreateVacancyFromOrder?: (orderId: string) => void
   onOpenChat?: () => void
+  onSetCandidateStage?: (
+    orderId: string,
+    candidateId: string,
+    stage: 'Pool' | 'Shortlist',
+  ) => void | Promise<void>
   onPauseOrders?: (orderIds: string[]) => void | Promise<void>
   onOpenCandidate: (candidate: WorkspaceCandidate) => void
   onCloseOrderDetails?: () => void
@@ -62,6 +67,7 @@ export type MainFeedPanelProps = {
   view: 'dashboard' | 'orders' | 'candidates'
   isOrderResponsesLoading?: boolean
   isUpdatingApplicantResponderStage?: boolean
+  isUpdatingCandidateStage?: boolean
   isRespondingToOrder?: boolean
   isSelectingOrderExecutor?: boolean
 }
