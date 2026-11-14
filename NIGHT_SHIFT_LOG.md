@@ -168,3 +168,12 @@
 Ошибки/ограничения: нет backend-контракта для interview invitations/rescheduling, salary или location в этих Dashboard данных; авторизованная браузерная проверка Applicant экрана невозможна, так как `/app` перенаправляет на `/auth`.
 Проверка: `npm run build` — success (2016 modules); полный frontend suite — 58/58, 15/15 файлов; `git diff --check` — success; reviewer — без замечаний.
 Коммит: feature/night-shift-refactor / feat: AUDIT-01 детали отклика соискателя / 9e61ddd
+
+## AUDIT-01 follow-up | Честные состояния календаря и чата
+Старт: 2026-11-14 20:31 +03:00
+Окончание: 2026-11-14 20:42 +03:00
+Статус: Done
+Изменения: CalendarPanel различает недоступный источник (`null`), подключённый пустой список и реальные встречи; текущий shell явно передаёт unavailable state. Локальное добавление сообщений и success banner удалены; chat empty state сообщает об отсутствии интеграции, composer заблокирован, handler выдаёт честную ошибку.
+Ошибки/ограничения: backend не предоставляет API встреч или сообщений, поэтому управление календарём и доставка чатов остаются неподдержанными. Dashboard browser route остаётся за авторизацией `/auth`.
+Проверка: `npm run build` — success (2016 modules); полный frontend suite — 62/62, 17/17 файлов; `git diff --check` — success; reviewer — без замечаний.
+Коммит: feature/night-shift-refactor / feat: AUDIT-01 honest calendar and chat states / d28d1a2
