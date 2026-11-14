@@ -222,3 +222,12 @@
 Ошибки/ограничения: MCP Playwright после перезапуска всё ещё не находит Chrome. Живая тестовая учётная запись backend определяется как Applicant, поэтому Executor authorization/live DTO не подтверждены.
 Проверка: `Sidebar.test.tsx` — 4/4; `npm run build` — success (2016 modules); Playwright 1.65.1 + Edge с API fixtures: карточка видна, keyboard-фильтры Shortlist/Pool работают, viewport 1365×900 и 390×844 без overflow, page errors — 0; reviewer — без замечаний.
 Коммит кода: feature/night-shift-refactor / feat: AUDIT-01 вознаграждение исполнителя в sidebar / d503635.
+
+## PRI-145 | Кнопки обзора кандидатов в проектах исполнителя
+Старт: 2026-11-15 00:54 +03:00
+Окончание: 2026-11-15 01:13 +03:00
+Статус: Review
+Изменения: stage-фильтры в таблице кандидатов выбранного проекта получили явные действия «Обзор всех кандидатов» и «Обзор финалистов». Первый показывает Pool/Shortlist/Selected выбранного проекта; второй — только Shortlist. Оставлены Pool и Выбран. Общий KPI-ряд не возвращался; кнопки не ведут в глобальный список, который не содержит полный Executor pipeline.
+Ошибки/ограничения: в `_1` нет глобальных кнопок «Обзор»; задачу согласовал с макетом через существующий project-scoped список. «Финалисты» интерпретированы как Shortlist по `shortlistCandidatesCount`; уже выбранный кандидат остаётся отдельным этапом. Live Executor API остаётся неподтверждённым из-за роли Applicant у тестовой записи backend.
+Проверка: `MainFeedPanel.test.tsx` — 22/22; `npm run build` — success (2016 modules); ESLint изменённых файлов и `git diff --check` — success; Playwright 1.65.1 + Edge fixture: Pool → все кандидаты → финалисты, только выбранный проект, viewport 1365×900/390×844 без overflow, page errors — 0; независимый reviewer — без замечаний.
+Коммит: feature/night-shift-refactor / feat: ИСП.: Кнопки обзор в моих проектах / 896481c.
