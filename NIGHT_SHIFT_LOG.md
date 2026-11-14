@@ -123,6 +123,15 @@
 Статус: готово к Review.
 Коммит: feature/night-shift-refactor / feat: NS-10 expose frontend on localhost / d957da1
 
+## AUDIT-01 | Полный аудит production Dashboard и план исправлений
+Старт: 2026-11-14 16:17 +03:00
+Окончание: 2026-11-14 16:30 +03:00
+Статус: Review
+Изменения: создан `docs/pages/dashboard/DASHBOARD_AUDIT.md` с картой текущей архитектуры, сравнением ролей `_1`–`_3`, подтверждёнными gaps, baseline-проверками и последовательным планом. Код не менялся; существующие dashboard tasks проверены в YouGile, дубли не создавались.
+Ошибки/ограничения: frontend baseline — 4 существующих падения MainFeedPanel tests; backend integration tests — 42 из 52 не проходят из-за DB authentication failure пользователя `neondb_owner`; живой браузер недоступен (Playwright без Chrome, CUA browser host недоступен).
+Проверка: `dotnetdevmcp` build `backend/Api/Api.csproj` — success, 0 errors/warnings; `npm run build` — success (2016 modules); frontend tests — 40/44 passed; backend integration tests — 10/52 passed; `git diff --check` — success.
+Коммит: будет указан после фиксации этапа.
+
 ## NS-08 follow-up | Дашборд исполнителя по макету _1
 Старт: 2026-11-14 15:38:42 +03:00
 Статус: Review
