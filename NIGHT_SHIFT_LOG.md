@@ -121,3 +121,4 @@
 Ошибки: до исправления Nginx был healthy внутри контейнера, но внутренний api_proxy блокировал публикацию порта и localhost:5173 отвергал соединение.
 Проверка: npm run build — success (2015 modules); docker compose build frontend — success; docker compose config --quiet — success; /app HTTP 200; frontend и backend healthy; PostgreSQL не перезапускался и его volume сохранён.
 Статус: готово к Review.
+Коммит: feature/night-shift-refactor / feat: NS-10 expose frontend on localhost / d957da1
