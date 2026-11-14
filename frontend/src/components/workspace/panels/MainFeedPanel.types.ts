@@ -36,6 +36,7 @@ export type MainFeedPanelProps = {
     candidateId: string,
     stage: 'Pool' | 'Shortlist',
   ) => void | Promise<void>
+  onSelectVacancyCandidate?: (orderId: string, candidateId: string) => void | Promise<void>
   onPauseOrders?: (orderIds: string[]) => void | Promise<void>
   onOpenCandidate: (candidate: WorkspaceCandidate) => void
   onCloseOrderDetails?: () => void
@@ -70,6 +71,9 @@ export type MainFeedPanelProps = {
   isUpdatingCandidateStage?: boolean
   isRespondingToOrder?: boolean
   isSelectingOrderExecutor?: boolean
+  canSelectFinalist?: boolean
+  hasSelectedFinalist?: boolean
+  isSelectingVacancyCandidate?: boolean
 }
 
 export type DashboardSort = 'updated' | 'responses' | 'priority'

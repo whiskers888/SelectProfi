@@ -23,6 +23,7 @@ import {
   useLazyGetVacancyCandidatesQuery,
   useMarkVacancyCandidateViewedByCustomerMutation,
   useRespondToVacancyMutation,
+  useSelectVacancyCandidateMutation,
   useUpdateVacancyCandidateStageMutation,
 } from '@/shared/api/candidates'
 import {
@@ -117,6 +118,8 @@ export function useWorkspaceShellController() {
     useSelectOrderResponseExecutorMutation()
   const [markVacancyCandidateViewedByCustomer] = useMarkVacancyCandidateViewedByCustomerMutation()
   const [respondToVacancy, { isLoading: isRespondingToVacancy }] = useRespondToVacancyMutation()
+  const [selectVacancyCandidate, { isLoading: isSelectingVacancyCandidate }] =
+    useSelectVacancyCandidateMutation()
   const [createCandidateResume] = useCreateCandidateResumeMutation()
   const [createMyCandidateResume] = useCreateMyCandidateResumeMutation()
   const [uploadCandidateResumeAttachment] = useUploadCandidateResumeAttachmentMutation()
@@ -776,6 +779,58 @@ export function useWorkspaceShellController() {
       vacanciesResponse,
     ],
   )
+  const handleSelectVacancyCandidate = useCallback(
+    async (orderId: string, candidateId: string) => {
+      if (role !== 'Customer') {
+        return
+      }
+
+      const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
+      if (
+        !vacancy ||
+        candidateSourceVacancy?.id !== vacancy.id ||
+        vacancy.status !== 'Published'
+      ) {
+        setBanner({
+          variant: 'destructive',
+          message: 'Выбор финалиста доступен для опубликованной вакансии.',
+        })
+        return
+      }
+
+      const currentVacancyCandidates =
+        vacancyCandidatesResponse?.vacancyId === vacancy.id ? vacancyCandidatesResponse.items : null
+      const candidate = currentVacancyCandidates?.find((item) => item.candidateId === candidateId)
+      if (
+        !currentVacancyCandidates ||
+        !candidate ||
+        candidate.stage !== 'Shortlist' ||
+        candidate.isSelected ||
+        currentVacancyCandidates.some((item) => item.isSelected)
+      ) {
+        setBanner({
+          variant: 'destructive',
+          message: 'Кандидат больше не доступен для выбора. Обновите список и повторите попытку.',
+        })
+        return
+      }
+
+      try {
+        await selectVacancyCandidate({ vacancyId: vacancy.id, body: { candidateId } }).unwrap()
+        setBanner({ variant: 'success', message: 'Финалист выбран.' })
+      } catch (error) {
+        setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) })
+      }
+    },
+    [
+      candidateSourceVacancy?.id,
+      role,
+      selectVacancyCandidate,
+      setBanner,
+      vacanciesResponse,
+      vacancyCandidatesResponse,
+    ],
+  )
   const handleToggleRole = useCallback(async () => {
     if (!canSwitchApplicantExecutor) {
       return
@@ -1163,6 +1218,14 @@ export function useWorkspaceShellController() {
     canLoadExecutorBaseCandidates,
     canLoadServerCandidates,
     canLoadServerOrders,
+    canSelectFinalist: role === 'Customer' && candidateSourceVacancy?.status === 'Published',
+    hasSelectedFinalist:
+      role === 'Customer' &&
+      Boolean(
+        candidateSourceVacancy &&
+          vacancyCandidatesResponse?.vacancyId === candidateSourceVacancy.id &&
+          vacancyCandidatesResponse.items.some((candidate) => candidate.isSelected),
+      ),
     canManageOrder,
     canManageOrderResponses,
     canSwitchApplicantExecutor,
@@ -1225,6 +1288,7 @@ export function useWorkspaceShellController() {
     handleRespondToOrder,
     handleRespondToSelectedVacancy,
     handleSetApplicantResponderStage,
+    handleSelectVacancyCandidate,
     handleRetryAnalytics,
     handleRetryCustomerDashboardStats,
     handleRetryExecutorDashboardStats,
@@ -1261,6 +1325,7 @@ export function useWorkspaceShellController() {
     isExecutorCandidateSummaryLoading,
     isApplicantDashboardStatsError,
     isApplicantDashboardStatsLoading,
+    isSelectingVacancyCandidate,
     isProfileRoute,
     isRejectingOrderExecutor,
     isRespondingToOrder: isRespondingToOrder || isRespondingToVacancy,

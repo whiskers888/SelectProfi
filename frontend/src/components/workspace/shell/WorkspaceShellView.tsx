@@ -96,6 +96,7 @@ export function WorkspaceShellView({
   handleRespondToOrder,
   handleRespondToSelectedVacancy,
   handleSetApplicantResponderStage,
+  handleSelectVacancyCandidate,
   handleRetryAnalytics,
   handleSelectOrderExecutor,
   handleSendMessage,
@@ -129,6 +130,9 @@ export function WorkspaceShellView({
   isRemovingVacancyCandidate,
   isSelectedCandidatePurchased,
   isSelectingOrderExecutor,
+  isSelectingVacancyCandidate,
+  canSelectFinalist,
+  hasSelectedFinalist,
   isSwitchingRole,
   isSidebarCollapsed,
   isViewLoading,
@@ -464,6 +468,7 @@ export function WorkspaceShellView({
                       isApplicantDashboardStatsLoading={isApplicantDashboardStatsLoading}
                       onRetryApplicantDashboardStats={handleRetryApplicantDashboardStats}
                       canManageOrderResponses={canManageOrderResponses}
+                      canSelectFinalist={canSelectFinalist}
                       canPublishVacancyForCustomer={canPublishVacancyForSelectedOrder}
                       canManageOrders={canManageOrder}
                       canRespondToOrder={canRespondToSelectedOrder}
@@ -497,6 +502,8 @@ export function WorkspaceShellView({
                       isRejectingOrderExecutor={isRejectingOrderExecutor}
                       isRespondingToOrder={isRespondingToOrder}
                       isSelectingOrderExecutor={isSelectingOrderExecutor}
+                      isSelectingVacancyCandidate={isSelectingVacancyCandidate}
+                      hasSelectedFinalist={hasSelectedFinalist}
                       onActivateOrders={handleActivateOrders}
                       onArchiveOrders={handleArchiveOrders}
                       onCreateVacancyFromOrder={handleCreateVacancyFromOrder}
@@ -521,6 +528,7 @@ export function WorkspaceShellView({
                         handleSetApplicantResponderStage(orderId, candidateId, 'Pool')
                       }
                       onRejectOrderExecutor={handleRejectOrderExecutor}
+                      onSelectVacancyCandidate={handleSelectVacancyCandidate}
                       onRespondToOrder={(orderId) => {
                         if (role === 'Applicant') {
                           return handleRespondToSelectedVacancy(orderId)

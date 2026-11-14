@@ -20,6 +20,7 @@ export function CandidatesSection({
   isApplicantView,
   isCandidateDataError = false,
   isCandidateDataLoading = false,
+  isSelectingVacancyCandidate = false,
   isBaseScope,
   isCandidateFiltersMenuOpen,
   onRetryCandidateData,
@@ -32,6 +33,9 @@ export function CandidatesSection({
   shouldShowCandidateFilters,
   shouldShowCandidateScopeSwitcher,
   dashboardSummary = false,
+  canSelectFinalist = false,
+  hasSelectedFinalist = false,
+  onSelectVacancyCandidate,
   role,
 }: CandidatesSectionProps) {
   const isCustomerDashboardSummary = dashboardSummary && role === 'Customer'
@@ -215,6 +219,7 @@ export function CandidatesSection({
               ) : null}
               <TableHead>{dashboardSummary ? 'Обновлено' : 'Рейтинг'}</TableHead>
               {!isBaseScope ? <TableHead>Статус</TableHead> : null}
+              {isCustomerDashboardSummary ? <TableHead>Действие</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -249,6 +254,37 @@ export function CandidatesSection({
                   <TableCell>
                     {candidate.statusLabel.trim() ? (
                       <Badge variant={workspaceToneToBadgeVariant(candidate.statusTone)}>{candidate.statusLabel}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground/70">—</span>
+                    )}
+                  </TableCell>
+                ) : null}
+                {isCustomerDashboardSummary ? (
+                  <TableCell data-label="Действие">
+                    {candidate.statusLabel === 'Выбран' ? (
+                      <span className="whitespace-nowrap text-sm font-medium text-primary">
+                        Финалист выбран
+                      </span>
+                    ) : candidate.statusLabel === 'Shortlist' && hasSelectedFinalist ? (
+                      <span className="whitespace-nowrap text-sm text-muted-foreground">
+                        Финалист уже выбран
+                      </span>
+                    ) : candidate.statusLabel === 'Shortlist' && !canSelectFinalist ? (
+                      <span className="text-sm text-muted-foreground">
+                        Доступно после публикации вакансии
+                      </span>
+                    ) : candidate.statusLabel === 'Shortlist' && onSelectVacancyCandidate ? (
+                      <button
+                        aria-label={`Выбрать финалистом ${candidate.name}`}
+                        className="h-8 whitespace-nowrap rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={isSelectingVacancyCandidate}
+                        onClick={() => {
+                          void onSelectVacancyCandidate(candidate.orderId, candidate.id)
+                        }}
+                        type="button"
+                      >
+                        {isSelectingVacancyCandidate ? 'Выбираем…' : 'Выбрать финалистом'}
+                      </button>
                     ) : (
                       <span className="text-muted-foreground/70">—</span>
                     )}

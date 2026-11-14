@@ -44,6 +44,18 @@ const poolCandidate: WorkspaceCandidate = {
   statusTone: 'warning',
   comment: 'Сохранённая заметка',
 }
+const shortlistCandidate: WorkspaceCandidate = {
+  ...poolCandidate,
+  name: 'Кандидат № 42',
+  statusLabel: 'Shortlist',
+  statusTone: 'default',
+}
+const selectedCandidate: WorkspaceCandidate = {
+  ...shortlistCandidate,
+  id: 'candidate-2',
+  statusLabel: 'Выбран',
+  statusTone: 'success',
+}
 
 function renderDashboard(
   role: 'Customer' | 'Executor',
@@ -172,6 +184,77 @@ describe('MainFeedPanel projects in work', () => {
     fireEvent.click(screen.getByRole('button', { name: `Открыть детали проекта ${order.title}` }))
 
     expect(onOpenOrder).toHaveBeenCalledWith(order)
+  })
+
+  it('lets a customer choose a shortlist candidate by ID while showing only the public alias', () => {
+    const onSelectVacancyCandidate = vi.fn()
+
+    renderDashboard('Customer', false, {
+      candidates: [shortlistCandidate],
+      canSelectFinalist: true,
+      onSelectVacancyCandidate,
+    })
+
+    expect(screen.getByText('Кандидат № 42')).toBeTruthy()
+    expect(screen.queryByText('Мария Соколова')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Выбрать финалистом Кандидат № 42' }))
+
+    expect(onSelectVacancyCandidate).toHaveBeenCalledWith(order.id, shortlistCandidate.id)
+  })
+
+  it('does not offer finalist selection when one is already selected', () => {
+    renderDashboard('Customer', false, {
+      candidates: [selectedCandidate, shortlistCandidate],
+      canSelectFinalist: true,
+      hasSelectedFinalist: true,
+      onSelectVacancyCandidate: vi.fn(),
+    })
+
+    expect(screen.getByText('Финалист выбран')).toBeTruthy()
+    expect(screen.getByText('Финалист уже выбран')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Выбрать финалистом/ })).toBeNull()
+  })
+
+  it('disables finalist selection while the request is pending', () => {
+    renderDashboard('Customer', false, {
+      candidates: [shortlistCandidate],
+      canSelectFinalist: true,
+      isSelectingVacancyCandidate: true,
+      onSelectVacancyCandidate: vi.fn(),
+    })
+
+    expect(screen.getByRole('button', { name: 'Выбрать финалистом Кандидат № 42' }).hasAttribute('disabled')).toBe(true)
+    expect(screen.getByText('Выбираем…')).toBeTruthy()
+  })
+
+  it('does not show the customer finalist action for Pool candidates or non-dashboard views', () => {
+    renderDashboard('Customer', false, {
+      candidates: [poolCandidate],
+      canSelectFinalist: true,
+      onSelectVacancyCandidate: vi.fn(),
+    })
+
+    expect(screen.queryByRole('button', { name: /Выбрать финалистом/ })).toBeNull()
+    cleanup()
+
+    render(
+      <MainFeedPanel
+        baseCandidates={[]}
+        candidates={[shortlistCandidate]}
+        isLoading={false}
+        canSelectFinalist
+        onSelectVacancyCandidate={vi.fn()}
+        onOpenCandidate={vi.fn()}
+        onOpenOrder={vi.fn()}
+        onSelectOrder={vi.fn()}
+        orders={[order]}
+        role="Customer"
+        selectedOrderId={null}
+        view="candidates"
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: /Выбрать финалистом/ })).toBeNull()
   })
 
   it('keeps aligned selection and pause action for customer active orders', () => {

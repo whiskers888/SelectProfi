@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { OrderResponse } from '@/shared/api/orders'
+import type { VacancyCandidatesItemResponse } from '@/shared/api/candidates'
+import type { VacancyResponse } from '@/shared/api/vacancies'
 import {
   createHeaderTitle,
   deriveWorkspaceViewState,
+  toWorkspaceCandidate,
   toWorkspaceOrder,
   updateWorkspaceCandidateStage,
 } from './workspaceShell.helpers'
@@ -116,6 +119,41 @@ describe('toWorkspaceOrder', () => {
     }
 
     expect(toWorkspaceOrder(response).statusLabel).toBe('В работе')
+  })
+})
+
+describe('toWorkspaceCandidate', () => {
+  it('uses the public alias for a Customer candidate even when the API also has a display name', () => {
+    const vacancy: VacancyResponse = {
+      id: 'vacancy-1',
+      orderId: 'order-1',
+      customerId: 'customer-1',
+      executorId: 'executor-1',
+      title: 'Frontend Developer',
+      description: 'React and TypeScript',
+      status: 'Published',
+      createdAtUtc: '2026-07-23T10:00:00Z',
+      updatedAtUtc: '2026-07-23T11:00:00Z',
+    }
+    const item: VacancyCandidatesItemResponse = {
+      vacancyCandidateId: 'vacancy-candidate-1',
+      candidateId: 'candidate-1',
+      publicAlias: 'Кандидат № 42',
+      displayName: 'Виктория Петрова',
+      source: 'RegisteredUser',
+      isOwnedByRequester: false,
+      isAnonymized: true,
+      stage: 'Shortlist',
+      addedAtUtc: '2026-07-23T10:00:00Z',
+      updatedAtUtc: '2026-07-23T11:00:00Z',
+      isSelected: false,
+    }
+
+    const candidate = toWorkspaceCandidate(item, vacancy, true)
+
+    expect(candidate.name).toBe(item.publicAlias)
+    expect(candidate.name).not.toBe(item.displayName)
+    expect(candidate.isAnonymized).toBe(true)
   })
 })
 
