@@ -83,7 +83,6 @@ export function WorkspaceShellView({
   handleHeaderMenuAction,
   handleRetryCustomerDashboardStats,
   handleRetryApplicantDashboardStats,
-  handleRetryExecutorDashboardStats,
   handleOpenCandidateDetails,
   handleOpenOrderDetails,
   handlePauseOrders,
@@ -117,8 +116,6 @@ export function WorkspaceShellView({
   isCustomerDashboardStatsLoading,
   isCustomerShortlistError,
   isCustomerShortlistLoading,
-  isExecutorDashboardStatsError,
-  isExecutorDashboardStatsLoading,
   isExecutorCandidateSummaryError,
   isExecutorCandidateSummaryLoading,
   isApplicantDashboardStatsError,
@@ -384,38 +381,7 @@ export function WorkspaceShellView({
                             </div>
                           ) : null}
                         </>
-                      ) : role === 'Executor' ? (
-                        <>
-                          {isExecutorDashboardStatsLoading && runtimeStats.length === 0 ? (
-                            <div className="preview11-card">
-                              <div className="preview11-loading" role="status">
-                                <span aria-hidden="true" className="preview11-loading-spin" />
-                                <span>Загружаем показатели...</span>
-                              </div>
-                            </div>
-                          ) : null}
-                          {isExecutorDashboardStatsError ? (
-                            <div className="preview11-error-card" role="alert">
-                              <h3>Не удалось загрузить показатели</h3>
-                              <p>Повторите запрос, чтобы обновить баланс и статистику.</p>
-                              <button
-                                className="preview11-btn preview11-btn-primary"
-                                onClick={handleRetryExecutorDashboardStats}
-                                type="button"
-                              >
-                                Повторить
-                              </button>
-                            </div>
-                          ) : null}
-                          {runtimeStats.length > 0 ? (
-                            <StatsGrid stats={runtimeStats} onOverview={handleStatOverview} />
-                          ) : !isExecutorDashboardStatsLoading && !isExecutorDashboardStatsError ? (
-                            <div className="preview11-empty-state" role="status">
-                              <p>Показатели пока недоступны.</p>
-                            </div>
-                          ) : null}
-                        </>
-                      ) : role === 'Applicant' ? (
+                      ) : role === 'Executor' ? null : role === 'Applicant' ? (
                         <>
                           {isApplicantDashboardStatsLoading && runtimeStats.length === 0 ? (
                             <div className="preview11-card">

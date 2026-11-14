@@ -123,3 +123,14 @@
 - Viewport 1365×900: список и детали стоят рядом (около 325 px и 690 px); viewport 390×844: блоки складываются, sidebar drawer скрыт, горизонтального overflow нет. JS errors не зафиксированы.
 - Проверки: `npm run test:run -- src/components/workspace/panels/ApplicantApplicationsSection.test.tsx` — 5/5; `npm run build` — success, 2016 modules; ESLint компонента и теста — без ошибок и предупреждений; `git diff --check` — success; независимый reviewer — замечаний нет.
 - Ограничение: API не предоставляет приглашения на интервью, адрес или зарплатные условия в Applicant Dashboard DTO; эти части макета остаются неподдержанными и не имитируются. Browser API были fixtures, поэтому реальные authorization/backend responses не подтверждены.
+
+
+## Результат сверки Executor по макету `_1`
+
+Дата: 2026-11-14 22:44 +03:00.
+
+- Подтверждено отличие от `_1`: перед списком проектов отображался общий ряд из четырёх KPI-карточек, которого нет в эталонной композиции. Убран только этот Executor Dashboard UI fragment; Customer/Applicant statistics, `runtimeStats` для sidebar и общие routes не менялись.
+- Edge smoke после изменения подтверждает в одном экране список проектов, выбранный проект и кандидатов; при 1365×900 и 390×844 нет horizontal overflow или JS errors, mobile drawer скрыт. Скриншоты сохранены вне репозитория в `%LOCALAPPDATA%\Temp\selectprofi-executor-current-*.png`.
+- Повторные Customer/Applicant Edge fixtures также прошли; детали, shortlist, Active/Archive, default selection и мобильное stacking сохранились.
+- Проверки: frontend suite — 71/71 в 17 файлах; `npm run build` — success, 2016 modules; ESLint `WorkspaceShellView.tsx` — без замечаний; `git diff --check` — success; независимый reviewer — замечаний нет.
+- Ограничение: все роли проверены с изолированными API fixtures, поэтому фактическая backend authorization, live DB ответы и мутации не подтверждены. Build предупреждает об устаревшем Browserslist, крупном JS chunk и plugin timings.
