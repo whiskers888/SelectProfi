@@ -23,9 +23,11 @@ public sealed class GetApplicantDashboardStatsQueryHandler(IGetApplicantDashboar
         return new GetApplicantDashboardStatsResult
         {
             ApplicationsCount = stats.ApplicationsCount,
+            UnclassifiedCandidateLinksCount = stats.UnclassifiedCandidateLinksCount,
             ShortlistCandidatesCount = stats.ShortlistCandidatesCount,
             UnreadNotificationsCount = stats.UnreadNotificationsCount,
-            ResumeTitle = stats.ResumeTitle
+            ResumeTitle = stats.ResumeTitle,
+            Applications = stats.Applications
         };
     }
 }

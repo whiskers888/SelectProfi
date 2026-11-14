@@ -129,7 +129,10 @@ const candidatesApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: (_result, _error, { vacancyId }) => [{ type: 'VacancyCandidate', id: vacancyId }],
+      invalidatesTags: (_result, _error, { vacancyId }) => [
+        { type: 'VacancyCandidate', id: vacancyId },
+        'VacancyCandidate',
+      ],
     }),
     uploadCandidateResumeAttachment: build.mutation<
       { attachmentId: string },
@@ -163,11 +166,17 @@ const candidatesApi = api.injectEndpoints({
         url: `/api/vacancies/${vacancyId}/candidates/${candidateId}`,
         method: 'POST',
       }),
-      invalidatesTags: (_result, _error, { vacancyId }) => [{ type: 'VacancyCandidate', id: vacancyId }],
+      invalidatesTags: (_result, _error, { vacancyId }) => [
+        { type: 'VacancyCandidate', id: vacancyId },
+        'VacancyCandidate',
+      ],
     }),
     removeVacancyCandidate: build.mutation<void, { vacancyId: string; candidateId: string }>({
       query: ({ vacancyId, candidateId }) => ({ url: `/api/vacancies/${vacancyId}/candidates/${candidateId}`, method: 'DELETE' }),
-      invalidatesTags: (_result, _error, { vacancyId }) => [{ type: 'VacancyCandidate', id: vacancyId }],
+      invalidatesTags: (_result, _error, { vacancyId }) => [
+        { type: 'VacancyCandidate', id: vacancyId },
+        'VacancyCandidate',
+      ],
     }),
     respondToVacancy: build.mutation<VacancyCandidateResponse, { vacancyId: string }>({
       query: ({ vacancyId }) => ({
@@ -198,6 +207,7 @@ const candidatesApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
+      invalidatesTags: ['VacancyCandidate'],
     }),
     selectVacancyCandidate: build.mutation<
       SelectedVacancyCandidateResponse,
@@ -208,12 +218,14 @@ const candidatesApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
+      invalidatesTags: ['VacancyCandidate'],
     }),
     markVacancyCandidateViewedByCustomer: build.mutation<void, { vacancyId: string; candidateId: string }>({
       query: ({ vacancyId, candidateId }) => ({
         url: `/api/vacancies/${vacancyId}/candidates/${candidateId}/viewed`,
         method: 'PATCH',
       }),
+      invalidatesTags: ['VacancyCandidate'],
     }),
     getSelectedCandidateContacts: build.query<SelectedCandidateContactsResponse, { vacancyId: string }>({
       query: ({ vacancyId }) => ({

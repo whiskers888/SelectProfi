@@ -47,7 +47,8 @@ public sealed class RespondToVacancyCommandHandler(IRespondToVacancyPersistence 
             AddedByExecutorId = vacancy.ExecutorId,
             Stage = VacancyCandidateStage.Pool,
             AddedAtUtc = utcNow,
-            UpdatedAtUtc = utcNow
+            UpdatedAtUtc = utcNow,
+            ApplicantSubmittedAtUtc = utcNow
         };
 
         var createResult = await persistence.CreateAsync(candidateToCreate, vacancyCandidate, cancellationToken);

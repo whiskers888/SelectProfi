@@ -216,6 +216,9 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid>("AddedByExecutorId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ApplicantSubmittedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("CandidateId")
                         .HasColumnType("uuid");
 

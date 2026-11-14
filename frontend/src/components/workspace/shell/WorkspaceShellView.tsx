@@ -27,6 +27,7 @@ export function WorkspaceShellView({
   activeThread,
   activeView,
   analyticsError,
+  applicantDashboardStats,
   authMe,
   applicantRespondedOrderIds,
   canLoadExecutorBaseCandidates,
@@ -81,6 +82,7 @@ export function WorkspaceShellView({
   handleHeaderCreateAction,
   handleHeaderMenuAction,
   handleRetryCustomerDashboardStats,
+  handleRetryApplicantDashboardStats,
   handleRetryExecutorDashboardStats,
   handleOpenCandidateDetails,
   handleOpenOrderDetails,
@@ -118,6 +120,8 @@ export function WorkspaceShellView({
   isExecutorDashboardStatsLoading,
   isExecutorCandidateSummaryError,
   isExecutorCandidateSummaryLoading,
+  isApplicantDashboardStatsError,
+  isApplicantDashboardStatsLoading,
   isRejectingOrderExecutor,
   isRespondingToOrder,
   isUpdatingApplicantResponderStage,
@@ -408,6 +412,37 @@ export function WorkspaceShellView({
                             </div>
                           ) : null}
                         </>
+                      ) : role === 'Applicant' ? (
+                        <>
+                          {isApplicantDashboardStatsLoading && runtimeStats.length === 0 ? (
+                            <div className="preview11-card">
+                              <div className="preview11-loading" role="status">
+                                <span aria-hidden="true" className="preview11-loading-spin" />
+                                <span>Загружаем данные резюме и откликов...</span>
+                              </div>
+                            </div>
+                          ) : null}
+                          {isApplicantDashboardStatsError ? (
+                            <div className="preview11-error-card" role="alert">
+                              <h3>Не удалось загрузить показатели</h3>
+                              <p>Повторите запрос, чтобы обновить данные резюме и откликов.</p>
+                              <button
+                                className="preview11-btn preview11-btn-primary"
+                                onClick={handleRetryApplicantDashboardStats}
+                                type="button"
+                              >
+                                Повторить
+                              </button>
+                            </div>
+                          ) : null}
+                          {runtimeStats.length > 0 ? (
+                            <StatsGrid stats={runtimeStats} />
+                          ) : !isApplicantDashboardStatsLoading && !isApplicantDashboardStatsError ? (
+                            <div className="preview11-empty-state" role="status">
+                              <p>Показатели резюме и откликов пока недоступны.</p>
+                            </div>
+                          ) : null}
+                        </>
                       ) : (
                         <StatsGrid
                           stats={runtimeStats}
@@ -421,6 +456,13 @@ export function WorkspaceShellView({
                         role === 'Executor' ? executorBaseCandidates : filteredBaseCandidates
                       }
                       applicantRespondedOrderIds={applicantRespondedOrderIds}
+                      applicantDashboardApplications={applicantDashboardStats?.applications ?? []}
+                      unclassifiedCandidateLinksCount={
+                        applicantDashboardStats?.unclassifiedCandidateLinksCount ?? 0
+                      }
+                      isApplicantDashboardStatsError={isApplicantDashboardStatsError}
+                      isApplicantDashboardStatsLoading={isApplicantDashboardStatsLoading}
+                      onRetryApplicantDashboardStats={handleRetryApplicantDashboardStats}
                       canManageOrderResponses={canManageOrderResponses}
                       canPublishVacancyForCustomer={canPublishVacancyForSelectedOrder}
                       canManageOrders={canManageOrder}

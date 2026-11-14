@@ -6,6 +6,8 @@ using SelectProfi.backend.Application.Dashboard.GetExecutorDashboardStats;
 using SelectProfi.backend.Application.Dashboard.GetApplicantDashboardStats;
 using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Contracts.Dashboard;
+using SelectProfi.backend.Contracts.Vacancies;
+using SelectProfi.backend.Domain.Candidates;
 
 namespace SelectProfi.backend.Controllers;
 
@@ -104,9 +106,26 @@ public sealed class DashboardController(IQueryDispatcher queryDispatcher) : Auth
         return Ok(new ApplicantDashboardStatsResponse
         {
             ApplicationsCount = result.ApplicationsCount,
+            UnclassifiedCandidateLinksCount = result.UnclassifiedCandidateLinksCount,
             ShortlistCandidatesCount = result.ShortlistCandidatesCount,
             UnreadNotificationsCount = result.UnreadNotificationsCount,
-            ResumeTitle = result.ResumeTitle
+            ResumeTitle = result.ResumeTitle,
+            Applications = result.Applications.Select(application => new ApplicantDashboardApplicationResponse
+            {
+                VacancyId = application.VacancyId,
+                VacancyTitle = application.VacancyTitle,
+                CompanyName = application.CompanyName,
+                Stage = MapStage(application.Stage),
+                SubmittedAtUtc = application.SubmittedAtUtc,
+                FirstViewedAtUtc = application.FirstViewedAtUtc
+            }).ToArray()
         });
     }
+
+    private static VacancyCandidateStageContract MapStage(VacancyCandidateStage stage) => stage switch
+    {
+        VacancyCandidateStage.Pool => VacancyCandidateStageContract.Pool,
+        VacancyCandidateStage.Shortlist => VacancyCandidateStageContract.Shortlist,
+        _ => throw new ArgumentOutOfRangeException(nameof(stage), stage, null)
+    };
 }

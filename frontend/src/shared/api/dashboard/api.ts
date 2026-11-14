@@ -24,9 +24,20 @@ export type CustomerDashboardStatsResponse = {
 
 export type ApplicantDashboardStatsResponse = {
   applicationsCount: number
+  unclassifiedCandidateLinksCount: number
   shortlistCandidatesCount: number
   unreadNotificationsCount: number
   resumeTitle: string | null
+  applications: ApplicantDashboardApplicationResponse[]
+}
+
+export type ApplicantDashboardApplicationResponse = {
+  vacancyId: string
+  vacancyTitle: string
+  companyName: string | null
+  stage: 'Pool' | 'Shortlist'
+  submittedAtUtc: string
+  firstViewedAtUtc: string | null
 }
 
 const dashboardApi = api.injectEndpoints({

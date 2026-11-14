@@ -194,9 +194,28 @@ export function useWorkspaceShellController() {
     isLoading: isCustomerDashboardStatsLoading,
     refetch: refetchCustomerDashboardStats,
   } = useGetCustomerDashboardStatsQuery(dashboardRole === 'Customer' ? undefined : skipToken)
-  const { data: applicantDashboardStats } = useGetApplicantDashboardStatsQuery(
+  const {
+    data: applicantDashboardStats,
+    isError: isApplicantDashboardStatsError,
+    isLoading: isApplicantDashboardStatsLoading,
+    refetch: refetchApplicantDashboardStats,
+  } = useGetApplicantDashboardStatsQuery(
     dashboardRole === 'Applicant' ? undefined : skipToken,
+    {
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+      refetchOnMountOrArgChange: true,
+    },
   )
+  const previousActiveView = useRef(activeView)
+  useEffect(() => {
+    const returnedToDashboard = previousActiveView.current !== 'dashboard' && activeView === 'dashboard'
+    previousActiveView.current = activeView
+
+    if (dashboardRole === 'Applicant' && returnedToDashboard) {
+      void refetchApplicantDashboardStats()
+    }
+  }, [activeView, dashboardRole, refetchApplicantDashboardStats])
   const canLoadServerVacancies = true
   const canLoadServerCandidates = role !== 'Applicant'
   const canLoadExecutorBaseCandidates = role === 'Executor'
@@ -1081,6 +1100,10 @@ export function useWorkspaceShellController() {
     void refetchExecutorDashboardStats()
   }
 
+  function handleRetryApplicantDashboardStats() {
+    void refetchApplicantDashboardStats()
+  }
+
   function handleRetryOrders() {
     void refetchOrders()
   }
@@ -1179,6 +1202,7 @@ export function useWorkspaceShellController() {
     isOrderSpecializationsError,
     createVacancyFormValues,
     dataset,
+    applicantDashboardStats,
     executorBaseCandidates,
     executorDashboardCandidates,
     executorMyCandidates,
@@ -1214,6 +1238,7 @@ export function useWorkspaceShellController() {
     handleRetryAnalytics,
     handleRetryCustomerDashboardStats,
     handleRetryExecutorDashboardStats,
+    handleRetryApplicantDashboardStats,
     handleRetryOrders,
     handleRetryVacancyCandidates,
     handleRetryCustomerShortlist,
@@ -1244,6 +1269,8 @@ export function useWorkspaceShellController() {
     isExecutorDashboardStatsLoading,
     isExecutorCandidateSummaryError,
     isExecutorCandidateSummaryLoading,
+    isApplicantDashboardStatsError,
+    isApplicantDashboardStatsLoading,
     isProfileRoute,
     isRejectingOrderExecutor,
     isRespondingToOrder: isRespondingToOrder || isRespondingToVacancy,

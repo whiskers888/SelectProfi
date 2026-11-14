@@ -1,5 +1,6 @@
 import type { MainFeedPanelViewProps } from './MainFeedPanel.types'
 import { CandidatesSection } from './CandidatesSection'
+import { ApplicantApplicationsSection } from './ApplicantApplicationsSection'
 import { DashboardOrdersSection } from './DashboardOrdersSection'
 import { OrdersExchangeSection } from './OrdersExchangeSection'
 
@@ -35,14 +36,24 @@ export function MainFeedPanelView(props: MainFeedPanelViewProps) {
 
   if (props.view === 'dashboard') {
     const isCustomer = props.role === 'Customer'
+    const isApplicant = props.role === 'Applicant'
 
     return (
       <div className="space-y-4">
         {isCustomer && props.isOrdersError
           ? renderError('Не удалось загрузить заказы', props.onRetryOrders)
           : null}
-        {!isCustomer || !props.isOrdersError || props.orders.length > 0 ? (
+        {!isApplicant && (!isCustomer || !props.isOrdersError || props.orders.length > 0) ? (
           <DashboardOrdersSection {...props} />
+        ) : null}
+        {isApplicant ? (
+          <ApplicantApplicationsSection
+            applications={props.applicantDashboardApplications ?? []}
+            isError={props.isApplicantDashboardStatsError ?? false}
+            isLoading={props.isApplicantDashboardStatsLoading ?? false}
+            onRetry={props.onRetryApplicantDashboardStats}
+            unclassifiedCandidateLinksCount={props.unclassifiedCandidateLinksCount ?? 0}
+          />
         ) : null}
         {isCustomer || props.role === 'Executor' ? (
           <CandidatesSection {...props} dashboardSummary />

@@ -19,30 +19,50 @@ public sealed class GetApplicantDashboardStatsPersistence(AppDbContext dbContext
             .Select(user => new
             {
                 user.ApplicantResumeTitle,
-                ApplicationsCount = dbContext.VacancyCandidates.Count(link =>
-                    link.DeletedAtUtc == null &&
-                    link.Candidate.DeletedAtUtc == null &&
-                    link.Candidate.UserId == user.Id &&
-                    link.Vacancy.DeletedAtUtc == null),
-                ShortlistCandidatesCount = dbContext.VacancyCandidates.Count(link =>
-                    link.DeletedAtUtc == null &&
-                    link.Stage == VacancyCandidateStage.Shortlist &&
-                    link.Candidate.DeletedAtUtc == null &&
-                    link.Candidate.UserId == user.Id &&
-                    link.Vacancy.DeletedAtUtc == null),
                 UnreadNotificationsCount = dbContext.Notifications.Count(notification =>
                     notification.UserId == user.Id && notification.ReadAtUtc == null)
             })
             .SingleOrDefaultAsync(cancellationToken);
 
-        return applicant is null
-            ? new ApplicantDashboardStatsSnapshot()
-            : new ApplicantDashboardStatsSnapshot
+        if (applicant is null)
+        {
+            return new ApplicantDashboardStatsSnapshot();
+        }
+
+        var activeApplicantLinks = dbContext.VacancyCandidates
+            .AsNoTracking()
+            .Where(link =>
+                link.DeletedAtUtc == null &&
+                link.Candidate.DeletedAtUtc == null &&
+                link.Candidate.UserId == applicantUserId &&
+                link.Vacancy.DeletedAtUtc == null);
+
+        var applications = await activeApplicantLinks
+            .Where(link => link.ApplicantSubmittedAtUtc != null)
+            .OrderByDescending(link => link.ApplicantSubmittedAtUtc)
+            .Select(link => new ApplicantDashboardApplicationSnapshot
             {
-                ApplicationsCount = applicant.ApplicationsCount,
-                ShortlistCandidatesCount = applicant.ShortlistCandidatesCount,
-                UnreadNotificationsCount = applicant.UnreadNotificationsCount,
-                ResumeTitle = applicant.ApplicantResumeTitle
-            };
+                VacancyId = link.VacancyId,
+                VacancyTitle = link.Vacancy.Title,
+                CompanyName = link.Vacancy.Customer.CustomerCompanyName,
+                Stage = link.Stage,
+                SubmittedAtUtc = link.ApplicantSubmittedAtUtc!.Value,
+                FirstViewedAtUtc = link.ViewedByCustomerAtUtc
+            })
+            .ToListAsync(cancellationToken);
+
+        var unclassifiedCandidateLinksCount = await activeApplicantLinks
+            .CountAsync(link => link.ApplicantSubmittedAtUtc == null, cancellationToken);
+
+        return new ApplicantDashboardStatsSnapshot
+        {
+            ApplicationsCount = applications.Count,
+            UnclassifiedCandidateLinksCount = unclassifiedCandidateLinksCount,
+            ShortlistCandidatesCount = applications.Count(application =>
+                application.Stage == VacancyCandidateStage.Shortlist),
+            UnreadNotificationsCount = applicant.UnreadNotificationsCount,
+            ResumeTitle = applicant.ApplicantResumeTitle,
+            Applications = applications
+        };
     }
 }
