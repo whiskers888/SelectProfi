@@ -183,7 +183,11 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
                           </Badge>
                         </TableCell>
                         <TableCell data-label="Действие">
-                          {nextStage && viewProps.onSetCandidateStage ? (
+                          {stage === 'selected' ? (
+                            <span className="text-xs text-muted-foreground">Финалист выбран</span>
+                          ) : viewProps.dashboardState === 'archive' ? (
+                            <span className="text-xs text-muted-foreground">Только просмотр</span>
+                          ) : nextStage && viewProps.onSetCandidateStage ? (
                             <button
                               type="button"
                               aria-label={
@@ -200,8 +204,6 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
                             >
                               {nextStage === 'Shortlist' ? 'Добавить в Shortlist' : 'Вернуть в Pool'}
                             </button>
-                          ) : stage === 'selected' ? (
-                            <span className="text-xs text-muted-foreground">Финалист выбран</span>
                           ) : null}
                         </TableCell>
                       </TableRow>

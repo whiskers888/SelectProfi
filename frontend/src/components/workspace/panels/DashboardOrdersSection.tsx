@@ -3,6 +3,10 @@ import { cn } from '@/lib/utils'
 import { workspaceToneToBadgeVariant } from '../model/data'
 import type { MainFeedPanelViewProps } from './MainFeedPanel.types'
 
+interface DashboardOrdersSectionProps extends MainFeedPanelViewProps {
+  stackHeader?: boolean
+}
+
 function renderEmptyState(title: string, description: string) {
   return (
     <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
@@ -38,9 +42,10 @@ export function DashboardOrdersSection({
   orders,
   role = 'Executor',
   selectedDashboardOrder,
+  stackHeader,
   setDashboardState,
   visibleDashboardOrders,
-}: MainFeedPanelViewProps) {
+}: DashboardOrdersSectionProps) {
   const isApplicantRole = role === 'Applicant'
   const isExecutorRole = role === 'Executor'
   const ordersNoun = isExecutorRole ? 'проектов' : 'заказов'
@@ -48,8 +53,9 @@ export function DashboardOrdersSection({
   const ordersInWorkLabel = isExecutorRole ? 'Проекты в работе' : 'Заказы в работе'
   const orderPriceLabelPrefix = isExecutorRole ? 'К получению' : 'Цена'
   const canSelectDashboardOrders = canManageOrders && dashboardState !== 'archive'
+  const shouldStackHeader = stackHeader ?? isExecutorRole
 
-  if (!selectedDashboardOrder || orders.length === 0) {
+  if (orders.length === 0) {
     return renderEmptyState(
       isApplicantRole ? 'Нет откликов' : `Нет данных по ${ordersNoun}`,
       isApplicantRole
@@ -60,8 +66,8 @@ export function DashboardOrdersSection({
 
   return (
     <section className="rounded-xl border border-border bg-card text-card-foreground shadow-none">
-      <div className="flex flex-col gap-4 border-b border-border p-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
+      <div className={cn('flex min-w-0 flex-col gap-4 border-b border-border p-4', !shouldStackHeader && 'lg:flex-row lg:items-start lg:justify-between')}>
+        <div className="min-w-0">
           <h3 className="text-base font-semibold">
             {isApplicantRole ? 'Мои отклики' : ordersInWorkLabel}
           </h3>
@@ -69,7 +75,7 @@ export function DashboardOrdersSection({
             {isApplicantRole ? 'Здесь отображаются только вакансии, на которые вы откликнулись.' : `Выберите ${orderNounSingular}, чтобы открыть детали.`}
           </p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className={cn('flex min-w-0 flex-col gap-3', shouldStackHeader ? 'items-stretch' : 'sm:flex-row sm:items-center')}>
           <div className="inline-flex w-fit rounded-lg border border-border bg-muted p-1" role="group" aria-label="Состояние заказов">
             <button
               aria-pressed={dashboardState === 'active'}
@@ -100,7 +106,7 @@ export function DashboardOrdersSection({
           </div>
           <select
             aria-label="Сортировка заказов"
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={cn('h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring', shouldStackHeader && 'w-full')}
             onChange={(event) => handleDashboardSortChange(event.target.value)}
             value={dashboardSort}
           >
@@ -162,7 +168,7 @@ export function DashboardOrdersSection({
             </div>
           ) : (
             visibleDashboardOrders.map((order) => {
-              const isSelected = selectedDashboardOrder.id === order.id
+              const isSelected = selectedDashboardOrder?.id === order.id
               return (
                 <div
                   key={order.id}

@@ -77,3 +77,37 @@
 - Календарь и чат: backend не предоставляет источник встреч или endpoint доставки сообщений. Dashboard теперь явно показывает, что календарная интеграция не подключена; состояние «встреч нет» оставлено только для доступного источника с пустым результатом. Локальная имитация отправки удалена, composer заблокирован до появления chat API. Коммит `d28d1a2`.
 - Авторизованный Dashboard в браузере: сессия недоступна, Playwright через Edge открывает `/auth`; визуальное сравнение всех ролей, keyboard-проверка и responsive-проверка Dashboard остаются незавершёнными.
 - Playwright: Chrome MCP launcher не запустился из-за отсутствующего Chrome; установка через `npx playwright install chrome` завершилась ошибкой привилегий. Проверка страницы входа прошла через Playwright 1.65.1 с установленным Edge: HTTP 200, без JS errors и horizontal overflow при ширине 1365 px.
+
+
+## Дополнительная визуальная проверка Dashboard
+
+Дата: 2026-11-14 21:14 +03:00.
+
+- Chrome MCP launcher после перезапуска процесса по-прежнему завершается ошибкой: отсутствует C:\Users\justi\AppData\Local\Google\Chrome\Application\chrome.exe. Для обхода использован локальный Playwright 1.65.1 с установленным Edge; приложение открыто на http://127.0.0.1:5173/app.
+- Без сессии /app перенаправляет на /auth. Для визуальной проверки компонентов созданы три изолированных браузерных контекста: auth/profile и role-scoped dashboard API перехвачены в браузере и отвечали фикстурами по текущим DTO. Реальные backend, авторизация и мутации этим прогоном не проверялись.
+- При viewport 1365×900 у Executor, Customer и Applicant не было JS/console errors и горизонтального overflow. Скриншоты сохранены вне репозитория в %LOCALAPPDATA%\Temp\selectprofi-dashboard-*.png.
+- Сверка с _1/screen.png подтвердила, что Executor уже показывает выбранный проект, его доступные детали и кандидатов; над основным списком остаётся общий ряд карточек статистики, отсутствующий в эталонной компоновке.
+- Сверка с _2/screen.png выявила более существенный gap: Customer показывает список заказов и shortlist отдельными полноширинными блоками, но не показывает рядом отдельные детали выбранного заказа.
+- Сверка с _3/screen.png подтвердила, что Applicant details скрыты до ручного нажатия «Подробнее»; таблица занимает всю ширину и при первом открытии не показывает выбранный отклик справа.
+- Порядок исправлений после визуальной проверки: (1) Customer — поместить список слева, а доступные детали выбранного заказа и существующий pseudonym-only shortlist справа; (2) Applicant — показывать первый отклик выбранным при загрузке и разместить существующие детали рядом со списком; (3) повторно сравнить Executor-компоновку и отдельно проверить responsive/keyboard сценарии. Неподдерживаемые invitation, salary/location и документы не добавлять.
+
+
+## Проверка согласованности выбора заказа
+
+Дата: 2026-11-14 21:34 +03:00.
+
+- Независимое ревью нового Customer details panel выявило, что selectedOrderVacancyPreview и selectedOrderExecutorName поступают из URL-selected order details, а не из текущей выбранной строки Dashboard. Эти поля нельзя показывать рядом с preferred order без подтверждённого совпадения идентификаторов.
+- При фильтре Archive состояние selectedDashboardOrder разрешало заказ вне видимого списка, а shell выбирал candidateSourceVacancy с приоритетом для неархивного заказа. В результате можно было совместно отобразить archived order и shortlist другого активного заказа.
+- Исправление: в Customer/Executor Dashboard выбирать только строку текущего видимого списка и синхронизировать её id с уже существующим preferred-order state; Dashboard candidate query должен использовать этот id и для archived selection. Перед показом shortlist дополнительно отфильтровать строки по selected order id; в Archive отключить мутации выбора финалиста/смены этапа. URL-scoped fields убрать из inline Dashboard card. Покрыть переключение Active/Archive тестом и проверить фактические route-interceptions Playwright.
+
+
+## Результат проверки Customer details и archive selection
+
+Дата: 2026-11-14 22:10 +03:00.
+
+- Customer Dashboard получил отдельную карточку деталей выбранного заказа справа от списка; shortlist расположен под деталями и отфильтрован по текущему заказу. В списке сохраняются быстрые фильтры, сортировка и выбор заказа, переход на страницу заказа доступен через явную кнопку.
+- Выбранный Customer/Executor заказ ограничен текущим видимым списком. Candidate query следует за тем же order/vacancy ID; для архива остаётся только просмотр, stale shortlist не показывается.
+- Playwright 1.65.1 через установленный Edge открыл текущий Vite server на `http://127.0.0.1:5175/app`. В изолированных API fixtures проверены первый Customer-заказ, переключение в Archive на другой заказ и возврат в Active: детали и shortlist менялись согласованно; кандидат предыдущего заказа исчезал; действие выбора финалиста отсутствовало в Archive. Скриншоты desktop/archive/mobile сохранены вне репозитория в `%LOCALAPPDATA%\Temp\selectprofi-customer-current-*.png`.
+- Viewport 1365×900 и 390×844: горизонтального overflow и JS errors нет; после закрытого состояния мобильного drawer список, детали и shortlist доступны на всю ширину.
+- Проверки: `npm run test:run -- src/components/workspace/panels/MainFeedPanel.test.tsx` — 21/21; `npm run build` — success, 2016 modules; ESLint для затронутых файлов — 0 errors, остался один существовавший warning в `ExecutorDashboardSection.tsx:32` о зависимости `useMemo`; `git diff --check` — success; независимый reviewer — замечаний нет.
+- Ограничение: Playwright использовал fixtures для профиля, заказов, вакансий, dashboard stats и shortlist. Реальные backend authorization, database response и mutation в этом прогоне не подтверждены. Полная проверка Applicant и повторная сверка Executor ещё остаются в плане.

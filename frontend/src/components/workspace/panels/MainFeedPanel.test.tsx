@@ -202,6 +202,119 @@ describe('MainFeedPanel projects in work', () => {
     expect(onSelectVacancyCandidate).toHaveBeenCalledWith(order.id, shortlistCandidate.id)
   })
 
+  it('shows the selected order details beside the customer shortlist', () => {
+    renderDashboard('Customer', false, { candidates: [shortlistCandidate] })
+
+    expect(screen.getByRole('region', { name: 'Детали выбранного заказа' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Детали выбранного заказа' }).textContent).toContain('ООО Альфа • Москва')
+    expect(screen.getByText('Разработка')).toBeTruthy()
+    expect(screen.getByText('Кандидат № 42')).toBeTruthy()
+  })
+
+  it('selects another customer order without navigating away', () => {
+    const onOpenOrder = vi.fn()
+    const onSelectOrder = vi.fn()
+    const secondOrder: WorkspaceOrder = { ...order, id: 'order-2', title: 'Другой проект' }
+    renderDashboard('Customer', false, { onOpenOrder, onSelectOrder, orders: [order, secondOrder] })
+
+    fireEvent.click(screen.getByRole('button', { name: /Другой проект/ }))
+
+    expect(onOpenOrder).not.toHaveBeenCalled()
+    expect(onSelectOrder).toHaveBeenCalledWith(secondOrder.id)
+  })
+
+  it('opens customer order route from the explicit details action', () => {
+    const onOpenOrder = vi.fn()
+    renderDashboard('Customer', false, { onOpenOrder })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть детали заказа' }))
+
+    expect(onOpenOrder).toHaveBeenCalledWith(order)
+  })
+
+  it('keeps Customer details and shortlist scoped to the selected archived order', () => {
+    const archivedOrder: WorkspaceOrder = {
+      ...order,
+      id: 'order-archived',
+      title: 'Завершённый проект',
+      isArchived: true,
+    }
+    const activeCandidate = { ...shortlistCandidate, id: 'active-candidate', name: 'Активный кандидат' }
+    const archivedCandidate = {
+      ...shortlistCandidate,
+      id: 'archived-candidate',
+      name: 'Кандидат архивного заказа',
+      orderId: archivedOrder.id,
+    }
+    const onSelectOrder = vi.fn()
+    const onSelectVacancyCandidate = vi.fn()
+
+    renderDashboard('Customer', false, {
+      candidates: [activeCandidate, archivedCandidate],
+      canSelectFinalist: true,
+      onSelectOrder,
+      onSelectVacancyCandidate,
+      orders: [order, archivedOrder],
+      selectedOrderId: order.id,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Архив' }))
+
+    expect(onSelectOrder).toHaveBeenCalledWith(archivedOrder.id)
+    expect(screen.getByRole('region', { name: 'Детали выбранного заказа' }).textContent).toContain(archivedOrder.title)
+    expect(screen.getByText(archivedCandidate.name)).toBeTruthy()
+    expect(screen.queryByText(activeCandidate.name)).toBeNull()
+    expect(screen.queryByRole('button', { name: /Выбрать финалистом/ })).toBeNull()
+    expect(onSelectVacancyCandidate).not.toHaveBeenCalled()
+  })
+
+  it('keeps Executor archived candidates read-only', () => {
+    const archivedOrder: WorkspaceOrder = {
+      ...order,
+      id: 'order-archived',
+      title: 'Завершённый проект',
+      isArchived: true,
+    }
+    const archivedCandidate: WorkspaceCandidate = {
+      ...poolCandidate,
+      id: 'archived-candidate',
+      orderId: archivedOrder.id,
+    }
+    const onSetCandidateStage = vi.fn()
+    const onSelectOrder = vi.fn()
+
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [poolCandidate, archivedCandidate],
+      onSelectOrder,
+      onSetCandidateStage,
+      orders: [order, archivedOrder],
+      selectedOrderId: order.id,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Архив' }))
+
+    expect(onSelectOrder).toHaveBeenCalledWith(archivedOrder.id)
+    expect(screen.getByText(archivedCandidate.name)).toBeTruthy()
+    expect(screen.getByText('Только просмотр')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Добавить .* в Shortlist/ })).toBeNull()
+    expect(onSetCandidateStage).not.toHaveBeenCalled()
+  })
+
+  it('keeps order filters available when the selected archive is empty', () => {
+    renderDashboard('Customer', false, { selectedOrderId: order.id })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Архив' }))
+
+    expect(screen.getByRole('button', { name: 'Активные' })).toBeTruthy()
+    expect(screen.getByText('Нет заказов в выбранном состоянии.')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Активные' }))
+
+    expect(
+      screen.getByRole('region', { name: 'Детали выбранного заказа' }).textContent,
+    ).toContain(order.title)
+  })
+
   it('does not offer finalist selection when one is already selected', () => {
     renderDashboard('Customer', false, {
       candidates: [selectedCandidate, shortlistCandidate],

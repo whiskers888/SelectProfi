@@ -75,6 +75,7 @@ export function useMainFeedPanelController({
   canViewBaseCandidates = false,
   executorDashboardCandidates,
   candidates,
+  onSelectOrder,
   orders,
   requesterUserId,
   role = 'Executor',
@@ -106,8 +107,6 @@ export function useMainFeedPanelController({
       : role === 'Executor' && requesterUserId
         ? orders.filter((order) => order.executorId === requesterUserId)
         : orders
-  const selectedDashboardOrder =
-    dashboardOrders.find((order) => order.id === selectedOrderId) ?? (dashboardOrders.length > 0 ? dashboardOrders[0] : null)
   // The applicant does not manage pauses: a paused vacancy is shown in the archive until reactivated.
   const isInArchive = (order: WorkspaceOrder) =>
     Boolean(order.isArchived) || (role === 'Applicant' && Boolean(order.isPaused))
@@ -131,6 +130,27 @@ export function useMainFeedPanelController({
   }
 
   const visibleDashboardOrders = sortedDashboardOrders.slice(0, 4)
+  const shouldSelectVisibleDashboardOrder =
+    view === 'dashboard' && (role === 'Customer' || role === 'Executor')
+  const selectedDashboardOrder = shouldSelectVisibleDashboardOrder
+    ? visibleDashboardOrders.find((order) => order.id === selectedOrderId) ??
+      visibleDashboardOrders[0] ??
+      null
+    : dashboardOrders.find((order) => order.id === selectedOrderId) ?? dashboardOrders[0] ?? null
+  const selectedDashboardOrderId = selectedDashboardOrder?.id
+
+  useEffect(() => {
+    if (
+      !shouldSelectVisibleDashboardOrder ||
+      !selectedDashboardOrderId ||
+      selectedDashboardOrderId === selectedOrderId
+    ) {
+      return
+    }
+
+    onSelectOrder(selectedDashboardOrderId)
+  }, [onSelectOrder, selectedDashboardOrderId, selectedOrderId, shouldSelectVisibleDashboardOrder])
+
   const checkedVisibleOrderIds = checkedOrderIds.filter((checkedId) =>
     visibleDashboardOrders.some((order) => order.id === checkedId),
   )

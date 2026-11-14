@@ -249,7 +249,12 @@ export function useWorkspaceShellController() {
       : canLoadServerOrders && ordersResponse
         ? serverOrders
         : dataset.orders
+  const preferredDashboardOrderId =
+    activeView === 'dashboard'
+      ? baseOrders.find((order) => order.id === preferredOrderId)?.id
+      : undefined
   const candidateScopeOrderId =
+    preferredDashboardOrderId ??
     baseOrders.find((order) => order.id === preferredOrderId && !order.isArchived)?.id ??
     baseOrders.find((order) => !order.isArchived)?.id ??
     baseOrders.find((order) => order.id === preferredOrderId)?.id ??
