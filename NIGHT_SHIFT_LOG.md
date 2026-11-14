@@ -195,3 +195,12 @@
 Ошибки/заметки: первый черновик вызвал ESLint `react-hooks/set-state-in-effect`, а async test использовал фиктивно непустой список из-за helper default; эффект удалён в пользу derived selection, fixture исправлен. API не содержит зарплату/локацию/интервью для Applicant.
 Проверка: ApplicantApplicationsSection tests — 5/5; `npm run build` — success (2016 modules); ESLint затронутых файлов — без замечаний; `git diff --check` — success; Edge Playwright fixtures проверили выбор, hide/re-show и mobile/desktop layout без JS errors и horizontal overflow; reviewer — без замечаний.
 Коммит: feature/night-shift-refactor / feat: AUDIT-01 Applicant детали и выбор / 67c8cb0
+
+## AUDIT-01 follow-up | Executor композиция `_1`
+Старт: 2026-11-14 22:27 +03:00
+Окончание: 2026-11-14 22:44 +03:00
+Статус: Review
+Изменения: убран общий ряд KPI-карточек только из Executor Dashboard — в `_1` проектный список и выбранный проект начинаются непосредственно под заголовком. Customer/Applicant KPI, `runtimeStats` боковой панели и controller query сохранены.
+Ошибки/заметки: первая сборка после удаления UI обнаружила три неиспользуемых bindings в `WorkspaceShellView`; bindings удалены, а controller output оставлен без изменений. Сборка после исправления прошла.
+Проверка: полный frontend suite — 71/71 в 17 файлах; `npm run build` — success (2016 modules); ESLint `WorkspaceShellView.tsx` — без замечаний; `git diff --check` — success; Edge Playwright fixtures для трёх ролей прошли при 1365×900/390×844 без JS errors и horizontal overflow; reviewer — без замечаний.
+Коммит: feature/night-shift-refactor / feat: AUDIT-01 Executor без лишних KPI / 4d775c8
