@@ -122,3 +122,12 @@
 Проверка: npm run build — success (2015 modules); docker compose build frontend — success; docker compose config --quiet — success; /app HTTP 200; frontend и backend healthy; PostgreSQL не перезапускался и его volume сохранён.
 Статус: готово к Review.
 Коммит: feature/night-shift-refactor / feat: NS-10 expose frontend on localhost / d957da1
+
+## NS-08 follow-up | Дашборд исполнителя по макету _1
+Старт: 2026-11-14 15:38:42 +03:00
+Статус: Review
+Сверка: production frontend теперь доступен по /app; текущий экран показывает общие показатели, список проектов и общий список кандидатов, но не открывает детали выбранного проекта и его Pool/Shortlist рядом со списком.
+Окончание: 2026-11-14 15:54:14 +03:00
+Изменения: добавлен экран исполнителя по `_1`: список проектов, детали выбранного проекта и Pool/Shortlist/Выбран; кандидаты ограничены выбранным orderId и допустимыми этапами, данные идут через существующий dashboard API. Экран подключён только для роли Executor; добавлены состояния загрузки/ошибки с повтором. Устаревшие preview11 стили заменены на Tailwind.
+Ошибки: проверка браузером не выполнена — CUA browser access host недоступен. Сборки прошли; остались предупреждения Browserslist (caniuse-lite устарел на 8 месяцев) и крупного JS bundle (1,139.45 kB).
+Проверка: reviewer — без существенных замечаний; `npm run build` — success (2016 modules); `docker compose build frontend` — success; пересоздан только frontend через `docker compose up -d --no-deps --force-recreate frontend`; `http://127.0.0.1:5173/app` — HTTP 200, новый bundle содержит Pool/Shortlist/«Выбранный проект»; frontend/backend/PostgreSQL healthy, БД не перезапускалась; `git diff --check` — success.

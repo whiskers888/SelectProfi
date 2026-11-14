@@ -3,6 +3,7 @@ import { CandidatesSection } from './CandidatesSection'
 import { ApplicantApplicationsSection } from './ApplicantApplicationsSection'
 import { DashboardOrdersSection } from './DashboardOrdersSection'
 import { OrdersExchangeSection } from './OrdersExchangeSection'
+import { ExecutorDashboardSection } from './ExecutorDashboardSection'
 
 function renderLoading() {
   return (
@@ -32,6 +33,10 @@ function renderError(title: string, onRetry?: () => void) {
 export function MainFeedPanelView(props: MainFeedPanelViewProps) {
   if (props.isLoading) {
     return renderLoading()
+  }
+
+  if (props.view === 'dashboard' && props.role === 'Executor') {
+    return <ExecutorDashboardSection viewProps={props} />
   }
 
   if (props.view === 'dashboard') {

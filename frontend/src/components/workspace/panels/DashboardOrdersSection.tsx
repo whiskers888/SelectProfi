@@ -1,27 +1,15 @@
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { type WorkspaceTone } from '../model/data'
+import { workspaceToneToBadgeVariant } from '../model/data'
 import type { MainFeedPanelViewProps } from './MainFeedPanel.types'
 
 function renderEmptyState(title: string, description: string) {
   return (
-    <div className="preview11-empty-state">
-      <h3>{title}</h3>
-      <p>{description}</p>
+    <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
+      <h3 className="font-semibold text-foreground">{title}</h3>
+      <p className="mt-1">{description}</p>
     </div>
   )
-}
-
-function toneClassName(tone: WorkspaceTone): string {
-  if (tone === 'success') {
-    return 'preview11-tag-ok'
-  }
-  if (tone === 'warning') {
-    return 'preview11-tag-warn'
-  }
-  if (tone === 'danger') {
-    return 'preview11-tag-danger'
-  }
-  return 'preview11-tag-neutral'
 }
 
 function toOrderPriceLabel(price: number | null | undefined): string {
@@ -61,177 +49,173 @@ export function DashboardOrdersSection({
   const orderPriceLabelPrefix = isExecutorRole ? 'К получению' : 'Цена'
   const canSelectDashboardOrders = canManageOrders && dashboardState !== 'archive'
 
-    if (!selectedDashboardOrder || orders.length === 0) {
-      return renderEmptyState(
-        isApplicantRole ? 'Нет откликов' : `Нет данных по ${ordersNoun}`,
-        isApplicantRole
-          ? 'Вы ещё не откликнулись ни на одну вакансию.'
-          : `Создайте новый ${orderNounSingular} или снимите фильтры, чтобы увидеть активные вакансии.`,
-      )
-    }
+  if (!selectedDashboardOrder || orders.length === 0) {
+    return renderEmptyState(
+      isApplicantRole ? 'Нет откликов' : `Нет данных по ${ordersNoun}`,
+      isApplicantRole
+        ? 'Вы ещё не откликнулись ни на одну вакансию.'
+        : `Создайте новый ${orderNounSingular} или снимите фильтры, чтобы увидеть активные вакансии.`,
+    )
+  }
 
-    return (
-      <section className="preview11-card">
-        <div className="preview11-orders-top">
-          <div>
-            <h3 className="preview11-panel-title">
-              {isApplicantRole ? 'Мои отклики' : ordersInWorkLabel}
-            </h3>
-            <p className="preview11-panel-subtitle">
-              {isApplicantRole ? 'Здесь отображаются только вакансии, на которые вы откликнулись.' : `Выберите ${orderNounSingular}, чтобы открыть детали.`}
-            </p>
-          </div>
-          <div className="preview11-orders-controls">
-            <div className="preview11-state-rail">
+  return (
+    <section className="rounded-xl border border-border bg-card text-card-foreground shadow-none">
+      <div className="flex flex-col gap-4 border-b border-border p-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h3 className="text-base font-semibold">
+            {isApplicantRole ? 'Мои отклики' : ordersInWorkLabel}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isApplicantRole ? 'Здесь отображаются только вакансии, на которые вы откликнулись.' : `Выберите ${orderNounSingular}, чтобы открыть детали.`}
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="inline-flex w-fit rounded-lg border border-border bg-muted p-1" role="group" aria-label="Состояние заказов">
+            <button
+              aria-pressed={dashboardState === 'active'}
+              className={cn('rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground', dashboardState === 'active' && 'bg-background text-foreground shadow-sm')}
+              onClick={() => setDashboardState('active')}
+              type="button"
+            >
+              Активные
+            </button>
+            {!isApplicantRole ? (
               <button
-                aria-pressed={dashboardState === 'active'}
-                  className={`preview11-state-btn${dashboardState === 'active' ? ' preview11-state-btn-active' : ''}`}
-                onClick={() => setDashboardState('active')}
+                aria-pressed={dashboardState === 'paused'}
+                className={cn('rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground', dashboardState === 'paused' && 'bg-background text-foreground shadow-sm')}
+                onClick={() => setDashboardState('paused')}
                 type="button"
               >
-                Активные
+                На паузе
               </button>
-              {!isApplicantRole ? (
+            ) : null}
+            <button
+              aria-pressed={dashboardState === 'archive'}
+              className={cn('rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground', dashboardState === 'archive' && 'bg-background text-foreground shadow-sm')}
+              onClick={() => setDashboardState('archive')}
+              type="button"
+            >
+              Архив
+            </button>
+          </div>
+          <select
+            aria-label="Сортировка заказов"
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onChange={(event) => handleDashboardSortChange(event.target.value)}
+            value={dashboardSort}
+          >
+            <option value="updated">Сначала обновлённые</option>
+            <option value="responses">По числу откликов</option>
+            <option value="priority">По приоритету</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="p-4">
+        {canSelectDashboardOrders ? (
+          <div className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                checked={allVisibleChecked}
+                className="size-4 rounded border-input accent-primary"
+                onChange={(event) => handleSelectAllVisibleOrders(event.target.checked)}
+                type="checkbox"
+              />
+              <span>Выбрать все</span>
+              <span className="text-muted-foreground">{checkedVisibleOrderIds.length}</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {dashboardState === 'active' ? (
                 <button
-                  aria-pressed={dashboardState === 'paused'}
-                  className={`preview11-state-btn${dashboardState === 'paused' ? ' preview11-state-btn-active' : ''}`}
-                  onClick={() => setDashboardState('paused')}
+                  className="rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+                  disabled={checkedVisibleOrderIds.length === 0 || isOrdersStateUpdating}
+                  onClick={() => {
+                    if (!onPauseOrders || checkedVisibleOrderIds.length === 0) return
+                    void onPauseOrders(checkedVisibleOrderIds)
+                  }}
                   type="button"
                 >
-                  На паузе
+                  {isOrdersStateUpdating ? 'Обновляем...' : 'На паузу'}
                 </button>
               ) : null}
-              <button
-                aria-pressed={dashboardState === 'archive'}
-                  className={`preview11-state-btn${dashboardState === 'archive' ? ' preview11-state-btn-active' : ''}`}
-                onClick={() => setDashboardState('archive')}
-                type="button"
-              >
-                Архив
-              </button>
+              {dashboardState === 'paused' ? (
+                <button
+                  className="rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+                  disabled={checkedVisibleOrderIds.length === 0 || isOrdersStateUpdating}
+                  onClick={() => {
+                    if (!onActivateOrders || checkedVisibleOrderIds.length === 0) return
+                    void onActivateOrders(checkedVisibleOrderIds)
+                  }}
+                  type="button"
+                >
+                  {isOrdersStateUpdating ? 'Обновляем...' : 'Активировать'}
+                </button>
+              ) : null}
             </div>
-            <select
-              className="preview11-select preview11-orders-select"
-              onChange={(event) => handleDashboardSortChange(event.target.value)}
-              value={dashboardSort}
-            >
-              <option value="updated">Сначала обновлённые</option>
-              <option value="responses">По числу откликов</option>
-              <option value="priority">По приоритету</option>
-            </select>
           </div>
-        </div>
+        ) : null}
 
-        <div className="preview11-panel-body">
-          {canSelectDashboardOrders ? (
-            <div className="preview11-orders-bulk">
-              <label className="preview11-orders-bulk-left">
-                <input
-                  checked={allVisibleChecked}
-                  className="preview11-order-select"
-                  onChange={(event) => handleSelectAllVisibleOrders(event.target.checked)}
-                  type="checkbox"
-                />
-                <span>Выбрать все</span>
-                <span>{checkedVisibleOrderIds.length}</span>
-              </label>
-              <div className="preview11-orders-bulk-actions">
-                {dashboardState === 'active' ? (
-                  <button
-                    className="preview11-mini-btn"
-                    disabled={checkedVisibleOrderIds.length === 0 || isOrdersStateUpdating}
-                    onClick={() => {
-                      if (!onPauseOrders || checkedVisibleOrderIds.length === 0) {
-                        return
-                      }
-                      void onPauseOrders(checkedVisibleOrderIds)
-                    }}
-                    type="button"
-                  >
-                    {isOrdersStateUpdating ? 'Обновляем...' : 'На паузу'}
-                  </button>
-                ) : null}
-                {dashboardState === 'paused' ? (
-                  <button
-                    className="preview11-mini-btn"
-                    disabled={checkedVisibleOrderIds.length === 0 || isOrdersStateUpdating}
-                    onClick={() => {
-                      if (!onActivateOrders || checkedVisibleOrderIds.length === 0) {
-                        return
-                      }
-                      void onActivateOrders(checkedVisibleOrderIds)
-                    }}
-                    type="button"
-                  >
-                    {isOrdersStateUpdating ? 'Обновляем...' : 'Активировать'}
-                  </button>
-                ) : null}
-              </div>
+        <div className="grid gap-4">
+          {visibleDashboardOrders.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              {`Нет ${ordersNoun} в выбранном состоянии.`}
             </div>
-          ) : null}
-
-          <div className="preview11-orders-layout">
-            <div className="preview11-feed preview11-orders-feed">
-              {visibleDashboardOrders.length === 0 ? (
-                <div className="preview11-empty-state">
-                  <p>{`Нет ${ordersNoun} в выбранном состоянии.`}</p>
-                </div>
-              ) : (
-                visibleDashboardOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className={cn(
-                      'preview11-order-row',
-                      canSelectDashboardOrders && 'preview11-order-row-with-selection',
-                    )}
+          ) : (
+            visibleDashboardOrders.map((order) => {
+              const isSelected = selectedDashboardOrder.id === order.id
+              return (
+                <div
+                  key={order.id}
+                  className={cn('flex overflow-hidden rounded-lg border border-border transition-colors', canSelectDashboardOrders && 'items-stretch', isSelected && 'border-primary ring-1 ring-primary/30')}
+                >
+                  {canSelectDashboardOrders ? (
+                    <div className="flex items-center px-3">
+                      <input
+                        aria-label={`Выбрать заказ ${order.title}`}
+                        checked={checkedOrderIds.includes(order.id)}
+                        className="size-4 rounded border-input accent-primary"
+                        onChange={(event) => handleToggleOrderChecked(order.id, event.target.checked)}
+                        type="checkbox"
+                      />
+                    </div>
+                  ) : null}
+                  <button
+                    aria-pressed={isSelected}
+                    className={cn('min-w-0 flex-1 p-4 text-left transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring', isSelected && 'bg-primary/5')}
+                    onClick={() => {
+                      onSelectOrder(order.id)
+                      onOpenOrder(order)
+                    }}
+                    type="button"
                   >
-                    {canSelectDashboardOrders ? (
-                      <div className="preview11-order-select-wrap">
-                        <input
-                          checked={checkedOrderIds.includes(order.id)}
-                          className="preview11-order-select"
-                          onChange={(event) => handleToggleOrderChecked(order.id, event.target.checked)}
-                          type="checkbox"
-                        />
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{order.title}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {order.company} • {order.location}
+                        </p>
                       </div>
-                    ) : null}
-                    <button
-                      className={cn('preview11-feed-item', 'preview11-feed-item-hover')}
-                      onClick={() => {
-                        onSelectOrder(order.id)
-                        onOpenOrder(order)
-                      }}
-                      type="button"
-                    >
-                      <div className="preview11-feed-item-top">
-                        <div>
-                          <p className="preview11-feed-item-title">{order.title}</p>
-                          <p className="preview11-feed-item-text">
-                            {order.company} • {order.location}
+                      <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                        <Badge variant={workspaceToneToBadgeVariant(order.statusTone)}>{order.statusLabel}</Badge>
+                        {role !== 'Applicant' ? (
+                          <p className="text-sm text-muted-foreground">
+                            {orderPriceLabelPrefix}:{' '}
+                            {toOrderPriceLabel(
+                              isExecutorRole
+                                ? order.executorNetAmount
+                                : (order.grossAmount ?? order.price),
+                            )}
                           </p>
-                        </div>
-                        <div className="preview11-order-side">
-                          <span className={`preview11-tag ${toneClassName(order.statusTone)}`}>{order.statusLabel}</span>
-                          {role !== 'Applicant' ? (
-                            <p className="preview11-order-price">
-                              {orderPriceLabelPrefix}:{' '}
-                              {toOrderPriceLabel(
-                                isExecutorRole
-                                  ? order.executorNetAmount
-                                  : (order.grossAmount ?? order.price),
-                              )}
-                            </p>
-                          ) : null}
-                        </div>
+                        ) : null}
                       </div>
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-
-          </div>
+                    </div>
+                  </button>
+                </div>
+              )
+            })
+          )}
         </div>
-      </section>
-    )
+      </div>
+    </section>
+  )
 }

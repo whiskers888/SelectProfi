@@ -473,7 +473,7 @@ export function WorkspaceShellView({
                       hasRespondedToOrder={hasRespondedToSelectedOrder}
                       isLoading={
                         isViewLoading ||
-                        (activeView === 'dashboard' && role === 'Customer' && isOrdersApiLoading) ||
+                        (activeView === 'dashboard' && (role === 'Customer' || role === 'Executor') && isOrdersApiLoading) ||
                         (activeView === 'orders' && isOrdersApiLoading) ||
                         (activeView === 'candidates' && isCandidatesApiLoading)
                       }
@@ -489,7 +489,7 @@ export function WorkspaceShellView({
                           ? isCustomerShortlistError
                           : role === 'Executor' && isExecutorCandidateSummaryError
                       }
-                      isOrdersError={role === 'Customer' && isOrdersError}
+                      isOrdersError={(role === 'Customer' || role === 'Executor') && isOrdersError}
                       isOrderResponsesLoading={isOrderResponsesFetching}
                       isOrdersArchiving={isDeletingOrder}
                       isOrdersStateUpdating={isOrderStatusUpdating}
