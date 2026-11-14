@@ -5,6 +5,10 @@ import { cn } from '@/lib/utils'
 import { workspaceToneToBadgeVariant } from '../model/data'
 import type { MainFeedPanelViewProps } from './MainFeedPanel.types'
 
+interface CandidatesSectionProps extends MainFeedPanelViewProps {
+  customerDashboardSummary?: boolean
+}
+
 export function CandidatesSection({
   candidateDataScope,
   candidateSourceFilter,
@@ -14,8 +18,11 @@ export function CandidatesSection({
   handleCandidateStageFilterChange,
   hasActiveCandidateFilters,
   isApplicantView,
+  isCandidateDataError = false,
+  isCandidateDataLoading = false,
   isBaseScope,
   isCandidateFiltersMenuOpen,
+  onRetryCandidateData,
   onOpenCandidate,
   setCandidateDataScope,
   setCandidateSourceFilter,
@@ -24,12 +31,27 @@ export function CandidatesSection({
   shouldShowBaseCandidateTab,
   shouldShowCandidateFilters,
   shouldShowCandidateScopeSwitcher,
-}: MainFeedPanelViewProps) {
+  customerDashboardSummary = false,
+}: CandidatesSectionProps) {
   return (
     <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-foreground">{isApplicantView ? 'Мои резюме' : 'Мои кандидаты'}</h3>
-        <div className="relative flex flex-wrap items-center gap-2">
+        <div>
+          <h3 className="text-base font-semibold text-foreground">
+            {customerDashboardSummary
+              ? 'Кандидаты в shortlist'
+              : isApplicantView
+                ? 'Мои резюме'
+                : 'Мои кандидаты'}
+          </h3>
+          {customerDashboardSummary ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Псевдонимы и статус по выбранной вакансии.
+            </p>
+          ) : null}
+        </div>
+        {!customerDashboardSummary ? (
+          <div className="relative flex flex-wrap items-center gap-2">
           {shouldShowCandidateScopeSwitcher ? (
             <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
               <button
@@ -128,28 +150,82 @@ export function CandidatesSection({
               </div>
             </>
           ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
-      {filteredCandidateRows.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
-          {isApplicantView ? 'Резюме пока не добавлены.' : 'Кандидаты по текущим фильтрам не найдены.'}
+      {isCandidateDataError ? (
+        <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
+          <p>Не удалось загрузить список кандидатов.</p>
+          {onRetryCandidateData ? (
+            <button
+              className="mt-2 rounded-md border border-current px-3 py-1 text-sm font-medium"
+              onClick={onRetryCandidateData}
+              type="button"
+            >
+              Повторить
+            </button>
+          ) : null}
         </div>
+      ) : null}
+      {isCandidateDataLoading && filteredCandidateRows.length === 0 ? (
+        <div className="preview11-loading" role="status">
+          <span aria-hidden="true" className="preview11-loading-spin" />
+          <span>Загружаем shortlist...</span>
+        </div>
+      ) : filteredCandidateRows.length === 0 ? (
+        isCandidateDataError ? null : (
+        <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
+          {customerDashboardSummary
+            ? 'Кандидатов в shortlist пока нет.'
+            : isApplicantView
+              ? 'Резюме пока не добавлены.'
+              : 'Кандидаты по текущим фильтрам не найдены.'}
+        </div>
+        )
       ) : (
         <Table stackOnMobile>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>{isApplicantView ? 'Резюме' : 'Кандидат'}</TableHead>
-              {!isBaseScope ? <TableHead>Источник</TableHead> : null}
-              <TableHead>Рейтинг</TableHead>
+              <TableHead>
+                {customerDashboardSummary ? 'Псевдоним' : isApplicantView ? 'Резюме' : 'Кандидат'}
+              </TableHead>
+              {customerDashboardSummary ? (
+                <TableHead>Вакансия</TableHead>
+              ) : !isBaseScope ? (
+                <TableHead>Источник</TableHead>
+              ) : null}
+              <TableHead>{customerDashboardSummary ? 'Обновлено' : 'Рейтинг'}</TableHead>
               {!isBaseScope ? <TableHead>Статус</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredCandidateRows.map((candidate) => (
-              <TableRow key={candidate.id} className="cursor-pointer" onClick={() => onOpenCandidate(candidate)}>
-                <TableCell className="font-medium">{candidate.name}</TableCell>
-                {!isBaseScope ? <TableCell data-label="Источник">{candidate.source}</TableCell> : null}
-                <TableCell data-label="Рейтинг">{candidate.rating}</TableCell>
+              <TableRow
+                key={candidate.id}
+                className={customerDashboardSummary ? '' : 'cursor-pointer'}
+                onClick={customerDashboardSummary ? undefined : () => onOpenCandidate(candidate)}
+              >
+                <TableCell className="font-medium">
+                  {customerDashboardSummary ? (
+                    <button
+                      className="text-left font-medium text-primary hover:underline"
+                      onClick={() => onOpenCandidate(candidate)}
+                      type="button"
+                    >
+                      {candidate.name}
+                    </button>
+                  ) : (
+                    candidate.name
+                  )}
+                </TableCell>
+                {customerDashboardSummary ? (
+                  <TableCell data-label="Вакансия">{candidate.position}</TableCell>
+                ) : !isBaseScope ? (
+                  <TableCell data-label="Источник">{candidate.source}</TableCell>
+                ) : null}
+                <TableCell data-label={customerDashboardSummary ? 'Обновлено' : 'Рейтинг'}>
+                  {customerDashboardSummary ? candidate.comment : candidate.rating}
+                </TableCell>
                 {!isBaseScope ? (
                   <TableCell>
                     {candidate.statusLabel.trim() ? (

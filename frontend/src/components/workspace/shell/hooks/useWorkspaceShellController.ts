@@ -185,18 +185,24 @@ export function useWorkspaceShellController() {
   const { data: executorDashboardStats } = useGetExecutorDashboardStatsQuery(
     dashboardRole === 'Executor' ? undefined : skipToken,
   )
-  const { data: customerDashboardStats } = useGetCustomerDashboardStatsQuery(
-    dashboardRole === 'Customer' ? undefined : skipToken,
-  )
+  const {
+    data: customerDashboardStats,
+    isError: isCustomerDashboardStatsError,
+    isLoading: isCustomerDashboardStatsLoading,
+    refetch: refetchCustomerDashboardStats,
+  } = useGetCustomerDashboardStatsQuery(dashboardRole === 'Customer' ? undefined : skipToken)
   const { data: applicantDashboardStats } = useGetApplicantDashboardStatsQuery(
     dashboardRole === 'Applicant' ? undefined : skipToken,
   )
   const canLoadServerVacancies = true
   const canLoadServerCandidates = role !== 'Applicant'
   const canLoadExecutorBaseCandidates = role === 'Executor'
-  const { data: vacanciesResponse, refetch: refetchVacancies } = useGetVacanciesQuery(
-    canLoadServerVacancies ? undefined : skipToken,
-  )
+  const {
+    data: vacanciesResponse,
+    isError: isVacanciesError,
+    isFetching: isVacanciesFetching,
+    refetch: refetchVacancies,
+  } = useGetVacanciesQuery(canLoadServerVacancies ? undefined : skipToken)
   const { data: myCandidatesResponse } = useGetMyCandidatesQuery(
     role === 'Executor' ? undefined : skipToken,
   )
@@ -223,7 +229,7 @@ export function useWorkspaceShellController() {
         null)
       : null
   const {
-    data: vacancyCandidatesResponse,
+    currentData: vacancyCandidatesResponse,
     isError: isVacancyCandidatesError,
     isFetching: isVacancyCandidatesFetching,
     refetch: refetchVacancyCandidates,
@@ -400,10 +406,10 @@ export function useWorkspaceShellController() {
   const threads = threadsByRole[role]
   const manualCandidates = manualCandidatesByRole[role]
   const serverCandidates =
-    candidateSourceVacancy && vacancyCandidatesResponse
+    candidateSourceVacancy && vacancyCandidatesResponse?.vacancyId === candidateSourceVacancy.id
       ? vacancyCandidatesResponse.items
           .filter((item) => role !== 'Customer' || item.stage === 'Shortlist' || item.isSelected)
-          .map((item) => toWorkspaceCandidate(item, candidateSourceVacancy))
+          .map((item) => toWorkspaceCandidate(item, candidateSourceVacancy, role === 'Customer'))
       : []
   const serverBaseCandidates =
     candidateSourceVacancy && vacancyBaseCandidatesResponse
@@ -491,6 +497,11 @@ export function useWorkspaceShellController() {
     vacanciesResponseExists: Boolean(vacanciesResponse),
     vacancyCandidatesItems: vacancyCandidatesResponse?.items ?? null,
   })
+  const isCustomerShortlistLoading =
+    role === 'Customer' &&
+    ((!vacanciesResponse && isVacanciesFetching) || isCandidatesApiLoading)
+  const isCustomerShortlistError =
+    role === 'Customer' && (isVacanciesError || isVacancyCandidatesError)
   const primaryScreen =
     workspaceHistoryEntry?.kind === 'create'
       ? workspaceHistoryEntry.screen
@@ -1049,6 +1060,27 @@ export function useWorkspaceShellController() {
     })
   }
 
+  function handleRetryCustomerDashboardStats() {
+    void refetchCustomerDashboardStats()
+  }
+
+  function handleRetryOrders() {
+    void refetchOrders()
+  }
+
+  function handleRetryVacancyCandidates() {
+    void refetchVacancyCandidates()
+  }
+
+  function handleRetryCustomerShortlist() {
+    if (isVacanciesError) {
+      void refetchVacancies()
+      return
+    }
+
+    void refetchVacancyCandidates()
+  }
+
   function closeCreateCandidatePage() {
     if (goBackFromCreateScreen('create-candidate')) {
       return
@@ -1153,6 +1185,10 @@ export function useWorkspaceShellController() {
     handleRespondToSelectedVacancy,
     handleSetApplicantResponderStage,
     handleRetryAnalytics,
+    handleRetryCustomerDashboardStats,
+    handleRetryOrders,
+    handleRetryVacancyCandidates,
+    handleRetryCustomerShortlist,
     handleSelectOrderExecutor,
     handleSendMessage,
     handleToggleRole,
@@ -1171,6 +1207,10 @@ export function useWorkspaceShellController() {
     isOrderStatusUpdating,
     isOrdersApiLoading,
     isOrdersError,
+    isCustomerDashboardStatsError,
+    isCustomerDashboardStatsLoading,
+    isCustomerShortlistError,
+    isCustomerShortlistLoading,
     isProfileRoute,
     isRejectingOrderExecutor,
     isRespondingToOrder: isRespondingToOrder || isRespondingToVacancy,

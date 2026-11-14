@@ -14,13 +14,39 @@ function renderLoading() {
   )
 }
 
+function renderError(title: string, onRetry?: () => void) {
+  return (
+    <div className="preview11-error-card" role="alert">
+      <h3>{title}</h3>
+      <p>Повторите запрос, чтобы обновить данные.</p>
+      {onRetry ? (
+        <button className="preview11-btn preview11-btn-primary" onClick={onRetry} type="button">
+          Повторить
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 export function MainFeedPanelView(props: MainFeedPanelViewProps) {
   if (props.isLoading) {
     return renderLoading()
   }
 
   if (props.view === 'dashboard') {
-    return <DashboardOrdersSection {...props} />
+    const isCustomer = props.role === 'Customer'
+
+    return (
+      <div className="space-y-4">
+        {isCustomer && props.isOrdersError
+          ? renderError('Не удалось загрузить заказы', props.onRetryOrders)
+          : null}
+        {!isCustomer || !props.isOrdersError || props.orders.length > 0 ? (
+          <DashboardOrdersSection {...props} />
+        ) : null}
+        {isCustomer ? <CandidatesSection {...props} customerDashboardSummary /> : null}
+      </div>
+    )
   }
 
   if (props.view === 'orders') {

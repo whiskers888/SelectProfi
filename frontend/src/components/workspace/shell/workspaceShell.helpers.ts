@@ -187,10 +187,11 @@ function toCandidateStatusTone(
 export function toWorkspaceCandidate(
   item: VacancyCandidatesItemResponse,
   vacancy: VacancyResponse,
+  usePublicAlias = false,
 ): WorkspaceCandidate {
   return {
     id: item.candidateId,
-    name: item.displayName || item.publicAlias,
+    name: usePublicAlias ? item.publicAlias : item.displayName || item.publicAlias,
     position: vacancy.title,
     orderId: vacancy.orderId,
     source: `Vacancy ${vacancy.id.slice(0, 8)}`,
@@ -201,6 +202,14 @@ export function toWorkspaceCandidate(
     statusLabel: toCandidateStatusLabel(item.stage, item.isSelected),
     statusTone: toCandidateStatusTone(item.stage, item.isSelected),
     comment: `Обновлено ${new Date(item.updatedAtUtc).toLocaleString('ru-RU')}`,
+  }
+}
+
+function formatCurrencyAmount(amount: number, currencyCode: string): string {
+  try {
+    return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: currencyCode }).format(amount)
+  } catch {
+    return `${amount.toLocaleString('ru-RU')} ${currencyCode}`
   }
 }
 
@@ -404,7 +413,7 @@ export function deriveWorkspaceViewState({
   const isCandidatesApiLoading = role !== 'Executor' && canLoadServerCandidates && !vacancyCandidatesItems && isVacancyCandidatesFetching;
 
   const allOrders = baseOrders;
-  const allCandidates = [...manualCandidates, ...baseCandidates];
+  const allCandidates = role === 'Customer' ? baseCandidates : [...manualCandidates, ...baseCandidates];
   const allBaseCandidates = role === 'Executor'
     ? executorBaseCandidatesForUi
     : canLoadExecutorBaseCandidates
@@ -435,8 +444,11 @@ export function deriveWorkspaceViewState({
     );
   });
 
-  const customerSelectedCandidates = role === 'Customer'
-    ? filteredCandidates.filter(candidate => candidate.statusLabel.trim().toLowerCase() === 'выбран')
+  const customerShortlistCandidates = role === 'Customer'
+    ? filteredCandidates.filter(candidate => {
+        const stage = candidate.statusLabel.trim().toLowerCase()
+        return stage === 'shortlist' || stage === 'выбран'
+      })
     : filteredCandidates;
 
   const filteredBaseCandidates = allBaseCandidates.filter(candidate => {
@@ -478,7 +490,7 @@ export function deriveWorkspaceViewState({
   const activeThread = filteredThreads.find(thread => thread.id === preferredChatId) ?? filteredThreads[0] ?? null;
 
   const candidatesCounter = role === 'Customer'
-    ? customerSelectedCandidates.length
+    ? customerShortlistCandidates.length
     : filteredCandidates.length;
 
   const meetingsList = meetings ?? fallbackMeetings ?? [];
@@ -521,7 +533,7 @@ export function deriveWorkspaceViewState({
         tone: resolveCandidateFlowTone(executorDashboardStats?.shortlistCandidatesCount ?? 0),
       },
     ];
-  } else if (role === 'Customer') {
+  } else if (role === 'Customer' && customerDashboardStats) {
     runtimeStats = [
       {
         id: 'projects',
@@ -543,6 +555,19 @@ export function deriveWorkspaceViewState({
         value: `${customerDashboardStats?.shortlistCandidatesCount ?? 0} чел.`,
         note: resolveIncomingFromExecutorNote(customerDashboardStats?.shortlistCandidatesCount ?? 0),
         tone: resolveIncomingFromExecutorTone(customerDashboardStats?.shortlistCandidatesCount ?? 0),
+      },
+      {
+        id: 'balance',
+        label: 'Доступный баланс',
+        value: formatCurrencyAmount(
+          customerDashboardStats.availableBalance,
+          customerDashboardStats.currencyCode,
+        ),
+        note: `Зарезервировано в эскроу: ${formatCurrencyAmount(
+          customerDashboardStats.reservedBalance,
+          customerDashboardStats.currencyCode,
+        )}`,
+        tone: 'default',
       },
     ];
   } else if (role === 'Applicant' && applicantDashboardStats) {
@@ -573,6 +598,8 @@ export function deriveWorkspaceViewState({
     ];
   } else if (role === 'Applicant') {
     runtimeStats = []
+  } else if (role === 'Customer') {
+    runtimeStats = []
   } else {
     runtimeStats = fallbackStats ?? [];
   }
@@ -593,7 +620,7 @@ export function deriveWorkspaceViewState({
     executorBaseCandidates,
     executorMyCandidates,
     filteredBaseCandidates,
-    filteredCandidates: customerSelectedCandidates,
+    filteredCandidates: customerShortlistCandidates,
     filteredOrders,
     filteredThreads,
     isCandidatesApiLoading,

@@ -72,3 +72,14 @@
 Ошибки: первый build выявил новые обязательные props в существующих Sidebar fixtures — обновлены. Ревью нашло незакрытый мобильный drawer, отсутствие Material Symbols шрифта и устаревшее ожидание бренда — исправлено. Финальный build прошёл; предупреждения: устаревший Browserslist, крупный JS chunk и plugin timing.
 Проверка: frontend `npm run build` — success (tsc + Vite, 2012 modules); `git diff --check` — success; независимое ревью — без оставшихся замечаний. Тесты и браузерная проверка responsive/keyboard поведения не запускались.
 Коммит: feature/night-shift-refactor / feat: NS-06 | Общий dashboard shell и UI-элементы / db45449.
+
+
+## NS-07 | Dashboard заказчика: escrow и безопасный shortlist
+Старт: 2026-11-14 12:18:00 +03:00
+Окончание: 2026-11-14 12:39:13 +03:00
+Статус: Review
+Изменения: customer dashboard показывает доступный баланс и общий резерв wallet из API; shortlist использует только server public alias и показывает вакансию, статус и дату обновления. Добавлены loading/error/empty/retry состояния для stats, заказов и shortlist; список привязан к текущей вакансии и не использует ручные клиентские кандидаты.
+Ограничения данных: API не содержит escrow по отдельным заказам, résumé experience/skills/salary или match score для кандидатов заказчика; эти значения не отображаются.
+Ошибки: независимое ревью выявило неучтённую загрузку/ошибку prerequisite вакансий и риск старого candidate response при переключении вакансии — добавлены prerequisite states/retry, RTK `currentData` и проверка vacancyId.
+Проверка: frontend `npm run build` — success (tsc + Vite, 2012 modules); `git diff --check` — success; независимое ревью — без оставшихся замечаний. Тесты и runtime сетевые сценарии не запускались.
+Коммит: feature/night-shift-refactor / feat: NS-07 | Dashboard заказчика: escrow и безопасный shortlist / pending.

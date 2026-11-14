@@ -13,6 +13,9 @@ export type MainFeedPanelProps = {
   canManageOrders?: boolean
   canViewBaseCandidates?: boolean
   isLoading: boolean
+  isCandidateDataLoading?: boolean
+  isCandidateDataError?: boolean
+  isOrdersError?: boolean
   isOrdersArchiving?: boolean
   isRejectingOrderExecutor?: boolean
   isOrdersStateUpdating?: boolean
@@ -25,6 +28,8 @@ export type MainFeedPanelProps = {
   onOpenCandidate: (candidate: WorkspaceCandidate) => void
   onCloseOrderDetails?: () => void
   onOpenOrder: (order: WorkspaceOrder) => void
+  onRetryCandidateData?: () => void
+  onRetryOrders?: () => void
   onPublishVacancyForCustomer?: () => void | Promise<void>
   onMoveApplicantResponderToShortlist?: (orderId: string, candidateId: string) => void | Promise<void>
   onRejectApplicantResponder?: (orderId: string, candidateId: string) => void | Promise<void>

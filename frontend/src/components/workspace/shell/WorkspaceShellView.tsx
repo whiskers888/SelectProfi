@@ -79,9 +79,13 @@ export function WorkspaceShellView({
   handlePublishVacancyForSelectedOrder,
   handleHeaderCreateAction,
   handleHeaderMenuAction,
+  handleRetryCustomerDashboardStats,
   handleOpenCandidateDetails,
   handleOpenOrderDetails,
   handlePauseOrders,
+  handleRetryOrders,
+  handleRetryVacancyCandidates,
+  handleRetryCustomerShortlist,
   handlePurchaseCandidate,
   handleRejectOrderExecutor,
   handleRespondToOrder,
@@ -102,6 +106,11 @@ export function WorkspaceShellView({
   isOrderResponsesFetching,
   isOrderStatusUpdating,
   isOrdersApiLoading,
+  isOrdersError,
+  isCustomerDashboardStatsError,
+  isCustomerDashboardStatsLoading,
+  isCustomerShortlistError,
+  isCustomerShortlistLoading,
   isRejectingOrderExecutor,
   isRespondingToOrder,
   isUpdatingApplicantResponderStage,
@@ -150,6 +159,11 @@ export function WorkspaceShellView({
   function handleMobileNavViewChange(view: Parameters<typeof handleViewChange>[0]) {
     handleViewChange(view)
     closeMobileNav()
+  }
+
+  function handleStatOverview(statId: string) {
+    presetCandidateStageFilter(statId === 'shortlist' ? 'shortlist' : 'all')
+    handleViewChange('candidates')
   }
 
   // Один renderer выбирает единственный полноэкранный surface.
@@ -325,19 +339,43 @@ export function WorkspaceShellView({
                   activeView === 'candidates') && (
                   <>
                     {activeView === 'dashboard' ? (
-                      <StatsGrid
-                        stats={runtimeStats}
-                        onOverview={
-                          role === 'Applicant'
-                            ? undefined
-                            : (statId) => {
-                                presetCandidateStageFilter(
-                                  statId === 'shortlist' ? 'shortlist' : 'all',
-                                )
-                                handleViewChange('candidates')
-                              }
-                        }
-                      />
+                      role === 'Customer' ? (
+                        <>
+                          {isCustomerDashboardStatsLoading && runtimeStats.length === 0 ? (
+                            <div className="preview11-card">
+                              <div className="preview11-loading" role="status">
+                                <span aria-hidden="true" className="preview11-loading-spin" />
+                                <span>Загружаем показатели...</span>
+                              </div>
+                            </div>
+                          ) : null}
+                          {isCustomerDashboardStatsError ? (
+                            <div className="preview11-error-card" role="alert">
+                              <h3>Не удалось загрузить показатели</h3>
+                              <p>Повторите запрос, чтобы обновить баланс и статистику.</p>
+                              <button
+                                className="preview11-btn preview11-btn-primary"
+                                onClick={handleRetryCustomerDashboardStats}
+                                type="button"
+                              >
+                                Повторить
+                              </button>
+                            </div>
+                          ) : null}
+                          {runtimeStats.length > 0 ? (
+                            <StatsGrid stats={runtimeStats} onOverview={handleStatOverview} />
+                          ) : !isCustomerDashboardStatsLoading && !isCustomerDashboardStatsError ? (
+                            <div className="preview11-empty-state" role="status">
+                              <p>Показатели пока недоступны.</p>
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <StatsGrid
+                          stats={runtimeStats}
+                          onOverview={role === 'Applicant' ? undefined : handleStatOverview}
+                        />
+                      )
                     ) : null}
                     <MainFeedPanel
                       key={activeView}
@@ -354,9 +392,15 @@ export function WorkspaceShellView({
                       hasRespondedToOrder={hasRespondedToSelectedOrder}
                       isLoading={
                         isViewLoading ||
+                        (activeView === 'dashboard' && role === 'Customer' && isOrdersApiLoading) ||
                         (activeView === 'orders' && isOrdersApiLoading) ||
                         (activeView === 'candidates' && isCandidatesApiLoading)
                       }
+                      isCandidateDataLoading={
+                        role === 'Customer' ? isCustomerShortlistLoading : isCandidatesApiLoading
+                      }
+                      isCandidateDataError={role === 'Customer' && isCustomerShortlistError}
+                      isOrdersError={role === 'Customer' && isOrdersError}
                       isOrderResponsesLoading={isOrderResponsesFetching}
                       isOrdersArchiving={isDeletingOrder}
                       isOrdersStateUpdating={isOrderStatusUpdating}
@@ -371,6 +415,12 @@ export function WorkspaceShellView({
                       onCloseOrderDetails={closeOrderDetails}
                       onOpenCandidate={handleOpenCandidateDetails}
                       onOpenOrder={handleOpenOrderDetails}
+                      onRetryCandidateData={
+                        role === 'Customer'
+                          ? handleRetryCustomerShortlist
+                          : handleRetryVacancyCandidates
+                      }
+                      onRetryOrders={handleRetryOrders}
                       onPauseOrders={handlePauseOrders}
                       onPublishVacancyForCustomer={handlePublishVacancyForSelectedOrder}
                       onMoveApplicantResponderToShortlist={(orderId, candidateId) =>

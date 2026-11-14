@@ -78,6 +78,7 @@ export function useMainFeedPanelController({
   requesterUserId,
   role = 'Executor',
   selectedOrderId,
+  view,
 }: MainFeedPanelProps) {
   const [dashboardSort, setDashboardSort] = useState<DashboardSort>('updated')
   const [dashboardState, setDashboardState] = useState<DashboardState>('active')
@@ -153,6 +154,10 @@ export function useMainFeedPanelController({
 
   const candidateRows = candidateDataScope === 'base' && canViewBaseCandidates ? baseCandidates : candidates
   const filteredCandidateRows = candidateRows.filter((candidate) => {
+    if (role === 'Customer' && view === 'dashboard') {
+      return true
+    }
+
     const matchesSource =
       candidateSourceFilter === 'all'
         ? true
