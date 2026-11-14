@@ -249,3 +249,13 @@
 Ошибки/ограничения: реальную смену роли на пользовательской backend-сессии не выполнял. Существующая controller/backend логика поддерживает оба направления; frontend fixture проверил отображение обоих ролей, а backend integration coverage содержит переход Applicant→Executor.
 Проверка: Playwright 1.65.1 + Edge fixtures для Applicant и Executor при 1365×900, 390×844 и 320×844: подписи видны, overflow нет, page errors — 0; ESLint `Header.tsx`, `npm run build` (2016 modules) и `git diff --check` успешны.
 Коммит: feature/night-shift-refactor / feat: добавить яркий переключатель роли / 022c1ba.
+
+## PRI-131 | Покупка кандидатов и комментарии
+Старт: 2026-11-15 01:50 +03:00 (точная отметка начала не сохранилась)
+Окончание: 2026-11-15 02:05 +03:00
+Статус: Blocked — нужна продуктовая спецификация покупки и доступа к комментариям.
+Изменения: удалены session-only `purchasedCandidateIds`, локальный success handler и фильтрация «купленных» кандидатов; в деталях кандидата больше нет кнопки покупки и выдаваемых за recruiter comments значений из `WorkspaceCandidate.comment`. Собственные кандидаты по `isOwnedByRequester` сохранены. Панель сообщает, что покупка/комментарии недоступны.
+Ограничения: backend не имеет purchase/unlock API, персистентности покупки и источника закрытых комментариев. Нельзя безопасно выбрать цену, плательщика, payment flow, срок/область прав, возвраты и видимость комментариев без доменных правил. Контактный TTL не используется как замена покупки. Реальный billing flow не проверялся.
+Проверка: новый `CandidateDetailsPagePanel.test.tsx` и `workspaceShell.helpers.test.ts` — 11/11; полный frontend suite — 80/80; `npm exec -- eslint` для всех затронутых TS/TSX-файлов — без замечаний; `npm run build` — success, 2016 modules; reviewer — замечаний нет; `git diff --check`.
+YouGile: PRI-131 переведена в Blocked с описанием отсутствующего бизнес-контракта; задача не помечена завершённой.
+Коммит: feature/night-shift-refactor / fix(workspace): remove fake candidate purchase / 6f5947d.
