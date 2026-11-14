@@ -83,3 +83,13 @@
 Ошибки: независимое ревью выявило неучтённую загрузку/ошибку prerequisite вакансий и риск старого candidate response при переключении вакансии — добавлены prerequisite states/retry, RTK `currentData` и проверка vacancyId.
 Проверка: frontend `npm run build` — success (tsc + Vite, 2012 modules); `git diff --check` — success; независимое ревью — без оставшихся замечаний. Тесты и runtime сетевые сценарии не запускались.
 Коммит: feature/night-shift-refactor / feat: NS-07 | Dashboard заказчика: escrow и безопасный shortlist / 39c5069.
+
+
+## NS-08 | Dashboard исполнителя: кошелёк, Pool и Shortlist
+Старт продолжения: 2026-11-14 12:50:15 +03:00
+Окончание: 2026-11-14 13:01:42 +03:00
+Статус: Review
+Изменения: добавлены доступный и зарезервированный балансы из executor dashboard API; сводка кандидатов берёт только этапы Pool/Shortlist/Выбран из vacancy API, исключая личные анкеты и записи без этапа. Сохранена общая вкладка кандидатов; добавлены состояния загрузки/ошибки и retry для stats и сводки кандидатов.
+Ошибки: промежуточная сборка нашла незаведённый проп `executorDashboardCandidates` в controller/view; проп протянут по цепочке. Финальная сборка без ошибок.
+Проверка: frontend `npm run build` — success (tsc + Vite, 2012 modules); `git diff --check` — success; независимое ревью — без оставшихся замечаний. Предупреждения сборки: устаревший Browserslist и JS chunk >500 kB. Браузерные и runtime API сценарии не запускались.
+Коммит: feature/night-shift-refactor / feat: NS-08 | Dashboard исполнителя: кошелёк, Pool и Shortlist / 35cef5f.
