@@ -125,11 +125,11 @@
 
 ## AUDIT-01 | Полный аудит production Dashboard и план исправлений
 Старт: 2026-11-14 16:17 +03:00
-Окончание: 2026-11-14 16:30 +03:00
+Окончание: 2026-11-14 16:44 +03:00
 Статус: Review
 Изменения: создан `docs/pages/dashboard/DASHBOARD_AUDIT.md` с картой текущей архитектуры, сравнением ролей `_1`–`_3`, подтверждёнными gaps, baseline-проверками и последовательным планом. Код не менялся; существующие dashboard tasks проверены в YouGile, дубли не создавались.
-Ошибки/ограничения: frontend baseline — 4 существующих падения MainFeedPanel tests; backend integration tests — 42 из 52 не проходят из-за DB authentication failure пользователя `neondb_owner`; живой браузер недоступен (Playwright без Chrome, CUA browser host недоступен).
-Проверка: `dotnetdevmcp` build `backend/Api/Api.csproj` — success, 0 errors/warnings; `npm run build` — success (2016 modules); frontend tests — 40/44 passed; backend integration tests — 10/52 passed; `git diff --check` — success.
+Ошибки/ограничения: frontend baseline — 4 существующих падения MainFeedPanel tests; backend integration tests — 42 из 52 не проходят из-за DB authentication failure пользователя `neondb_owner`; авторизованная сессия Dashboard не открылась, `/app` перенаправил на `/auth`.
+Проверка: `dotnetdevmcp` build `backend/Api/Api.csproj` — success, 0 errors/warnings; `npm run build` — success (2016 modules); frontend tests — 40/44 passed; backend integration tests — 10/52 passed; Playwright 1.65.1 через Edge: auth page HTTP 200, без JS errors и horizontal overflow при viewport 1365 px; `git diff --check` — success.
 Коммит: будет указан после фиксации этапа.
 
 ## NS-08 follow-up | Дашборд исполнителя по макету _1
