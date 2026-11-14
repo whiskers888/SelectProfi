@@ -49,6 +49,7 @@ services:
     networks:
       api_proxy:
         ipv4_address: ${FRONTEND_PROXY_IP:-172.28.253.3}
+      frontend_local: {}
     healthcheck:
       test: [ "CMD", "wget", "-q", "--spider", "http://127.0.0.1/" ]
       interval: 10s
@@ -138,3 +139,4 @@ networks:
       config:
         - subnet: ${PROXY_NETWORK_SUBNET:-172.28.253.0/24}
   data: {}
+  frontend_local: {}

@@ -111,3 +111,13 @@
 Ошибки: первые Docker publish обнаружили advisories для AWSSDK.Core и Microsoft.OpenApi; package pins устранили их, затем выявлен advisory System.Security.Cryptography.Pkcs и обновлён до 9.0.21. Runtime npm audit выявил 6 high advisories; `npm audit fix --omit=dev` устранил их, после чего сборка обнаружила рассогласование Tiptap core/react 3.34/3.22; все прямые Tiptap зависимости выровнены на 3.34.0. Отдельная проверка Nginx вне Compose сначала не разрешила hostname `app`; повторная syntax check с тестовым DNS alias прошла. Полный npm install по-прежнему сообщает о 24 уязвимостях dev/build tree (1 low, 12 moderate, 11 high); runtime-only audit чистый.
 Проверка: dotnetdevmcp `backend/Api/Api.csproj` — success, 0 errors/warnings; NuGet vulnerable scan для Api/Infrastructure — без уязвимых пакетов; frontend `npm run build` — success (2015 modules); `npm audit --omit=dev` — 0 vulnerabilities; `docker compose config --quiet` — success с временными валидационными значениями секретов и проверкой fallback Postgres connection string; `docker compose build app frontend` — success; Nginx `-t` — success; Caddy `adapt` — success; `git diff --check` — success; независимое ревью — без оставшихся замечаний. Compose runtime и приложение не запускались; реальные `JWT_SIGNING_KEY` и `RABBITMQ_DEFAULT_PASS` должны быть добавлены в локальный `.env` перед запуском.
 Коммит: `feature/night-shift-refactor` / `feat: NS-10 Production Docker и единый compose` / `95c8fc8`.
+
+## NS-10 follow-up | Доступ production frontend на localhost
+Старт: 2026-11-14 15:30:37 +03:00
+Статус: In Progress
+Основание: runtime-проверка показала, что frontend в internal api_proxy не публикует порт 127.0.0.1:5173; добавляется отдельная frontend_local bridge-сеть без доступа к data/БД.
+Окончание: 2026-11-14 15:35:18 +03:00
+Изменения: frontend получил отдельную non-internal bridge-сеть только для loopback-доступа; api_proxy остался internal, data/БД недоступны frontend.
+Ошибки: до исправления Nginx был healthy внутри контейнера, но внутренний api_proxy блокировал публикацию порта и localhost:5173 отвергал соединение.
+Проверка: npm run build — success (2015 modules); docker compose build frontend — success; docker compose config --quiet — success; /app HTTP 200; frontend и backend healthy; PostgreSQL не перезапускался и его volume сохранён.
+Статус: готово к Review.
