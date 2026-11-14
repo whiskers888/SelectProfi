@@ -159,3 +159,12 @@
 Ошибки/ограничения: Playwright MCP не смог найти Chrome; `npx playwright install chrome` завершился ошибкой привилегий. Playwright 1.65.1 запущен напрямую с установленным Edge: `/app` перенаправляет на `/auth`; доступная страница входа не показала JS errors и горизонтального переполнения при ширине 1365 px. Авторизованный Dashboard и сетевой mutation flow не проверены.
 Проверка: `npm run build` — success (2016 modules); полный frontend suite — 56/56, 14/14 файлов; `git diff --check` — success; cavecrew reviewer — без замечаний. Build warnings: Browserslist устарел, bundle 1,143.02 kB, plugin timings.
 Коммит: feature/night-shift-refactor / feat: NS-08 выбор финалиста заказчиком / 0f4bdc9
+
+## AUDIT-01 follow-up | Детали отклика соискателя
+Старт: 2026-11-14 20:22 +03:00
+Окончание: 2026-11-14 20:29 +03:00
+Статус: Done
+Изменения: Applicant может раскрыть выбранный отклик и увидеть сохранённые этап, работодателя, дату отклика, первый просмотр и описание соответствующей опубликованной вакансии. Используются только существующие Applicant-scoped источники; зарплата, адрес, приглашение и расписание не синтезируются. Добавлены component-тесты раскрытия деталей и отсутствующего описания.
+Ошибки/ограничения: нет backend-контракта для interview invitations/rescheduling, salary или location в этих Dashboard данных; авторизованная браузерная проверка Applicant экрана невозможна, так как `/app` перенаправляет на `/auth`.
+Проверка: `npm run build` — success (2016 modules); полный frontend suite — 58/58, 15/15 файлов; `git diff --check` — success; reviewer — без замечаний.
+Коммит: feature/night-shift-refactor / feat: AUDIT-01 детали отклика соискателя / 9e61ddd
