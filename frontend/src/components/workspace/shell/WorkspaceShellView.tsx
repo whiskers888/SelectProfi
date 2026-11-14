@@ -89,6 +89,7 @@ export function WorkspaceShellView({
   handleRetryOrders,
   handleRetryVacancyCandidates,
   handleRetryCustomerShortlist,
+  handleRetryExecutorDashboardStats,
   handleRetryExecutorCandidates,
   handlePurchaseCandidate,
   handleRejectOrderExecutor,
@@ -118,6 +119,8 @@ export function WorkspaceShellView({
   isCustomerShortlistLoading,
   isExecutorCandidateSummaryError,
   isExecutorCandidateSummaryLoading,
+  isExecutorDashboardStatsError,
+  isExecutorDashboardStatsLoading,
   isApplicantDashboardStatsError,
   isApplicantDashboardStatsLoading,
   isRejectingOrderExecutor,
@@ -157,6 +160,19 @@ export function WorkspaceShellView({
 }: WorkspaceShellViewProps) {
   // Мобильный drawer навигации (<=900px) — отдельное локальное состояние, не нужно персистить.
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+
+  const sidebarRoleProps =
+    role === 'Executor'
+      ? {
+          role,
+          executorReward: {
+            stat: runtimeStats.find((stat) => stat.id === 'balance') ?? null,
+            isLoading: isExecutorDashboardStatsLoading,
+            isError: isExecutorDashboardStatsError,
+            onRetry: handleRetryExecutorDashboardStats,
+          },
+        }
+      : { role }
 
   function closeMobileNav() {
     setIsMobileNavOpen(false)
@@ -211,7 +227,7 @@ export function WorkspaceShellView({
             onToggleCollapse={toggleSidebar}
             onViewChange={handleMobileNavViewChange}
             roleLabel={profileRoleLabel}
-            role={role}
+            {...sidebarRoleProps}
           />
 
           <div className="preview11-main">

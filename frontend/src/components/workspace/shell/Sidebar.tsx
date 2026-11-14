@@ -9,9 +9,14 @@ import {
   type LucideIcon,
   UsersRound,
 } from 'lucide-react'
-import { workspaceViewOptions, type WorkspaceRole, type WorkspaceView } from '../model/data'
+import {
+  workspaceViewOptions,
+  type WorkspaceRole,
+  type WorkspaceStat,
+  type WorkspaceView,
+} from '../model/data'
 
-interface SidebarProps {
+interface SidebarBaseProps {
   activeView: WorkspaceView
   collapsed: boolean
   counters: Partial<Record<WorkspaceView, number>>
@@ -22,8 +27,20 @@ interface SidebarProps {
   onToggleCollapse: () => void
   onViewChange: (view: WorkspaceView) => void
   roleLabel: string
-  role: WorkspaceRole
 }
+
+interface ExecutorRewardState {
+  stat: WorkspaceStat | null
+  isLoading: boolean
+  isError: boolean
+  onRetry: () => void
+}
+
+type SidebarProps = SidebarBaseProps &
+  (
+    | { role: 'Executor'; executorReward: ExecutorRewardState }
+    | { role: Exclude<WorkspaceRole, 'Executor'>; executorReward?: never }
+  )
 
 const navIconMap: Record<WorkspaceView, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -83,7 +100,9 @@ export function Sidebar({
   onViewChange,
   roleLabel,
   role,
+  ...roleState
 }: SidebarProps) {
+  const executorReward = role === 'Executor' ? roleState.executorReward : null
   const showExpandedLabels = !collapsed || mobileOpen
   const visibleViewOptions =
     role === 'Customer'
@@ -173,6 +192,60 @@ export function Sidebar({
             )
           })}
         </nav>
+
+        {executorReward ? (
+          <div className="preview11-footer">
+            <section aria-label="Вознаграждение" className="preview11-hint-card">
+              <h2 className="preview11-hint-title">Вознаграждение</h2>
+              {executorReward.stat ? (
+                <div className="mt-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {executorReward.stat.label}
+                    </span>
+                    <strong className="text-sm font-bold text-foreground">
+                      {executorReward.stat.value}
+                    </strong>
+                  </div>
+                  {executorReward.stat.note ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {executorReward.stat.note}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {executorReward.isLoading && !executorReward.stat ? (
+                <p className="mt-2 text-xs text-muted-foreground" role="status">
+                  Загружаем баланс…
+                </p>
+              ) : null}
+
+              {!executorReward.isLoading && !executorReward.stat && !executorReward.isError ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Данные о вознаграждении пока недоступны.
+                </p>
+              ) : null}
+
+              {executorReward.isError ? (
+                <div className="mt-2 text-xs" role="alert">
+                  <p className="text-muted-foreground">
+                    {executorReward.stat
+                      ? 'Не удалось обновить данные о вознаграждении.'
+                      : 'Не удалось загрузить данные о вознаграждении.'}
+                  </p>
+                  <button
+                    className="mt-1 font-semibold text-primary underline-offset-4 hover:underline"
+                    onClick={executorReward.onRetry}
+                    type="button"
+                  >
+                    Повторить
+                  </button>
+                </div>
+              ) : null}
+            </section>
+          </div>
+        ) : null}
 
       </aside>
     </>
