@@ -371,7 +371,6 @@ export function useWorkspaceShellController() {
     Executor: false,
     Applicant: false,
   })
-  const [purchasedCandidateIds, setPurchasedCandidateIds] = useState<string[]>([])
   const [executorGlobalCandidates, setExecutorGlobalCandidates] = useState<WorkspaceCandidate[]>([])
   const [executorGlobalBaseCandidates, setExecutorGlobalBaseCandidates] = useState<
     WorkspaceCandidate[]
@@ -473,7 +472,6 @@ export function useWorkspaceShellController() {
     isCandidatesApiLoading,
     isDetailsPageOpen,
     isOrdersApiLoading,
-    isSelectedCandidatePurchased,
     runtimeStats,
     selectedCandidate,
     selectedOrder,
@@ -529,7 +527,6 @@ export function useWorkspaceShellController() {
     ordersResponseExists: Boolean(ordersResponse),
     preferredChatId,
     preferredOrderId,
-    purchasedCandidateIds,
     role,
     searchValue,
     serverBaseCandidates,
@@ -1003,21 +1000,6 @@ export function useWorkspaceShellController() {
     updateOrder,
   })
 
-  function handlePurchaseCandidate(candidate: WorkspaceCandidate) {
-    if (purchasedCandidateIds.includes(candidate.id)) {
-      return
-    }
-
-    setPurchasedCandidateIds((previousPurchasedCandidateIds) => [
-      ...previousPurchasedCandidateIds,
-      candidate.id,
-    ])
-    setBanner({
-      variant: 'success',
-      message: 'Доступ к комментариям кандидата открыт.',
-    })
-  }
-
   const { handleHeaderCreateAction, handleHeaderMenuAction, handleSendMessage } =
     useWorkspaceUiActions({
       customerCompanyName,
@@ -1289,7 +1271,6 @@ export function useWorkspaceShellController() {
     handleOpenCandidateDetails,
     handleOpenOrderDetails,
     handlePauseOrders,
-    handlePurchaseCandidate,
     handleRejectOrderExecutor,
     handleRespondToOrder,
     handleRespondToSelectedVacancy,
@@ -1335,7 +1316,6 @@ export function useWorkspaceShellController() {
     isRejectingOrderExecutor,
     isRespondingToOrder: isRespondingToOrder || isRespondingToVacancy,
     isUpdatingApplicantResponderStage,
-    isSelectedCandidatePurchased,
     isSelectingOrderExecutor,
     isSwitchingRole,
     isSidebarCollapsed,

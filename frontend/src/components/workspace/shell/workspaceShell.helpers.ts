@@ -332,7 +332,6 @@ type DeriveWorkspaceViewStateInput = {
   ordersResponseExists: boolean;
   preferredChatId: string | null;
   preferredOrderId: string | null;
-  purchasedCandidateIds: string[];
   role: WorkspaceRole;
   searchValue: string;
   serverBaseCandidates: WorkspaceCandidate[];
@@ -364,7 +363,6 @@ type DeriveWorkspaceViewStateResult = {
   isCandidatesApiLoading: boolean
   isDetailsPageOpen: boolean
   isOrdersApiLoading: boolean
-  isSelectedCandidatePurchased: boolean
   isStandaloneOrderDetailsOpen: boolean
   runtimeStats: WorkspaceStat[]
   selectedCandidate: WorkspaceCandidate | null
@@ -396,7 +394,6 @@ export function deriveWorkspaceViewState({
   ordersResponseExists,
   preferredChatId,
   preferredOrderId,
-  purchasedCandidateIds,
   role,
   searchValue,
   serverBaseCandidates = [],
@@ -481,8 +478,8 @@ export function deriveWorkspaceViewState({
     );
   });
 
-  const executorMyCandidates = filteredCandidates.filter(candidate =>
-    candidate.isOwnedByRequester === true || purchasedCandidateIds.includes(candidate.id)
+  const executorMyCandidates = filteredCandidates.filter(
+    candidate => candidate.isOwnedByRequester === true,
   );
   const executorDashboardCandidates = executorCandidatesForUi.filter(candidate => {
     const stage = candidate.statusLabel.trim().toLowerCase();
@@ -501,8 +498,8 @@ export function deriveWorkspaceViewState({
       (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
     );
   });
-  const executorBaseCandidates = filteredBaseCandidates.filter(candidate =>
-    candidate.isOwnedByRequester !== true && !purchasedCandidateIds.includes(candidate.id)
+  const executorBaseCandidates = filteredBaseCandidates.filter(
+    candidate => candidate.isOwnedByRequester !== true,
   );
 
   const selectedOrderId = filteredOrders.find(order => order.id === preferredOrderId)?.id ?? filteredOrders[0]?.id ?? null;
@@ -513,7 +510,6 @@ export function deriveWorkspaceViewState({
 
   const knownCandidates = [...allCandidates, ...allBaseCandidates];
   const selectedCandidate = knownCandidates.find(candidate => candidate.id === selectedCandidateIdFromUrl) ?? null;
-  const isSelectedCandidatePurchased = selectedCandidate ? purchasedCandidateIds.includes(selectedCandidate.id) : false;
 
   const candidateViewOrders = allOrders.filter(order => !order.isArchived);
   const candidateViewSelectedOrderId = candidateViewOrders.find(order => order.id === preferredOrderId)?.id ?? candidateViewOrders[0]?.id ?? null;
@@ -679,7 +675,6 @@ export function deriveWorkspaceViewState({
     isCandidatesApiLoading,
     isDetailsPageOpen,
     isOrdersApiLoading,
-    isSelectedCandidatePurchased,
     isStandaloneOrderDetailsOpen,
     runtimeStats,
     selectedCandidate,

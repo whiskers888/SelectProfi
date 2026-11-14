@@ -6,33 +6,16 @@ import { workspaceToneToBadgeVariant, type WorkspaceCandidate } from '../model/d
 
 type CandidateDetailsPagePanelProps = {
   candidate: WorkspaceCandidate
-  canPurchase: boolean
-  isPurchased: boolean
   onBack: () => void
-  onPurchase: () => void
 }
 
-export function CandidateDetailsPagePanel({
-  candidate,
-  canPurchase,
-  isPurchased,
-  onBack,
-  onPurchase,
-}: CandidateDetailsPagePanelProps) {
-  const isCommentsLocked = canPurchase && !isPurchased
-  const purchaseButtonLabel = canPurchase ? (isPurchased ? 'Куплено' : 'Купить') : 'Уже доступно'
-  const isPurchaseButtonDisabled = !canPurchase || isPurchased
-
+export function CandidateDetailsPagePanel({ candidate, onBack }: CandidateDetailsPagePanelProps) {
   return (
     <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-foreground">Резюме кандидата</h3>
-          {isCommentsLocked ? (
-            <p className="mt-1 text-sm text-muted-foreground">Комментарии рекрутера скрыты до покупки.</p>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">{candidate.comment}</p>
-          )}
+          <h3 className="text-base font-semibold text-foreground">Информация о кандидате</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Комментарии к кандидату недоступны.</p>
         </div>
         <Button
           className="h-10 rounded-xl border-border text-muted-foreground"
@@ -45,28 +28,9 @@ export function CandidateDetailsPagePanel({
       </div>
 
       <Alert>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm text-muted-foreground">
-            {canPurchase
-              ? candidate.sourceType === 'AddedByExecutor'
-                ? 'Резюме обезличено. Для доступа к полному профилю и комментариям требуется покупка.'
-                : 'Для доступа к комментариям других рекрутеров требуется покупка.'
-              : 'Профиль уже доступен без покупки.'}
-          </span>
-          <Button
-            className={
-              isPurchaseButtonDisabled
-                ? 'h-10 rounded-xl border-border text-muted-foreground'
-                : 'h-10 rounded-xl bg-success text-primary-foreground hover:bg-success/90'
-            }
-            disabled={isPurchaseButtonDisabled}
-            onClick={onPurchase}
-            type="button"
-            variant={isPurchaseButtonDisabled ? 'outline' : 'default'}
-          >
-            {purchaseButtonLabel}
-          </Button>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Покупка профиля и доступ к комментариям не поддерживаются.
+        </p>
       </Alert>
 
       <dl className="mt-4 grid gap-3">

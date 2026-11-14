@@ -91,7 +91,6 @@ export function WorkspaceShellView({
   handleRetryCustomerShortlist,
   handleRetryExecutorDashboardStats,
   handleRetryExecutorCandidates,
-  handlePurchaseCandidate,
   handleRejectOrderExecutor,
   handleRespondToOrder,
   handleRespondToSelectedVacancy,
@@ -128,7 +127,6 @@ export function WorkspaceShellView({
   isUpdatingApplicantResponderStage,
   isAddingCandidateFromBase,
   isRemovingVacancyCandidate,
-  isSelectedCandidatePurchased,
   isSelectingOrderExecutor,
   isSelectingVacancyCandidate,
   canSelectFinalist,
@@ -303,10 +301,7 @@ export function WorkspaceShellView({
             {workspaceScreen === 'candidate-details' && selectedCandidate ? (
               <CandidateDetailsPagePanel
                 candidate={selectedCandidate}
-                canPurchase={selectedCandidate.isOwnedByRequester !== true}
-                isPurchased={isSelectedCandidatePurchased}
                 onBack={closeCandidateDetails}
-                onPurchase={() => handlePurchaseCandidate(selectedCandidate)}
               />
             ) : null}
 

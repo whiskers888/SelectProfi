@@ -201,7 +201,6 @@ function deriveStats(role: 'Customer' | 'Executor') {
     ordersResponseExists: false,
     preferredChatId: null,
     preferredOrderId: null,
-    purchasedCandidateIds: [],
     role,
     searchValue: '',
     serverBaseCandidates: [],
