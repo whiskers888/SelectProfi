@@ -71,4 +71,4 @@
 Изменения: бренд перенесён в общую верхнюю панель; роль, создание и счётчики размещены в sidebar по макетам; счётчик dashboard берётся из API-метрики роли. Сохранены существующие навигация, профиль, поиск, быстрые действия и мобильный drawer; действие создания закрывает drawer. Добавлены `aria-current` и доступные подписи счётчиков.
 Ошибки: первый build выявил новые обязательные props в существующих Sidebar fixtures — обновлены. Ревью нашло незакрытый мобильный drawer, отсутствие Material Symbols шрифта и устаревшее ожидание бренда — исправлено. Финальный build прошёл; предупреждения: устаревший Browserslist, крупный JS chunk и plugin timing.
 Проверка: frontend `npm run build` — success (tsc + Vite, 2012 modules); `git diff --check` — success; независимое ревью — без оставшихся замечаний. Тесты и браузерная проверка responsive/keyboard поведения не запускались.
-Коммит: feature/night-shift-refactor / feat: NS-06 | Общий dashboard shell и UI-элементы / pending.
+Коммит: feature/night-shift-refactor / feat: NS-06 | Общий dashboard shell и UI-элементы / db45449.
