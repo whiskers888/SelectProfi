@@ -105,7 +105,7 @@
 
 ## NS-10 | Production Docker: multi-stage build и единый compose
 Старт: около 2026-11-14 13:40:14 +03:00; точный момент перевода в In Progress не был записан в предыдущем фрагменте.
-Окончание: 2026-11-14 14:29:27 +03:00
+Окончание: 2026-11-14 14:32:02 +03:00
 Статус: Done после Review; последняя задача, созданная по эпикам PROJECT_REQUIREMENTS.md.
 Изменения: сохранён backend multi-stage image на .NET 10; добавлены production frontend image (Node 22 build + Nginx), SPA fallback и same-origin API/health proxy. Compose заменяет Vite dev server на статические ассеты, сохраняет Postgres/Redis/RabbitMQ/Caddy, добавляет health/dependency checks, proxy network с фиксированными KnownProxies и loopback-only app/frontend ports. Backend dependency health details закрыты от внешних proxy маршрутов; лимит Nginx 26 MiB позволяет файл до 25 MiB с multipart overhead. Обновлена документация на .NET 10 по последнему решению пользователя. Закреплены совместимые исправленные версии AWSSDK.Core, Microsoft.OpenApi и System.Security.Cryptography.Pkcs; Tiptap family/lockfile согласованы на 3.34.0.
 Ошибки: первые Docker publish обнаружили advisories для AWSSDK.Core и Microsoft.OpenApi; package pins устранили их, затем выявлен advisory System.Security.Cryptography.Pkcs и обновлён до 9.0.21. Runtime npm audit выявил 6 high advisories; `npm audit fix --omit=dev` устранил их, после чего сборка обнаружила рассогласование Tiptap core/react 3.34/3.22; все прямые Tiptap зависимости выровнены на 3.34.0. Отдельная проверка Nginx вне Compose сначала не разрешила hostname `app`; повторная syntax check с тестовым DNS alias прошла. Полный npm install по-прежнему сообщает о 24 уязвимостях dev/build tree (1 low, 12 moderate, 11 high); runtime-only audit чистый.
