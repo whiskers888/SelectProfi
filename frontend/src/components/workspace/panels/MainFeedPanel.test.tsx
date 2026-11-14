@@ -164,6 +164,40 @@ describe('MainFeedPanel projects in work', () => {
     expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, shortlistCandidate.id, 'Pool')
   })
 
+  it('shows project-scoped candidates from the all-candidates and finalists overview actions', () => {
+    const otherOrder: WorkspaceOrder = { ...order, id: 'order-2', title: 'Другой проект' }
+    const finalist: WorkspaceCandidate = {
+      ...shortlistCandidate,
+      id: 'finalist-1',
+      name: 'Финалист проекта',
+    }
+    const otherProjectCandidate: WorkspaceCandidate = {
+      ...poolCandidate,
+      id: 'candidate-other-project',
+      name: 'Кандидат другого проекта',
+      orderId: otherOrder.id,
+    }
+
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [poolCandidate, finalist, otherProjectCandidate],
+      orders: [order, otherOrder],
+      selectedOrderId: order.id,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Pool/ }))
+    expect(screen.queryByText(finalist.name)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Обзор всех кандидатов/ }))
+    expect(screen.getByText(poolCandidate.name)).toBeTruthy()
+    expect(screen.getByText(finalist.name)).toBeTruthy()
+    expect(screen.queryByText(otherProjectCandidate.name)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Обзор финалистов/ }))
+    expect(screen.getByText(finalist.name)).toBeTruthy()
+    expect(screen.queryByText(poolCandidate.name)).toBeNull()
+    expect(screen.queryByText(otherProjectCandidate.name)).toBeNull()
+  })
+
   it('disables candidate stage actions while an update is pending', () => {
     renderDashboard('Executor', false, {
       executorDashboardCandidates: [poolCandidate],

@@ -118,7 +118,14 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
               <CardTitle className="text-lg">Кандидаты по проекту</CardTitle>
               <div className="flex flex-wrap gap-2" role="group" aria-label="Фильтр по этапу кандидата">
                 {(['all', 'pool', 'shortlist', 'selected'] as const).map((stage) => {
-                  const label = stage === 'all' ? 'Все' : stage === 'pool' ? 'Pool' : stage === 'shortlist' ? 'Shortlist' : 'Выбран'
+                  const label =
+                    stage === 'all'
+                      ? 'Обзор всех кандидатов'
+                      : stage === 'pool'
+                        ? 'Pool'
+                        : stage === 'shortlist'
+                          ? 'Обзор финалистов'
+                          : 'Выбран'
                   const count = stage === 'all' ? orderCandidates.length : stageCounts[stage]
                   return <button key={stage} type="button" aria-pressed={stageFilter === stage} onClick={() => setStageFilter(stage)} className={`rounded-full border px-3 py-1.5 text-sm ${stageFilter === stage ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>{label} <span className="ml-1 opacity-75">{count}</span></button>
                 })}
