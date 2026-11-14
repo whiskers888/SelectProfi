@@ -186,3 +186,12 @@
 Ошибки/ограничения: Playwright MCP не запускается без Chrome; для UI smoke использован Playwright 1.65.1 и Edge с изолированными API fixtures. Реальные backend authorization, database и mutation не проверены. В сборке остаются предупреждения Browserslist/chunk size/plugin timings; ESLint оставил один прежний warning в ExecutorDashboardSection useMemo.
 Проверка: MainFeedPanel tests — 21/21; `npm run build` — success (2016 modules); ESLint — 0 errors; `git diff --check` — success; Edge smoke Active → Archive → Active без JS errors и stale shortlist; viewport 1365×900 и 390×844 без horizontal overflow; cavecrew reviewer — без замечаний.
 Коммит: feature/night-shift-refactor / feat: AUDIT-01 Customer детали и shortlist / d24df1f
+
+## AUDIT-01 follow-up | Applicant список и выбранные детали `_3`
+Старт: 2026-11-14 22:11 +03:00
+Окончание: 2026-11-14 22:27 +03:00
+Статус: Review
+Изменения: Applicant Dashboard показывает компактный список откликов слева и детали выбранного отклика справа на широком экране; на mobile layout складывается. Первый доступный отклик выбран по текущим props после async загрузки; при удалении выбора отображается первая запись, при пустом списке детали закрываются. Существующий toggle и доступные API-поля сохранены.
+Ошибки/заметки: первый черновик вызвал ESLint `react-hooks/set-state-in-effect`, а async test использовал фиктивно непустой список из-за helper default; эффект удалён в пользу derived selection, fixture исправлен. API не содержит зарплату/локацию/интервью для Applicant.
+Проверка: ApplicantApplicationsSection tests — 5/5; `npm run build` — success (2016 modules); ESLint затронутых файлов — без замечаний; `git diff --check` — success; Edge Playwright fixtures проверили выбор, hide/re-show и mobile/desktop layout без JS errors и horizontal overflow; reviewer — без замечаний.
+Коммит: feature/night-shift-refactor / feat: AUDIT-01 Applicant детали и выбор / 67c8cb0
