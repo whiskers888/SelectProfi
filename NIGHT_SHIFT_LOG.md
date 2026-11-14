@@ -177,3 +177,12 @@
 Ошибки/ограничения: backend не предоставляет API встреч или сообщений, поэтому управление календарём и доставка чатов остаются неподдержанными. Dashboard browser route остаётся за авторизацией `/auth`.
 Проверка: `npm run build` — success (2016 modules); полный frontend suite — 62/62, 17/17 файлов; `git diff --check` — success; reviewer — без замечаний.
 Коммит: feature/night-shift-refactor / feat: AUDIT-01 honest calendar and chat states / d28d1a2
+
+## AUDIT-01 follow-up | Customer details и согласование Archive
+Старт: 2026-11-14 21:34 +03:00 (последняя доступная отметка перед продолжением; точное время возобновления не сохранилось)
+Окончание: 2026-11-14 22:11 +03:00
+Статус: Review
+Изменения: Customer Dashboard показывает детали выбранного заказа рядом со списком и shortlist только этого заказа. В Customer/Executor Dashboard выбор ограничен строками текущего фильтра; shortlist следует за выбранной vacancy, архивные действия доступны только для просмотра. Добавлены component tests для выбора, переключения Active/Archive и изоляции кандидатов.
+Ошибки/ограничения: Playwright MCP не запускается без Chrome; для UI smoke использован Playwright 1.65.1 и Edge с изолированными API fixtures. Реальные backend authorization, database и mutation не проверены. В сборке остаются предупреждения Browserslist/chunk size/plugin timings; ESLint оставил один прежний warning в ExecutorDashboardSection useMemo.
+Проверка: MainFeedPanel tests — 21/21; `npm run build` — success (2016 modules); ESLint — 0 errors; `git diff --check` — success; Edge smoke Active → Archive → Active без JS errors и stale shortlist; viewport 1365×900 и 390×844 без horizontal overflow; cavecrew reviewer — без замечаний.
+Коммит: feature/night-shift-refactor / feat: AUDIT-01 Customer детали и shortlist / d24df1f
