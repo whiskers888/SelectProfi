@@ -111,3 +111,15 @@
 - Viewport 1365×900 и 390×844: горизонтального overflow и JS errors нет; после закрытого состояния мобильного drawer список, детали и shortlist доступны на всю ширину.
 - Проверки: `npm run test:run -- src/components/workspace/panels/MainFeedPanel.test.tsx` — 21/21; `npm run build` — success, 2016 modules; ESLint для затронутых файлов — 0 errors, остался один существовавший warning в `ExecutorDashboardSection.tsx:32` о зависимости `useMemo`; `git diff --check` — success; независимый reviewer — замечаний нет.
 - Ограничение: Playwright использовал fixtures для профиля, заказов, вакансий, dashboard stats и shortlist. Реальные backend authorization, database response и mutation в этом прогоне не подтверждены. Полная проверка Applicant и повторная сверка Executor ещё остаются в плане.
+
+
+## Результат проверки Applicant по макету `_3`
+
+Дата: 2026-11-14 22:26 +03:00.
+
+- Applicant Dashboard выбирает первый доступный отклик при асинхронной загрузке; если выбранный отклик пропадает, детали переключаются на первую оставшуюся запись, а при пустом списке закрываются. Существующие описание вакансии, компания, этап, дата отклика и активность резюме сохранены; детали можно скрыть и показать снова.
+- Вместо пятиколоночной таблицы используется компактный список откликов слева и панель деталей справа на широком экране; на узком экране блоки складываются вертикально. Список содержит только поля из Applicant dashboard DTO.
+- Playwright 1.65.1 через Edge на `http://127.0.0.1:5175/app` проверил default selection, выбор второго отклика, hide/re-show и responsive layout на двух API fixtures. Скриншоты desktop/mobile сохранены вне репозитория в `%LOCALAPPDATA%\Temp\selectprofi-applicant-current-*.png`.
+- Viewport 1365×900: список и детали стоят рядом (около 325 px и 690 px); viewport 390×844: блоки складываются, sidebar drawer скрыт, горизонтального overflow нет. JS errors не зафиксированы.
+- Проверки: `npm run test:run -- src/components/workspace/panels/ApplicantApplicationsSection.test.tsx` — 5/5; `npm run build` — success, 2016 modules; ESLint компонента и теста — без ошибок и предупреждений; `git diff --check` — success; независимый reviewer — замечаний нет.
+- Ограничение: API не предоставляет приглашения на интервью, адрес или зарплатные условия в Applicant Dashboard DTO; эти части макета остаются неподдержанными и не имитируются. Browser API были fixtures, поэтому реальные authorization/backend responses не подтверждены.

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { ApplicantDashboardApplicationResponse } from '@/shared/api/dashboard/api'
 import type { VacancyResponse } from '@/shared/api/vacancies'
 
@@ -34,8 +33,16 @@ export function ApplicantApplicationsSection({
   unclassifiedCandidateLinksCount,
 }: ApplicantApplicationsSectionProps) {
   const [selectedVacancyId, setSelectedVacancyId] = useState<string | null>(null)
-  const selectedApplication = applications.find((application) => application.vacancyId === selectedVacancyId) ?? null
-  const selectedVacancy = vacancies.find((vacancy) => vacancy.id === selectedApplication?.vacancyId) ?? null
+  const [detailsVisible, setDetailsVisible] = useState(true)
+  const effectiveSelectedVacancyId = applications.some(
+    (application) => application.vacancyId === selectedVacancyId,
+  )
+    ? selectedVacancyId
+    : (applications[0]?.vacancyId ?? null)
+  const selectedApplication =
+    applications.find((application) => application.vacancyId === effectiveSelectedVacancyId) ?? null
+  const selectedVacancy =
+    vacancies.find((vacancy) => vacancy.id === selectedApplication?.vacancyId) ?? null
 
   return (
     <Card className="rounded-xl border-border shadow-none">
@@ -50,7 +57,10 @@ export function ApplicantApplicationsSection({
             <span>Загружаем отклики...</span>
           </div>
         ) : isError ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
+          <div
+            className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+            role="alert"
+          >
             <p>Не удалось загрузить список откликов.</p>
             {onRetry ? (
               <button
@@ -63,107 +73,127 @@ export function ApplicantApplicationsSection({
             ) : null}
           </div>
         ) : applications.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground" role="status">
+          <div
+            className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground"
+            role="status"
+          >
             Подтверждённых откликов пока нет.
           </div>
         ) : (
-          <Table stackOnMobile>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>Вакансия</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Дата отклика</TableHead>
-                <TableHead>Активность резюме</TableHead>
-                <TableHead>Детали</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {applications.map((application) => (
-                <TableRow key={application.vacancyId}>
-                  <TableCell className="font-medium" data-label="Вакансия">
-                    <div>{application.vacancyTitle}</div>
-                    <div className="text-xs font-normal text-muted-foreground">
-                      {application.companyName?.trim() || 'Работодатель'}
+          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.7fr)]">
+            <div className="grid min-w-0 content-start gap-2">
+              {applications.map((application) => {
+                const isSelected = effectiveSelectedVacancyId === application.vacancyId
+                return (
+                  <article
+                    className="min-w-0 rounded-lg border border-border p-3"
+                    key={application.vacancyId}
+                  >
+                    <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="break-words text-sm font-semibold text-foreground">
+                          {application.vacancyTitle}
+                        </h3>
+                        <p className="break-words text-xs text-muted-foreground">
+                          {application.companyName?.trim() || 'Работодатель'}
+                        </p>
+                      </div>
+                      <Badge variant={application.stage === 'Shortlist' ? 'success' : 'neutral'}>
+                        {application.stage === 'Shortlist' ? 'В шорт-листе' : 'Отклик отправлен'}
+                      </Badge>
                     </div>
-                  </TableCell>
-                  <TableCell data-label="Статус">
-                    <Badge variant={application.stage === 'Shortlist' ? 'success' : 'neutral'}>
-                      {application.stage === 'Shortlist' ? 'В шорт-листе' : 'Отклик отправлен'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell data-label="Дата отклика">{formatDate(application.submittedAtUtc)}</TableCell>
-                  <TableCell data-label="Активность резюме">
-                    {application.firstViewedAtUtc
-                      ? `Первый просмотр ${formatDate(application.firstViewedAtUtc)}`
-                      : 'Просмотр ещё не зафиксирован'}
-                  </TableCell>
-                  <TableCell data-label="Детали">
+                    <dl className="mt-3 grid min-w-0 gap-2 text-xs sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                      <div>
+                        <dt className="text-muted-foreground">Дата отклика</dt>
+                        <dd className="mt-0.5 font-medium text-foreground">
+                          {formatDate(application.submittedAtUtc)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Активность резюме</dt>
+                        <dd className="mt-0.5 break-words font-medium text-foreground">
+                          {application.firstViewedAtUtc
+                            ? `Первый просмотр ${formatDate(application.firstViewedAtUtc)}`
+                            : 'Просмотр ещё не зафиксирован'}
+                        </dd>
+                      </div>
+                    </dl>
                     <button
                       aria-controls={
-                        selectedVacancyId === application.vacancyId
-                          ? 'applicant-application-details'
-                          : undefined
+                        detailsVisible && isSelected ? 'applicant-application-details' : undefined
                       }
-                      aria-expanded={selectedVacancyId === application.vacancyId}
-                      aria-label={`${selectedVacancyId === application.vacancyId ? 'Скрыть' : 'Показать'} детали отклика ${application.vacancyTitle}`}
-                      className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-primary hover:bg-muted"
-                      onClick={() =>
-                        setSelectedVacancyId((currentId) =>
-                          currentId === application.vacancyId ? null : application.vacancyId,
-                        )
-                      }
+                      aria-expanded={detailsVisible && isSelected}
+                      aria-label={`${detailsVisible && isSelected ? 'Скрыть' : 'Показать'} детали отклика ${application.vacancyTitle}`}
+                      className="mt-3 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-primary hover:bg-muted"
+                      onClick={() => {
+                        if (isSelected && detailsVisible) {
+                          setDetailsVisible(false)
+                          return
+                        }
+                        setSelectedVacancyId(application.vacancyId)
+                        setDetailsVisible(true)
+                      }}
                       type="button"
                     >
-                      {selectedVacancyId === application.vacancyId ? 'Скрыть' : 'Подробнее'}
+                      {detailsVisible && isSelected ? 'Скрыть' : 'Подробнее'}
                     </button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </article>
+                )
+              })}
+            </div>
+            {selectedApplication && detailsVisible ? (
+              <section
+                aria-label={`Детали отклика ${selectedApplication.vacancyTitle}`}
+                className="min-w-0 rounded-xl border border-border bg-muted/40 p-4"
+                id="applicant-application-details"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-foreground">
+                      {selectedApplication.vacancyTitle}
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {selectedApplication.companyName?.trim() || 'Работодатель'}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={selectedApplication.stage === 'Shortlist' ? 'success' : 'neutral'}
+                  >
+                    {selectedApplication.stage === 'Shortlist'
+                      ? 'В шорт-листе'
+                      : 'Отклик отправлен'}
+                  </Badge>
+                </div>
+                <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-muted-foreground">Дата отклика</dt>
+                    <dd className="mt-1 font-medium text-foreground">
+                      {formatDate(selectedApplication.submittedAtUtc)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Первый просмотр</dt>
+                    <dd className="mt-1 font-medium text-foreground">
+                      {selectedApplication.firstViewedAtUtc
+                        ? formatDate(selectedApplication.firstViewedAtUtc)
+                        : 'Просмотр ещё не зафиксирован'}
+                    </dd>
+                  </div>
+                </dl>
+                <div className="mt-4 border-t border-border pt-4">
+                  <h4 className="text-sm font-semibold text-foreground">Описание вакансии</h4>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                    {selectedVacancy?.description.trim() || 'Описание вакансии сейчас недоступно.'}
+                  </p>
+                </div>
+              </section>
+            ) : null}
+          </div>
         )}
-        {selectedApplication ? (
-          <section
-            aria-label={`Детали отклика ${selectedApplication.vacancyTitle}`}
-            className="mt-4 rounded-xl border border-border bg-muted/40 p-4"
-            id="applicant-application-details"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h3 className="font-semibold text-foreground">{selectedApplication.vacancyTitle}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {selectedApplication.companyName?.trim() || 'Работодатель'}
-                </p>
-              </div>
-              <Badge variant={selectedApplication.stage === 'Shortlist' ? 'success' : 'neutral'}>
-                {selectedApplication.stage === 'Shortlist' ? 'В шорт-листе' : 'Отклик отправлен'}
-              </Badge>
-            </div>
-            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="text-muted-foreground">Дата отклика</dt>
-                <dd className="mt-1 font-medium text-foreground">{formatDate(selectedApplication.submittedAtUtc)}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Первый просмотр</dt>
-                <dd className="mt-1 font-medium text-foreground">
-                  {selectedApplication.firstViewedAtUtc
-                    ? formatDate(selectedApplication.firstViewedAtUtc)
-                    : 'Просмотр ещё не зафиксирован'}
-                </dd>
-              </div>
-            </dl>
-            <div className="mt-4 border-t border-border pt-4">
-              <h4 className="text-sm font-semibold text-foreground">Описание вакансии</h4>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
-                {selectedVacancy?.description.trim() || 'Описание вакансии сейчас недоступно.'}
-              </p>
-            </div>
-          </section>
-        ) : null}
         {unclassifiedCandidateLinksCount > 0 ? (
           <p className="mt-3 text-xs text-muted-foreground" role="note">
-            У {unclassifiedCandidateLinksCount} записей не сохранён источник, поэтому они не включены в список откликов.
+            У {unclassifiedCandidateLinksCount} записей не сохранён источник, поэтому они не
+            включены в список откликов.
           </p>
         ) : null}
       </CardContent>
