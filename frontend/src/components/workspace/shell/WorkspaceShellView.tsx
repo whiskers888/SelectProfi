@@ -56,6 +56,7 @@ export function WorkspaceShellView({
   isOrderSpecializationsLoading,
   createVacancyFormValues,
   executorBaseCandidates,
+  executorDashboardCandidates,
   executorMyCandidates,
   filteredBaseCandidates,
   filteredCandidates,
@@ -80,12 +81,14 @@ export function WorkspaceShellView({
   handleHeaderCreateAction,
   handleHeaderMenuAction,
   handleRetryCustomerDashboardStats,
+  handleRetryExecutorDashboardStats,
   handleOpenCandidateDetails,
   handleOpenOrderDetails,
   handlePauseOrders,
   handleRetryOrders,
   handleRetryVacancyCandidates,
   handleRetryCustomerShortlist,
+  handleRetryExecutorCandidates,
   handlePurchaseCandidate,
   handleRejectOrderExecutor,
   handleRespondToOrder,
@@ -111,6 +114,10 @@ export function WorkspaceShellView({
   isCustomerDashboardStatsLoading,
   isCustomerShortlistError,
   isCustomerShortlistLoading,
+  isExecutorDashboardStatsError,
+  isExecutorDashboardStatsLoading,
+  isExecutorCandidateSummaryError,
+  isExecutorCandidateSummaryLoading,
   isRejectingOrderExecutor,
   isRespondingToOrder,
   isUpdatingApplicantResponderStage,
@@ -370,6 +377,37 @@ export function WorkspaceShellView({
                             </div>
                           ) : null}
                         </>
+                      ) : role === 'Executor' ? (
+                        <>
+                          {isExecutorDashboardStatsLoading && runtimeStats.length === 0 ? (
+                            <div className="preview11-card">
+                              <div className="preview11-loading" role="status">
+                                <span aria-hidden="true" className="preview11-loading-spin" />
+                                <span>Загружаем показатели...</span>
+                              </div>
+                            </div>
+                          ) : null}
+                          {isExecutorDashboardStatsError ? (
+                            <div className="preview11-error-card" role="alert">
+                              <h3>Не удалось загрузить показатели</h3>
+                              <p>Повторите запрос, чтобы обновить баланс и статистику.</p>
+                              <button
+                                className="preview11-btn preview11-btn-primary"
+                                onClick={handleRetryExecutorDashboardStats}
+                                type="button"
+                              >
+                                Повторить
+                              </button>
+                            </div>
+                          ) : null}
+                          {runtimeStats.length > 0 ? (
+                            <StatsGrid stats={runtimeStats} onOverview={handleStatOverview} />
+                          ) : !isExecutorDashboardStatsLoading && !isExecutorDashboardStatsError ? (
+                            <div className="preview11-empty-state" role="status">
+                              <p>Показатели пока недоступны.</p>
+                            </div>
+                          ) : null}
+                        </>
                       ) : (
                         <StatsGrid
                           stats={runtimeStats}
@@ -389,6 +427,7 @@ export function WorkspaceShellView({
                       canRespondToOrder={canRespondToSelectedOrder}
                       canViewBaseCandidates={canLoadExecutorBaseCandidates}
                       candidates={role === 'Executor' ? executorMyCandidates : filteredCandidates}
+                      executorDashboardCandidates={executorDashboardCandidates}
                       hasRespondedToOrder={hasRespondedToSelectedOrder}
                       isLoading={
                         isViewLoading ||
@@ -397,9 +436,17 @@ export function WorkspaceShellView({
                         (activeView === 'candidates' && isCandidatesApiLoading)
                       }
                       isCandidateDataLoading={
-                        role === 'Customer' ? isCustomerShortlistLoading : isCandidatesApiLoading
+                        role === 'Customer'
+                          ? isCustomerShortlistLoading
+                          : role === 'Executor'
+                            ? isExecutorCandidateSummaryLoading
+                            : isCandidatesApiLoading
                       }
-                      isCandidateDataError={role === 'Customer' && isCustomerShortlistError}
+                      isCandidateDataError={
+                        role === 'Customer'
+                          ? isCustomerShortlistError
+                          : role === 'Executor' && isExecutorCandidateSummaryError
+                      }
                       isOrdersError={role === 'Customer' && isOrdersError}
                       isOrderResponsesLoading={isOrderResponsesFetching}
                       isOrdersArchiving={isDeletingOrder}
@@ -418,7 +465,9 @@ export function WorkspaceShellView({
                       onRetryCandidateData={
                         role === 'Customer'
                           ? handleRetryCustomerShortlist
-                          : handleRetryVacancyCandidates
+                          : role === 'Executor'
+                            ? handleRetryExecutorCandidates
+                            : handleRetryVacancyCandidates
                       }
                       onRetryOrders={handleRetryOrders}
                       onPauseOrders={handlePauseOrders}

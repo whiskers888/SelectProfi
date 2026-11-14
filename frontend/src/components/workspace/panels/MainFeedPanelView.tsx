@@ -44,7 +44,9 @@ export function MainFeedPanelView(props: MainFeedPanelViewProps) {
         {!isCustomer || !props.isOrdersError || props.orders.length > 0 ? (
           <DashboardOrdersSection {...props} />
         ) : null}
-        {isCustomer ? <CandidatesSection {...props} customerDashboardSummary /> : null}
+        {isCustomer || props.role === 'Executor' ? (
+          <CandidatesSection {...props} dashboardSummary />
+        ) : null}
       </div>
     )
   }

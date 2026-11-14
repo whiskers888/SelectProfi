@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { WorkspaceCandidate, WorkspaceRole } from '../../model/data'
 import type { VacancyBaseCandidatesItemResponse, VacancyCandidatesItemResponse } from '@/shared/api/candidates'
 import type { VacancyResponse } from '@/shared/api/vacancies'
@@ -47,6 +47,9 @@ export function useSyncExecutorGlobalCandidates({
   toWorkspaceCandidate,
   vacanciesResponse,
 }: UseSyncExecutorGlobalCandidatesInput) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState(false)
+  const [retryVersion, setRetryVersion] = useState(0)
   const executorVacancyIdsSignature =
     role === 'Executor' && vacanciesResponse
       ? vacanciesResponse.items
@@ -56,16 +59,32 @@ export function useSyncExecutorGlobalCandidates({
       : ''
 
   useEffect(() => {
-    if (role !== 'Executor' || !vacanciesResponse) {
+    if (role !== 'Executor') {
+      setExecutorGlobalCandidates([])
+      setExecutorGlobalBaseCandidates([])
+      setIsLoading(false)
+      setIsError(false)
+      return
+    }
+
+    if (!vacanciesResponse) {
       return
     }
 
     const vacancies = vacanciesResponse.items
     if (vacancies.length === 0) {
+      setExecutorGlobalCandidates([])
+      setExecutorGlobalBaseCandidates([])
+      setIsLoading(false)
+      setIsError(false)
       return
     }
 
     let cancelled = false
+    setExecutorGlobalCandidates([])
+    setExecutorGlobalBaseCandidates([])
+    setIsLoading(true)
+    setIsError(false)
     void Promise.all(
       vacancies.map(async (vacancy) => {
         const [vacancyCandidatesResponseResult, vacancyBaseCandidatesResponseResult] = await Promise.all([
@@ -122,6 +141,7 @@ export function useSyncExecutorGlobalCandidates({
 
         setExecutorGlobalCandidates(Array.from(globalCandidatesMap.values()))
         setExecutorGlobalBaseCandidates(Array.from(globalBaseCandidatesMap.values()))
+        setIsError(false)
       })
       .catch(() => {
         if (cancelled) {
@@ -130,6 +150,12 @@ export function useSyncExecutorGlobalCandidates({
 
         setExecutorGlobalCandidates([])
         setExecutorGlobalBaseCandidates([])
+        setIsError(true)
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
       })
 
     return () => {
@@ -144,8 +170,15 @@ export function useSyncExecutorGlobalCandidates({
     setExecutorGlobalCandidates,
     toWorkspaceBaseCandidate,
     toWorkspaceCandidate,
+    retryVersion,
     vacanciesResponse,
   ])
+
+  return {
+    isError,
+    isLoading,
+    retry: () => setRetryVersion((version) => version + 1),
+  }
 }
 
 type UseMarkCustomerViewedCandidateInput = {

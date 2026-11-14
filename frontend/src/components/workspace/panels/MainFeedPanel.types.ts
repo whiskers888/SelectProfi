@@ -12,6 +12,7 @@ export type MainFeedPanelProps = {
   candidates: WorkspaceCandidate[]
   canManageOrders?: boolean
   canViewBaseCandidates?: boolean
+  executorDashboardCandidates?: WorkspaceCandidate[]
   isLoading: boolean
   isCandidateDataLoading?: boolean
   isCandidateDataError?: boolean

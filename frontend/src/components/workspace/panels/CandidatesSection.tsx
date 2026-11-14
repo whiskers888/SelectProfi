@@ -6,7 +6,7 @@ import { workspaceToneToBadgeVariant } from '../model/data'
 import type { MainFeedPanelViewProps } from './MainFeedPanel.types'
 
 interface CandidatesSectionProps extends MainFeedPanelViewProps {
-  customerDashboardSummary?: boolean
+  dashboardSummary?: boolean
 }
 
 export function CandidatesSection({
@@ -31,26 +31,35 @@ export function CandidatesSection({
   shouldShowBaseCandidateTab,
   shouldShowCandidateFilters,
   shouldShowCandidateScopeSwitcher,
-  customerDashboardSummary = false,
+  dashboardSummary = false,
+  role,
 }: CandidatesSectionProps) {
+  const isCustomerDashboardSummary = dashboardSummary && role === 'Customer'
+  const isExecutorDashboardSummary = dashboardSummary && role === 'Executor'
+  const visibleCandidateRows = dashboardSummary ? filteredCandidateRows.slice(0, 5) : filteredCandidateRows
+
   return (
     <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-base font-semibold text-foreground">
-            {customerDashboardSummary
+            {isCustomerDashboardSummary
               ? 'Кандидаты в shortlist'
+              : isExecutorDashboardSummary
+                ? 'Pool и Shortlist'
               : isApplicantView
                 ? 'Мои резюме'
                 : 'Мои кандидаты'}
           </h3>
-          {customerDashboardSummary ? (
+          {dashboardSummary ? (
             <p className="mt-1 text-xs text-muted-foreground">
-              Псевдонимы и статус по выбранной вакансии.
+              {isCustomerDashboardSummary
+                ? 'Псевдонимы и статус по выбранной вакансии.'
+                : 'Кандидаты из ваших вакансий, полученные через API.'}
             </p>
           ) : null}
         </div>
-        {!customerDashboardSummary ? (
+        {!dashboardSummary ? (
           <div className="relative flex flex-wrap items-center gap-2">
           {shouldShowCandidateScopeSwitcher ? (
             <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
@@ -155,7 +164,11 @@ export function CandidatesSection({
       </div>
       {isCandidateDataError ? (
         <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
-          <p>Не удалось загрузить список кандидатов.</p>
+          <p>
+            {isExecutorDashboardSummary
+              ? 'Не удалось загрузить Pool и Shortlist.'
+              : 'Не удалось загрузить список кандидатов.'}
+          </p>
           {onRetryCandidateData ? (
             <button
               className="mt-2 rounded-md border border-current px-3 py-1 text-sm font-medium"
@@ -170,13 +183,19 @@ export function CandidatesSection({
       {isCandidateDataLoading && filteredCandidateRows.length === 0 ? (
         <div className="preview11-loading" role="status">
           <span aria-hidden="true" className="preview11-loading-spin" />
-          <span>Загружаем shortlist...</span>
+          <span>
+            {isExecutorDashboardSummary
+              ? 'Загружаем кандидатов из ваших вакансий...'
+              : 'Загружаем shortlist...'}
+          </span>
         </div>
       ) : filteredCandidateRows.length === 0 ? (
         isCandidateDataError ? null : (
         <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
-          {customerDashboardSummary
+          {isCustomerDashboardSummary
             ? 'Кандидатов в shortlist пока нет.'
+            : isExecutorDashboardSummary
+              ? 'Кандидатов в Pool или Shortlist пока нет.'
             : isApplicantView
               ? 'Резюме пока не добавлены.'
               : 'Кандидаты по текущим фильтрам не найдены.'}
@@ -187,26 +206,26 @@ export function CandidatesSection({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>
-                {customerDashboardSummary ? 'Псевдоним' : isApplicantView ? 'Резюме' : 'Кандидат'}
+                {isCustomerDashboardSummary ? 'Псевдоним' : isApplicantView ? 'Резюме' : 'Кандидат'}
               </TableHead>
-              {customerDashboardSummary ? (
+              {dashboardSummary ? (
                 <TableHead>Вакансия</TableHead>
               ) : !isBaseScope ? (
                 <TableHead>Источник</TableHead>
               ) : null}
-              <TableHead>{customerDashboardSummary ? 'Обновлено' : 'Рейтинг'}</TableHead>
+              <TableHead>{dashboardSummary ? 'Обновлено' : 'Рейтинг'}</TableHead>
               {!isBaseScope ? <TableHead>Статус</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCandidateRows.map((candidate) => (
+            {visibleCandidateRows.map((candidate) => (
               <TableRow
                 key={candidate.id}
-                className={customerDashboardSummary ? '' : 'cursor-pointer'}
-                onClick={customerDashboardSummary ? undefined : () => onOpenCandidate(candidate)}
+                className={dashboardSummary ? '' : 'cursor-pointer'}
+                onClick={dashboardSummary ? undefined : () => onOpenCandidate(candidate)}
               >
                 <TableCell className="font-medium">
-                  {customerDashboardSummary ? (
+                  {dashboardSummary ? (
                     <button
                       className="text-left font-medium text-primary hover:underline"
                       onClick={() => onOpenCandidate(candidate)}
@@ -218,13 +237,13 @@ export function CandidatesSection({
                     candidate.name
                   )}
                 </TableCell>
-                {customerDashboardSummary ? (
+                {dashboardSummary ? (
                   <TableCell data-label="Вакансия">{candidate.position}</TableCell>
                 ) : !isBaseScope ? (
                   <TableCell data-label="Источник">{candidate.source}</TableCell>
                 ) : null}
-                <TableCell data-label={customerDashboardSummary ? 'Обновлено' : 'Рейтинг'}>
-                  {customerDashboardSummary ? candidate.comment : candidate.rating}
+                <TableCell data-label={dashboardSummary ? 'Обновлено' : 'Рейтинг'}>
+                  {dashboardSummary ? candidate.comment : candidate.rating}
                 </TableCell>
                 {!isBaseScope ? (
                   <TableCell>

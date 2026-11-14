@@ -73,6 +73,7 @@ export function useMainFeedPanelController({
   applicantRespondedOrderIds = [],
   baseCandidates,
   canViewBaseCandidates = false,
+  executorDashboardCandidates,
   candidates,
   orders,
   requesterUserId,
@@ -152,9 +153,14 @@ export function useMainFeedPanelController({
     return order.executorId === requesterUserId || order.customerId === requesterUserId
   })
 
-  const candidateRows = candidateDataScope === 'base' && canViewBaseCandidates ? baseCandidates : candidates
+  const candidateRows =
+    role === 'Executor' && view === 'dashboard'
+      ? executorDashboardCandidates ?? candidates
+      : candidateDataScope === 'base' && canViewBaseCandidates
+        ? baseCandidates
+        : candidates
   const filteredCandidateRows = candidateRows.filter((candidate) => {
-    if (role === 'Customer' && view === 'dashboard') {
+    if ((role === 'Customer' || role === 'Executor') && view === 'dashboard') {
       return true
     }
 

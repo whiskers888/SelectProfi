@@ -182,9 +182,12 @@ export function useWorkspaceShellController() {
   )
   const orderSpecializationOptions =
     orderSpecializationsResponse?.items.map((item) => ({ id: item.id, name: item.name })) ?? []
-  const { data: executorDashboardStats } = useGetExecutorDashboardStatsQuery(
-    dashboardRole === 'Executor' ? undefined : skipToken,
-  )
+  const {
+    data: executorDashboardStats,
+    isError: isExecutorDashboardStatsError,
+    isLoading: isExecutorDashboardStatsLoading,
+    refetch: refetchExecutorDashboardStats,
+  } = useGetExecutorDashboardStatsQuery(dashboardRole === 'Executor' ? undefined : skipToken)
   const {
     data: customerDashboardStats,
     isError: isCustomerDashboardStatsError,
@@ -380,7 +383,11 @@ export function useWorkspaceShellController() {
     saveVacancyCreateDraft(userId, orderId, createVacancyFormValues)
   }, [authMe?.userId, createVacancyFormValues, createVacancyOrderId])
 
-  useSyncExecutorGlobalCandidates({
+  const {
+    isError: isExecutorCandidatesError,
+    isLoading: isExecutorCandidatesLoading,
+    retry: retryExecutorCandidates,
+  } = useSyncExecutorGlobalCandidates({
     loadVacancyBaseCandidates,
     loadVacancyCandidates,
     role,
@@ -424,6 +431,7 @@ export function useWorkspaceShellController() {
     candidateViewSelectedOrderId,
     counters,
     executorBaseCandidates,
+    executorDashboardCandidates,
     executorMyCandidates,
     filteredBaseCandidates,
     filteredCandidates,
@@ -502,6 +510,11 @@ export function useWorkspaceShellController() {
     ((!vacanciesResponse && isVacanciesFetching) || isCandidatesApiLoading)
   const isCustomerShortlistError =
     role === 'Customer' && (isVacanciesError || isVacancyCandidatesError)
+  const isExecutorCandidateSummaryLoading =
+    role === 'Executor' &&
+    ((!vacanciesResponse && isVacanciesFetching) || isExecutorCandidatesLoading)
+  const isExecutorCandidateSummaryError =
+    role === 'Executor' && (isVacanciesError || isExecutorCandidatesError)
   const primaryScreen =
     workspaceHistoryEntry?.kind === 'create'
       ? workspaceHistoryEntry.screen
@@ -1064,6 +1077,10 @@ export function useWorkspaceShellController() {
     void refetchCustomerDashboardStats()
   }
 
+  function handleRetryExecutorDashboardStats() {
+    void refetchExecutorDashboardStats()
+  }
+
   function handleRetryOrders() {
     void refetchOrders()
   }
@@ -1079,6 +1096,15 @@ export function useWorkspaceShellController() {
     }
 
     void refetchVacancyCandidates()
+  }
+
+  function handleRetryExecutorCandidates() {
+    if (isVacanciesError) {
+      void refetchVacancies()
+      return
+    }
+
+    retryExecutorCandidates()
   }
 
   function closeCreateCandidatePage() {
@@ -1154,6 +1180,7 @@ export function useWorkspaceShellController() {
     createVacancyFormValues,
     dataset,
     executorBaseCandidates,
+    executorDashboardCandidates,
     executorMyCandidates,
     filteredBaseCandidates,
     filteredCandidates,
@@ -1186,9 +1213,11 @@ export function useWorkspaceShellController() {
     handleSetApplicantResponderStage,
     handleRetryAnalytics,
     handleRetryCustomerDashboardStats,
+    handleRetryExecutorDashboardStats,
     handleRetryOrders,
     handleRetryVacancyCandidates,
     handleRetryCustomerShortlist,
+    handleRetryExecutorCandidates,
     handleSelectOrderExecutor,
     handleSendMessage,
     handleToggleRole,
@@ -1211,6 +1240,10 @@ export function useWorkspaceShellController() {
     isCustomerDashboardStatsLoading,
     isCustomerShortlistError,
     isCustomerShortlistLoading,
+    isExecutorDashboardStatsError,
+    isExecutorDashboardStatsLoading,
+    isExecutorCandidateSummaryError,
+    isExecutorCandidateSummaryLoading,
     isProfileRoute,
     isRejectingOrderExecutor,
     isRespondingToOrder: isRespondingToOrder || isRespondingToVacancy,

@@ -336,6 +336,7 @@ type DeriveWorkspaceViewStateResult = {
   candidateViewSelectedOrderId: string | null
   counters: Partial<Record<WorkspaceView, number>>
   executorBaseCandidates: WorkspaceCandidate[]
+  executorDashboardCandidates: WorkspaceCandidate[]
   executorMyCandidates: WorkspaceCandidate[]
   filteredBaseCandidates: WorkspaceCandidate[]
   filteredCandidates: WorkspaceCandidate[]
@@ -464,6 +465,23 @@ export function deriveWorkspaceViewState({
   const executorMyCandidates = filteredCandidates.filter(candidate =>
     candidate.isOwnedByRequester === true || purchasedCandidateIds.includes(candidate.id)
   );
+  const executorDashboardCandidates = executorCandidatesForUi.filter(candidate => {
+    const stage = candidate.statusLabel.trim().toLowerCase();
+    if (stage !== 'pool' && stage !== 'shortlist' && stage !== 'выбран') {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    return (
+      candidate.name.toLowerCase().includes(normalizedSearch) ||
+      candidate.position.toLowerCase().includes(normalizedSearch) ||
+      candidate.source.toLowerCase().includes(normalizedSearch) ||
+      (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
+    );
+  });
   const executorBaseCandidates = filteredBaseCandidates.filter(candidate =>
     candidate.isOwnedByRequester !== true && !purchasedCandidateIds.includes(candidate.id)
   );
@@ -509,7 +527,7 @@ export function deriveWorkspaceViewState({
   };
 
   let runtimeStats: WorkspaceStat[];
-  if (role === 'Executor') {
+  if (role === 'Executor' && executorDashboardStats) {
     runtimeStats = [
       {
         id: 'projects',
@@ -531,6 +549,19 @@ export function deriveWorkspaceViewState({
         value: `${executorDashboardStats?.shortlistCandidatesCount ?? 0} чел.`,
         note: '',
         tone: resolveCandidateFlowTone(executorDashboardStats?.shortlistCandidatesCount ?? 0),
+      },
+      {
+        id: 'balance',
+        label: 'Доступно к получению',
+        value: formatCurrencyAmount(
+          executorDashboardStats.availableBalance,
+          executorDashboardStats.currencyCode,
+        ),
+        note: `В резерве: ${formatCurrencyAmount(
+          executorDashboardStats.reservedBalance,
+          executorDashboardStats.currencyCode,
+        )}`,
+        tone: 'default',
       },
     ];
   } else if (role === 'Customer' && customerDashboardStats) {
@@ -600,6 +631,8 @@ export function deriveWorkspaceViewState({
     runtimeStats = []
   } else if (role === 'Customer') {
     runtimeStats = []
+  } else if (role === 'Executor') {
+    runtimeStats = []
   } else {
     runtimeStats = fallbackStats ?? [];
   }
@@ -618,6 +651,7 @@ export function deriveWorkspaceViewState({
     candidateViewSelectedOrderId,
     counters,
     executorBaseCandidates,
+    executorDashboardCandidates,
     executorMyCandidates,
     filteredBaseCandidates,
     filteredCandidates: customerShortlistCandidates,
