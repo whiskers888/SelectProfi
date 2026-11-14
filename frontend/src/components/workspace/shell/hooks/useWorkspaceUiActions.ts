@@ -45,6 +45,12 @@ export function useWorkspaceUiActions({
   }, [setBanner])
 
   const handleHeaderCreateAction = useCallback(() => {
+    if (role === 'Applicant') {
+      setIsCreateApplicantResponsePageOpen(false)
+      setActiveView('orders')
+      return
+    }
+
     setActiveView('dashboard')
 
     if (role === 'Customer') {
@@ -69,8 +75,6 @@ export function useWorkspaceUiActions({
       return
     }
 
-    setIsCreateApplicantResponsePageOpen(true)
-    setActiveView('dashboard')
   }, [
     role,
     customerCompanyName,

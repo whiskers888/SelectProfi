@@ -3,6 +3,7 @@ import type { OrderResponse } from '@/shared/api/orders'
 import type { VacancyCandidatesItemResponse } from '@/shared/api/candidates'
 import type { VacancyResponse } from '@/shared/api/vacancies'
 import {
+  createActionLabel,
   createHeaderTitle,
   deriveWorkspaceViewState,
   toWorkspaceCandidate,
@@ -21,6 +22,14 @@ const makeCandidate = (id: string, orderId: string): WorkspaceCandidate => ({
   statusLabel: 'Pool',
   statusTone: 'warning',
   comment: 'Original comment',
+})
+
+describe('createActionLabel', () => {
+  it('uses an action supported by each role', () => {
+    expect(createActionLabel('Applicant')).toBe('Найти вакансию')
+    expect(createActionLabel('Executor')).toBe('Добавить кандидата')
+    expect(createActionLabel('Customer')).toBe('Создать заказ')
+  })
 })
 
 describe('updateWorkspaceCandidateStage', () => {

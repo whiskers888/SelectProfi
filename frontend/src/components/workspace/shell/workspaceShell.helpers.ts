@@ -44,7 +44,7 @@ export function createActionLabel(role: WorkspaceRole): string {
   }
 
   if (role === 'Applicant') {
-    return 'Добавить резюме'
+    return 'Найти вакансию'
   }
 
   return 'Создать заказ'
