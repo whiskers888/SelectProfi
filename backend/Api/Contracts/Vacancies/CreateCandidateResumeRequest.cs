@@ -26,6 +26,9 @@ public sealed class CreateCandidateResumeRequest
     [MaxLength(200)]
     public string ResumeTitle { get; init; } = string.Empty;
 
+    [Range(0, int.MaxValue)]
+    public int? ExperienceYears { get; init; }
+
     [Required]
     [MinLength(1)]
     public string ResumeContentJson { get; init; } = "{}";

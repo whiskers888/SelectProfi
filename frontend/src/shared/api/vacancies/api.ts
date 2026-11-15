@@ -49,12 +49,15 @@ const vacanciesApi = api.injectEndpoints({
         method: 'GET',
         params: params ?? undefined,
       }),
+      providesTags: (result) =>
+        result?.items.map((vacancy) => ({ type: 'Vacancy' as const, id: vacancy.id })) ?? [],
     }),
     getVacancyById: build.query<VacancyResponse, string>({
       query: (vacancyId) => ({
         url: `/api/vacancies/${vacancyId}`,
         method: 'GET',
       }),
+      providesTags: (_result, _error, vacancyId) => [{ type: 'Vacancy', id: vacancyId }],
     }),
     createVacancy: build.mutation<VacancyResponse, CreateVacancyRequest>({
       query: (body) => ({

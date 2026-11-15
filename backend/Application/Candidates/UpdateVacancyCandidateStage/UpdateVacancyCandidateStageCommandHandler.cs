@@ -42,33 +42,27 @@ public sealed class UpdateVacancyCandidateStageCommandHandler(IUpdateVacancyCand
                 ErrorCode = UpdateVacancyCandidateStageErrorCode.CandidateLinkNotFound
             };
 
+        if (vacancy.ShortlistSentToCustomerAtUtc is not null && vacancyCandidate.Stage != command.Stage)
+            return new UpdateVacancyCandidateStageResult
+            {
+                ErrorCode = UpdateVacancyCandidateStageErrorCode.CandidateListAlreadySubmitted
+            };
+
         if (vacancy.SelectedCandidateId == vacancyCandidate.CandidateId && targetStage != VacancyCandidateStage.Shortlist)
             return new UpdateVacancyCandidateStageResult { ErrorCode = UpdateVacancyCandidateStageErrorCode.Conflict };
 
-        var shouldSaveVacancy = false;
-        var previousStage = vacancyCandidate.Stage;
+        var shouldSave = false;
         if (vacancyCandidate.Stage != targetStage)
         {
+            var now = DateTime.UtcNow;
             vacancyCandidate.Stage = targetStage;
-            vacancyCandidate.UpdatedAtUtc = DateTime.UtcNow;
-            shouldSaveVacancy = true;
+            vacancyCandidate.UpdatedAtUtc = now;
+            vacancy.CandidatePipelineRevision++;
+            vacancy.UpdatedAtUtc = now;
+            shouldSave = true;
         }
 
-        // @dvnull: Ранее shortlist не имел серверной фиксации факта авто-отправки заказчику; добавлена отметка при достижении порога заказа.
-        if (targetStage == VacancyCandidateStage.Shortlist && vacancy.ShortlistSentToCustomerAtUtc is null)
-        {
-            var shortlistCandidatesCount = await persistence.CountShortlistCandidatesAsync(command.VacancyId, cancellationToken);
-            if (previousStage != VacancyCandidateStage.Shortlist && targetStage == VacancyCandidateStage.Shortlist)
-                shortlistCandidatesCount += 1;
-            if (shortlistCandidatesCount >= vacancy.Order.RequestedCandidatesCount)
-            {
-                vacancy.ShortlistSentToCustomerAtUtc = DateTime.UtcNow;
-                vacancy.UpdatedAtUtc = DateTime.UtcNow;
-                shouldSaveVacancy = true;
-            }
-        }
-
-        if (shouldSaveVacancy)
+        if (shouldSave)
         {
             var saveResult = await persistence.SaveChangesAsync(cancellationToken);
             if (saveResult == UpdateVacancyCandidateStagePersistenceResult.Conflict)

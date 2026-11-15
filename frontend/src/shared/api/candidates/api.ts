@@ -10,6 +10,7 @@ export type CreateCandidateResumeRequest = {
   phone?: string
   specializationId: string
   resumeTitle: string
+  experienceYears?: number
   resumeContentJson: string
   resumeAttachmentsJson?: string
 }
@@ -27,6 +28,7 @@ export type MyCandidateResponse = {
   fullName: string
   specializationName: string
   resumeTitle: string
+  experienceYears?: number | null
   updatedAtUtc: string
 }
 
@@ -51,6 +53,10 @@ export type VacancyCandidatesItemResponse = {
   addedAtUtc: string
   updatedAtUtc: string
   viewedByCustomerAtUtc?: string | null
+  applicantSubmittedAtUtc?: string | null
+  isCustomerSubmitted: boolean
+  experienceSummary?: string | null
+  experienceYears?: number | null
   isSelected: boolean
 }
 
@@ -60,6 +66,12 @@ export type VacancyCandidatesResponse = {
   items: VacancyCandidatesItemResponse[]
 }
 
+export type SubmitVacancyCandidateListResponse = {
+  vacancyId: string
+  submittedAtUtc: string
+  submittedCandidatesCount: number
+}
+
 export type VacancyBaseCandidatesItemResponse = {
   candidateId: string
   publicAlias: string
@@ -67,6 +79,7 @@ export type VacancyBaseCandidatesItemResponse = {
   source: 'AddedByExecutor' | 'RegisteredUser'
   isOwnedByRequester: boolean
   isAnonymized: boolean
+  experienceYears?: number | null
   updatedAtUtc: string
 }
 
@@ -192,6 +205,17 @@ const candidatesApi = api.injectEndpoints({
       }),
       providesTags: (_result, _error, { vacancyId }) => [{ type: 'VacancyCandidate', id: vacancyId }],
     }),
+    submitVacancyCandidateList: build.mutation<SubmitVacancyCandidateListResponse, { vacancyId: string }>({
+      query: ({ vacancyId }) => ({
+        url: `/api/vacancies/${vacancyId}/candidates/submit`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, _error, { vacancyId }) => [
+        { type: 'VacancyCandidate', id: vacancyId },
+        'VacancyCandidate',
+        { type: 'Vacancy', id: vacancyId },
+      ],
+    }),
     getVacancyBaseCandidates: build.query<VacancyBaseCandidatesResponse, { vacancyId: string }>({
       query: ({ vacancyId }) => ({
         url: `/api/vacancies/${vacancyId}/base-candidates`,
@@ -257,6 +281,7 @@ export const {
   useRespondToVacancyMutation,
   useGetVacancyCandidatesQuery,
   useLazyGetVacancyCandidatesQuery,
+  useSubmitVacancyCandidateListMutation,
   useGetVacancyBaseCandidatesQuery,
   useLazyGetVacancyBaseCandidatesQuery,
   useUpdateVacancyCandidateStageMutation,

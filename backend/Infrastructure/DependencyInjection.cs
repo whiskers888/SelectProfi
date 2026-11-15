@@ -62,6 +62,8 @@ using SelectProfi.backend.Infrastructure.Candidates.MarkVacancyCandidateViewedBy
 using SelectProfi.backend.Infrastructure.Candidates.RespondToVacancy;
 using SelectProfi.backend.Infrastructure.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Infrastructure.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.SubmitVacancyCandidateList;
+using SelectProfi.backend.Infrastructure.Candidates.SubmitVacancyCandidateList;
 using SelectProfi.backend.Infrastructure.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Infrastructure.Data;
@@ -145,6 +147,7 @@ public static class DependencyInjection
         services.AddScoped<IRemoveVacancyCandidatePersistence, RemoveVacancyCandidatePersistence>();
         // @dvnull: Добавлена persistence-реализация для смены стадии кандидата в vacancy pipeline.
         services.AddScoped<IUpdateVacancyCandidateStagePersistence, UpdateVacancyCandidateStagePersistence>();
+        services.AddScoped<ISubmitVacancyCandidateListPersistence, SubmitVacancyCandidateListPersistence>();
         // @dvnull: Добавлена persistence-реализация для финального выбора кандидата заказчиком.
         services.AddScoped<ISelectVacancyCandidatePersistence, SelectVacancyCandidatePersistence>();
         // @dvnull: Добавлена persistence-реализация фиксации просмотра кандидата заказчиком для бейджа новых профилей.

@@ -34,6 +34,9 @@ public sealed class GetVacancyCandidatesQueryHandler(IGetVacancyCandidatesPersis
         }
 
         var vacancyCandidates = await persistence.FindActiveVacancyCandidatesAsync(query.VacancyId, cancellationToken);
+        if (query.RequesterRole == UserRole.Customer)
+            vacancyCandidates = vacancyCandidates.Where(candidate => candidate.CustomerSubmittedAtUtc is not null).ToArray();
+
         var selectedCandidateId = vacancy.SelectedCandidateId;
         var items = vacancyCandidates
             .Select(vacancyCandidate => new GetVacancyCandidatesItemResult
@@ -49,7 +52,20 @@ public sealed class GetVacancyCandidatesQueryHandler(IGetVacancyCandidatesPersis
                 AddedAtUtc = vacancyCandidate.AddedAtUtc,
                 UpdatedAtUtc = vacancyCandidate.UpdatedAtUtc,
                 ViewedByCustomerAtUtc = vacancyCandidate.ViewedByCustomerAtUtc,
-                IsSelected = selectedCandidateId == vacancyCandidate.CandidateId
+                IsSelected = selectedCandidateId == vacancyCandidate.CandidateId,
+                ApplicantSubmittedAtUtc = query.RequesterRole == UserRole.Executor
+                    ? vacancyCandidate.ApplicantSubmittedAtUtc
+                    : null,
+                IsCustomerSubmitted = vacancyCandidate.CustomerSubmittedAtUtc is not null,
+                ExperienceSummary = query.RequesterRole == UserRole.Executor &&
+                                    vacancyCandidate.ApplicantSubmittedAtUtc is not null
+                    ? vacancyCandidate.Candidate.User?.ApplicantExperienceSummary
+                    : null,
+                ExperienceYears = vacancyCandidate.Candidate.Resumes
+                    .Where(resume => resume.DeletedAtUtc == null)
+                    .OrderByDescending(resume => resume.UpdatedAtUtc)
+                    .Select(resume => resume.ExperienceYears)
+                    .FirstOrDefault()
             })
             .ToArray();
 

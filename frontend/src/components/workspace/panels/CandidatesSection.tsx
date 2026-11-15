@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { formatExperienceYears, getWorkspaceCandidatePipelineStage } from '../shell/workspaceShell.helpers'
 import { workspaceToneToBadgeVariant } from '../model/data'
 import type { MainFeedPanelViewProps } from './MainFeedPanel.types'
 
@@ -48,9 +49,9 @@ export function CandidatesSection({
         <div>
           <h3 className="text-base font-semibold text-foreground">
             {isCustomerDashboardSummary
-              ? 'Кандидаты в shortlist'
+              ? 'Список кандидатов'
               : isExecutorDashboardSummary
-                ? 'Pool и Shortlist'
+                ? 'Рабочий список и список кандидатов'
               : isApplicantView
                 ? 'Мои резюме'
                 : 'Мои кандидаты'}
@@ -134,8 +135,8 @@ export function CandidatesSection({
                       value={candidateStageFilter}
                     >
                       <option value="all">Все</option>
-                      <option value="pool">Pool</option>
-                      <option value="shortlist">Shortlist</option>
+                      <option value="pool">Рабочий список</option>
+                      <option value="shortlist">Список кандидатов</option>
                       <option value="selected">Выбран</option>
                       <option value="no_stage">Без этапа</option>
                     </select>
@@ -170,7 +171,7 @@ export function CandidatesSection({
         <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
           <p>
             {isExecutorDashboardSummary
-              ? 'Не удалось загрузить Pool и Shortlist.'
+              ? 'Не удалось загрузить списки кандидатов.'
               : 'Не удалось загрузить список кандидатов.'}
           </p>
           {onRetryCandidateData ? (
@@ -190,16 +191,16 @@ export function CandidatesSection({
           <span>
             {isExecutorDashboardSummary
               ? 'Загружаем кандидатов из ваших вакансий...'
-              : 'Загружаем shortlist...'}
+              : 'Загружаем список кандидатов...'}
           </span>
         </div>
       ) : filteredCandidateRows.length === 0 ? (
         isCandidateDataError ? null : (
         <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
           {isCustomerDashboardSummary
-            ? 'Кандидатов в shortlist пока нет.'
+            ? 'В списке кандидатов пока нет записей.'
             : isExecutorDashboardSummary
-              ? 'Кандидатов в Pool или Shortlist пока нет.'
+              ? 'В рабочем списке и списке кандидатов пока нет записей.'
             : isApplicantView
               ? 'Резюме пока не добавлены.'
               : 'Кандидаты по текущим фильтрам не найдены.'}
@@ -212,6 +213,7 @@ export function CandidatesSection({
               <TableHead>
                 {isCustomerDashboardSummary ? 'Псевдоним' : isApplicantView ? 'Резюме' : 'Кандидат'}
               </TableHead>
+              <TableHead>Опыт</TableHead>
               {dashboardSummary ? (
                 <TableHead>Вакансия</TableHead>
               ) : !isBaseScope ? (
@@ -242,6 +244,7 @@ export function CandidatesSection({
                     candidate.name
                   )}
                 </TableCell>
+                <TableCell data-label="Опыт">{formatExperienceYears(candidate.experienceYears)}</TableCell>
                 {dashboardSummary ? (
                   <TableCell data-label="Вакансия">{candidate.position}</TableCell>
                 ) : !isBaseScope ? (
@@ -265,15 +268,15 @@ export function CandidatesSection({
                       <span className="whitespace-nowrap text-sm font-medium text-primary">
                         Финалист выбран
                       </span>
-                    ) : candidate.statusLabel === 'Shortlist' && hasSelectedFinalist ? (
+                    ) : getWorkspaceCandidatePipelineStage(candidate) === 'Shortlist' && hasSelectedFinalist ? (
                       <span className="whitespace-nowrap text-sm text-muted-foreground">
                         Финалист уже выбран
                       </span>
-                    ) : candidate.statusLabel === 'Shortlist' && !canSelectFinalist ? (
+                    ) : getWorkspaceCandidatePipelineStage(candidate) === 'Shortlist' && !canSelectFinalist ? (
                       <span className="text-sm text-muted-foreground">
                         Доступно после публикации вакансии
                       </span>
-                    ) : candidate.statusLabel === 'Shortlist' && onSelectVacancyCandidate ? (
+                    ) : getWorkspaceCandidatePipelineStage(candidate) === 'Shortlist' && onSelectVacancyCandidate ? (
                       <button
                         aria-label={`Выбрать финалистом ${candidate.name}`}
                         className="h-8 whitespace-nowrap rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"

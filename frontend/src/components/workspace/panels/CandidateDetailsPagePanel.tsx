@@ -3,13 +3,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { workspaceToneToBadgeVariant, type WorkspaceCandidate } from '../model/data'
+import { formatExperienceYears } from '../shell/workspaceShell.helpers'
 
-type CandidateDetailsPagePanelProps = {
+interface CandidateDetailsPagePanelProps {
   candidate: WorkspaceCandidate
   onBack: () => void
 }
 
-export function CandidateDetailsPagePanel({ candidate, onBack }: CandidateDetailsPagePanelProps) {
+export function CandidateDetailsPagePanel({ candidate, onBack }: Readonly<CandidateDetailsPagePanelProps>) {
   return (
     <Card className="rounded-xl border-border p-4 shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -41,6 +42,10 @@ export function CandidateDetailsPagePanel({ candidate, onBack }: CandidateDetail
         <div>
           <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Позиция</dt>
           <dd className="mt-1 text-sm text-foreground">{candidate.position}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Опыт работы</dt>
+          <dd className="mt-1 text-sm text-foreground">{formatExperienceYears(candidate.experienceYears)}</dd>
         </div>
         <div>
           <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Источник</dt>

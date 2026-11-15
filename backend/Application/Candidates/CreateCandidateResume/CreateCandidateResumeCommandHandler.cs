@@ -98,6 +98,7 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
             OwnerUserId = command.RequesterUserId,
             SpecializationId = specialization.Id,
             Title = NormalizeRequired(command.ResumeTitle),
+            ExperienceYears = command.ExperienceYears,
             ContentJson = NormalizeJson(command.ResumeContentJson),
             AttachmentsJson = NormalizeOptional(command.ResumeAttachmentsJson),
             PdfExportAllowed = false,
@@ -138,6 +139,7 @@ public sealed class CreateCandidateResumeCommandHandler(ICreateCandidateResumePe
                && command.SpecializationId != Guid.Empty
                && !string.IsNullOrWhiteSpace(command.Phone)
                && !string.IsNullOrWhiteSpace(command.ResumeTitle)
+               && (command.ExperienceYears is null or >= 0)
                && HasResumeContent(command.ResumeContentJson)
                && HasValidAttachmentLinks(command.ResumeAttachmentsJson);
     }

@@ -8,5 +8,6 @@ public enum UpdateVacancyCandidateStageErrorCode
     Forbidden = 3,
     InvalidStage = 4,
     VacancyNotPublished = 5,
-    Conflict = 6
+    Conflict = 6,
+    CandidateListAlreadySubmitted = 7
 }

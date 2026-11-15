@@ -12,7 +12,7 @@ const candidate: WorkspaceCandidate = {
   orderId: 'order-1',
   source: 'База кандидатов',
   rating: '4.8',
-  statusLabel: 'Pool',
+  statusLabel: 'В рабочем списке',
   statusTone: 'warning',
   comment: 'Синтетическая заметка из даты обновления',
 }

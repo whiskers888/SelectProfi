@@ -23,6 +23,8 @@ public sealed class CreateCandidateResumeCommand : ICommand<CreateCandidateResum
 
     public string ResumeTitle { get; init; } = string.Empty;
 
+    public int? ExperienceYears { get; init; }
+
     public string ResumeContentJson { get; init; } = "{}";
 
     public string? ResumeAttachmentsJson { get; init; }

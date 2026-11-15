@@ -12,7 +12,6 @@ public sealed class UpdateVacancyCandidateStagePersistence(AppDbContext dbContex
     public Task<Vacancy?> FindActiveVacancyByIdAsync(Guid vacancyId, CancellationToken cancellationToken)
     {
         return dbContext.Vacancies
-            .Include(vacancy => vacancy.Order)
             .FirstOrDefaultAsync(vacancy => vacancy.Id == vacancyId && vacancy.DeletedAtUtc == null, cancellationToken);
     }
 
@@ -29,23 +28,16 @@ public sealed class UpdateVacancyCandidateStagePersistence(AppDbContext dbContex
                 cancellationToken);
     }
 
-    public Task<int> CountShortlistCandidatesAsync(Guid vacancyId, CancellationToken cancellationToken)
-    {
-        return dbContext.VacancyCandidates
-            .AsNoTracking()
-            .CountAsync(
-                vacancyCandidate => vacancyCandidate.VacancyId == vacancyId
-                                    && vacancyCandidate.DeletedAtUtc == null
-                                    && vacancyCandidate.Stage == VacancyCandidateStage.Shortlist,
-                cancellationToken);
-    }
-
     public async Task<UpdateVacancyCandidateStagePersistenceResult> SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
             return UpdateVacancyCandidateStagePersistenceResult.Saved;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return UpdateVacancyCandidateStagePersistenceResult.Conflict;
         }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         {

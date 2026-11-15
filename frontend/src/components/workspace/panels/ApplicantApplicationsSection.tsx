@@ -99,7 +99,7 @@ export function ApplicantApplicationsSection({
                         </p>
                       </div>
                       <Badge variant={application.stage === 'Shortlist' ? 'success' : 'neutral'}>
-                        {application.stage === 'Shortlist' ? 'В шорт-листе' : 'Отклик отправлен'}
+                        {application.stage === 'Shortlist' ? 'В списке кандидатов' : 'Отклик отправлен'}
                       </Badge>
                     </div>
                     <dl className="mt-3 grid min-w-0 gap-2 text-xs sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
@@ -160,7 +160,7 @@ export function ApplicantApplicationsSection({
                     variant={selectedApplication.stage === 'Shortlist' ? 'success' : 'neutral'}
                   >
                     {selectedApplication.stage === 'Shortlist'
-                      ? 'В шорт-листе'
+                      ? 'В списке кандидатов'
                       : 'Отклик отправлен'}
                   </Badge>
                 </div>

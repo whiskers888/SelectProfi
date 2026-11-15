@@ -12,6 +12,7 @@ using SelectProfi.backend.Application.Candidates.GetSelectedCandidateContacts;
 using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.SubmitVacancyCandidateList;
 using SelectProfi.backend.Domain.Vacancies;
 using SelectProfi.backend.Contracts.Vacancies;
 
@@ -167,6 +168,16 @@ public static class VacancyResponseMapper
         };
     }
 
+    public static SubmitVacancyCandidateListResponse ToResponse(this SubmitVacancyCandidateListResult result)
+    {
+        return new SubmitVacancyCandidateListResponse
+        {
+            VacancyId = result.VacancyId,
+            SubmittedAtUtc = result.SubmittedAtUtc,
+            SubmittedCandidatesCount = result.SubmittedCandidatesCount
+        };
+    }
+
     public static SelectedCandidateContactsResponse ToResponse(this GetSelectedCandidateContactsResult result)
     {
         return new SelectedCandidateContactsResponse
@@ -211,7 +222,11 @@ public static class VacancyResponseMapper
                 AddedAtUtc = item.AddedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc,
                 ViewedByCustomerAtUtc = item.ViewedByCustomerAtUtc,
-                IsSelected = item.IsSelected
+                IsSelected = item.IsSelected,
+                ApplicantSubmittedAtUtc = item.ApplicantSubmittedAtUtc,
+                IsCustomerSubmitted = item.IsCustomerSubmitted,
+                ExperienceSummary = item.ExperienceSummary,
+                ExperienceYears = item.ExperienceYears
             }).ToArray()
         };
     }
@@ -229,6 +244,7 @@ public static class VacancyResponseMapper
                 Source = item.Source.ToString(),
                 IsOwnedByRequester = item.IsOwnedByRequester,
                 IsAnonymized = item.IsAnonymized,
+                ExperienceYears = item.ExperienceYears,
                 UpdatedAtUtc = item.UpdatedAtUtc
             }).ToArray()
         };

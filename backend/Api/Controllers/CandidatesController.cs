@@ -66,6 +66,7 @@ public sealed class CandidatesController(ICommandDispatcher commandDispatcher, I
             FullName = item.FullName,
             SpecializationName = item.SpecializationName,
             ResumeTitle = item.ResumeTitle,
+            ExperienceYears = item.ExperienceYears,
             UpdatedAtUtc = item.UpdatedAtUtc
         }));
     }

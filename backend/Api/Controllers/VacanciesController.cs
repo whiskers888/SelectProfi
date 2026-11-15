@@ -12,6 +12,7 @@ using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCus
 using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.SubmitVacancyCandidateList;
 using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Vacancies.CreateVacancy;
@@ -243,6 +244,20 @@ public sealed class VacanciesController(
                 request.ToCommand(vacancyId, candidateId, RequesterUserId, RequesterRole),
                 cancellationToken);
 
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{vacancyId:guid}/candidates/submit")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    [ProducesResponseType(typeof(SubmitVacancyCandidateListResponse), StatusCodes.Status200OK)]
+    [ProducesForbiddenProblem]
+    [ProducesConflictProblem]
+    public async Task<IActionResult> SubmitCandidateList(Guid vacancyId, CancellationToken cancellationToken)
+    {
+        var command = vacancyId.ToSubmitCandidateListCommand(RequesterUserId, RequesterRole);
+        var result = await commandDispatcher.DispatchAsync<SubmitVacancyCandidateListCommand, SubmitVacancyCandidateListResult>(
+            command,
+            cancellationToken);
         return result.ToActionResult(this);
     }
 

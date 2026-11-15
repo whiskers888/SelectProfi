@@ -6,7 +6,7 @@ public interface ISelectVacancyCandidatePersistence
 {
     Task<Vacancy?> FindActiveVacancyByIdAsync(Guid vacancyId, CancellationToken cancellationToken);
 
-    Task<bool> CandidateInShortlistAsync(Guid vacancyId, Guid candidateId, CancellationToken cancellationToken);
+    Task<bool> CandidateInSubmittedShortlistAsync(Guid vacancyId, Guid candidateId, CancellationToken cancellationToken);
 
     Task<SelectVacancyCandidatePersistenceResult> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -19,6 +19,7 @@ public sealed class DeleteVacancyCommandHandler(IDeleteVacancyPersistence persis
         var utcNow = DateTime.UtcNow;
         vacancy.DeletedAtUtc = utcNow;
         vacancy.UpdatedAtUtc = utcNow;
+        vacancy.CandidatePipelineRevision++;
 
         var saveResult = await persistence.SaveChangesAsync(cancellationToken);
         if (saveResult == DeleteVacancyPersistenceResult.Conflict)

@@ -270,6 +270,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         {
             builder.HasKey(vacancy => vacancy.Id);
 
+            builder.Property(vacancy => vacancy.CandidatePipelineRevision)
+                .IsConcurrencyToken();
+
             // @dvnull: Ранее статус жизненного цикла вакансии не хранился; добавлен enum-статус для draft/approval/published.
             builder.Property(vacancy => vacancy.Status)
                 .HasConversion<string>()

@@ -62,6 +62,7 @@ export function useSyncExecutorGlobalCandidates({
     if (role !== 'Executor') {
       setExecutorGlobalCandidates([])
       setExecutorGlobalBaseCandidates([])
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear stale loading state immediately when leaving the Executor role.
       setIsLoading(false)
       setIsError(false)
       return

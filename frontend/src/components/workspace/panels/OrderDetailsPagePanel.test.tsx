@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { WorkspaceOrder } from '../model/data'
+import type { WorkspaceCandidate, WorkspaceOrder } from '../model/data'
 import { OrderDetailsPagePanel } from './OrderDetailsPagePanel'
 
 afterEach(cleanup)
@@ -108,5 +108,41 @@ describe('OrderDetailsPagePanel', () => {
     expect(screen.getByRole('heading', { name: 'Детали вакансии' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Откликнуться на вакансию' })).toBeTruthy()
     expect(screen.queryByText('Отклики')).toBeNull()
+  })
+
+  it('locks applicant responder decisions after the shortlist is submitted while keeping profile access', () => {
+    const applicantResponder: WorkspaceCandidate = {
+      id: 'candidate-1',
+      name: 'Иван Петров',
+      position: 'Разработчик',
+      orderId: order.id,
+      source: 'Отклик на вакансию',
+      stage: 'Shortlist',
+      rating: '—',
+      statusLabel: 'В списке кандидатов',
+      statusTone: 'default',
+      comment: '',
+    }
+
+    render(
+      <OrderDetailsPagePanel
+        applicantResponders={[applicantResponder]}
+        canCreateVacancyFromOrder
+        onBack={() => {}}
+        order={order}
+        vacancyPreview={{
+          title: 'Senior React Developer',
+          description: 'Требования к вакансии',
+          status: 'Published',
+          createdAtUtc: '2026-11-14T10:00:00Z',
+          updatedAtUtc: '2026-11-15T10:00:00Z',
+          shortlistSentToCustomerAtUtc: '2026-11-15T10:00:00Z',
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'В список кандидатов' }).hasAttribute('disabled')).toBe(true)
+    expect(screen.getByRole('button', { name: 'Отказать' }).hasAttribute('disabled')).toBe(true)
+    expect(screen.getByRole('button', { name: 'Профиль' }).hasAttribute('disabled')).toBe(false)
   })
 })

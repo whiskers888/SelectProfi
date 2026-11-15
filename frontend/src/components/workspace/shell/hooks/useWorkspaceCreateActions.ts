@@ -18,11 +18,12 @@ type CandidateCreateFormValues = {
   specialization: string
   specializationId: string
   resumeTitle: string
+  experienceYears: string
   resumeRichTextHtml: string
   resumeAttachmentLinks: string
 }
 
-type ApplicantResumeFormValues = CandidateCreateFormValues
+type ApplicantResumeFormValues = Omit<CandidateCreateFormValues, 'experienceYears'>
 type VacancyCreateFormValues = {
   title: string
   description: string
@@ -541,6 +542,7 @@ export function useWorkspaceCreateActions({
         | 'specialization'
         | 'specializationId'
         | 'resumeTitle'
+        | 'experienceYears'
         | 'resumeRichTextHtml'
         | 'resumeAttachmentLinks',
       value: string,
@@ -562,11 +564,21 @@ export function useWorkspaceCreateActions({
       const phone = createCandidateFormValues.phone.trim()
       const resumeTitle = createCandidateFormValues.resumeTitle.trim()
       const resumeSummary = toResumeSummary(createCandidateFormValues.resumeRichTextHtml)
+      const experienceYearsText = createCandidateFormValues.experienceYears.trim()
+      const experienceYears = experienceYearsText ? Number(experienceYearsText) : null
 
-      if (!fullName || !phone || !specializationId || !resumeTitle || !resumeSummary) {
+      if (
+        !fullName ||
+        !phone ||
+        !specializationId ||
+        !resumeTitle ||
+        !resumeSummary ||
+        (experienceYears !== null &&
+          (!Number.isSafeInteger(experienceYears) || experienceYears < 0 || experienceYears > 2147483647))
+      ) {
         setBanner({
           variant: 'destructive',
-          message: 'Заполните ФИО, специализацию, заголовок и содержимое резюме.',
+          message: 'Проверьте ФИО, специализацию, заголовок, содержимое резюме и стаж.',
         })
         return
       }
@@ -579,6 +591,7 @@ export function useWorkspaceCreateActions({
             phone,
             specializationId,
             resumeTitle,
+            experienceYears: experienceYears ?? undefined,
             resumeContentJson: buildResumeContentJson({ resumeSkills: '', resumeRichTextHtml: createCandidateFormValues.resumeRichTextHtml }),
             resumeAttachmentsJson: buildResumeAttachmentsJson({ resumeAttachmentLinks: createCandidateFormValues.resumeAttachmentLinks }),
           }
@@ -600,6 +613,7 @@ export function useWorkspaceCreateActions({
               source: 'Добавлен вручную',
               sourceType: 'AddedByExecutor',
               isOwnedByRequester: true,
+              experienceYears,
               rating: '—',
               statusLabel: 'Новый',
               statusTone: 'default',
@@ -620,6 +634,7 @@ export function useWorkspaceCreateActions({
         specialization: '',
         specializationId: '',
         resumeTitle: '',
+        experienceYears: '',
         resumeRichTextHtml: '',
         resumeAttachmentLinks: '',
       })
@@ -639,6 +654,7 @@ export function useWorkspaceCreateActions({
       createCandidateFormValues.birthDate,
       createCandidateFormValues.email,
       createCandidateFormValues.phone,
+      createCandidateFormValues.experienceYears,
       createCandidateFormValues.resumeRichTextHtml,
       createCandidateFormValues.resumeTitle,
       createCandidateFormValues.specialization,

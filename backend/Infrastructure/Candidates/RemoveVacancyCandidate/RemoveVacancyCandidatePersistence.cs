@@ -12,5 +12,16 @@ public sealed class RemoveVacancyCandidatePersistence(AppDbContext dbContext) : 
         dbContext.Vacancies.FirstOrDefaultAsync(item => item.Id == vacancyId && item.DeletedAtUtc == null, cancellationToken);
     public Task<VacancyCandidate?> FindActiveLinkAsync(Guid vacancyId, Guid candidateId, CancellationToken cancellationToken) =>
         dbContext.VacancyCandidates.FirstOrDefaultAsync(item => item.VacancyId == vacancyId && item.CandidateId == candidateId && item.DeletedAtUtc == null, cancellationToken);
-    public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
+    public async Task<RemoveVacancyCandidatePersistenceResult> SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return RemoveVacancyCandidatePersistenceResult.Saved;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return RemoveVacancyCandidatePersistenceResult.Conflict;
+        }
+    }
 }

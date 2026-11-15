@@ -157,6 +157,7 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
                 Phone = BuildUniquePhone(candidateKey),
                 SpecializationId = scenario.SpecializationId,
                 ResumeTitle = "Senior .NET Developer",
+                ExperienceYears = 2,
                 ResumeContentJson = "{\"summary\":\"Experience\"}"
             });
         var payload = await response.Content.ReadFromJsonAsync<CandidateResumeResponse>();
@@ -167,6 +168,13 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
         Assert.NotEqual(Guid.Empty, payload.CandidateResumeId);
         Assert.NotEqual(Guid.Empty, payload.VacancyCandidateId);
         Assert.False(string.IsNullOrWhiteSpace(payload.PublicAlias));
+
+        using var candidatesResponse = await client.GetAsync($"/api/vacancies/{scenario.VacancyId}/candidates");
+        var candidates = await candidatesResponse.Content.ReadFromJsonAsync<VacancyCandidatesResponse>();
+        Assert.Equal(HttpStatusCode.OK, candidatesResponse.StatusCode);
+        var createdCandidate = Assert.Single(candidates!.Items);
+        Assert.Equal(payload.CandidateId, createdCandidate.CandidateId);
+        Assert.Equal(2, createdCandidate.ExperienceYears);
     }
 
     [Fact]
@@ -234,10 +242,24 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
     public async Task SelectCandidate_WhenVacancyPublishedAndCandidateInShortlist_ReturnsOk()
     {
         var scenario = await SeedVacancyScenarioAsync(VacancyStatus.Published);
-        var candidateId = await SeedVacancyCandidateLinkAsync(
-            scenario,
-            CandidateSource.AddedByExecutor,
-            VacancyCandidateStage.Shortlist);
+        var candidateIds = new List<Guid>();
+        for (var index = 0; index < 3; index++)
+        {
+            candidateIds.Add(await SeedVacancyCandidateLinkAsync(
+                scenario,
+                CandidateSource.AddedByExecutor,
+                VacancyCandidateStage.Shortlist));
+        }
+
+        using (var executorClient = CreateAuthorizedClient(scenario.Executor))
+        using (var submitResponse = await executorClient.PostAsync(
+                   $"/api/vacancies/{scenario.VacancyId}/candidates/submit",
+                   content: null))
+        {
+            Assert.Equal(HttpStatusCode.OK, submitResponse.StatusCode);
+        }
+
+        var candidateId = candidateIds[0];
         using var client = CreateAuthorizedClient(scenario.Customer);
 
         using var response = await client.PatchAsJsonAsync(
@@ -252,6 +274,103 @@ public sealed class VacancyPipelineLifecycleHttpTests : IClassFixture<TestWebApp
         Assert.NotNull(payload);
         Assert.Equal(scenario.VacancyId, payload!.VacancyId);
         Assert.Equal(candidateId, payload.SelectedCandidateId);
+    }
+
+    [Fact]
+    public async Task SubmitCandidateList_WhenShortlistIsIncomplete_ReturnsConflict()
+    {
+        var scenario = await SeedVacancyScenarioAsync(VacancyStatus.Published);
+        using var client = CreateAuthorizedClient(scenario.Executor);
+
+        using var response = await client.PostAsync(
+            $"/api/vacancies/{scenario.VacancyId}/candidates/submit",
+            content: null);
+        using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("candidate_list_incomplete", payload.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task SubmitCandidateList_WhenReady_FreezesAndSeparatesCustomerList()
+    {
+        var scenario = await SeedVacancyScenarioAsync(VacancyStatus.Published);
+        var submittedCandidateIds = new List<Guid>();
+        for (var index = 0; index < 3; index++)
+        {
+            submittedCandidateIds.Add(await SeedVacancyCandidateLinkAsync(
+                scenario,
+                CandidateSource.AddedByExecutor,
+                VacancyCandidateStage.Shortlist));
+        }
+        var workingCandidateId = await SeedVacancyCandidateLinkAsync(
+            scenario,
+            CandidateSource.AddedByExecutor,
+            VacancyCandidateStage.Pool);
+        using var executorClient = CreateAuthorizedClient(scenario.Executor);
+        using var customerClient = CreateAuthorizedClient(scenario.Customer);
+
+        using (var customerBeforeSubmission = await customerClient.GetAsync(
+                   $"/api/vacancies/{scenario.VacancyId}/candidates"))
+        using (var payload = JsonDocument.Parse(await customerBeforeSubmission.Content.ReadAsStringAsync()))
+        {
+            Assert.Equal(HttpStatusCode.OK, customerBeforeSubmission.StatusCode);
+            Assert.Empty(payload.RootElement.GetProperty("items").EnumerateArray());
+        }
+
+        using (var response = await executorClient.PostAsync(
+                   $"/api/vacancies/{scenario.VacancyId}/candidates/submit",
+                   content: null))
+        {
+            var payload = await response.Content.ReadFromJsonAsync<SubmitVacancyCandidateListResponse>();
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.NotNull(payload);
+            Assert.Equal(3, payload!.SubmittedCandidatesCount);
+        }
+
+        using (var customerAfterSubmission = await customerClient.GetAsync(
+                   $"/api/vacancies/{scenario.VacancyId}/candidates"))
+        using (var payload = JsonDocument.Parse(await customerAfterSubmission.Content.ReadAsStringAsync()))
+        {
+            var items = payload.RootElement.GetProperty("items").EnumerateArray().ToArray();
+            Assert.Equal(HttpStatusCode.OK, customerAfterSubmission.StatusCode);
+            Assert.Equal(3, items.Length);
+            Assert.All(items, item => Assert.True(item.GetProperty("isCustomerSubmitted").GetBoolean()));
+        }
+
+        using (var removeResponse = await executorClient.DeleteAsync(
+                   $"/api/vacancies/{scenario.VacancyId}/candidates/{submittedCandidateIds[0]}"))
+        using (var payload = JsonDocument.Parse(await removeResponse.Content.ReadAsStringAsync()))
+        {
+            Assert.Equal(HttpStatusCode.Conflict, removeResponse.StatusCode);
+            Assert.Equal("candidate_list_already_submitted", payload.RootElement.GetProperty("code").GetString());
+        }
+
+        using (var stageResponse = await executorClient.PatchAsJsonAsync(
+                   $"/api/vacancies/{scenario.VacancyId}/candidates/{submittedCandidateIds[1]}/stage",
+                   new UpdateVacancyCandidateStageRequest { Stage = VacancyCandidateStageContract.Pool }))
+        using (var payload = JsonDocument.Parse(await stageResponse.Content.ReadAsStringAsync()))
+        {
+            Assert.Equal(HttpStatusCode.Conflict, stageResponse.StatusCode);
+            Assert.Equal("candidate_list_already_submitted", payload.RootElement.GetProperty("code").GetString());
+        }
+
+        using var removeWorkingCandidate = await executorClient.DeleteAsync(
+            $"/api/vacancies/{scenario.VacancyId}/candidates/{workingCandidateId}");
+        Assert.Equal(HttpStatusCode.NoContent, removeWorkingCandidate.StatusCode);
+    }
+
+    [Fact]
+    public async Task SubmitCandidateList_WhenCustomerCalls_ReturnsForbidden()
+    {
+        var scenario = await SeedVacancyScenarioAsync(VacancyStatus.Published);
+        using var client = CreateAuthorizedClient(scenario.Customer);
+
+        using var response = await client.PostAsync(
+            $"/api/vacancies/{scenario.VacancyId}/candidates/submit",
+            content: null);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     private async Task<TestScenario> SeedVacancyScenarioAsync(VacancyStatus status)

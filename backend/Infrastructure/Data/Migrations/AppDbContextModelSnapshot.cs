@@ -222,6 +222,9 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid>("CandidateId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("CustomerSubmittedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -723,6 +726,10 @@ namespace SelectProfi.backend.Migrations
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("CandidatePipelineRevision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");

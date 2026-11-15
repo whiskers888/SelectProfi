@@ -33,5 +33,13 @@ public sealed class VacancyCandidatesItemResponse
 
     public DateTime? ViewedByCustomerAtUtc { get; init; }
 
+    public DateTime? ApplicantSubmittedAtUtc { get; init; }
+
+    public bool IsCustomerSubmitted { get; init; }
+
+    public string? ExperienceSummary { get; init; }
+
+    public int? ExperienceYears { get; init; }
+
     public bool IsSelected { get; init; }
 }

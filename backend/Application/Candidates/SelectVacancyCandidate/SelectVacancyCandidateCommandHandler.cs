@@ -25,23 +25,24 @@ public sealed class SelectVacancyCandidateCommandHandler(ISelectVacancyCandidate
         if (!CandidateAccessRules.CanMutateVacancyCandidatePipeline(vacancy.Status))
             return new SelectVacancyCandidateResult { ErrorCode = SelectVacancyCandidateErrorCode.VacancyNotPublished };
 
+        var inSubmittedShortlist = await persistence.CandidateInSubmittedShortlistAsync(
+            command.VacancyId,
+            command.CandidateId,
+            cancellationToken);
+        if (!inSubmittedShortlist)
+            return new SelectVacancyCandidateResult
+            {
+                ErrorCode = SelectVacancyCandidateErrorCode.CandidateNotInShortlist
+            };
+
         if (vacancy.SelectedCandidateId.HasValue && vacancy.SelectedCandidateId.Value != command.CandidateId)
             return new SelectVacancyCandidateResult { ErrorCode = SelectVacancyCandidateErrorCode.Conflict };
 
         if (vacancy.SelectedCandidateId != command.CandidateId)
         {
-            var inShortlist = await persistence.CandidateInShortlistAsync(
-                command.VacancyId,
-                command.CandidateId,
-                cancellationToken);
-            if (!inShortlist)
-                return new SelectVacancyCandidateResult
-                {
-                    ErrorCode = SelectVacancyCandidateErrorCode.CandidateNotInShortlist
-                };
-
             vacancy.SelectedCandidateId = command.CandidateId;
             vacancy.UpdatedAtUtc = DateTime.UtcNow;
+            vacancy.CandidatePipelineRevision++;
 
             var saveResult = await persistence.SaveChangesAsync(cancellationToken);
             if (saveResult == SelectVacancyCandidatePersistenceResult.Conflict)

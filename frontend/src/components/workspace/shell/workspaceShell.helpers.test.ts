@@ -6,6 +6,8 @@ import {
   createActionLabel,
   createHeaderTitle,
   deriveWorkspaceViewState,
+  formatExperienceYears,
+  getWorkspaceCandidatePipelineStage,
   toWorkspaceCandidate,
   toWorkspaceOrder,
   updateWorkspaceCandidateStage,
@@ -19,9 +21,26 @@ const makeCandidate = (id: string, orderId: string): WorkspaceCandidate => ({
   orderId,
   source: 'Test source',
   rating: '—',
-  statusLabel: 'Pool',
+  statusLabel: 'В рабочем списке',
+  stage: 'Pool',
   statusTone: 'warning',
   comment: 'Original comment',
+})
+
+describe('formatExperienceYears', () => {
+  it.each([
+    { years: 1, expected: '1 год' },
+    { years: 2, expected: '2 года' },
+    { years: 3, expected: '3 года' },
+    { years: 4, expected: '4 года' },
+    { years: 5, expected: '5 лет' },
+    { years: 11, expected: '11 лет' },
+    { years: 21, expected: '21 год' },
+    { years: 22, expected: '22 года' },
+    { years: null, expected: '—' },
+  ])('formats $years as $expected', ({ years, expected }) => {
+    expect(formatExperienceYears(years)).toBe(expected)
+  })
 })
 
 describe('createActionLabel', () => {
@@ -37,7 +56,12 @@ describe('updateWorkspaceCandidateStage', () => {
     const candidate = makeCandidate('candidate-1', 'order-1')
     const updated = updateWorkspaceCandidateStage([candidate], 'order-1', 'candidate-1', 'Shortlist')
 
-    expect(updated[0]).toEqual({ ...candidate, statusLabel: 'Shortlist', statusTone: 'default' })
+    expect(updated[0]).toEqual({
+      ...candidate,
+      stage: 'Shortlist',
+      statusLabel: 'В списке кандидатов',
+      statusTone: 'default',
+    })
     expect(updated[0].comment).toBe('Original comment')
   })
 
@@ -54,6 +78,24 @@ describe('updateWorkspaceCandidateStage', () => {
 
     expect(updated[1]).toBe(unrelated)
     expect(updated[1]).toEqual(unrelated)
+  })
+})
+
+describe('getWorkspaceCandidatePipelineStage', () => {
+  it('uses the stored stage and keeps selected status separate from the label', () => {
+    const poolCandidate = makeCandidate('candidate-pool', 'order-1')
+    const shortlistCandidate = {
+      ...poolCandidate,
+      id: 'candidate-shortlist',
+      stage: 'Shortlist' as const,
+      statusLabel: 'В списке кандидатов',
+    }
+    const selectedCandidate = { ...shortlistCandidate, statusLabel: 'Выбран' }
+
+    expect(getWorkspaceCandidatePipelineStage(poolCandidate)).toBe('Pool')
+    expect(getWorkspaceCandidatePipelineStage(shortlistCandidate)).toBe('Shortlist')
+    expect(getWorkspaceCandidatePipelineStage(selectedCandidate)).toBe('Selected')
+    expect(getWorkspaceCandidatePipelineStage({ ...poolCandidate, statusLabel: '', stage: undefined })).toBeNull()
   })
 })
 
@@ -152,6 +194,7 @@ describe('toWorkspaceCandidate', () => {
       source: 'RegisteredUser',
       isOwnedByRequester: false,
       isAnonymized: true,
+      isCustomerSubmitted: false,
       stage: 'Shortlist',
       addedAtUtc: '2026-07-23T10:00:00Z',
       updatedAtUtc: '2026-07-23T11:00:00Z',

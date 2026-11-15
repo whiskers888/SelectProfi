@@ -21,5 +21,7 @@ public sealed class VacancyBaseCandidatesItemResponse
 
     public bool IsAnonymized { get; init; }
 
+    public int? ExperienceYears { get; init; }
+
     public DateTime UpdatedAtUtc { get; init; }
 }

@@ -35,7 +35,7 @@ public sealed class MarkVacancyCandidateViewedByCustomerCommandHandler(
             command.VacancyId,
             command.CandidateId,
             cancellationToken);
-        if (vacancyCandidate is null)
+        if (vacancyCandidate is null || vacancyCandidate.CustomerSubmittedAtUtc is null)
         {
             return new MarkVacancyCandidateViewedByCustomerResult
             {

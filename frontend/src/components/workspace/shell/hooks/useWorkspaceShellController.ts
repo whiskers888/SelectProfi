@@ -24,6 +24,7 @@ import {
   useMarkVacancyCandidateViewedByCustomerMutation,
   useRespondToVacancyMutation,
   useSelectVacancyCandidateMutation,
+  useSubmitVacancyCandidateListMutation,
   useUpdateVacancyCandidateStageMutation,
 } from '@/shared/api/candidates'
 import {
@@ -127,6 +128,8 @@ export function useWorkspaceShellController() {
     useAddCandidateFromBaseMutation()
   const [removeVacancyCandidate, { isLoading: isRemovingVacancyCandidate }] =
     useRemoveVacancyCandidateMutation()
+  const [submitVacancyCandidateList, { isLoading: isSubmittingCandidateList }] =
+    useSubmitVacancyCandidateListMutation()
   const [updateVacancyCandidateStage, { isLoading: isUpdatingApplicantResponderStage }] =
     useUpdateVacancyCandidateStageMutation()
   const [switchMyActiveRole, { isLoading: isSwitchingRole }] = useSwitchMyActiveRoleMutation()
@@ -333,6 +336,7 @@ export function useWorkspaceShellController() {
     specialization: '',
     specializationId: '',
     resumeTitle: '',
+    experienceYears: '',
     resumeRichTextHtml: '',
     resumeAttachmentLinks: '',
   })
@@ -517,6 +521,7 @@ export function useWorkspaceShellController() {
             source: 'Мой кандидат',
             sourceType: 'AddedByExecutor' as const,
             isOwnedByRequester: true,
+            experienceYears: candidate.experienceYears,
             rating: '—',
             statusLabel: 'Новый',
             statusTone: 'default' as const,
@@ -582,30 +587,29 @@ export function useWorkspaceShellController() {
     selectedOrder && vacanciesResponse
       ? (vacanciesResponse.items.find((vacancy) => vacancy.orderId === selectedOrder.id) ?? null)
       : null
+  const selectedOrderCandidates =
+    role !== 'Applicant' &&
+    selectedOrder &&
+    selectedOrderVacancy &&
+    vacancyCandidatesResponse?.vacancyId === selectedOrderVacancy.id
+      ? vacancyCandidatesResponse.items.map((item) =>
+          toWorkspaceCandidate(item, selectedOrderVacancy, role === 'Customer'),
+        )
+      : []
   const selectedOrderApplicantResponders =
     role === 'Executor' && selectedOrder
       ? Array.from(
           new Map(
-            executorGlobalCandidates
+            selectedOrderCandidates
               .filter(
-                (candidate) =>
-                  candidate.orderId === selectedOrder.id &&
-                  candidate.sourceType === 'RegisteredUser',
+                (candidate) => candidate.applicantSubmittedAtUtc,
               )
               .map((candidate) => [candidate.id, candidate]),
           ).values(),
         )
       : []
   const selectedOrderCandidateIds =
-    role === 'Executor' && selectedOrder
-      ? Array.from(
-          new Set(
-            executorGlobalCandidates
-              .filter((candidate) => candidate.orderId === selectedOrder.id)
-              .map((candidate) => candidate.id),
-          ),
-        )
-      : []
+    role === 'Executor' && selectedOrder ? selectedOrderCandidates.map((candidate) => candidate.id) : []
   const hasRespondedToSelectedOrder =
     role === 'Applicant'
       ? Boolean(selectedOrder && applicantRespondedOrderIds.includes(selectedOrder.id))
@@ -650,6 +654,7 @@ export function useWorkspaceShellController() {
         status: selectedOrderVacancy.status,
         createdAtUtc: selectedOrderVacancy.createdAtUtc,
         updatedAtUtc: selectedOrderVacancy.updatedAtUtc,
+        shortlistSentToCustomerAtUtc: selectedOrderVacancy.shortlistSentToCustomerAtUtc,
       }
     : null
   const handlePublishVacancyForSelectedOrder = useCallback(async () => {
@@ -767,8 +772,8 @@ export function useWorkspaceShellController() {
           variant: 'success',
           message:
             stage === 'Shortlist'
-              ? 'Соискатель добавлен в shortlist.'
-              : 'Соискатель переведен в Pool.',
+              ? 'Соискатель добавлен в список кандидатов.'
+              : 'Соискатель переведён в рабочий список.',
         })
       } catch (error) {
         setBanner({
@@ -965,15 +970,38 @@ export function useWorkspaceShellController() {
   const handleRemoveCandidateFromOrder = useCallback(
     async (orderId: string, candidateId: string) => {
       const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
-      if (!vacancy) return
+      if (!vacancy) return false
       try {
         await removeVacancyCandidate({ vacancyId: vacancy.id, candidateId }).unwrap()
         setBanner({ variant: 'success', message: 'Кандидат исключён из вакансии.' })
+        return true
       } catch (error) {
         setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) })
+        return false
       }
     },
     [removeVacancyCandidate, setBanner, vacanciesResponse],
+  )
+  const handleSubmitCandidateListFromOrder = useCallback(
+    async (orderId: string) => {
+      const vacancy = vacanciesResponse?.items.find((item) => item.orderId === orderId)
+      if (!vacancy) {
+        setBanner({ variant: 'destructive', message: 'Не удалось найти опубликованную вакансию проекта.' })
+        return false
+      }
+      try {
+        const result = await submitVacancyCandidateList({ vacancyId: vacancy.id }).unwrap()
+        setBanner({
+          variant: 'success',
+          message: `Список кандидатов (${result.submittedCandidatesCount}) отправлен заказчику.`,
+        })
+        return true
+      } catch (error) {
+        setBanner({ variant: 'destructive', message: getRequestErrorMessage(error) })
+        return false
+      }
+    },
+    [setBanner, submitVacancyCandidateList, vacanciesResponse],
   )
   const {
     handleActivateOrders,
@@ -1223,6 +1251,10 @@ export function useWorkspaceShellController() {
     handlePublishVacancyForSelectedOrder,
     hasCreateVacancyDraftForSelectedOrder,
     canRespondToSelectedOrder,
+    candidateSourceVacancyId: createCandidateVacancyId,
+    candidateSourceOrderId: createCandidateVacancyId
+      ? (vacanciesResponse?.items.find((vacancy) => vacancy.id === createCandidateVacancyId)?.orderId ?? null)
+      : null,
     applicantRespondedOrderIds,
     candidateViewOrders,
     candidateViewSelectedOrderId,
@@ -1259,6 +1291,7 @@ export function useWorkspaceShellController() {
     handleCreateCandidateFromOrder,
     handleAddCandidateFromOrder,
     handleRemoveCandidateFromOrder,
+    handleSubmitCandidateListFromOrder,
     handleCreateOrderFormFieldChange,
     handleCreateOrderFromPage,
     handleCreateVacancyAndSendToCustomerFromPage,
@@ -1291,6 +1324,7 @@ export function useWorkspaceShellController() {
     isCandidatesApiLoading,
     isAddingCandidateFromBase,
     isRemovingVacancyCandidate,
+    isSubmittingCandidateList,
     isCreatingOrder,
     isCreatingVacancy: isCreatingVacancy || isUpdatingVacancy,
     isPublishingVacancyForCustomer: isSendingVacancyToCustomer,
@@ -1320,6 +1354,7 @@ export function useWorkspaceShellController() {
     isSwitchingRole,
     isSidebarCollapsed,
     isVacancyCandidatesError,
+    isVacancyCandidatesFetching,
     isViewLoading,
     orderResponses,
     profileDisplayName,
@@ -1335,6 +1370,7 @@ export function useWorkspaceShellController() {
     selectedOrderId,
     selectedOrderApplicantResponders,
     selectedOrderCandidateIds,
+    selectedOrderCandidates,
     selectedOrderVacancyPreview,
     selectedOrderWithResponses,
     workspaceScreen,

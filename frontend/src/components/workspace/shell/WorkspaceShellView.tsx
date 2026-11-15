@@ -41,6 +41,8 @@ export function WorkspaceShellView({
   canPublishVacancyForSelectedOrder,
   hasCreateVacancyDraftForSelectedOrder,
   canRespondToSelectedOrder,
+  candidateSourceOrderId,
+  candidateSourceVacancyId,
   candidateViewOrders,
   candidateViewSelectedOrderId,
   closeCandidateDetails,
@@ -72,6 +74,7 @@ export function WorkspaceShellView({
   handleCreateCandidateFromOrder,
   handleAddCandidateFromOrder,
   handleRemoveCandidateFromOrder,
+  handleSubmitCandidateListFromOrder,
   handleCreateOrderFormFieldChange,
   handleCreateOrderFromPage,
   handleCreateVacancyAndSendToCustomerFromPage,
@@ -127,6 +130,9 @@ export function WorkspaceShellView({
   isUpdatingApplicantResponderStage,
   isAddingCandidateFromBase,
   isRemovingVacancyCandidate,
+  isSubmittingCandidateList,
+  isVacancyCandidatesError,
+  isVacancyCandidatesFetching,
   isSelectingOrderExecutor,
   isSelectingVacancyCandidate,
   canSelectFinalist,
@@ -148,6 +154,7 @@ export function WorkspaceShellView({
   selectedOrderId,
   selectedOrderApplicantResponders,
   selectedOrderCandidateIds,
+  selectedOrderCandidates,
   selectedOrderVacancyPreview,
   selectedOrderWithResponses,
   setPreferredChatId,
@@ -171,6 +178,13 @@ export function WorkspaceShellView({
           },
         }
       : { role }
+
+  let workspaceTitle = createHeaderTitle(role)
+  if (workspaceScreen === 'profile') {
+    workspaceTitle = 'Мой профиль'
+  } else if (workspaceScreen === 'create-candidate') {
+    workspaceTitle = 'Добавить кандидата'
+  }
 
   function closeMobileNav() {
     setIsMobileNavOpen(false)
@@ -233,7 +247,7 @@ export function WorkspaceShellView({
           <main className="preview11-content flex-1 space-y-4">
             <div className="space-y-1">
               <h1 className="text-xl font-extrabold leading-tight text-foreground">
-                {workspaceScreen === 'profile' ? 'Мой профиль' : createHeaderTitle(role)}
+                {workspaceTitle}
               </h1>
               {workspaceScreen === 'profile' ? (
                 <p className="text-sm text-muted-foreground">Личные данные и настройки роли</p>
@@ -243,8 +257,11 @@ export function WorkspaceShellView({
               <OrderDetailsPagePanel
                 key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}
                 assignedExecutorName={selectedOrderExecutorName}
-                availableCandidates={executorMyCandidates}
-                assignedCandidateIds={selectedOrderCandidateIds}
+                projectCandidates={selectedOrderCandidates}
+                isCustomerViewer={role === 'Customer'}
+                isProjectCandidatesLoading={isVacancyCandidatesFetching}
+                isProjectCandidatesError={isVacancyCandidatesError}
+                onRetryProjectCandidates={handleRetryVacancyCandidates}
                 canCreateVacancyFromOrder={canCreateVacancyFromSelectedOrder}
                 canCreateCandidateFromOrder={canCreateCandidateFromSelectedOrder}
                 canManageCandidatesFromOrder={canManageCandidatesFromSelectedOrder}
@@ -259,12 +276,11 @@ export function WorkspaceShellView({
                 onOpenChat={() => handleViewChange('chats')}
                 onCreateVacancyFromOrder={() => handleCreateVacancyFromOrder(selectedOrder.id)}
                 onCreateCandidateFromOrder={() => handleCreateCandidateFromOrder(selectedOrder.id)}
-                onAddCandidateFromBase={(candidateId) =>
-                  handleAddCandidateFromOrder(selectedOrder.id, candidateId)
-                }
                 onRemoveCandidateFromVacancy={(candidateId) =>
                   handleRemoveCandidateFromOrder(selectedOrder.id, candidateId)
                 }
+                isSubmittingCandidateList={isSubmittingCandidateList}
+                onSubmitCandidateList={() => handleSubmitCandidateListFromOrder(selectedOrder.id)}
                 onPublishVacancyForCustomer={handlePublishVacancyForSelectedOrder}
                 onRespondToOrder={() => {
                   if (role === 'Applicant') {
@@ -287,7 +303,6 @@ export function WorkspaceShellView({
                   handleSelectOrderExecutor(selectedOrder.id, executorId)
                 }
                 isUpdatingApplicantResponderStage={isUpdatingApplicantResponderStage}
-                isAddingCandidateFromBase={isAddingCandidateFromBase}
                 isRemovingVacancyCandidate={isRemovingVacancyCandidate}
                 isExecutorViewer={role === 'Executor'}
                 isApplicantViewer={role === 'Applicant'}
@@ -307,11 +322,27 @@ export function WorkspaceShellView({
 
             {workspaceScreen === 'create-candidate' ? (
               <CandidateCreatePagePanel
+                applicantResponders={selectedOrderApplicantResponders}
+                assignedCandidateIds={selectedOrderCandidateIds}
+                availableCandidates={executorMyCandidates}
+                canAddToProject={
+                  role === 'Executor' &&
+                  Boolean(candidateSourceVacancyId) &&
+                  canManageCandidatesFromSelectedOrder
+                }
                 formValues={createCandidateFormValues}
+                isAddingCandidateFromBase={isAddingCandidateFromBase}
+                orderTitle={selectedOrder?.title}
+                onAddCandidateFromBase={
+                  candidateSourceOrderId
+                    ? (candidateId) => handleAddCandidateFromOrder(candidateSourceOrderId, candidateId)
+                    : undefined
+                }
                 specializationOptions={orderSpecializationOptions}
                 onBack={closeCreateCandidatePage}
                 onFieldChange={handleCreateCandidateFormFieldChange}
                 onSubmit={handleCreateCandidateFromPage}
+                vacancyTitle={selectedOrderVacancyPreview?.title}
               />
             ) : null}
 

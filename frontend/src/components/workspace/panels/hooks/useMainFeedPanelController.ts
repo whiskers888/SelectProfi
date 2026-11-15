@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getWorkspaceCandidatePipelineStage } from '../../shell/workspaceShell.helpers'
 import type { WorkspaceOrder } from '../../model/data'
 import type {
   CandidateSourceFilter,
@@ -194,20 +195,20 @@ export function useMainFeedPanelController({
       return false
     }
 
-    const normalizedStatus = candidate.statusLabel.trim().toLowerCase()
+    const stage = getWorkspaceCandidatePipelineStage(candidate)
     if (candidateStageFilter === 'all') {
       return true
     }
     if (candidateStageFilter === 'no_stage') {
-      return normalizedStatus.length === 0
+      return stage === null
     }
     if (candidateStageFilter === 'pool') {
-      return normalizedStatus === 'pool'
+      return stage === 'Pool'
     }
     if (candidateStageFilter === 'shortlist') {
-      return normalizedStatus === 'shortlist'
+      return stage === 'Shortlist'
     }
-    return normalizedStatus === 'выбран'
+    return stage === 'Selected'
   })
 
   const isBaseScope = canViewBaseCandidates && candidateDataScope === 'base'

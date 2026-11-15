@@ -21,6 +21,10 @@ public sealed class DeleteVacancyPersistence(AppDbContext dbContext) : IDeleteVa
             await dbContext.SaveChangesAsync(cancellationToken);
             return DeleteVacancyPersistenceResult.Saved;
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            return DeleteVacancyPersistenceResult.Conflict;
+        }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         {
             return DeleteVacancyPersistenceResult.Conflict;

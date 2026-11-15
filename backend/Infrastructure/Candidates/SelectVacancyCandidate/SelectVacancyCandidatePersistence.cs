@@ -15,12 +15,13 @@ public sealed class SelectVacancyCandidatePersistence(AppDbContext dbContext) : 
             cancellationToken);
     }
 
-    public Task<bool> CandidateInShortlistAsync(Guid vacancyId, Guid candidateId, CancellationToken cancellationToken)
+    public Task<bool> CandidateInSubmittedShortlistAsync(Guid vacancyId, Guid candidateId, CancellationToken cancellationToken)
     {
         return dbContext.VacancyCandidates.AnyAsync(
             vacancyCandidate => vacancyCandidate.VacancyId == vacancyId
                                 && vacancyCandidate.CandidateId == candidateId
                                 && vacancyCandidate.Stage == VacancyCandidateStage.Shortlist
+                                && vacancyCandidate.CustomerSubmittedAtUtc != null
                                 && vacancyCandidate.DeletedAtUtc == null,
             cancellationToken);
     }
@@ -33,6 +34,10 @@ public sealed class SelectVacancyCandidatePersistence(AppDbContext dbContext) : 
             return SelectVacancyCandidatePersistenceResult.Saved;
         }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
+        {
+            return SelectVacancyCandidatePersistenceResult.Conflict;
+        }
+        catch (DbUpdateConcurrencyException)
         {
             return SelectVacancyCandidatePersistenceResult.Conflict;
         }

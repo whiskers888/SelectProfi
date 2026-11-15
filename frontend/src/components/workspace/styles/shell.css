@@ -65,7 +65,8 @@
 
 .preview11-sidebar {
   display: flex;
-  width: 260px;
+  width: 224px;
+  flex: 0 0 224px;
   flex-direction: column;
   gap: 16px;
   border-right: 1px solid var(--ws-border);
@@ -75,6 +76,7 @@
 
 .preview11-sidebar-collapsed {
   width: 82px;
+  flex-basis: 82px;
   padding: 16px 10px;
 }
 
@@ -1337,6 +1339,8 @@
 
   .preview11-sidebar {
     position: fixed;
+    width: 260px;
+    flex-basis: 260px;
     top: 0;
     left: 0;
     z-index: 1000;
@@ -1349,6 +1353,7 @@
   /* На мобильном drawer всегда открывается полным (с подписями), независимо от desktop-состояния collapsed. */
   .preview11-sidebar.preview11-sidebar-collapsed {
     width: 260px;
+    flex-basis: 260px;
     padding: 16px;
   }
 

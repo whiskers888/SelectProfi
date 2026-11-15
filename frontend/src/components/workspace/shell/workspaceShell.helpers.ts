@@ -26,6 +26,31 @@ type ProblemDetailsPayload = {
   title?: string
 }
 
+export type WorkspaceCandidatePipelineStage = 'Pool' | 'Shortlist' | 'Selected'
+
+export function getWorkspaceCandidatePipelineStage(
+  candidate: WorkspaceCandidate,
+): WorkspaceCandidatePipelineStage | null {
+  const statusLabel = candidate.statusLabel.trim().toLocaleLowerCase('ru-RU')
+  if (statusLabel === 'выбран' || statusLabel === 'selected') {
+    return 'Selected'
+  }
+
+  if (candidate.stage) {
+    return candidate.stage
+  }
+
+  if (statusLabel === 'shortlist' || statusLabel === 'в списке кандидатов') {
+    return 'Shortlist'
+  }
+
+  if (statusLabel === 'pool' || statusLabel === 'в рабочем списке') {
+    return 'Pool'
+  }
+
+  return null
+}
+
 export function createHeaderTitle(role: WorkspaceRole): string {
   if (role === 'Executor') {
     return 'Проекты'
@@ -95,6 +120,25 @@ export function toOrderUpdatedAtLabel(updatedAtUtc: string): string {
   })}`
 }
 
+export function formatExperienceYears(years: number | null | undefined): string {
+  if (typeof years !== 'number' || !Number.isInteger(years) || years < 0) {
+    return '—'
+  }
+
+  const lastTwoDigits = years % 100
+  const lastDigit = years % 10
+  let unit = 'лет'
+  if (lastTwoDigits < 11 || lastTwoDigits > 14) {
+    if (lastDigit === 1) {
+      unit = 'год'
+    } else if (lastDigit >= 2 && lastDigit <= 4) {
+      unit = 'года'
+    }
+  }
+
+  return `${years} ${unit}`
+}
+
 export function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
   const isArchived = Boolean(order.deletedAtUtc)
   const isPaused = order.status === 'Paused'
@@ -110,6 +154,7 @@ export function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
     serviceCommissionAmount: order.serviceCommissionAmount,
     executorNetAmount: order.executorNetAmount,
     isPricingLocked: order.isPricingLocked,
+    requestedCandidatesCount: order.requestedCandidatesCount,
     title: order.title,
     company: order.customerCompanyName?.trim() || 'Компания не указана',
     location: order.location,
@@ -170,7 +215,7 @@ function toCandidateStatusLabel(stage: VacancyCandidatesItemResponse['stage'], i
     return 'Выбран'
   }
 
-  return stage === 'Shortlist' ? 'Shortlist' : 'Pool'
+  return stage === 'Shortlist' ? 'В списке кандидатов' : 'В рабочем списке'
 }
 
 function toCandidateStatusTone(
@@ -197,7 +242,8 @@ export function updateWorkspaceCandidateStage(
 
     return {
       ...candidate,
-      statusLabel: stage,
+      stage,
+      statusLabel: toCandidateStatusLabel(stage, false),
       statusTone: stage === 'Shortlist' ? 'default' : 'warning',
     }
   })
@@ -217,6 +263,11 @@ export function toWorkspaceCandidate(
     sourceType: item.source,
     isOwnedByRequester: item.isOwnedByRequester,
     isAnonymized: item.isAnonymized,
+    stage: item.stage,
+    isCustomerSubmitted: item.isCustomerSubmitted,
+    applicantSubmittedAtUtc: item.applicantSubmittedAtUtc,
+    experienceSummary: item.experienceSummary,
+    experienceYears: item.experienceYears,
     rating: '—',
     statusLabel: toCandidateStatusLabel(item.stage, item.isSelected),
     statusTone: toCandidateStatusTone(item.stage, item.isSelected),
@@ -245,6 +296,7 @@ export function toWorkspaceBaseCandidate(
     sourceType: candidate.source,
     isOwnedByRequester: candidate.isOwnedByRequester,
     isAnonymized: candidate.isAnonymized,
+    experienceYears: candidate.experienceYears,
     rating: '—',
     statusLabel: '',
     statusTone: 'neutral',
@@ -463,8 +515,8 @@ export function deriveWorkspaceViewState({
 
   const customerShortlistCandidates = role === 'Customer'
     ? filteredCandidates.filter(candidate => {
-        const stage = candidate.statusLabel.trim().toLowerCase()
-        return stage === 'shortlist' || stage === 'выбран'
+        const stage = getWorkspaceCandidatePipelineStage(candidate)
+        return stage === 'Shortlist' || stage === 'Selected'
       })
     : filteredCandidates;
 
@@ -482,8 +534,8 @@ export function deriveWorkspaceViewState({
     candidate => candidate.isOwnedByRequester === true,
   );
   const executorDashboardCandidates = executorCandidatesForUi.filter(candidate => {
-    const stage = candidate.statusLabel.trim().toLowerCase();
-    if (stage !== 'pool' && stage !== 'shortlist' && stage !== 'выбран') {
+    const stage = getWorkspaceCandidatePipelineStage(candidate)
+    if (stage === null) {
       return false;
     }
 
@@ -629,7 +681,7 @@ export function deriveWorkspaceViewState({
       },
       {
         id: 'shortlist',
-        label: 'В shortlist',
+        label: 'В списке кандидатов',
         value: `${applicantDashboardStats.shortlistCandidatesCount} шт.`,
         note: 'Отклики, перешедшие к следующему этапу.',
         tone: resolveCandidateFlowTone(applicantDashboardStats.shortlistCandidatesCount),

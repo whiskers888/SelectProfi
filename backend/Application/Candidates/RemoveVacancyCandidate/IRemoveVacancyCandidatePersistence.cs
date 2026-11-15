@@ -7,5 +7,11 @@ public interface IRemoveVacancyCandidatePersistence
 {
     Task<Vacancy?> FindActiveVacancyByIdAsync(Guid vacancyId, CancellationToken cancellationToken);
     Task<VacancyCandidate?> FindActiveLinkAsync(Guid vacancyId, Guid candidateId, CancellationToken cancellationToken);
-    Task SaveChangesAsync(CancellationToken cancellationToken);
+    Task<RemoveVacancyCandidatePersistenceResult> SaveChangesAsync(CancellationToken cancellationToken);
+}
+
+public enum RemoveVacancyCandidatePersistenceResult
+{
+    Saved = 0,
+    Conflict = 1
 }

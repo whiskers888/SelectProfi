@@ -171,8 +171,11 @@
    - `GET /api/vacancies/{vacancyId}/candidates`
    - `POST /api/vacancies/{vacancyId}/candidates/resumes`
    - `POST /api/vacancies/{vacancyId}/candidates/{candidateId}`
+    - `DELETE /api/vacancies/{vacancyId}/candidates/{candidateId}`
    - `PATCH /api/vacancies/{vacancyId}/candidates/{candidateId}/stage`
    - `PATCH /api/vacancies/{vacancyId}/selected-candidate`
+    - `POST /api/vacancies/{vacancyId}/candidates/submit`
+    - `experienceYears` в `CreateCandidateResumeRequest` — необязательное неотрицательное целое число. Значение хранится у конкретного резюме; если оно неизвестно (в том числе в старых записях), UI показывает `—` и не пытается вычислить его из свободного текста.
 5. Интеграция контактов:
    - `GET /api/vacancies/{vacancyId}/candidates/{candidateId}/contacts` (executor, owner+TTL)
    - `GET /api/vacancies/{vacancyId}/selected-candidate/contacts` (customer после финального выбора)
@@ -268,5 +271,14 @@
 ### 15.10. Вывод по границе MVP
 
 - Для текущего MVP backend уже покрывает минимальный жизненный цикл `Order -> Vacancy -> Pool/Shortlist -> Selected Candidate -> Contacts`.
+
+## Отправка списка кандидатов заказчику
+
+- Рабочие кандидаты вакансии остаются в `Pool`/`Shortlist`; заказчику доступны только кандидаты из официально отправленного состава.
+- Исполнитель вызывает `POST /api/vacancies/{vacancyId}/candidates/submit`. Вакансия должна быть опубликована, а активный `Shortlist` должен содержать не меньше `Order.RequestedCandidatesCount` кандидатов.
+- Успешная отправка один раз фиксирует `Vacancy.ShortlistSentToCustomerAtUtc` и `VacancyCandidate.CustomerSubmittedAtUtc` для текущего состава. Снимок переносится миграцией для существующих вакансий с непустым `ShortlistSentToCustomerAtUtc`.
+- После отправки backend запрещает удаление отправленных связей и смену стадии кандидатов. Изменения списка и выбор финалиста используют `CandidatePipelineRevision` как optimistic concurrency token.
+- `GET /api/vacancies/{vacancyId}/candidates` возвращает исполнителю рабочий список с `isCustomerSubmitted`; заказчику возвращает только официальный состав. Отклики соискателей различаются по `applicantSubmittedAtUtc`.
+- Удаление по `DELETE /api/vacancies/{vacancyId}/candidates/{candidateId}` отвязывает кандидата от вакансии (soft delete), не удаляет профиль. В MVP нет endpoint/хранилища истории удаления, поэтому UI не показывает удалённые строки как audit trail и не обещает отмену.
 - На стороне frontend runtime декомпозиция `VacanciesPage` и `OrdersPage` в production-friendly surface-слой уже выполнена; основной остаток работ смещен на UX-навигацию между `list/detail/pipeline`.
 - Основной дефицит на стороне preview/TЗ относительно MVP — наличие сценариев следующего этапа, для которых еще не зафиксированы endpoint-ы и контракты.

@@ -259,3 +259,12 @@
 Проверка: новый `CandidateDetailsPagePanel.test.tsx` и `workspaceShell.helpers.test.ts` — 11/11; полный frontend suite — 80/80; `npm exec -- eslint` для всех затронутых TS/TSX-файлов — без замечаний; `npm run build` — success, 2016 modules; reviewer — замечаний нет; `git diff --check`.
 YouGile: PRI-131 переведена в Blocked с описанием отсутствующего бизнес-контракта; задача не помечена завершённой.
 Коммит: feature/night-shift-refactor / fix(workspace): remove fake candidate purchase / 6f5947d.
+
+## MagicPath | Первый сценарий «Кандидаты»
+Старт: 2026-11-15 17:12 +03:00
+Окончание: 2026-11-15 19:48 +03:00
+Статус: Completed
+Изменения: добавлена страница добавления кандидата с тремя источниками, рабочий и отправленный заказчику списки, подтверждаемое удаление с серверными ограничениями, numeric experience и русское склонение. Отправленный список защищён от дальнейших изменений; исправлены обновление даты отправки в RTK Query и гонка удаления вакансии с отправкой списка.
+Проверка: `npm run tokens:build` и `npm run build` — успешно (2025 modules; предупреждения о размере bundle и устаревшем Browserslist); `npm run lint` — 0 ошибок, 5 предупреждений в нетронутых файлах; `npm run test:run` — 20 файлов, 95/95; `dotnet build backend/IntegrationTests/IntegrationTests.csproj` — 0 предупреждений и ошибок; `git diff --check` — успешно. Playwright Edge: `/app` перенаправлен на `/auth` при 1440x900 и 390x844, горизонтального переполнения нет; кабинет кандидатов не проверен в браузере без авторизованной сессии.
+Ограничения: интеграционный запуск на одноразовой PostgreSQL остановлен до тестов с Win32Exception Access Denied в `testhost`; контейнер удалён, Development-БД не затронута. `npm ci` сообщил о 24 уязвимостях lock-файла (1 low, 12 moderate, 11 high). ZIP-архив MagicPath сохранён вне коммита.
+Коммит реализации: будет указан после создания.

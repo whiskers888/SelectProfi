@@ -48,6 +48,7 @@ public sealed class GetVacancyBaseCandidatesQueryHandler(IGetVacancyBaseCandidat
                 Source = candidate.Source,
                 IsOwnedByRequester = IsOwnedByRequester(candidate, query.RequesterUserId),
                 IsAnonymized = IsAnonymized(candidate, query.RequesterUserId),
+                ExperienceYears = candidate.Resumes.FirstOrDefault()?.ExperienceYears,
                 UpdatedAtUtc = candidate.UpdatedAtUtc
             })
             .ToArray();

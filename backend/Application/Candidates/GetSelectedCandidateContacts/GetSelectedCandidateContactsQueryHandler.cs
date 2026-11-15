@@ -21,11 +21,18 @@ public sealed class GetSelectedCandidateContactsQueryHandler(IGetSelectedCandida
                 vacancy.CustomerId))
             return new GetSelectedCandidateContactsResult { ErrorCode = GetSelectedCandidateContactsErrorCode.Forbidden };
 
+        if (vacancy.ShortlistSentToCustomerAtUtc is null)
+            return new GetSelectedCandidateContactsResult
+                { ErrorCode = GetSelectedCandidateContactsErrorCode.CandidateNotSelected };
+
         if (!vacancy.SelectedCandidateId.HasValue)
             return new GetSelectedCandidateContactsResult
                 { ErrorCode = GetSelectedCandidateContactsErrorCode.CandidateNotSelected };
 
-        var candidate = await persistence.FindActiveCandidateByIdAsync(vacancy.SelectedCandidateId.Value, cancellationToken);
+        var candidate = await persistence.FindActiveSubmittedCandidateAsync(
+            vacancy.Id,
+            vacancy.SelectedCandidateId.Value,
+            cancellationToken);
         if (candidate is null)
             return new GetSelectedCandidateContactsResult { ErrorCode = GetSelectedCandidateContactsErrorCode.CandidateNotFound };
 

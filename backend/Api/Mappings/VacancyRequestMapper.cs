@@ -15,6 +15,7 @@ using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCus
 using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.SubmitVacancyCandidateList;
 using SelectProfi.backend.Contracts.Vacancies;
 using SelectProfi.backend.Domain.Candidates;
 using SelectProfi.backend.Domain.Users;
@@ -118,6 +119,7 @@ public static class VacancyRequestMapper
             Phone = request.Phone,
             SpecializationId = request.SpecializationId ?? Guid.Empty,
             ResumeTitle = request.ResumeTitle,
+            ExperienceYears = request.ExperienceYears,
             ResumeContentJson = request.ResumeContentJson,
             ResumeAttachmentsJson = request.ResumeAttachmentsJson
         };
@@ -147,6 +149,16 @@ public static class VacancyRequestMapper
     public static RemoveVacancyCandidateCommand ToRemoveCommand(this Guid candidateId, Guid vacancyId, Guid requesterUserId, UserRole requesterRole) => new()
     {
         VacancyId = vacancyId, CandidateId = candidateId, RequesterUserId = requesterUserId, RequesterRole = requesterRole
+    };
+
+    public static SubmitVacancyCandidateListCommand ToSubmitCandidateListCommand(
+        this Guid vacancyId,
+        Guid requesterUserId,
+        UserRole requesterRole) => new()
+    {
+        VacancyId = vacancyId,
+        RequesterUserId = requesterUserId,
+        RequesterRole = requesterRole
     };
 
     public static RespondToVacancyCommand ToRespondToVacancyCommand(

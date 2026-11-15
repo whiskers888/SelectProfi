@@ -20,6 +20,10 @@ public sealed class GetVacancyBaseCandidatesPersistence(AppDbContext dbContext) 
     {
         return await dbContext.Candidates
             .AsNoTracking()
+            .Include(candidate => candidate.Resumes
+                .Where(resume => resume.DeletedAtUtc == null)
+                .OrderByDescending(resume => resume.UpdatedAtUtc)
+                .Take(1))
             .Where(candidate => candidate.DeletedAtUtc == null)
             .OrderByDescending(candidate => candidate.UpdatedAtUtc)
             .ToArrayAsync(cancellationToken);

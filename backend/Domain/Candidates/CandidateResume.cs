@@ -28,6 +28,8 @@ public sealed class CandidateResume
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
 
+    public int? ExperienceYears { get; set; }
+
     public string ContentJson { get; set; } = "{}";
 
     public string? AttachmentsJson { get; set; }

@@ -16,10 +16,21 @@ public sealed class GetSelectedCandidateContactsPersistence(AppDbContext dbConte
             .FirstOrDefaultAsync(vacancy => vacancy.Id == vacancyId && vacancy.DeletedAtUtc == null, cancellationToken);
     }
 
-    public Task<Candidate?> FindActiveCandidateByIdAsync(Guid candidateId, CancellationToken cancellationToken)
+    public Task<Candidate?> FindActiveSubmittedCandidateAsync(
+        Guid vacancyId,
+        Guid candidateId,
+        CancellationToken cancellationToken)
     {
         return dbContext.Candidates
             .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == candidateId && candidate.DeletedAtUtc == null, cancellationToken);
+            .FirstOrDefaultAsync(
+                candidate => candidate.Id == candidateId
+                             && candidate.DeletedAtUtc == null
+                             && dbContext.VacancyCandidates.Any(link =>
+                                 link.VacancyId == vacancyId
+                                 && link.CandidateId == candidate.Id
+                                 && link.DeletedAtUtc == null
+                                 && link.CustomerSubmittedAtUtc != null),
+                cancellationToken);
     }
 }

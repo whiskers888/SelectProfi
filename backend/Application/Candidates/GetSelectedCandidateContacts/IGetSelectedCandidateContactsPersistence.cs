@@ -7,5 +7,8 @@ public interface IGetSelectedCandidateContactsPersistence
 {
     Task<Vacancy?> FindActiveVacancyByIdAsync(Guid vacancyId, CancellationToken cancellationToken);
 
-    Task<Candidate?> FindActiveCandidateByIdAsync(Guid candidateId, CancellationToken cancellationToken);
+    Task<Candidate?> FindActiveSubmittedCandidateAsync(
+        Guid vacancyId,
+        Guid candidateId,
+        CancellationToken cancellationToken);
 }

@@ -32,6 +32,8 @@ public sealed class VacancyCandidate
 
     public DateTime? ApplicantSubmittedAtUtc { get; set; }
 
+    public DateTime? CustomerSubmittedAtUtc { get; set; }
+
     public DateTime? ViewedByCustomerAtUtc { get; set; }
 
     public DateTime? DeletedAtUtc { get; set; }

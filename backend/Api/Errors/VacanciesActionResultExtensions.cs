@@ -10,6 +10,7 @@ using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCus
 using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.SubmitVacancyCandidateList;
 using SelectProfi.backend.Application.Vacancies.CreateVacancy;
 using SelectProfi.backend.Application.Vacancies.DeleteVacancy;
 using SelectProfi.backend.Application.Vacancies.GetVacancies;
@@ -103,6 +104,14 @@ public static class VacanciesActionResultExtensions
     public static IActionResult ToActionResult(this UpdateVacancyCandidateStageResult result, ControllerBase controller)
     {
         if (result.ErrorCode == UpdateVacancyCandidateStageErrorCode.None)
+            return controller.Ok(result.ToResponse());
+
+        return controller.ToProblem(VacanciesProblemMap.Resolve(result.ErrorCode));
+    }
+
+    public static IActionResult ToActionResult(this SubmitVacancyCandidateListResult result, ControllerBase controller)
+    {
+        if (result.ErrorCode == SubmitVacancyCandidateListErrorCode.None)
             return controller.Ok(result.ToResponse());
 
         return controller.ToProblem(VacanciesProblemMap.Resolve(result.ErrorCode));

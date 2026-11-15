@@ -15,6 +15,7 @@ using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCus
 using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.SubmitVacancyCandidateList;
 
 namespace SelectProfi.backend.Errors;
 
@@ -132,7 +133,19 @@ public static class VacanciesProblemMap
         StatusCodes.Status409Conflict,
         "Конфликт",
         "candidate_link_conflict",
-        "Не удалось добавить кандидата в вакансию из-за конфликта данных.");
+        "Не удалось изменить список кандидатов вакансии из-за конфликта данных.");
+
+    private static readonly ApiProblemDescriptor CandidateListSubmitForbidden = new(
+        StatusCodes.Status403Forbidden,
+        "Доступ запрещен",
+        "candidate_list_submit_forbidden",
+        "Только назначенный исполнитель может отправить список кандидатов заказчику.");
+
+    private static readonly ApiProblemDescriptor CandidateListSubmitConflict = new(
+        StatusCodes.Status409Conflict,
+        "Список изменился",
+        "candidate_list_submit_conflict",
+        "Список изменился одновременно с отправкой. Обновите страницу и повторите попытку.");
 
     private static readonly ApiProblemDescriptor VacancyRespondForbidden = new(
         StatusCodes.Status403Forbidden,
@@ -175,6 +188,18 @@ public static class VacanciesProblemMap
         "Конфликт",
         "vacancy_candidate_stage_conflict",
         "Не удалось изменить стадию кандидата из-за ограничения инвариантов.");
+
+    private static readonly ApiProblemDescriptor CandidateListAlreadySubmitted = new(
+        StatusCodes.Status409Conflict,
+        "Список уже отправлен",
+        "candidate_list_already_submitted",
+        "После отправки списка заказчику его состав нельзя изменить.");
+
+    private static readonly ApiProblemDescriptor CandidateListIncomplete = new(
+        StatusCodes.Status409Conflict,
+        "Список не готов",
+        "candidate_list_incomplete",
+        "Добавьте нужное количество кандидатов в Shortlist перед отправкой заказчику.");
 
     private static readonly ApiProblemDescriptor CandidateSelectForbidden = new(
         StatusCodes.Status403Forbidden,
@@ -336,6 +361,18 @@ public static class VacanciesProblemMap
         RemoveVacancyCandidateErrorCode.VacancyNotFound => VacancyNotFound,
         RemoveVacancyCandidateErrorCode.Forbidden => CandidateLinkForbidden,
         RemoveVacancyCandidateErrorCode.VacancyNotPublished => VacancyNotPublished,
+        RemoveVacancyCandidateErrorCode.CustomerListAlreadySubmitted => CandidateListAlreadySubmitted,
+        _ => CandidateLinkConflict
+    };
+
+    public static ApiProblemDescriptor Resolve(SubmitVacancyCandidateListErrorCode errorCode) => errorCode switch
+    {
+        SubmitVacancyCandidateListErrorCode.VacancyNotFound => VacancyNotFound,
+        SubmitVacancyCandidateListErrorCode.Forbidden => CandidateListSubmitForbidden,
+        SubmitVacancyCandidateListErrorCode.VacancyNotPublished => VacancyNotPublished,
+        SubmitVacancyCandidateListErrorCode.ShortlistIncomplete => CandidateListIncomplete,
+        SubmitVacancyCandidateListErrorCode.AlreadySubmitted => CandidateListAlreadySubmitted,
+        SubmitVacancyCandidateListErrorCode.Conflict => CandidateListSubmitConflict,
         _ => CandidateLinkConflict
     };
 
@@ -361,6 +398,7 @@ public static class VacanciesProblemMap
             UpdateVacancyCandidateStageErrorCode.Forbidden => CandidateStageForbidden,
             UpdateVacancyCandidateStageErrorCode.InvalidStage => CandidateStageInvalid,
             UpdateVacancyCandidateStageErrorCode.VacancyNotPublished => VacancyNotPublished,
+            UpdateVacancyCandidateStageErrorCode.CandidateListAlreadySubmitted => CandidateListAlreadySubmitted,
             _ => CandidateStageConflict
         };
     }

@@ -25,6 +25,7 @@ export type WorkspaceOrder = {
   serviceCommissionAmount?: number | null
   executorNetAmount?: number | null
   isPricingLocked?: boolean
+  requestedCandidatesCount?: number
   title: string
   company: string
   location: string
@@ -50,6 +51,11 @@ export type WorkspaceCandidate = {
   sourceType?: 'AddedByExecutor' | 'RegisteredUser'
   isOwnedByRequester?: boolean
   isAnonymized?: boolean
+  stage?: 'Pool' | 'Shortlist'
+  isCustomerSubmitted?: boolean
+  applicantSubmittedAtUtc?: string | null
+  experienceSummary?: string | null
+  experienceYears?: number | null
   rating: string
   statusLabel: string
   statusTone: WorkspaceTone

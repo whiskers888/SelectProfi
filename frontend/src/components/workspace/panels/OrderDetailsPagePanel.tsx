@@ -3,15 +3,12 @@ import { MessageCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Modal } from '@/components/ui/modal'
 import { workspaceToneToBadgeVariant, type WorkspaceCandidate, type WorkspaceOrder } from '../model/data'
 import type { OrderExecutorResponseItemResponse } from '@/shared/api/orders'
+import { ProjectCandidatesPanel } from './ProjectCandidatesPanel'
 
-type OrderDetailsPagePanelProps = {
+interface OrderDetailsPagePanelProps {
   applicantResponders?: WorkspaceCandidate[]
-  availableCandidates?: WorkspaceCandidate[]
-  assignedCandidateIds?: string[]
   canCreateVacancyFromOrder?: boolean
   canCreateCandidateFromOrder?: boolean
   canManageCandidatesFromOrder?: boolean
@@ -23,9 +20,11 @@ type OrderDetailsPagePanelProps = {
     status: 'Draft' | 'OnApproval' | 'Published'
     createdAtUtc: string
     updatedAtUtc: string
+    shortlistSentToCustomerAtUtc?: string | null
   } | null
   canManageOrderResponses?: boolean
   isExecutorViewer?: boolean
+  isCustomerViewer?: boolean
   isApplicantViewer?: boolean
   hasRespondedToOrder?: boolean
   canRespondToOrder?: boolean
@@ -35,16 +34,20 @@ type OrderDetailsPagePanelProps = {
   isRespondingToOrder?: boolean
   isSelectingOrderExecutor?: boolean
   isUpdatingApplicantResponderStage?: boolean
-  isAddingCandidateFromBase?: boolean
   isRemovingVacancyCandidate?: boolean
+  isSubmittingCandidateList?: boolean
+  isProjectCandidatesLoading?: boolean
+  isProjectCandidatesError?: boolean
   order: WorkspaceOrder
+  projectCandidates?: WorkspaceCandidate[]
   assignedExecutorName?: string | null
   onBack: () => void
   onOpenChat?: () => void
   onCreateVacancyFromOrder?: () => void
   onCreateCandidateFromOrder?: () => void
-  onAddCandidateFromBase?: (candidateId: string) => boolean | Promise<boolean>
-  onRemoveCandidateFromVacancy?: (candidateId: string) => void | Promise<void>
+  onRemoveCandidateFromVacancy?: (candidateId: string) => boolean | Promise<boolean>
+  onSubmitCandidateList?: () => boolean | Promise<boolean>
+  onRetryProjectCandidates?: () => void
   onPublishVacancyForCustomer?: () => void | Promise<void>
   onRespondToOrder?: () => void | Promise<void>
   onOpenApplicantResponder?: (candidate: WorkspaceCandidate) => void
@@ -55,7 +58,12 @@ type OrderDetailsPagePanelProps = {
   orderResponses?: OrderExecutorResponseItemResponse[]
 }
 
-function OrderDetailRow({ label, value }: { label: string; value: string }) {
+interface OrderDetailRowProps {
+  label: string
+  value: string
+}
+
+function OrderDetailRow({ label, value }: Readonly<OrderDetailRowProps>) {
   const visibleValue = value.trim() || 'Не указано'
 
   return (
@@ -80,8 +88,7 @@ function toExecutorPaymentLabel(amount: number | null | undefined): string {
 
 export function OrderDetailsPagePanel({
   applicantResponders = [],
-  availableCandidates = [],
-  assignedCandidateIds = [],
+  projectCandidates = [],
   canCreateVacancyFromOrder = false,
   canCreateCandidateFromOrder = false,
   canManageCandidatesFromOrder = false,
@@ -90,6 +97,7 @@ export function OrderDetailsPagePanel({
   vacancyPreview = null,
   canManageOrderResponses = false,
   isExecutorViewer = false,
+  isCustomerViewer = false,
   isApplicantViewer = false,
   hasRespondedToOrder = false,
   canRespondToOrder = false,
@@ -99,16 +107,19 @@ export function OrderDetailsPagePanel({
   isRespondingToOrder = false,
   isSelectingOrderExecutor = false,
   isUpdatingApplicantResponderStage = false,
-  isAddingCandidateFromBase = false,
   isRemovingVacancyCandidate = false,
+  isSubmittingCandidateList = false,
+  isProjectCandidatesLoading = false,
+  isProjectCandidatesError = false,
   order,
   assignedExecutorName = null,
   onBack,
   onOpenChat,
   onCreateVacancyFromOrder,
   onCreateCandidateFromOrder,
-  onAddCandidateFromBase,
   onRemoveCandidateFromVacancy,
+  onSubmitCandidateList,
+  onRetryProjectCandidates,
   onPublishVacancyForCustomer,
   onRespondToOrder,
   onOpenApplicantResponder,
@@ -117,19 +128,10 @@ export function OrderDetailsPagePanel({
   onRejectOrderExecutor,
   onSelectOrderExecutor,
   orderResponses = [],
-}: OrderDetailsPagePanelProps) {
+}: Readonly<OrderDetailsPagePanelProps>) {
   const hasAssignedExecutor = Boolean(order.executorId)
   const [isResponsesExpanded, setIsResponsesExpanded] = useState(() => !hasAssignedExecutor)
   const [expandedExecutorIds, setExpandedExecutorIds] = useState<Set<string>>(() => new Set<string>())
-  const [isCandidatePickerOpen, setIsCandidatePickerOpen] = useState(false)
-  const [candidateSearch, setCandidateSearch] = useState('')
-  const normalizedCandidateSearch = candidateSearch.trim().toLocaleLowerCase('ru-RU')
-  const assignedCandidateIdSet = new Set(assignedCandidateIds)
-  const matchingCandidates = availableCandidates.filter(
-    (candidate) =>
-      !normalizedCandidateSearch ||
-      `${candidate.name} ${candidate.position}`.toLocaleLowerCase('ru-RU').includes(normalizedCandidateSearch),
-  )
 
   function toStatusLabel(status: OrderExecutorResponseItemResponse['status']): string {
     if (status === 'Pending') {
@@ -152,6 +154,7 @@ export function OrderDetailsPagePanel({
   const vacancyDescriptionPreview = vacancyPreview
     ? vacancyPreview.description.replace(/<[^>]*>/g, ' ').trim()
     : ''
+  const isCandidateListSubmitted = Boolean(vacancyPreview?.shortlistSentToCustomerAtUtc)
   const vacancyStatusLabel = vacancyPreview?.status === 'Published'
     ? 'Согласовано и опубликовано'
     : vacancyPreview?.status === 'OnApproval'
@@ -231,13 +234,13 @@ export function OrderDetailsPagePanel({
             {applicantResponders.length > 0 ? (
               <dd className="mt-2 space-y-2">
                 {applicantResponders.map((candidate) => {
-                  const isShortlist = candidate.statusLabel.trim().toLowerCase() === 'shortlist'
+                  const isShortlist = candidate.stage === 'Shortlist'
                   return (
                     <div key={candidate.id} className="rounded-lg border border-border bg-muted p-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <p className="text-sm font-medium text-foreground">{candidate.name}</p>
-                          <p className="text-xs text-muted-foreground">Статус: {candidate.statusLabel || 'Pool'}</p>
+                          <p className="text-xs text-muted-foreground">Статус: {candidate.statusLabel || 'В рабочем списке'}</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <Button
@@ -249,32 +252,8 @@ export function OrderDetailsPagePanel({
                             Профиль
                           </Button>
                           <Button
-                            aria-label="Открыть чат с соискателем"
-                            className="h-8 w-8 rounded-lg p-0"
-                            onClick={() => {
-                            }}
-                            type="button"
-                            variant="outline"
-                          >
-                            <svg
-                              aria-hidden="true"
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M8 10.5h8M8 14h5m-9 7 2.2-3.8a9 9 0 1 1 3.6 2.2L4 21Z"
-                                stroke="currentColor"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.8"
-                              />
-                            </svg>
-                          </Button>
-                          <Button
                             className="h-8 rounded-lg bg-primary px-2 text-xs text-primary-foreground hover:bg-primary/90"
-                            disabled={isShortlist || isUpdatingApplicantResponderStage}
+                            disabled={isCandidateListSubmitted || isShortlist || isUpdatingApplicantResponderStage}
                             onClick={() => {
                               if (!onMoveApplicantResponderToShortlist) {
                                 return
@@ -283,11 +262,11 @@ export function OrderDetailsPagePanel({
                             }}
                             type="button"
                           >
-                            В shortlist
+                            В список кандидатов
                           </Button>
                           <Button
                             className="h-8 rounded-lg px-2 text-xs"
-                            disabled={!isShortlist || isUpdatingApplicantResponderStage}
+                            disabled={isCandidateListSubmitted || !isShortlist || isUpdatingApplicantResponderStage}
                             onClick={() => {
                               if (!onRejectApplicantResponder) {
                                 return
@@ -311,6 +290,25 @@ export function OrderDetailsPagePanel({
           </div>
         ) : null}
       </dl>
+
+      <ProjectCandidatesPanel
+        candidates={projectCandidates}
+        canAddCandidate={canCreateCandidateFromOrder}
+        canManageCandidates={canManageCandidatesFromOrder}
+        isCustomerViewer={isCustomerViewer}
+        isError={isProjectCandidatesError}
+        isExecutorViewer={isExecutorViewer}
+        isLoading={isProjectCandidatesLoading}
+        isRemovingCandidate={isRemovingVacancyCandidate}
+        isSubmittingCandidateList={isSubmittingCandidateList}
+        onAddCandidate={onCreateCandidateFromOrder}
+        onRemoveCandidate={onRemoveCandidateFromVacancy}
+        onRetry={onRetryProjectCandidates}
+        onSubmitCandidateList={onSubmitCandidateList}
+        requestedCandidatesCount={order.requestedCandidatesCount ?? 1}
+        submittedAtUtc={vacancyPreview?.shortlistSentToCustomerAtUtc}
+        vacancyIsPublished={vacancyPreview?.status === 'Published'}
+      />
 
       <div className="mt-5">
         {vacancyPreview ? (
@@ -343,7 +341,7 @@ export function OrderDetailsPagePanel({
                   : 'Откликнуться на заказ'}
           </Button>
         ) : null}
-        {canCreateVacancyFromOrder || canManageCandidatesFromOrder ? (
+        {canCreateVacancyFromOrder ? (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {canCreateVacancyFromOrder ? (
               <div>
@@ -376,18 +374,6 @@ export function OrderDetailsPagePanel({
                 {hasCreateVacancyDraft ? 'Продолжить черновик вакансии' : 'Создать вакансию'}
               </Button>
             </div>
-              </div>
-            ) : null}
-            {canManageCandidatesFromOrder ? (
-              <div>
-            <Button
-              className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => setIsCandidatePickerOpen(true)}
-              type="button"
-              disabled={!canCreateCandidateFromOrder}
-            >
-              Добавить кандидата
-            </Button>
               </div>
             ) : null}
           </div>
@@ -526,72 +512,6 @@ export function OrderDetailsPagePanel({
           ) : null}
         </div>
       ) : null}
-      <Modal
-        className="max-w-3xl"
-        description="Выберите кандидата из своей базы или создайте нового вручную."
-        onOpenChange={setIsCandidatePickerOpen}
-        open={isCandidatePickerOpen}
-        title="Добавить кандидата к заказу"
-        footer={
-          <div className="flex flex-wrap justify-between gap-2">
-            <Button onClick={() => onCreateCandidateFromOrder?.()} type="button">
-              Добавить нового вручную
-            </Button>
-            <Button onClick={() => setIsCandidatePickerOpen(false)} type="button" variant="outline">
-              Закрыть
-            </Button>
-          </div>
-        }
-      >
-        <Input
-          aria-label="Поиск кандидата"
-          className="mb-4 h-10 rounded-xl"
-          onChange={(event) => setCandidateSearch(event.target.value)}
-          placeholder="Поиск по ФИО или специализации"
-          value={candidateSearch}
-        />
-        <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
-          {matchingCandidates.map((candidate) => (
-            <div key={candidate.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3">
-              <div>
-                <p className="font-medium text-foreground">{candidate.name}</p>
-                <p className="text-sm text-muted-foreground">{candidate.position}</p>
-              </div>
-              {assignedCandidateIdSet.has(candidate.id) ? (
-                <Button
-                  aria-label={`${candidate.name}: кандидат уже добавлен к вакансии`}
-                  className="border-error/40 bg-error-muted text-destructive hover:bg-error-muted"
-                  disabled={isRemovingVacancyCandidate}
-                  onClick={() => void onRemoveCandidateFromVacancy?.(candidate.id)}
-                  title="Кандидат уже добавлен к этой вакансии"
-                  type="button"
-                  variant="outline"
-                >
-                  {isRemovingVacancyCandidate ? 'Исключаем...' : 'Исключить'}
-                </Button>
-              ) : (
-                <Button
-                  disabled={isAddingCandidateFromBase}
-                  onClick={() => {
-                    void Promise.resolve(onAddCandidateFromBase?.(candidate.id)).then((wasAdded) => {
-                      if (wasAdded) {
-                        setIsCandidatePickerOpen(false)
-                      }
-                    })
-                  }}
-                  type="button"
-                  variant="outline"
-                >
-                  {isAddingCandidateFromBase ? 'Добавляем...' : 'Выбрать'}
-                </Button>
-              )}
-            </div>
-          ))}
-          {matchingCandidates.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">Кандидаты не найдены.</p>
-          ) : null}
-        </div>
-      </Modal>
     </Card>
   )
 }

@@ -10,6 +10,7 @@ using SelectProfi.backend.Application.Candidates.MarkVacancyCandidateViewedByCus
 using SelectProfi.backend.Application.Candidates.RespondToVacancy;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
+using SelectProfi.backend.Application.Candidates.SubmitVacancyCandidateList;
 using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment;
 using SelectProfi.backend.Application.Auth.Login;
 using SelectProfi.backend.Application.Auth.Refresh;
@@ -78,6 +79,7 @@ public static class
         services.AddScoped<ICommandHandler<RemoveVacancyCandidateCommand, RemoveVacancyCandidateResult>, RemoveVacancyCandidateCommandHandler>();
         // @dvnull: Добавлен command смены стадии кандидата в vacancy pipeline с инвариантом selectedCandidate.
         services.AddScoped<ICommandHandler<UpdateVacancyCandidateStageCommand, UpdateVacancyCandidateStageResult>, UpdateVacancyCandidateStageCommandHandler>();
+        services.AddScoped<ICommandHandler<SubmitVacancyCandidateListCommand, SubmitVacancyCandidateListResult>, SubmitVacancyCandidateListCommandHandler>();
         services.AddScoped<ICommandHandler<UploadCandidateResumeAttachmentCommand, UploadCandidateResumeAttachmentResult>, UploadCandidateResumeAttachmentCommandHandler>();
         // @dvnull: Добавлен command финального выбора кандидата заказчиком только из shortlist.
         services.AddScoped<ICommandHandler<SelectVacancyCandidateCommand, SelectVacancyCandidateResult>, SelectVacancyCandidateCommandHandler>();

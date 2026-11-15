@@ -22,6 +22,12 @@ public sealed class GetVacancyCandidatesPersistence(AppDbContext dbContext) : IG
         return await dbContext.VacancyCandidates
             .AsNoTracking()
             .Include(vacancyCandidate => vacancyCandidate.Candidate)
+            .ThenInclude(candidate => candidate.User)
+            .Include(vacancyCandidate => vacancyCandidate.Candidate)
+            .ThenInclude(candidate => candidate.Resumes
+                .Where(resume => resume.DeletedAtUtc == null)
+                .OrderByDescending(resume => resume.UpdatedAtUtc)
+                .Take(1))
             .Where(vacancyCandidate => vacancyCandidate.VacancyId == vacancyId && vacancyCandidate.DeletedAtUtc == null)
             .OrderByDescending(vacancyCandidate => vacancyCandidate.UpdatedAtUtc)
             .ToArrayAsync(cancellationToken);

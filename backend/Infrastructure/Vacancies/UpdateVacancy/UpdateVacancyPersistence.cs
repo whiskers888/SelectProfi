@@ -21,6 +21,10 @@ public sealed class UpdateVacancyPersistence(AppDbContext dbContext) : IUpdateVa
             await dbContext.SaveChangesAsync(cancellationToken);
             return UpdateVacancyPersistenceResult.Saved;
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            return UpdateVacancyPersistenceResult.Conflict;
+        }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         {
             return UpdateVacancyPersistenceResult.Conflict;

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using SelectProfi.backend.Application.Dashboard.GetCustomerDashboardStats;
-using SelectProfi.backend.Domain.Candidates;
 using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Domain.Vacancies;
 using SelectProfi.backend.Infrastructure.Data;
@@ -42,7 +41,8 @@ public sealed class GetCustomerDashboardStatsPersistence(AppDbContext dbContext)
                 pair =>
                     pair.vacancyCandidate.DeletedAtUtc == null &&
                     pair.vacancy.DeletedAtUtc == null &&
-                    pair.vacancy.CustomerId == customerUserId,
+                    pair.vacancy.CustomerId == customerUserId &&
+                    pair.vacancyCandidate.CustomerSubmittedAtUtc != null,
                 cancellationToken);
 
         var shortlistCandidatesCount = await dbContext.VacancyCandidates
@@ -57,7 +57,7 @@ public sealed class GetCustomerDashboardStatsPersistence(AppDbContext dbContext)
                     pair.vacancyCandidate.DeletedAtUtc == null &&
                     pair.vacancy.DeletedAtUtc == null &&
                     pair.vacancy.CustomerId == customerUserId &&
-                    pair.vacancyCandidate.Stage == VacancyCandidateStage.Shortlist,
+                    pair.vacancyCandidate.CustomerSubmittedAtUtc != null,
                 cancellationToken);
 
         var wallet = await dbContext.Wallets

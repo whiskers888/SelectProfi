@@ -40,14 +40,16 @@ const poolCandidate: WorkspaceCandidate = {
   orderId: order.id,
   source: 'База кандидатов',
   rating: '4.8',
-  statusLabel: 'Pool',
+  statusLabel: 'В рабочем списке',
+  stage: 'Pool',
   statusTone: 'warning',
   comment: 'Сохранённая заметка',
 }
 const shortlistCandidate: WorkspaceCandidate = {
   ...poolCandidate,
   name: 'Кандидат № 42',
-  statusLabel: 'Shortlist',
+  statusLabel: 'В списке кандидатов',
+  stage: 'Shortlist',
   statusTone: 'default',
 }
 const selectedCandidate: WorkspaceCandidate = {
@@ -139,7 +141,7 @@ describe('MainFeedPanel projects in work', () => {
       onSetCandidateStage,
     })
 
-    fireEvent.click(screen.getByRole('button', { name: `Добавить ${poolCandidate.name} в Shortlist` }))
+    fireEvent.click(screen.getByRole('button', { name: `Добавить ${poolCandidate.name} в список кандидатов` }))
 
     expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, poolCandidate.id, 'Shortlist')
     expect(onOpenCandidate).not.toHaveBeenCalled()
@@ -150,7 +152,8 @@ describe('MainFeedPanel projects in work', () => {
     const onSetCandidateStage = vi.fn()
     const shortlistCandidate: WorkspaceCandidate = {
       ...poolCandidate,
-      statusLabel: 'Shortlist',
+      statusLabel: 'В списке кандидатов',
+      stage: 'Shortlist',
       statusTone: 'default',
     }
 
@@ -159,7 +162,7 @@ describe('MainFeedPanel projects in work', () => {
       onSetCandidateStage,
     })
 
-    fireEvent.click(screen.getByRole('button', { name: `Вернуть ${shortlistCandidate.name} в Pool` }))
+    fireEvent.click(screen.getByRole('button', { name: `Вернуть ${shortlistCandidate.name} в рабочий список` }))
 
     expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, shortlistCandidate.id, 'Pool')
   })
@@ -184,7 +187,7 @@ describe('MainFeedPanel projects in work', () => {
       selectedOrderId: order.id,
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /Pool/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Рабочий список/ }))
     expect(screen.queryByText(finalist.name)).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: /Обзор всех кандидатов/ }))
@@ -205,9 +208,36 @@ describe('MainFeedPanel projects in work', () => {
       onSetCandidateStage: vi.fn(),
     })
 
-    const button = screen.getByRole('button', { name: `Добавить ${poolCandidate.name} в Shortlist` })
+    const button = screen.getByRole('button', { name: `Добавить ${poolCandidate.name} в список кандидатов` })
 
     expect(button.hasAttribute('disabled')).toBe(true)
+  })
+
+  it('freezes Pool stage actions when any candidate for the selected vacancy is submitted', () => {
+    const onSetCandidateStage = vi.fn()
+    const submittedCandidate: WorkspaceCandidate = {
+      ...shortlistCandidate,
+      id: 'candidate-submitted',
+      isCustomerSubmitted: true,
+    }
+    const poolCandidateNotSubmitted: WorkspaceCandidate = {
+      ...poolCandidate,
+      isCustomerSubmitted: false,
+    }
+
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [poolCandidateNotSubmitted, submittedCandidate],
+      onSetCandidateStage,
+      selectedOrderId: order.id,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Рабочий список/ }))
+
+    expect(screen.queryByRole('button', {
+      name: `Добавить ${poolCandidateNotSubmitted.name} в список кандидатов`,
+    })).toBeNull()
+    expect(screen.getByText('Список отправлен заказчику')).toBeTruthy()
+    expect(onSetCandidateStage).not.toHaveBeenCalled()
   })
 
   it('opens the selected project details from the dashboard summary', () => {
@@ -330,7 +360,7 @@ describe('MainFeedPanel projects in work', () => {
     expect(onSelectOrder).toHaveBeenCalledWith(archivedOrder.id)
     expect(screen.getByText(archivedCandidate.name)).toBeTruthy()
     expect(screen.getByText('Только просмотр')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: /Добавить .* в Shortlist/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Добавить .* в список кандидатов/ })).toBeNull()
     expect(onSetCandidateStage).not.toHaveBeenCalled()
   })
 

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { getWorkspaceCandidatePipelineStage } from '../shell/workspaceShell.helpers'
 import { workspaceToneToBadgeVariant } from '../model/data'
 import type { WorkspaceCandidate, WorkspaceOrder } from '../model/data'
 import type { MainFeedPanelViewProps } from './MainFeedPanel.types'
@@ -15,10 +16,10 @@ type CandidateStage = 'pool' | 'shortlist' | 'selected'
 type CandidateFilter = 'all' | CandidateStage
 
 function candidateStage(candidate: WorkspaceCandidate): CandidateStage | null {
-  const status = candidate.statusLabel.trim().toLowerCase()
-  if (status === 'выбран' || status === 'selected') return 'selected'
-  if (status === 'shortlist') return 'shortlist'
-  if (status === 'pool') return 'pool'
+  const stage = getWorkspaceCandidatePipelineStage(candidate)
+  if (stage === 'Selected') return 'selected'
+  if (stage === 'Shortlist') return 'shortlist'
+  if (stage === 'Pool') return 'pool'
   return null
 }
 
@@ -40,6 +41,7 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
     shortlist: orderCandidates.filter((candidate) => candidateStage(candidate) === 'shortlist').length,
     selected: orderCandidates.filter((candidate) => candidateStage(candidate) === 'selected').length,
   }
+  const isCandidateListSubmitted = orderCandidates.some((candidate) => candidate.isCustomerSubmitted)
   const filteredCandidates = orderCandidates.filter(
     (candidate) => stageFilter === 'all' || candidateStage(candidate) === stageFilter,
   )
@@ -122,7 +124,7 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
                     stage === 'all'
                       ? 'Обзор всех кандидатов'
                       : stage === 'pool'
-                        ? 'Pool'
+                        ? 'Рабочий список'
                         : stage === 'shortlist'
                           ? 'Обзор финалистов'
                           : 'Выбран'
@@ -193,13 +195,15 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
                             <span className="text-xs text-muted-foreground">Финалист выбран</span>
                           ) : viewProps.dashboardState === 'archive' ? (
                             <span className="text-xs text-muted-foreground">Только просмотр</span>
+                          ) : isCandidateListSubmitted ? (
+                            <span className="text-xs text-muted-foreground">Список отправлен заказчику</span>
                           ) : nextStage && viewProps.onSetCandidateStage ? (
                             <button
                               type="button"
                               aria-label={
                                 nextStage === 'Shortlist'
-                                  ? `Добавить ${candidate.name} в Shortlist`
-                                  : `Вернуть ${candidate.name} в Pool`
+                                  ? `Добавить ${candidate.name} в список кандидатов`
+                                  : `Вернуть ${candidate.name} в рабочий список`
                               }
                               disabled={viewProps.isUpdatingCandidateStage}
                               onClick={(event) => {
@@ -208,7 +212,7 @@ export function ExecutorDashboardSection({ viewProps }: ExecutorDashboardSection
                               }}
                               className="rounded-md border border-primary/40 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              {nextStage === 'Shortlist' ? 'Добавить в Shortlist' : 'Вернуть в Pool'}
+                              {nextStage === 'Shortlist' ? 'Добавить в список кандидатов' : 'Вернуть в рабочий список'}
                             </button>
                           ) : null}
                         </TableCell>

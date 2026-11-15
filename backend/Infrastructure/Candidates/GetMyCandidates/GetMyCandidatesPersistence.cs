@@ -25,6 +25,11 @@ public sealed class GetMyCandidatesPersistence(AppDbContext dbContext) : IGetMyC
                     .OrderByDescending(resume => resume.UpdatedAtUtc)
                     .Select(resume => resume.Title)
                     .FirstOrDefault() ?? string.Empty,
+                ExperienceYears = candidate.Resumes
+                    .Where(resume => resume.DeletedAtUtc == null)
+                    .OrderByDescending(resume => resume.UpdatedAtUtc)
+                    .Select(resume => resume.ExperienceYears)
+                    .FirstOrDefault(),
                 UpdatedAtUtc = candidate.UpdatedAtUtc
             })
             .OrderByDescending(item => item.UpdatedAtUtc)
