@@ -268,3 +268,12 @@ YouGile: PRI-131 переведена в Blocked с описанием отсу�
 Проверка: `npm run tokens:build` и `npm run build` — успешно (2025 modules; предупреждения о размере bundle и устаревшем Browserslist); `npm run lint` — 0 ошибок, 5 предупреждений в нетронутых файлах; `npm run test:run` — 20 файлов, 95/95; `dotnet build backend/IntegrationTests/IntegrationTests.csproj` — 0 предупреждений и ошибок; `git diff --check` — успешно. Playwright Edge: `/app` перенаправлен на `/auth` при 1440x900 и 390x844, горизонтального переполнения нет; кабинет кандидатов не проверен в браузере без авторизованной сессии.
 Ограничения: интеграционный запуск на одноразовой PostgreSQL остановлен до тестов с Win32Exception Access Denied в `testhost`; контейнер удалён, Development-БД не затронута. `npm ci` сообщил о 24 уязвимостях lock-файла (1 low, 12 moderate, 11 high). ZIP-архив MagicPath сохранён вне коммита.
 Коммит реализации: `76f4e53` (`feat(candidates): integrate MagicPath workflow`).
+
+## MagicPath | UI исполнителя и live-проверка
+Старт: 2026-11-16 00:02 +03:00 (первый браузерный проход текущего продолжения)
+Окончание: 2026-11-16 00:12 +03:00
+Статус: Completed.
+Изменения: пересобран и пересоздан только frontend-контейнер; общий Tiptap-редактор настроен без дублирующего Underline в StarterKit, toolbar сохранил отдельное расширение. Данные тестового проекта не менялись.
+Проверка: `npm run test:run` — 22 файла, 106/106; `npm run build` — успешно, 2025 модулей; `npm run lint` — 0 ошибок, 5 Fast Refresh предупреждений в AuthFields.tsx и ResumeLinksInput.tsx; reviewer — без замечаний. Docker: frontend healthy, `GET /app` — 200, API-запросы кабинета — 200. Playwright: Executor dashboard и форма добавления кандидата при 1280×900; мобильный viewport 390×844, горизонтального переполнения нет; вкладки источников доступны; после исправления в консоли 0 ошибок и предупреждений.
+Ограничения: сборка сообщает об устаревшей базе Browserslist и JS chunk больше 500 kB; не относятся к переносу UI. ZIP-архив MagicPath оставлен untracked как входной файл.
+Коммит реализации: `6fd4edc` (`feat(dashboard): finish executor workspace UI`).
