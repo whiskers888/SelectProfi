@@ -45,27 +45,44 @@ export function DashboardOrdersSection({
   stackHeader,
   setDashboardState,
   visibleDashboardOrders,
+  view,
 }: DashboardOrdersSectionProps) {
   const isApplicantRole = role === 'Applicant'
   const isExecutorRole = role === 'Executor'
   const ordersNoun = isExecutorRole ? 'проектов' : 'заказов'
   const orderNounSingular = isExecutorRole ? 'проект' : 'заказ'
-  const ordersInWorkLabel = isExecutorRole ? 'Проекты в работе' : 'Заказы в работе'
+  const isExecutorDashboard = isExecutorRole && view === 'dashboard'
+  const ordersInWorkLabel = isExecutorDashboard
+    ? 'Мои проекты в работе'
+    : isExecutorRole
+      ? 'Проекты в работе'
+      : 'Заказы в работе'
   const orderPriceLabelPrefix = isExecutorRole ? 'К получению' : 'Цена'
   const canSelectDashboardOrders = canManageOrders && dashboardState !== 'archive'
   const shouldStackHeader = stackHeader ?? isExecutorRole
 
   if (orders.length === 0) {
     return renderEmptyState(
-      isApplicantRole ? 'Нет откликов' : `Нет данных по ${ordersNoun}`,
+      isApplicantRole
+        ? 'Нет откликов'
+        : isExecutorRole
+          ? 'Нет проектов в работе'
+          : `Нет данных по ${ordersNoun}`,
       isApplicantRole
         ? 'Вы ещё не откликнулись ни на одну вакансию.'
-        : `Создайте новый ${orderNounSingular} или снимите фильтры, чтобы увидеть активные вакансии.`,
+        : isExecutorRole
+          ? 'Назначенные вам проекты появятся здесь.'
+          : `Создайте новый ${orderNounSingular} или снимите фильтры, чтобы увидеть активные вакансии.`,
     )
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card text-card-foreground shadow-none">
+    <section
+      className={cn(
+        'rounded-xl border border-border bg-card text-card-foreground shadow-none',
+        isExecutorDashboard && 'preview11-executor-project-list',
+      )}
+    >
       <div className={cn('flex min-w-0 flex-col gap-4 border-b border-border p-4', !shouldStackHeader && 'lg:flex-row lg:items-start lg:justify-between')}>
         <div className="min-w-0">
           <h3 className="text-base font-semibold">
@@ -117,7 +134,7 @@ export function DashboardOrdersSection({
         </div>
       </div>
 
-      <div className="p-4">
+        <div className={cn('p-4', isExecutorDashboard && 'preview11-executor-project-list-body')}>
         {canSelectDashboardOrders ? (
           <div className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/50 p-3 sm:flex-row sm:items-center sm:justify-between">
             <label className="flex items-center gap-2 text-sm font-medium">
@@ -161,7 +178,7 @@ export function DashboardOrdersSection({
           </div>
         ) : null}
 
-        <div className="grid gap-4">
+        <div className={cn('grid gap-4', isExecutorDashboard && 'preview11-executor-order-list')}>
           {visibleDashboardOrders.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
               {`Нет ${ordersNoun} в выбранном состоянии.`}
@@ -172,7 +189,12 @@ export function DashboardOrdersSection({
               return (
                 <div
                   key={order.id}
-                  className={cn('flex overflow-hidden rounded-lg border border-border transition-colors', canSelectDashboardOrders && 'items-stretch', isSelected && 'border-primary ring-1 ring-primary/30')}
+                  className={cn(
+                    'flex overflow-hidden rounded-lg border border-border transition-colors',
+                    canSelectDashboardOrders && 'items-stretch',
+                    isSelected && 'border-primary ring-1 ring-primary/30',
+                    isExecutorDashboard && 'preview11-executor-order-item',
+                  )}
                 >
                   {canSelectDashboardOrders ? (
                     <div className="flex items-center px-3">
@@ -187,7 +209,11 @@ export function DashboardOrdersSection({
                   ) : null}
                   <button
                     aria-pressed={isSelected}
-                    className={cn('min-w-0 flex-1 p-4 text-left transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring', isSelected && 'bg-primary/5')}
+                    className={cn(
+                      'min-w-0 flex-1 p-4 text-left transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                      isSelected && 'bg-primary/5',
+                      isExecutorDashboard && 'preview11-executor-order-button',
+                    )}
                     onClick={() => {
                       onSelectOrder(order.id)
                       onOpenOrder(order)

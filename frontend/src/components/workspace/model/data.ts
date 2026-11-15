@@ -45,7 +45,8 @@ export type WorkspaceOrder = {
 export type WorkspaceCandidate = {
   id: string
   name: string
-  position: string
+  position?: string
+  vacancyTitle?: string
   orderId: string
   source: string
   sourceType?: 'AddedByExecutor' | 'RegisteredUser'

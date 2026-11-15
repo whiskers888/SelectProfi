@@ -38,7 +38,9 @@ function CandidateRow({ candidate, canRemove, isRemoving, onRemove }: Readonly<C
     <li className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4">
       <div className="min-w-0">
         <p className="truncate font-medium text-foreground">{candidate.name}</p>
-        <p className="mt-1 truncate text-sm text-muted-foreground">{candidate.position}</p>
+        <p className="mt-1 truncate text-sm text-muted-foreground">
+          {candidate.vacancyTitle ? `Вакансия: ${candidate.vacancyTitle}` : candidate.position || 'Специализация не указана'}
+        </p>
         <p className="mt-1 text-xs text-muted-foreground">Опыт: {formatExperienceYears(candidate.experienceYears)}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">

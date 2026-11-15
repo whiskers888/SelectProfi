@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { WorkspaceCandidate, WorkspaceOrder } from '../model/data'
 import { MainFeedPanel } from './MainFeedPanel'
@@ -36,13 +36,14 @@ const order: WorkspaceOrder = {
 const poolCandidate: WorkspaceCandidate = {
   id: 'candidate-1',
   name: 'Мария Соколова',
-  position: 'Рекрутер',
+  position: '',
   orderId: order.id,
   source: 'База кандидатов',
   rating: '4.8',
   statusLabel: 'В рабочем списке',
   stage: 'Pool',
   statusTone: 'warning',
+  experienceSummary: 'Рекрутер',
   comment: 'Сохранённая заметка',
 }
 const shortlistCandidate: WorkspaceCandidate = {
@@ -57,6 +58,16 @@ const selectedCandidate: WorkspaceCandidate = {
   id: 'candidate-2',
   statusLabel: 'Выбран',
   statusTone: 'success',
+}
+const applicantResponseCandidate: WorkspaceCandidate = {
+  ...poolCandidate,
+  id: 'response-candidate',
+  name: 'Новый отклик',
+  position: '',
+  source: 'Отклик соискателя',
+  experienceSummary: 'Backend-разработка и API',
+  experienceYears: 5,
+  applicantSubmittedAtUtc: '2026-11-15T10:00:00Z',
 }
 
 function renderDashboard(
@@ -120,6 +131,13 @@ function renderExecutorExchange() {
 }
 
 describe('MainFeedPanel projects in work', () => {
+  it('shows a role-appropriate empty state when executor has no projects', () => {
+    renderDashboard('Executor', false, { orders: [] })
+
+    expect(screen.getByText('Назначенные вам проекты появятся здесь.')).toBeTruthy()
+    expect(screen.queryByText(/Создайте новый проект/)).toBeNull()
+  })
+
   it('shows executor net amount and read-only project controls', () => {
     renderDashboard('Executor', false)
 
@@ -145,7 +163,8 @@ describe('MainFeedPanel projects in work', () => {
 
     expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, poolCandidate.id, 'Shortlist')
     expect(onOpenCandidate).not.toHaveBeenCalled()
-    expect(screen.getByText('Сохранённая заметка')).toBeTruthy()
+    expect(screen.getByText('Рекрутер')).toBeTruthy()
+    expect(screen.queryByText('Сохранённая заметка')).toBeNull()
   })
 
   it('returns a selected-project candidate from Shortlist to Pool', () => {
@@ -167,7 +186,40 @@ describe('MainFeedPanel projects in work', () => {
     expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, shortlistCandidate.id, 'Pool')
   })
 
-  it('shows project-scoped candidates from the all-candidates and finalists overview actions', () => {
+  it('keeps Pool completed after its last candidate moves to Shortlist', () => {
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [shortlistCandidate],
+      selectedOrderId: order.id,
+      dashboardVacancies: [
+        {
+          id: 'vacancy-1',
+          orderId: order.id,
+          customerId: 'customer-1',
+          executorId,
+          title: 'Senior разработчик',
+          description: 'Опыт работы от пяти лет',
+          status: 'Published',
+          createdAtUtc: '2026-11-01T10:00:00Z',
+          updatedAtUtc: '2026-11-10T10:00:00Z',
+        },
+      ],
+      selectedOrderVacancyPreview: {
+        title: 'Senior разработчик',
+        description: 'Опыт работы от пяти лет',
+        status: 'Draft',
+        createdAtUtc: '2026-11-01T10:00:00Z',
+        updatedAtUtc: '2026-11-10T10:00:00Z',
+      },
+    })
+
+    const currentStep = screen
+      .getByRole('list', { name: 'Этапы проекта' })
+      .querySelector('[aria-current="step"]')
+
+    expect(currentStep?.textContent).toContain('Список кандидатов')
+  })
+
+  it('shows project-scoped candidates from the stage filters', () => {
     const otherOrder: WorkspaceOrder = { ...order, id: 'order-2', title: 'Другой проект' }
     const finalist: WorkspaceCandidate = {
       ...shortlistCandidate,
@@ -187,15 +239,15 @@ describe('MainFeedPanel projects in work', () => {
       selectedOrderId: order.id,
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /Рабочий список/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Pool/ }))
     expect(screen.queryByText(finalist.name)).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: /Обзор всех кандидатов/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Все этапы/ }))
     expect(screen.getByText(poolCandidate.name)).toBeTruthy()
     expect(screen.getByText(finalist.name)).toBeTruthy()
     expect(screen.queryByText(otherProjectCandidate.name)).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: /Обзор финалистов/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Список кандидатов · финалисты/ }))
     expect(screen.getByText(finalist.name)).toBeTruthy()
     expect(screen.queryByText(poolCandidate.name)).toBeNull()
     expect(screen.queryByText(otherProjectCandidate.name)).toBeNull()
@@ -238,6 +290,115 @@ describe('MainFeedPanel projects in work', () => {
     })).toBeNull()
     expect(screen.getByText('Список отправлен заказчику')).toBeTruthy()
     expect(onSetCandidateStage).not.toHaveBeenCalled()
+  })
+
+  it('separates the official customer submission from the working candidate list', () => {
+    const submittedCandidate: WorkspaceCandidate = {
+      ...shortlistCandidate,
+      id: 'candidate-submitted',
+      name: 'Отправленный кандидат',
+      isCustomerSubmitted: true,
+    }
+
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [poolCandidate, submittedCandidate],
+      selectedOrderId: order.id,
+    })
+
+    expect(screen.getByText(poolCandidate.name)).toBeTruthy()
+    expect(screen.queryByText(submittedCandidate.name)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Отправлены заказчику/ }))
+
+    expect(screen.getByText(submittedCandidate.name)).toBeTruthy()
+    expect(screen.queryByText(poolCandidate.name)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Список кандидатов · финалисты/ }))
+    expect(screen.getByText(submittedCandidate.name)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Pool 0/ })).toBeTruthy()
+  })
+
+  it('shows only submitted applicant responses and searches by candidate qualification', () => {
+    const juniorResponse: WorkspaceCandidate = {
+      ...applicantResponseCandidate,
+      id: 'junior-response',
+      name: 'Анна Смирнова',
+      position: '',
+      experienceYears: 2,
+      experienceSummary: 'Опыт тестирования',
+      applicantSubmittedAtUtc: '2026-11-14T10:00:00Z',
+    }
+    const recruiterCandidate: WorkspaceCandidate = {
+      ...poolCandidate,
+      id: 'recruiter-candidate',
+      name: 'Кандидат из базы',
+      applicantSubmittedAtUtc: null,
+    }
+    const otherOrderResponse: WorkspaceCandidate = {
+      ...applicantResponseCandidate,
+      id: 'other-order-response',
+      name: 'Отклик другого проекта',
+      orderId: 'order-2',
+    }
+
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [
+        applicantResponseCandidate,
+        juniorResponse,
+        recruiterCandidate,
+        otherOrderResponse,
+      ],
+      selectedOrderId: order.id,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Отклики/ }))
+
+    expect(screen.getByText('Отклики соискателей')).toBeTruthy()
+    expect(screen.getByText(applicantResponseCandidate.name)).toBeTruthy()
+    expect(screen.getByText(juniorResponse.name)).toBeTruthy()
+    expect(screen.queryByText(recruiterCandidate.name)).toBeNull()
+    expect(screen.queryByText(otherOrderResponse.name)).toBeNull()
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Поиск откликов' }), {
+      target: { value: 'backend' },
+    })
+
+    expect(screen.getByText(applicantResponseCandidate.name)).toBeTruthy()
+    expect(screen.queryByText(juniorResponse.name)).toBeNull()
+  })
+
+  it('applies response experience and stage filters from the filter modal', () => {
+    const shortlistResponse: WorkspaceCandidate = {
+      ...applicantResponseCandidate,
+      id: 'shortlist-response',
+      name: 'Отклик в списке кандидатов',
+      stage: 'Shortlist',
+      statusLabel: 'В списке кандидатов',
+    }
+    const juniorResponse: WorkspaceCandidate = {
+      ...applicantResponseCandidate,
+      id: 'junior-response',
+      name: 'Отклик с малым опытом',
+      experienceYears: 2,
+    }
+
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [applicantResponseCandidate, shortlistResponse, juniorResponse],
+      selectedOrderId: order.id,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Отклики/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Фильтры откликов' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Фильтры откликов' })
+    fireEvent.change(within(dialog).getByLabelText('Опыт'), { target: { value: '5' } })
+    fireEvent.change(within(dialog).getByLabelText('Этап'), { target: { value: 'pool' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Показать отклики' }))
+
+    expect(screen.getByText(applicantResponseCandidate.name)).toBeTruthy()
+    expect(screen.queryByText(shortlistResponse.name)).toBeNull()
+    expect(screen.queryByText(juniorResponse.name)).toBeNull()
+    expect(screen.getByText('Опыт от 5 лет')).toBeTruthy()
   })
 
   it('opens the selected project details from the dashboard summary', () => {

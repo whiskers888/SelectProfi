@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { OrderResponse } from '@/shared/api/orders'
-import type { VacancyCandidatesItemResponse } from '@/shared/api/candidates'
+import type { VacancyBaseCandidatesItemResponse, VacancyCandidatesItemResponse } from '@/shared/api/candidates'
 import type { VacancyResponse } from '@/shared/api/vacancies'
 import {
   createActionLabel,
@@ -8,6 +8,7 @@ import {
   deriveWorkspaceViewState,
   formatExperienceYears,
   getWorkspaceCandidatePipelineStage,
+  toWorkspaceBaseCandidate,
   toWorkspaceCandidate,
   toWorkspaceOrder,
   updateWorkspaceCandidateStage,
@@ -206,6 +207,37 @@ describe('toWorkspaceCandidate', () => {
     expect(candidate.name).toBe(item.publicAlias)
     expect(candidate.name).not.toBe(item.displayName)
     expect(candidate.isAnonymized).toBe(true)
+    expect(candidate.position).toBeUndefined()
+    expect(candidate.vacancyTitle).toBe(vacancy.title)
+  })
+
+  it('keeps base candidate vacancy context separate from candidate specialization', () => {
+    const vacancy: VacancyResponse = {
+      id: 'vacancy-1',
+      orderId: 'order-1',
+      customerId: 'customer-1',
+      executorId: 'executor-1',
+      title: 'Frontend Developer',
+      description: 'React and TypeScript',
+      status: 'Published',
+      createdAtUtc: '2026-07-23T10:00:00Z',
+      updatedAtUtc: '2026-07-23T11:00:00Z',
+    }
+    const item: VacancyBaseCandidatesItemResponse = {
+      candidateId: 'candidate-1',
+      publicAlias: 'Кандидат № 42',
+      displayName: 'Виктория Петрова',
+      source: 'AddedByExecutor',
+      isOwnedByRequester: true,
+      isAnonymized: false,
+      experienceYears: 5,
+      updatedAtUtc: '2026-07-23T11:00:00Z',
+    }
+
+    const candidate = toWorkspaceBaseCandidate(item, vacancy)
+
+    expect(candidate.position).toBeUndefined()
+    expect(candidate.vacancyTitle).toBe(vacancy.title)
   })
 })
 

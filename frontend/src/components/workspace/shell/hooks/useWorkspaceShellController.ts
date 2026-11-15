@@ -265,7 +265,10 @@ export function useWorkspaceShellController() {
     null
   const candidateSourceVacancy =
     candidateScopeOrderId && vacanciesResponse
-      ? (vacanciesResponse.items.find((vacancy) => vacancy.orderId === candidateScopeOrderId) ??
+      ? (vacanciesResponse.items.find(
+          (vacancy) => vacancy.orderId === candidateScopeOrderId && vacancy.status === 'Published',
+        ) ??
+        vacanciesResponse.items.find((vacancy) => vacancy.orderId === candidateScopeOrderId) ??
         null)
       : null
   const {
@@ -274,12 +277,12 @@ export function useWorkspaceShellController() {
     isFetching: isVacancyCandidatesFetching,
     refetch: refetchVacancyCandidates,
   } = useGetVacancyCandidatesQuery(
-    canLoadServerCandidates && candidateSourceVacancy
+    canLoadServerCandidates && candidateSourceVacancy?.status === 'Published'
       ? { vacancyId: candidateSourceVacancy.id }
       : skipToken,
   )
-  const { data: vacancyBaseCandidatesResponse } = useGetVacancyBaseCandidatesQuery(
-    canLoadExecutorBaseCandidates && candidateSourceVacancy
+  const { currentData: vacancyBaseCandidatesResponse } = useGetVacancyBaseCandidatesQuery(
+    canLoadExecutorBaseCandidates && candidateSourceVacancy?.status === 'Published'
       ? { vacancyId: candidateSourceVacancy.id }
       : skipToken,
   )
@@ -455,7 +458,8 @@ export function useWorkspaceShellController() {
           .map((item) => toWorkspaceCandidate(item, candidateSourceVacancy, role === 'Customer'))
       : []
   const serverBaseCandidates =
-    candidateSourceVacancy && vacancyBaseCandidatesResponse
+    candidateSourceVacancy &&
+    vacancyBaseCandidatesResponse?.vacancyId === candidateSourceVacancy.id
       ? vacancyBaseCandidatesResponse.items.map((item) =>
           toWorkspaceBaseCandidate(item, candidateSourceVacancy),
         )
@@ -1168,6 +1172,10 @@ export function useWorkspaceShellController() {
     void refetchOrders()
   }
 
+  function handleRetryVacancies() {
+    void refetchVacancies()
+  }
+
   function handleRetryVacancyCandidates() {
     void refetchVacancyCandidates()
   }
@@ -1355,6 +1363,10 @@ export function useWorkspaceShellController() {
     isSidebarCollapsed,
     isVacancyCandidatesError,
     isVacancyCandidatesFetching,
+    dashboardVacancies: vacanciesResponse?.items,
+    isDashboardVacanciesLoading: !vacanciesResponse && isVacanciesFetching,
+    isDashboardVacanciesError: isVacanciesError,
+    onRetryDashboardVacancies: handleRetryVacancies,
     isViewLoading,
     orderResponses,
     profileDisplayName,

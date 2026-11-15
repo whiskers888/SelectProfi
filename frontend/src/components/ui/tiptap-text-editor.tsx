@@ -47,7 +47,7 @@ export function TiptapTextEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ underline: false }),
       TextStyle,
       FontFamily.configure({
         types: ['textStyle'],

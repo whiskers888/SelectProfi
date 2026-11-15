@@ -21,6 +21,10 @@ export type MainFeedPanelProps = {
   canManageOrders?: boolean
   canViewBaseCandidates?: boolean
   executorDashboardCandidates?: WorkspaceCandidate[]
+  dashboardVacancies?: VacancyResponse[]
+  isDashboardVacanciesLoading?: boolean
+  isDashboardVacanciesError?: boolean
+  onRetryDashboardVacancies?: () => void
   isLoading: boolean
   isCandidateDataLoading?: boolean
   isCandidateDataError?: boolean
@@ -66,6 +70,7 @@ export type MainFeedPanelProps = {
     status: 'Draft' | 'OnApproval' | 'Published'
     createdAtUtc: string
     updatedAtUtc: string
+    shortlistSentToCustomerAtUtc?: string | null
   } | null
   view: 'dashboard' | 'orders' | 'candidates'
   isOrderResponsesLoading?: boolean

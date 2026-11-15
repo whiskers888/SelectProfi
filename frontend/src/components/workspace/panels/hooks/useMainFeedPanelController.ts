@@ -75,6 +75,7 @@ export function useMainFeedPanelController({
   baseCandidates,
   canViewBaseCandidates = false,
   executorDashboardCandidates,
+  dashboardVacancies,
   candidates,
   onSelectOrder,
   orders,
@@ -139,6 +140,24 @@ export function useMainFeedPanelController({
       null
     : dashboardOrders.find((order) => order.id === selectedOrderId) ?? dashboardOrders[0] ?? null
   const selectedDashboardOrderId = selectedDashboardOrder?.id
+  const selectedDashboardOrderVacancies = selectedDashboardOrder
+    ? dashboardVacancies?.filter((vacancy) => vacancy.orderId === selectedDashboardOrder.id)
+    : undefined
+  const selectedDashboardVacancy = selectedDashboardOrderVacancies
+    ? selectedDashboardOrderVacancies.find((vacancy) => vacancy.status === 'Published') ??
+      selectedDashboardOrderVacancies[0] ??
+      null
+    : null
+  const selectedDashboardVacancyPreview = selectedDashboardVacancy
+    ? {
+        title: selectedDashboardVacancy.title,
+        description: selectedDashboardVacancy.description,
+        status: selectedDashboardVacancy.status,
+        createdAtUtc: selectedDashboardVacancy.createdAtUtc,
+        updatedAtUtc: selectedDashboardVacancy.updatedAtUtc,
+        shortlistSentToCustomerAtUtc: selectedDashboardVacancy.shortlistSentToCustomerAtUtc,
+      }
+    : null
 
   useEffect(() => {
     if (
@@ -278,6 +297,7 @@ export function useMainFeedPanelController({
     isBaseScope,
     isCandidateFiltersMenuOpen,
     selectedDashboardOrder,
+    selectedDashboardVacancyPreview,
     setCandidateDataScope,
     setCandidateSourceFilter,
     setCandidateStageFilter,

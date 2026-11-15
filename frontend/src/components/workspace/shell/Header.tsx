@@ -78,7 +78,7 @@ export function Header({
         >
           <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
-        <BrandLogo className="h-[34px] w-[34px] shrink-0" alt="" />
+        <BrandLogo className="h-7 w-7 shrink-0" alt="" />
         <div className="preview11-brand-copy">
           <div className="preview11-brand-title">КадрыТут</div>
           <div className="preview11-muted">Маркетплейс подбора персонала</div>

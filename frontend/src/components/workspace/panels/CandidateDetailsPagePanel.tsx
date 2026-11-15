@@ -40,9 +40,15 @@ export function CandidateDetailsPagePanel({ candidate, onBack }: Readonly<Candid
           <dd className="mt-1 text-sm text-foreground">{candidate.name}</dd>
         </div>
         <div>
-          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Позиция</dt>
-          <dd className="mt-1 text-sm text-foreground">{candidate.position}</dd>
+          <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Специализация</dt>
+          <dd className="mt-1 text-sm text-foreground">{candidate.position || 'Не указана'}</dd>
         </div>
+        {candidate.vacancyTitle ? (
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Вакансия</dt>
+            <dd className="mt-1 text-sm text-foreground">{candidate.vacancyTitle}</dd>
+          </div>
+        ) : null}
         <div>
           <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Опыт работы</dt>
           <dd className="mt-1 text-sm text-foreground">{formatExperienceYears(candidate.experienceYears)}</dd>

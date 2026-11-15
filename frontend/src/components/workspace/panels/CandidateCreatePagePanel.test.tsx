@@ -8,7 +8,8 @@ afterEach(cleanup)
 const baseCandidate: WorkspaceCandidate = {
   id: 'candidate-base',
   name: 'Мария Соколова',
-  position: 'Менеджер по продажам',
+  position: '',
+  vacancyTitle: 'Менеджер по продажам',
   orderId: 'order-1',
   source: 'База кандидатов',
   experienceYears: 2,

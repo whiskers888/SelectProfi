@@ -29,6 +29,7 @@ export function WorkspaceShellView({
   analyticsError,
   applicantDashboardStats,
   applicantDashboardVacancies,
+  dashboardVacancies,
   authMe,
   applicantRespondedOrderIds,
   canLoadExecutorBaseCandidates,
@@ -90,6 +91,7 @@ export function WorkspaceShellView({
   handleOpenOrderDetails,
   handlePauseOrders,
   handleRetryOrders,
+  onRetryDashboardVacancies,
   handleRetryVacancyCandidates,
   handleRetryCustomerShortlist,
   handleRetryExecutorDashboardStats,
@@ -133,6 +135,8 @@ export function WorkspaceShellView({
   isSubmittingCandidateList,
   isVacancyCandidatesError,
   isVacancyCandidatesFetching,
+  isDashboardVacanciesLoading,
+  isDashboardVacanciesError,
   isSelectingOrderExecutor,
   isSelectingVacancyCandidate,
   canSelectFinalist,
@@ -205,10 +209,15 @@ export function WorkspaceShellView({
     handleViewChange('candidates')
   }
 
+  const isExecutorDashboard =
+    role === 'Executor' && activeView === 'dashboard' && workspaceScreen === 'feed'
+
   // Один renderer выбирает единственный полноэкранный surface.
   return (
     <div className="preview11-html">
-      <div className="preview11-app flex min-h-screen flex-col">
+      <div
+        className={`preview11-app flex min-h-screen flex-col${isExecutorDashboard ? ' preview11-app-executor-dashboard' : ''}`}
+      >
         <Header
           activeView={activeView}
           meetingsCount={counters.meetings ?? 0}
@@ -227,7 +236,9 @@ export function WorkspaceShellView({
           searchValue={searchValue}
         />
 
-        <div className="flex min-h-0 flex-1">
+        <div
+          className={`flex min-h-0 flex-1${isExecutorDashboard ? ' preview11-workspace-row-executor-dashboard' : ''}`}
+        >
           <Sidebar
             activeView={activeView}
             collapsed={isSidebarCollapsed}
@@ -242,10 +253,12 @@ export function WorkspaceShellView({
             {...sidebarRoleProps}
           />
 
-          <div className="preview11-main">
+          <div className={`preview11-main${isExecutorDashboard ? ' preview11-main-executor-dashboard' : ''}`}>
 
-          <main className="preview11-content flex-1 space-y-4">
-            <div className="space-y-1">
+          <main
+            className={`preview11-content flex-1${isExecutorDashboard ? ' preview11-content-executor-dashboard' : ' space-y-4'}`}
+          >
+            <div className={`space-y-1${isExecutorDashboard ? ' sr-only' : ''}`}>
               <h1 className="text-xl font-extrabold leading-tight text-foreground">
                 {workspaceTitle}
               </h1>
@@ -469,6 +482,10 @@ export function WorkspaceShellView({
                       applicantRespondedOrderIds={applicantRespondedOrderIds}
                       applicantDashboardApplications={applicantDashboardStats?.applications ?? []}
                       applicantDashboardVacancies={applicantDashboardVacancies}
+                      dashboardVacancies={dashboardVacancies}
+                      isDashboardVacanciesLoading={isDashboardVacanciesLoading}
+                      isDashboardVacanciesError={isDashboardVacanciesError}
+                      onRetryDashboardVacancies={onRetryDashboardVacancies}
                       unclassifiedCandidateLinksCount={
                         applicantDashboardStats?.unclassifiedCandidateLinksCount ?? 0
                       }

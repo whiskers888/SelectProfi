@@ -73,7 +73,7 @@ export function CandidateCreatePagePanel({
   const projectCandidatesIds = useMemo(() => new Set(assignedCandidateIds), [assignedCandidateIds])
   const normalizedSearch = candidateSearch.trim().toLocaleLowerCase('ru-RU')
   const filteredCandidates = availableCandidates.filter((candidate) =>
-    `${candidate.name} ${candidate.position}`.toLocaleLowerCase('ru-RU').includes(normalizedSearch),
+    `${candidate.name} ${candidate.position ?? ''}`.toLocaleLowerCase('ru-RU').includes(normalizedSearch),
   )
   const projectLabel = orderTitle?.trim() || vacancyTitle?.trim() || 'Мои кандидаты'
   const hasVisibleResumeText = formValues.resumeRichTextHtml.replace(/<[^>]*>/g, ' ').trim().length > 0
@@ -168,7 +168,9 @@ export function CandidateCreatePagePanel({
                       <li className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4" key={candidate.id}>
                         <div className="min-w-0">
                           <p className="truncate font-medium text-foreground">{candidate.name}</p>
-                          <p className="mt-1 truncate text-sm text-muted-foreground">{candidate.position}</p>
+                          <p className="mt-1 truncate text-sm text-muted-foreground">
+                            {candidate.position || 'Специализация не указана'}
+                          </p>
                           <p className="mt-1 text-xs text-muted-foreground">Опыт: {formatExperienceYears(candidate.experienceYears)}</p>
                         </div>
                         {isAlreadyAdded ? (
@@ -211,7 +213,9 @@ export function CandidateCreatePagePanel({
                     <li className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4" key={candidate.id}>
                       <div className="min-w-0">
                         <p className="truncate font-medium text-foreground">{candidate.name}</p>
-                        <p className="mt-1 truncate text-sm text-muted-foreground">{candidate.position}</p>
+                        <p className="mt-1 truncate text-sm text-muted-foreground">
+                          {candidate.position || 'Специализация не указана'}
+                        </p>
                         {candidate.experienceYears !== null && candidate.experienceYears !== undefined ? (
                           <p className="mt-2 text-sm text-muted-foreground">Опыт: {formatExperienceYears(candidate.experienceYears)}</p>
                         ) : candidate.experienceSummary?.trim() ? (

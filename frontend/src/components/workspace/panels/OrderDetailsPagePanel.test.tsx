@@ -114,7 +114,8 @@ describe('OrderDetailsPagePanel', () => {
     const applicantResponder: WorkspaceCandidate = {
       id: 'candidate-1',
       name: 'Иван Петров',
-      position: 'Разработчик',
+      position: '',
+      vacancyTitle: order.title,
       orderId: order.id,
       source: 'Отклик на вакансию',
       stage: 'Shortlist',

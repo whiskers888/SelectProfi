@@ -246,7 +246,9 @@ export function CandidatesSection({
                 </TableCell>
                 <TableCell data-label="Опыт">{formatExperienceYears(candidate.experienceYears)}</TableCell>
                 {dashboardSummary ? (
-                  <TableCell data-label="Вакансия">{candidate.position}</TableCell>
+                  <TableCell data-label="Вакансия / специализация">
+                    {candidate.vacancyTitle || candidate.position || 'Не указана'}
+                  </TableCell>
                 ) : !isBaseScope ? (
                   <TableCell data-label="Источник">{candidate.source}</TableCell>
                 ) : null}

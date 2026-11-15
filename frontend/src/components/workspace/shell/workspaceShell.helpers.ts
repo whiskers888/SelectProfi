@@ -257,7 +257,7 @@ export function toWorkspaceCandidate(
   return {
     id: item.candidateId,
     name: usePublicAlias ? item.publicAlias : item.displayName || item.publicAlias,
-    position: vacancy.title,
+    vacancyTitle: vacancy.title,
     orderId: vacancy.orderId,
     source: `Vacancy ${vacancy.id.slice(0, 8)}`,
     sourceType: item.source,
@@ -290,7 +290,7 @@ export function toWorkspaceBaseCandidate(
   return {
     id: candidate.candidateId,
     name: candidate.displayName || candidate.publicAlias,
-    position: vacancy.title,
+    vacancyTitle: vacancy.title,
     orderId: vacancy.orderId,
     source: `База Vacancy ${vacancy.id.slice(0, 8)}`,
     sourceType: candidate.source,
@@ -507,7 +507,7 @@ export function deriveWorkspaceViewState({
     if (!normalizedSearch) return true;
     return (
       candidate.name.toLowerCase().includes(normalizedSearch) ||
-      candidate.position.toLowerCase().includes(normalizedSearch) ||
+      `${candidate.position ?? ''} ${candidate.vacancyTitle ?? ''}`.toLowerCase().includes(normalizedSearch) ||
       candidate.source.toLowerCase().includes(normalizedSearch) ||
       (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
     );
@@ -524,7 +524,7 @@ export function deriveWorkspaceViewState({
     if (!normalizedSearch) return true;
     return (
       candidate.name.toLowerCase().includes(normalizedSearch) ||
-      candidate.position.toLowerCase().includes(normalizedSearch) ||
+      `${candidate.position ?? ''} ${candidate.vacancyTitle ?? ''}`.toLowerCase().includes(normalizedSearch) ||
       candidate.source.toLowerCase().includes(normalizedSearch) ||
       (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
     );
@@ -545,7 +545,7 @@ export function deriveWorkspaceViewState({
 
     return (
       candidate.name.toLowerCase().includes(normalizedSearch) ||
-      candidate.position.toLowerCase().includes(normalizedSearch) ||
+      `${candidate.position ?? ''} ${candidate.vacancyTitle ?? ''}`.toLowerCase().includes(normalizedSearch) ||
       candidate.source.toLowerCase().includes(normalizedSearch) ||
       (orderTitleById.get(candidate.orderId) ?? '').toLowerCase().includes(normalizedSearch)
     );

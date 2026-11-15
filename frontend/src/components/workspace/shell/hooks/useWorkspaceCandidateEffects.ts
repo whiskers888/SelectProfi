@@ -53,7 +53,7 @@ export function useSyncExecutorGlobalCandidates({
   const executorVacancyIdsSignature =
     role === 'Executor' && vacanciesResponse
       ? vacanciesResponse.items
-          .map((vacancy) => vacancy.id)
+          .map((vacancy) => `${vacancy.id}:${vacancy.status}`)
           .sort((left, right) => left.localeCompare(right))
           .join('|')
       : ''
@@ -72,7 +72,7 @@ export function useSyncExecutorGlobalCandidates({
       return
     }
 
-    const vacancies = vacanciesResponse.items
+    const vacancies = vacanciesResponse.items.filter((vacancy) => vacancy.status === 'Published')
     if (vacancies.length === 0) {
       setExecutorGlobalCandidates([])
       setExecutorGlobalBaseCandidates([])

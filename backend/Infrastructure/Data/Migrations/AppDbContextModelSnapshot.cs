@@ -129,6 +129,9 @@ namespace SelectProfi.backend.Migrations
                     b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("ExperienceYears")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("OwnerUserId")
                         .HasColumnType("uuid");
 

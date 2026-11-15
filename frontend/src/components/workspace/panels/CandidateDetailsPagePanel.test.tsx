@@ -28,6 +28,20 @@ describe('CandidateDetailsPagePanel', () => {
     expect(screen.queryByRole('button', { name: 'Куплено' })).not.toBeInTheDocument()
   })
 
+  it('distinguishes missing specialization from the linked vacancy title', () => {
+    render(
+      <CandidateDetailsPagePanel
+        candidate={{ ...candidate, position: '', vacancyTitle: 'Senior разработчик' }}
+        onBack={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Специализация')).toBeInTheDocument()
+    expect(screen.getByText('Не указана')).toBeInTheDocument()
+    expect(screen.getByText('Вакансия')).toBeInTheDocument()
+    expect(screen.getByText('Senior разработчик')).toBeInTheDocument()
+  })
+
   it('keeps the back action working', () => {
     const onBack = vi.fn()
     render(<CandidateDetailsPagePanel candidate={candidate} onBack={onBack} />)
