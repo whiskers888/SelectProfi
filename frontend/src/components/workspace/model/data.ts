@@ -40,6 +40,12 @@ export type WorkspaceOrder = {
   updatedAt: string
   isArchived?: boolean
   isPaused?: boolean
+  dueDate?: string | null
+  completedAtUtc?: string | null
+}
+
+export function isWorkspaceOrderCompleted(order: Pick<WorkspaceOrder, 'statusLabel'>): boolean {
+  return /(?:выполнен|заверш[её]н)/iu.test(order.statusLabel)
 }
 
 export type WorkspaceCandidate = {

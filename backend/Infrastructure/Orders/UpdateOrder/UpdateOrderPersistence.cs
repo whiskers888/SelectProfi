@@ -38,6 +38,49 @@ public sealed class UpdateOrderPersistence(AppDbContext dbContext) : IUpdateOrde
 
     public async Task<UpdateOrderPersistenceResult> SaveChangesAsync(CancellationToken cancellationToken)
     {
+        foreach (var entry in dbContext.ChangeTracker.Entries<Order>()
+                     .Where(entry => entry.State == EntityState.Modified))
+        {
+            var previousStatus = entry.Property(order => order.Status).OriginalValue;
+            var currentStatus = entry.Property(order => order.Status).CurrentValue;
+            if (previousStatus != currentStatus)
+            {
+                var description = currentStatus switch
+                {
+                    OrderStatus.Paused => "Проект поставлен на паузу.",
+                    OrderStatus.Active => "Проект возобновлен.",
+                    _ => null
+                };
+                if (description is not null)
+                {
+                    dbContext.ProjectActivities.Add(new ProjectActivity
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderId = entry.Entity.Id,
+                        ActorUserId = entry.Entity.CustomerId,
+                        Action = currentStatus == OrderStatus.Paused ? "ProjectPaused" : "ProjectResumed",
+                        Description = description,
+                        CreatedAtUtc = DateTime.UtcNow
+                    });
+                }
+            }
+
+            var previousExecutor = entry.Property(order => order.ExecutorId).OriginalValue;
+            var currentExecutor = entry.Property(order => order.ExecutorId).CurrentValue;
+            if (previousExecutor != currentExecutor && currentExecutor.HasValue)
+            {
+                dbContext.ProjectActivities.Add(new ProjectActivity
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = entry.Entity.Id,
+                    ActorUserId = entry.Entity.CustomerId,
+                    Action = "ExecutorAssigned",
+                    Description = "Исполнитель назначен на проект.",
+                    CreatedAtUtc = DateTime.UtcNow
+                });
+            }
+        }
+
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);

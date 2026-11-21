@@ -10,5 +10,6 @@ public enum UpdateOrderErrorCode
     // @dvnull: Добавлен код ошибки отсутствующей/неактивной специализации из справочника.
     SpecializationNotFound = 5,
     PriceRequired = 6,
-    PriceLocked = 7
+    PriceLocked = 7,
+    InvalidStatus = 8
 }

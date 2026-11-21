@@ -1,6 +1,7 @@
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Users;
+using SelectProfi.backend.Domain.Orders;
 
 namespace SelectProfi.backend.Application.Orders.UpdateOrder;
 
@@ -15,6 +16,9 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
 
         if (!OrderAccessRules.CanManageOrder(command.RequesterRole, command.RequesterUserId, order.CustomerId))
             return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.Forbidden };
+
+        if (order.Status == OrderStatus.Completed || command.Status == OrderStatus.Completed)
+            return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.InvalidStatus };
 
         // @dvnull: Ранее PATCH обновлял только активные заказы; теперь статусный PATCH разрешает восстановление soft-deleted заказа из архива.
         if (order.DeletedAtUtc is not null)
@@ -115,7 +119,9 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             RequestedCandidatesCount = order.RequestedCandidatesCount,
             Status = order.Status,
             CreatedAtUtc = order.CreatedAtUtc,
-            UpdatedAtUtc = order.UpdatedAtUtc
+            UpdatedAtUtc = order.UpdatedAtUtc,
+            DueDate = order.DueDate,
+            CompletedAtUtc = order.CompletedAtUtc
         };
     }
 }

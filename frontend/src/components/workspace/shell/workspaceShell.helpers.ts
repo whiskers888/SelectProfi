@@ -142,6 +142,7 @@ export function formatExperienceYears(years: number | null | undefined): string 
 export function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
   const isArchived = Boolean(order.deletedAtUtc)
   const isPaused = order.status === 'Paused'
+  const isCompleted = order.status === 'Completed'
   const hasExecutor = Boolean(order.executorId)
 
   return {
@@ -166,15 +167,19 @@ export function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
     responses: 0,
     statusLabel: isArchived
       ? 'Архив'
-      : isPaused
+      : isCompleted
+        ? 'Выполнен'
+        : isPaused
         ? 'На паузе'
         : hasExecutor
           ? 'В работе'
           : 'Ожидает назначения',
-    statusTone: isArchived ? 'neutral' : isPaused ? 'danger' : hasExecutor ? 'success' : 'warning',
+    statusTone: isArchived ? 'neutral' : isCompleted ? 'success' : isPaused ? 'danger' : hasExecutor ? 'success' : 'warning',
     updatedAt: toOrderUpdatedAtLabel(order.updatedAtUtc),
     isArchived,
     isPaused,
+    dueDate: order.dueDate ?? null,
+    completedAtUtc: order.completedAtUtc ?? null,
   }
 }
 

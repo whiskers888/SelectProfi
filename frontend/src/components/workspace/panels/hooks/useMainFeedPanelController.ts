@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getWorkspaceCandidatePipelineStage } from '../../shell/workspaceShell.helpers'
-import type { WorkspaceOrder } from '../../model/data'
+import { isWorkspaceOrderCompleted, type WorkspaceOrder } from '../../model/data'
 import type {
   CandidateSourceFilter,
   CandidateStageFilter,
@@ -85,7 +85,9 @@ export function useMainFeedPanelController({
   view,
 }: MainFeedPanelProps) {
   const [dashboardSort, setDashboardSort] = useState<DashboardSort>('updated')
-  const [dashboardState, setDashboardState] = useState<DashboardState>('active')
+  const [dashboardState, setDashboardState] = useState<DashboardState>(
+    role === 'Executor' && view === 'dashboard' ? 'all' : 'active',
+  )
   const [checkedOrderIds, setCheckedOrderIds] = useState<string[]>([])
   const [candidateDataScope, setCandidateDataScope] = useState<'mine' | 'base'>('mine')
   const [candidateSourceFilter, setCandidateSourceFilter] = useState<CandidateSourceFilter>(
@@ -113,11 +115,20 @@ export function useMainFeedPanelController({
   const isInArchive = (order: WorkspaceOrder) =>
     Boolean(order.isArchived) || (role === 'Applicant' && Boolean(order.isPaused))
   const scopedDashboardOrders =
-    dashboardState === 'paused'
+    dashboardState === 'all' && role === 'Executor' && view === 'dashboard'
+      ? dashboardOrders.filter((order) => !order.isArchived)
+      : dashboardState === 'completed'
+        ? dashboardOrders.filter(isWorkspaceOrderCompleted)
+      : dashboardState === 'paused'
       ? dashboardOrders.filter((order) => !order.isArchived && Boolean(order.isPaused))
       : dashboardState === 'archive'
         ? dashboardOrders.filter(isInArchive)
-        : dashboardOrders.filter((order) => !isInArchive(order) && !order.isPaused)
+        : dashboardOrders.filter(
+            (order) =>
+              !isInArchive(order) &&
+              !order.isPaused &&
+              !(role === 'Executor' && view === 'dashboard' && isWorkspaceOrderCompleted(order)),
+          )
   const sortedDashboardOrders = [...scopedDashboardOrders]
 
   if (dashboardSort === 'responses') {
@@ -129,9 +140,16 @@ export function useMainFeedPanelController({
       low: 2,
     }
     sortedDashboardOrders.sort((left, right) => priorityWeight[left.priority] - priorityWeight[right.priority])
+  } else if (dashboardSort === 'dueDate') {
+    sortedDashboardOrders.sort((left, right) => {
+      const leftDueDate = left.dueDate ? Date.parse(left.dueDate) : Number.POSITIVE_INFINITY
+      const rightDueDate = right.dueDate ? Date.parse(right.dueDate) : Number.POSITIVE_INFINITY
+      return leftDueDate - rightDueDate
+    })
   }
 
-  const visibleDashboardOrders = sortedDashboardOrders.slice(0, 4)
+  const visibleDashboardOrders =
+    role === 'Executor' && view === 'dashboard' ? sortedDashboardOrders : sortedDashboardOrders.slice(0, 4)
   const shouldSelectVisibleDashboardOrder =
     view === 'dashboard' && (role === 'Customer' || role === 'Executor')
   const selectedDashboardOrder = shouldSelectVisibleDashboardOrder
@@ -238,7 +256,7 @@ export function useMainFeedPanelController({
   const shouldShowBaseCandidateTab = canViewBaseCandidates && !isApplicantView
 
   function handleDashboardSortChange(value: string) {
-    if (value === 'updated' || value === 'responses' || value === 'priority') {
+    if (value === 'updated' || value === 'responses' || value === 'priority' || value === 'dueDate') {
       setDashboardSort(value)
     }
   }

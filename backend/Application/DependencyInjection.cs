@@ -46,6 +46,7 @@ using SelectProfi.backend.Application.Vacancies.GetVacancies;
 using SelectProfi.backend.Application.Vacancies.GetVacancyById;
 using SelectProfi.backend.Application.Vacancies.UpdateVacancy;
 using SelectProfi.backend.Application.Vacancies.UpdateVacancyStatus;
+using SelectProfi.backend.Application.Orders.ProjectWorkspace;
 
 namespace SelectProfi.backend.Application;
 
@@ -69,6 +70,8 @@ public static class
         services.AddScoped<ICommandHandler<WithdrawOrderResponseCommand, WithdrawOrderResponseResult>, WithdrawOrderResponseCommandHandler>();
         services.AddScoped<ICommandHandler<SelectOrderResponseExecutorCommand, SelectOrderResponseExecutorResult>, SelectOrderResponseExecutorCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateOrderCommand, UpdateOrderResult>, UpdateOrderCommandHandler>();
+        services.AddScoped<ICommandHandler<SetProjectDueDateCommand, ProjectWorkspaceCommandResult>, ProjectWorkspaceCommandHandler>();
+        services.AddScoped<ICommandHandler<UploadProjectDocumentCommand, ProjectWorkspaceCommandResult>, ProjectWorkspaceCommandHandler>();
         // @dvnull: Ранее обновление specialization выполнялось напрямую через DbContext в API; добавлен CQRS-command для update specialization.
         services.AddScoped<ICommandHandler<UpdateOrderSpecializationCommand, UpdateOrderSpecializationResult>, UpdateOrderSpecializationCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteOrderCommand, DeleteOrderResult>, DeleteOrderCommandHandler>();
@@ -93,6 +96,9 @@ public static class
         services.AddScoped<ICommandHandler<UpdateVacancyStatusCommand, UpdateVacancyStatusResult>, UpdateVacancyStatusCommandHandler>();
         services.AddScoped<ICommandHandler<DeleteVacancyCommand, DeleteVacancyResult>, DeleteVacancyCommandHandler>();
         services.AddScoped<IQueryHandler<GetOrderByIdQuery, GetOrderByIdResult>, GetOrderByIdQueryHandler>();
+        services.AddScoped<IQueryHandler<GetProjectHistoryQuery, ProjectHistoryResult>, ProjectWorkspaceQueryHandler>();
+        services.AddScoped<IQueryHandler<GetProjectDocumentsQuery, ProjectDocumentsResult>, ProjectWorkspaceQueryHandler>();
+        services.AddScoped<IQueryHandler<GetProjectDocumentQuery, ProjectDocumentDownloadResult>, ProjectWorkspaceQueryHandler>();
         services.AddScoped<IQueryHandler<GetOrderExecutorsQuery, GetOrderExecutorsResult>, GetOrderExecutorsQueryHandler>();
         // @dvnull: Ранее список specialization запрашивался напрямую из контроллера; добавлен CQRS-query для dictionary списка.
         services.AddScoped<IQueryHandler<GetOrderSpecializationsQuery, GetOrderSpecializationsResult>, GetOrderSpecializationsQueryHandler>();

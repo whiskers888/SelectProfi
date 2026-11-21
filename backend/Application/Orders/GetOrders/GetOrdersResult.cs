@@ -55,4 +55,8 @@ public sealed class GetOrdersItemResult
     public DateTime UpdatedAtUtc { get; init; }
 
     public DateTime? DeletedAtUtc { get; init; }
+
+    public DateOnly? DueDate { get; init; }
+
+    public DateTime? CompletedAtUtc { get; init; }
 }

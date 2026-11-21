@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SelectProfi.backend.Application.Candidates.UpdateVacancyCandidateStage;
 using SelectProfi.backend.Domain.Candidates;
+using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Domain.Vacancies;
 using SelectProfi.backend.Infrastructure.Data;
 
@@ -30,6 +31,26 @@ public sealed class UpdateVacancyCandidateStagePersistence(AppDbContext dbContex
 
     public async Task<UpdateVacancyCandidateStagePersistenceResult> SaveChangesAsync(CancellationToken cancellationToken)
     {
+        foreach (var entry in dbContext.ChangeTracker.Entries<VacancyCandidate>()
+                     .Where(entry => entry.State == EntityState.Modified && entry.Property(item => item.Stage).IsModified))
+        {
+            var orderId = await dbContext.Vacancies
+                .Where(vacancy => vacancy.Id == entry.Entity.VacancyId)
+                .Select(vacancy => vacancy.OrderId)
+                .FirstAsync(cancellationToken);
+            dbContext.ProjectActivities.Add(new ProjectActivity
+            {
+                Id = Guid.NewGuid(),
+                OrderId = orderId,
+                ActorUserId = entry.Entity.AddedByExecutorId,
+                Action = "CandidateStageChanged",
+                Description = entry.Entity.Stage == VacancyCandidateStage.Shortlist
+                    ? "Кандидат добавлен в short-list."
+                    : "Кандидат перемещен в пул.",
+                CreatedAtUtc = entry.Entity.UpdatedAtUtc
+            });
+        }
+
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);

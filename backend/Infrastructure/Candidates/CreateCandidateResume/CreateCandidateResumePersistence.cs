@@ -51,7 +51,22 @@ public sealed class CreateCandidateResumePersistence(AppDbContext dbContext) : I
         dbContext.Candidates.Add(candidate);
         dbContext.CandidateResumes.Add(resume);
         if (vacancyCandidate is not null)
+        {
             dbContext.VacancyCandidates.Add(vacancyCandidate);
+            var orderId = await dbContext.Vacancies
+                .Where(vacancy => vacancy.Id == vacancyCandidate.VacancyId)
+                .Select(vacancy => vacancy.OrderId)
+                .FirstAsync(cancellationToken);
+            dbContext.ProjectActivities.Add(new ProjectActivity
+            {
+                Id = Guid.NewGuid(),
+                OrderId = orderId,
+                ActorUserId = vacancyCandidate.AddedByExecutorId,
+                Action = "CandidateAdded",
+                Description = "Кандидат добавлен в проект.",
+                CreatedAtUtc = vacancyCandidate.AddedAtUtc
+            });
+        }
 
         try
         {

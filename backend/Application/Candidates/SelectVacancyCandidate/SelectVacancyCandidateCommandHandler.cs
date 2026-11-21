@@ -1,6 +1,7 @@
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Access;
 using SelectProfi.backend.Domain.Candidates;
+using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
@@ -40,9 +41,17 @@ public sealed class SelectVacancyCandidateCommandHandler(ISelectVacancyCandidate
 
         if (vacancy.SelectedCandidateId != command.CandidateId)
         {
+            var now = DateTime.UtcNow;
             vacancy.SelectedCandidateId = command.CandidateId;
-            vacancy.UpdatedAtUtc = DateTime.UtcNow;
+            vacancy.UpdatedAtUtc = now;
             vacancy.CandidatePipelineRevision++;
+
+            if (vacancy.Order.Status != OrderStatus.Completed)
+            {
+                vacancy.Order.Status = OrderStatus.Completed;
+                vacancy.Order.CompletedAtUtc = now;
+                vacancy.Order.UpdatedAtUtc = now;
+            }
 
             var saveResult = await persistence.SaveChangesAsync(cancellationToken);
             if (saveResult == SelectVacancyCandidatePersistenceResult.Conflict)

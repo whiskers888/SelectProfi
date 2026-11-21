@@ -34,38 +34,43 @@ Do not override a Luna subagent to a more expensive model unless the user explic
 
 ## Delegation gate
 
-Before doing substantive repository work, classify the task as either:
+Default to root-only execution.
 
-- root-only
-- delegated
+The root agent is responsible for completing ordinary coding tasks
+without unnecessary delegation.
 
-Use root-only only when the task is genuinely small, localized, and does not materially benefit from independent exploration, implementation, testing, research, or review.
+A task spanning multiple files does NOT automatically require
+subagents.
 
-The task MUST be delegated when at least one of the following is true:
+Use root-only execution for:
+- UI implementation from existing mockups.
+- Styling, layout, and responsive fixes.
+- Small and medium frontend features.
+- Localized bugs and refactoring.
+- Tasks that can be completed efficiently in one context.
 
-- the task spans multiple files, modules, services, or components
-- there are two or more independent workstreams
-- repository exploration is needed before implementation
-- implementation and verification benefit from separate context
-- debugging requires tracing across components
-- multiple modules or services need inspection
-- external or version-specific facts need verification
-- an independent post-change review is materially useful
-- the user explicitly asks for delegation, parallelism, agents, or subagents
+Delegate only when:
+- There are genuinely independent workstreams.
+- Repository-wide exploration would consume excessive root context.
+- A complex cross-service issue requires specialized investigation.
+- An independent security or architectural review is necessary.
+- The user explicitly requests multiple agents.
 
-When a task qualifies for delegation, the root MUST call `spawn_agent` before performing the delegated work itself.
+Before spawning a subagent, determine:
+1. What specific problem will delegation solve?
+2. Why can the root not handle it efficiently?
+3. What concrete result must the subagent return?
 
-Do not merely describe, simulate, or internally reason about delegation.
+If there is no clear benefit, do not delegate.
 
-Actual subagents must be spawned.
+Do not spawn agents merely because multiple files are involved.
 
-If `spawn_agent` is unavailable or fails, explicitly report that failure.
+For ordinary tasks, use at most one subagent.
+Additional agents require a concrete justification.
 
-Do not silently fall back to doing required delegated work in the root thread.
+If delegation is unavailable, continue root-only when safe and
+report any verification limitations.
 
-For every delegated task, spawn at least one subagent.
-
-Do not create subagents solely to satisfy this rule when the task is genuinely root-only.
 
 ---
 
@@ -247,28 +252,23 @@ Prefer one writer per file or subsystem.
 
 ---
 
+
 ## Default coding workflow
 
-For non-trivial implementation tasks, prefer this sequence:
+For ordinary coding tasks:
 
-1. spawn one or more Luna explorers if repository understanding is needed
-2. wait for exploration results
-3. root decides implementation direction
-4. spawn Luna worker or workers with bounded ownership
-5. wait for implementation
-6. spawn Luna tester
-7. wait for validation
-8. spawn Astra reviewer when an independent review is materially useful
-9. resolve material findings
-10. run final verification
-11. present the result
+1. Inspect the relevant files and requirements.
+2. Determine the smallest safe implementation scope.
+3. Implement directly in the root agent.
+4. Run targeted tests and build checks.
+5. Verify the running application when applicable.
+6. Review the final diff.
+7. Report the actual verification results.
+
+For complex tasks, delegate only the specific workstreams
+that benefit from independent execution.
 
 Do not spawn every role mechanically.
-
-Use only the roles that materially improve the task.
-
-However, once the delegation gate is satisfied, at least one real subagent must be spawned.
-
 ---
 
 ## Debugging workflow
@@ -378,6 +378,106 @@ Before producing the final answer for a delegated task, confirm that:
 Do not finish while required subagents are still running.
 
 Do not claim delegation occurred unless `spawn_agent` was actually called successfully.
+
+---
+
+
+## UI fidelity protocol
+
+When implementing UI from Stitch, HTML mockups, screenshots,
+or other visual references:
+
+1. Treat the supplied mockup as the visual source of truth.
+2. Inspect the complete reference before implementation.
+3. Identify all sections, controls, tabs, tables, and states.
+4. Preserve layout, spacing, typography, colors, and hierarchy.
+5. Do not redesign, simplify, or remove elements without approval.
+6. Reuse the existing project design system and components.
+7. Keep one agent responsible for the complete UI implementation.
+8. Do not delegate individual visual sections to different agents
+   unless their boundaries are clearly independent.
+
+After implementation:
+1. Build the application.
+2. Start or update the running application.
+3. Open the actual page in a browser when available.
+4. Capture a screenshot at the reference viewport size.
+5. Compare the screenshot against the original mockup.
+6. Identify and fix visible differences.
+7. Repeat verification after corrections.
+
+A successful build does not prove visual correctness.
+
+If browser verification is unavailable, report the limitation
+explicitly and mark visual verification as incomplete.
+
+Never claim pixel-perfect fidelity without visual evidence.
+
+---
+
+## Runtime verification and deployment discipline
+
+After changing application code, determine how the project is
+currently running before choosing a restart strategy.
+
+Possible environments include:
+- Vite development server with hot module replacement.
+- Docker Compose development environment.
+- Docker Compose production build with Nginx.
+- Direct backend execution.
+
+Do not assume that a successful build updates running containers.
+
+For every UI change:
+1. Identify the active runtime environment.
+2. Rebuild or restart only the services that require updating.
+3. Wait for the affected services to become ready.
+4. Verify that the application serves the updated version.
+5. Test the modified route and its primary interaction.
+6. Check browser and server errors when tools are available.
+
+Never restart PostgreSQL, remove Docker volumes, reset databases,
+or recreate unrelated services without explicit authorization.
+
+Do not claim that the application was restarted or verified
+unless the corresponding commands actually succeeded.
+
+Report separately:
+- Build status.
+- Runtime status.
+- Browser verification status.
+- Visual fidelity status.
+
+---
+
+## Token efficiency and escalation limits
+
+Optimize for verified results, not agent count.
+
+- Prefer direct execution over unnecessary orchestration.
+- Do not spawn agents for routine frontend implementation.
+- Do not repeatedly explore files already inspected.
+- Reuse concise findings instead of repeating repository scans.
+- Keep delegation scopes narrow and measurable.
+- Avoid sending large file contents between agents.
+- Do not run multiple agents on the same implementation task.
+- Do not invoke Astra automatically for ordinary UI changes.
+
+Use Astra primarily for:
+- High-risk architecture decisions.
+- Security-sensitive changes.
+- Complex business logic.
+- Difficult bugs that remain unresolved after focused diagnosis.
+- Independent review of significant changes.
+
+After two unsuccessful attempts at the same fix:
+1. Stop repeating the same approach.
+2. Inspect the actual failure and available logs.
+3. Identify the likely root cause.
+4. Narrow the problem.
+5. Escalate only if deeper reasoning is justified.
+
+Do not claim specific token savings without measurement.
 
 ---
 

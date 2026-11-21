@@ -495,6 +495,8 @@ export function WorkspaceShellView({
                       canManageOrderResponses={canManageOrderResponses}
                       canSelectFinalist={canSelectFinalist}
                       canPublishVacancyForCustomer={canPublishVacancyForSelectedOrder}
+                      canCreateVacancyFromOrder={canCreateVacancyFromSelectedOrder}
+                      canCreateCandidateFromOrder={canCreateCandidateFromSelectedOrder}
                       canManageOrders={canManageOrder}
                       canRespondToOrder={canRespondToSelectedOrder}
                       canViewBaseCandidates={canLoadExecutorBaseCandidates}
@@ -519,6 +521,7 @@ export function WorkspaceShellView({
                           ? isCustomerShortlistError
                           : role === 'Executor' && isExecutorCandidateSummaryError
                       }
+                      isSubmittingCandidateList={isSubmittingCandidateList}
                       isOrdersError={(role === 'Customer' || role === 'Executor') && isOrdersError}
                       isOrderResponsesLoading={isOrderResponsesFetching}
                       isOrdersArchiving={isDeletingOrder}
@@ -532,6 +535,7 @@ export function WorkspaceShellView({
                       onActivateOrders={handleActivateOrders}
                       onArchiveOrders={handleArchiveOrders}
                       onCreateVacancyFromOrder={handleCreateVacancyFromOrder}
+                      onCreateCandidateFromOrder={handleCreateCandidateFromOrder}
                       onOpenChat={() => handleViewChange('chats')}
                       onCloseOrderDetails={closeOrderDetails}
                       onOpenCandidate={handleOpenCandidateDetails}
@@ -562,6 +566,11 @@ export function WorkspaceShellView({
                       }}
                       onSelectOrder={setPreferredOrderId}
                       onSelectOrderExecutor={handleSelectOrderExecutor}
+                      onSubmitCandidateListForOrder={
+                        canManageCandidatesFromSelectedOrder
+                          ? handleSubmitCandidateListFromOrder
+                          : undefined
+                      }
                       orderResponses={orderResponses}
                       orders={activeView === 'candidates' ? candidateViewOrders : filteredOrders}
                       requesterUserId={authMe?.userId}

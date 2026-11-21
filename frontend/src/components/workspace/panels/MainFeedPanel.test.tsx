@@ -1,10 +1,30 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { configureStore } from '@reduxjs/toolkit'
+import { Provider } from 'react-redux'
+import { useState, type ReactElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { authSessionReducer } from '@/app/authSessionSlice'
+import { api } from '@/shared/api/generated/openapi'
 import type { WorkspaceCandidate, WorkspaceOrder } from '../model/data'
 import { MainFeedPanel } from './MainFeedPanel'
 import type { MainFeedPanelProps } from './MainFeedPanel.types'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
+
+function renderWithApiProvider(ui: ReactElement) {
+  const store = configureStore({
+    reducer: {
+      authSession: authSessionReducer,
+      [api.reducerPath]: api.reducer,
+    },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(api.middleware),
+  })
+
+  return render(<Provider store={store}>{ui}</Provider>)
+}
 
 const executorId = 'executor-1'
 const order: WorkspaceOrder = {
@@ -75,7 +95,7 @@ function renderDashboard(
   canManageOrders: boolean,
   overrides: Partial<MainFeedPanelProps> = {},
 ) {
-  return render(
+  const rendered = renderWithApiProvider(
     <MainFeedPanel
       baseCandidates={[]}
       candidates={[]}
@@ -87,15 +107,55 @@ function renderDashboard(
       orders={[order]}
       requesterUserId={role === 'Executor' ? executorId : 'customer-1'}
       role={role}
-      selectedOrderId={null}
+      selectedOrderId={order.id}
       view="dashboard"
       {...overrides}
     />,
   )
+
+  const selectedOrderId = overrides.selectedOrderId === undefined ? order.id : overrides.selectedOrderId
+  if (role === 'Executor' && selectedOrderId) {
+    const selectedOrder = (overrides.orders ?? [order]).find((item) => item.id === selectedOrderId)
+    const openButton = selectedOrder
+      ? screen.queryByRole('button', { name: `Открыть проект ${selectedOrder.title}` })
+      : null
+    if (openButton) fireEvent.click(openButton)
+  }
+
+  return rendered
+}
+
+function renderControlledExecutorDashboard(orders: WorkspaceOrder[]) {
+  const onOpenOrder = vi.fn()
+
+  function ControlledDashboard() {
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+
+    return (
+      <MainFeedPanel
+        baseCandidates={[]}
+        candidates={[]}
+        isLoading={false}
+        onOpenCandidate={vi.fn()}
+        onOpenOrder={(selectedOrder) => {
+          onOpenOrder(selectedOrder)
+          setSelectedOrderId(selectedOrder.id)
+        }}
+        onSelectOrder={vi.fn()}
+        orders={orders}
+        requesterUserId={executorId}
+        role="Executor"
+        selectedOrderId={selectedOrderId}
+        view="dashboard"
+      />
+    )
+  }
+
+  return { ...renderWithApiProvider(<ControlledDashboard />), onOpenOrder }
 }
 
 function renderApplicant(view: 'dashboard' | 'orders', applicantRespondedOrderIds: string[]) {
-  return render(
+  return renderWithApiProvider(
     <MainFeedPanel
       applicantRespondedOrderIds={applicantRespondedOrderIds}
       baseCandidates={[]}
@@ -113,7 +173,7 @@ function renderApplicant(view: 'dashboard' | 'orders', applicantRespondedOrderId
 }
 
 function renderExecutorExchange() {
-  return render(
+  return renderWithApiProvider(
     <MainFeedPanel
       baseCandidates={[]}
       candidates={[]}
@@ -138,11 +198,54 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.queryByText(/Создайте новый проект/)).toBeNull()
   })
 
+  it('filters completed projects and keeps preparation status amber', () => {
+    const activeOrder: WorkspaceOrder = { ...order, requestedCandidatesCount: 3 }
+    const completedOrder: WorkspaceOrder = {
+      ...order,
+      id: 'completed-order',
+      title: 'Завершённый проект',
+      statusLabel: 'Завершён',
+    }
+    renderDashboard('Executor', false, {
+      orders: [activeOrder, completedOrder],
+      selectedOrderId: null,
+    })
+
+    const preparationStatus = screen.getByText('Подготовка 0/3')
+    expect(preparationStatus.classList.contains('preview11-executor-project-status-preparation')).toBe(true)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Выполнены' }))
+
+    expect(screen.getByText(completedOrder.title)).toBeTruthy()
+    expect(screen.queryByText(activeOrder.title)).toBeNull()
+  })
+
+  it('keeps archived executor projects out of All and exposes them in Archive', () => {
+    const archivedOrder: WorkspaceOrder = {
+      ...order,
+      id: 'archived-order',
+      title: 'Архивный проект',
+      isArchived: true,
+      statusLabel: 'Архив',
+    }
+    renderDashboard('Executor', false, { orders: [order, archivedOrder], selectedOrderId: null })
+
+    expect(screen.getByText(order.title)).toBeTruthy()
+    expect(screen.queryByText(archivedOrder.title)).toBeNull()
+
+    fireEvent.click(screen.getByTitle('На паузе и в архиве'))
+    fireEvent.click(screen.getByRole('button', { name: 'Архив' }))
+
+    expect(screen.getByText(archivedOrder.title)).toBeTruthy()
+    expect(screen.queryByText(order.title)).toBeNull()
+  })
+
   it('shows executor net amount and read-only project controls', () => {
     renderDashboard('Executor', false)
 
     expect(screen.getAllByText('В работе').length).toBeGreaterThan(0)
-    expect(screen.getByText(/К получению:\s*85[\s\u00a0]?000 ₽/)).toBeTruthy()
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Оплата' }), { button: 0 })
+    expect(screen.getByText(/85[\s\u00a0]?000 ₽/)).toBeTruthy()
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
     expect(screen.queryByRole('button', { name: 'На паузу' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Активировать' })).toBeNull()
@@ -163,8 +266,34 @@ describe('MainFeedPanel projects in work', () => {
 
     expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, poolCandidate.id, 'Shortlist')
     expect(onOpenCandidate).not.toHaveBeenCalled()
-    expect(screen.getByText('Рекрутер')).toBeTruthy()
+    expect(screen.getByText(/Рекрутер/)).toBeTruthy()
     expect(screen.queryByText('Сохранённая заметка')).toBeNull()
+  })
+
+  it('shows shortlist candidates from the project list management control', () => {
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [poolCandidate, shortlistCandidate],
+    })
+
+    const manageListButton = screen.getByRole('button', { name: 'Управлять списком' })
+    fireEvent.click(manageListButton)
+
+    expect(manageListButton.getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByText(shortlistCandidate.name)).toBeTruthy()
+    expect(screen.queryByText(poolCandidate.name)).toBeNull()
+  })
+
+  it('uses the correct Russian plural for four project candidates', () => {
+    renderDashboard('Executor', false, {
+      executorDashboardCandidates: [
+        poolCandidate,
+        { ...shortlistCandidate, id: 'candidate-2' },
+        { ...poolCandidate, id: 'candidate-3', name: 'Кандидат № 3' },
+        { ...poolCandidate, id: 'candidate-4', name: 'Кандидат № 4' },
+      ],
+    })
+
+    expect(screen.getByText(/^4 кандидата\s/u)).toBeTruthy()
   })
 
   it('returns a selected-project candidate from Shortlist to Pool', () => {
@@ -184,6 +313,41 @@ describe('MainFeedPanel projects in work', () => {
     fireEvent.click(screen.getByRole('button', { name: `Вернуть ${shortlistCandidate.name} в рабочий список` }))
 
     expect(onSetCandidateStage).toHaveBeenCalledWith(order.id, shortlistCandidate.id, 'Pool')
+  })
+
+  it('shows official shortlist progress and submits through the existing order callback', async () => {
+    const onSubmitCandidateListForOrder = vi.fn(async () => true)
+    const project = { ...order, requestedCandidatesCount: 1 }
+
+    renderDashboard('Executor', false, {
+      orders: [project],
+      executorDashboardCandidates: [shortlistCandidate],
+      dashboardVacancies: [
+        {
+          id: 'vacancy-1',
+          orderId: project.id,
+          customerId: project.customerId ?? 'customer-1',
+          executorId,
+          title: project.title,
+          description: project.requirements,
+          status: 'Published',
+          createdAtUtc: '2026-11-01T10:00:00Z',
+          updatedAtUtc: '2026-11-10T10:00:00Z',
+        },
+      ],
+      onSubmitCandidateListForOrder,
+    })
+
+    expect(screen.getByRole('progressbar', { name: 'Готовность официального списка' }).getAttribute('aria-valuenow'))
+      .toBe('100')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить полный список кандидатов (1/1)' }))
+    expect(onSubmitCandidateListForOrder).not.toHaveBeenCalled()
+    expect(await screen.findByRole('dialog', { name: 'Отправить список кандидатов заказчику?' })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Подтвердить отправку' }))
+    await waitFor(() => expect(onSubmitCandidateListForOrder).toHaveBeenCalledWith(project.id))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   })
 
   it('keeps Pool completed after its last candidate moves to Shortlist', () => {
@@ -216,7 +380,7 @@ describe('MainFeedPanel projects in work', () => {
       .getByRole('list', { name: 'Этапы проекта' })
       .querySelector('[aria-current="step"]')
 
-    expect(currentStep?.textContent).toContain('Список кандидатов')
+    expect(currentStep?.textContent).toContain('Подготовка')
   })
 
   it('shows project-scoped candidates from the stage filters', () => {
@@ -239,6 +403,7 @@ describe('MainFeedPanel projects in work', () => {
       selectedOrderId: order.id,
     })
 
+    fireEvent.click(screen.getByText('Фильтры'))
     fireEvent.click(screen.getByRole('button', { name: /^Pool/ }))
     expect(screen.queryByText(finalist.name)).toBeNull()
 
@@ -283,6 +448,7 @@ describe('MainFeedPanel projects in work', () => {
       selectedOrderId: order.id,
     })
 
+    fireEvent.click(screen.getByText('Фильтры'))
     fireEvent.click(screen.getByRole('button', { name: /Рабочий список/ }))
 
     expect(screen.queryByRole('button', {
@@ -308,6 +474,7 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.getByText(poolCandidate.name)).toBeTruthy()
     expect(screen.queryByText(submittedCandidate.name)).toBeNull()
 
+    fireEvent.click(screen.getByText('Фильтры'))
     fireEvent.click(screen.getByRole('button', { name: /Отправлены заказчику/ }))
 
     expect(screen.getByText(submittedCandidate.name)).toBeTruthy()
@@ -351,7 +518,7 @@ describe('MainFeedPanel projects in work', () => {
       selectedOrderId: order.id,
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /^Отклики/ }))
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Отклики' }), { button: 0 })
 
     expect(screen.getByText('Отклики соискателей')).toBeTruthy()
     expect(screen.getByText(applicantResponseCandidate.name)).toBeTruthy()
@@ -387,7 +554,7 @@ describe('MainFeedPanel projects in work', () => {
       selectedOrderId: order.id,
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /^Отклики/ }))
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Отклики' }), { button: 0 })
     fireEvent.click(screen.getByRole('button', { name: 'Фильтры откликов' }))
 
     const dialog = screen.getByRole('dialog', { name: 'Фильтры откликов' })
@@ -401,14 +568,110 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.getByText('Опыт от 5 лет')).toBeTruthy()
   })
 
-  it('opens the selected project details from the dashboard summary', () => {
+  it('opens project details from the candidate list controls', () => {
     const onOpenOrder = vi.fn()
 
     renderDashboard('Executor', false, { onOpenOrder })
 
-    fireEvent.click(screen.getByRole('button', { name: `Открыть детали проекта ${order.title}` }))
+    fireEvent.click(screen.getByRole('button', { name: 'Управлять списком' }))
 
     expect(onOpenOrder).toHaveBeenCalledWith(order)
+  })
+
+  it('shows every assigned project and opens the selected project details', () => {
+    const orders = Array.from({ length: 5 }, (_, index) => ({
+      ...order,
+      id: `order-${index + 1}`,
+      title: `Проект ${index + 1}`,
+    }))
+    const { onOpenOrder } = renderControlledExecutorDashboard(orders)
+
+    expect(screen.getAllByRole('button', { name: /^Открыть проект/ })).toHaveLength(5)
+    expect(screen.queryByRole('tablist', { name: 'Разделы проекта' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть проект Проект 5' }))
+
+    expect(onOpenOrder).toHaveBeenCalledWith(orders[4])
+    expect(screen.getByRole('heading', { name: 'Проект 5' })).toBeTruthy()
+    expect(screen.getByRole('tablist', { name: 'Разделы проекта' })).toBeTruthy()
+  })
+
+  it('switches project sections and opens existing candidate and vacancy workflows', async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ items: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const onCreateCandidateFromOrder = vi.fn()
+    const onCreateVacancyFromOrder = vi.fn()
+    const onOpenOrder = vi.fn()
+
+    renderDashboard('Executor', false, {
+      canCreateCandidateFromOrder: true,
+      canCreateVacancyFromOrder: true,
+      onCreateCandidateFromOrder,
+      onCreateVacancyFromOrder,
+      onOpenOrder,
+      selectedOrderId: order.id,
+    })
+
+    expect(screen.getByRole('tablist', { name: 'Разделы проекта' })).toBeTruthy()
+
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Требования вакансии' }), { button: 0 })
+    expect(screen.getByText('Разработка')).toBeTruthy()
+    expect(screen.getByText('Опыт')).toBeTruthy()
+
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Моя вакансия' }), { button: 0 })
+    fireEvent.click(screen.getByRole('button', { name: 'Создать вакансию' }))
+    expect(onCreateVacancyFromOrder).toHaveBeenCalledWith(order.id)
+
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Кандидаты' }), { button: 0 })
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить кандидата' }))
+    expect(onCreateCandidateFromOrder).toHaveBeenCalledWith(order.id)
+    fireEvent.click(screen.getByRole('button', { name: 'Управлять списком' }))
+    expect(onOpenOrder).toHaveBeenCalledWith(order)
+
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'История' }), { button: 0 })
+    await waitFor(() => expect(screen.getByText('Событий по проекту пока нет.')).toBeTruthy())
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Документы' }), { button: 0 })
+    await waitFor(() => expect(screen.getByText('Документы к проекту пока не добавлены.')).toBeTruthy())
+
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Оплата' }), { button: 0 })
+    const paymentPanel = screen.getByRole('tabpanel', { name: 'Оплата' })
+    expect(within(paymentPanel).getByText(/85[\s\u00a0]?000 ₽/)).toBeTruthy()
+  })
+
+  it('renders project requirements containing rich-text HTML as readable text', () => {
+    const projectOrder = {
+      ...order,
+      functional: '<p>Работа с <strong>командой</strong></p>',
+    }
+
+    renderDashboard('Executor', false, {
+      orders: [projectOrder],
+      selectedOrderId: projectOrder.id,
+      dashboardVacancies: [
+        {
+          id: 'vacancy-1',
+          orderId: projectOrder.id,
+          customerId: 'customer-1',
+          executorId,
+          title: 'Требования проекта',
+          description: '<p><span style="font-family: Georgia;">Работа с <strong>аналитикой</strong></span></p>',
+          status: 'Published',
+          createdAtUtc: '2026-01-01T00:00:00Z',
+          updatedAtUtc: '2026-01-01T00:00:00Z',
+        },
+      ],
+    })
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Требования вакансии' }), { button: 0 })
+
+    expect(screen.getByText('Работа с командой')).toBeTruthy()
+    expect(screen.getByText('Работа с аналитикой')).toBeTruthy()
+    expect(screen.queryByText(/<p>|<strong>/u)).toBeNull()
   })
 
   it('lets a customer choose a shortlist candidate by ID while showing only the public alias', () => {
@@ -516,7 +779,10 @@ describe('MainFeedPanel projects in work', () => {
       selectedOrderId: order.id,
     })
 
+    fireEvent.click(screen.getByRole('button', { name: 'Мои проекты в работе' }))
+    fireEvent.click(screen.getByTitle('На паузе и в архиве'))
     fireEvent.click(screen.getByRole('button', { name: 'Архив' }))
+    fireEvent.click(screen.getByRole('button', { name: `Открыть проект ${archivedOrder.title}` }))
 
     expect(onSelectOrder).toHaveBeenCalledWith(archivedOrder.id)
     expect(screen.getByText(archivedCandidate.name)).toBeTruthy()
@@ -575,7 +841,7 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.queryByRole('button', { name: /Выбрать финалистом/ })).toBeNull()
     cleanup()
 
-    render(
+    renderWithApiProvider(
       <MainFeedPanel
         baseCandidates={[]}
         candidates={[shortlistCandidate]}

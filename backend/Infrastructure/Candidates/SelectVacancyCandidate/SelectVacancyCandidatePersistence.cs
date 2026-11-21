@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SelectProfi.backend.Application.Candidates.SelectVacancyCandidate;
 using SelectProfi.backend.Domain.Candidates;
+using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Domain.Vacancies;
 using SelectProfi.backend.Infrastructure.Data;
 
@@ -10,7 +11,7 @@ public sealed class SelectVacancyCandidatePersistence(AppDbContext dbContext) : 
 {
     public Task<Vacancy?> FindActiveVacancyByIdAsync(Guid vacancyId, CancellationToken cancellationToken)
     {
-        return dbContext.Vacancies.FirstOrDefaultAsync(
+        return dbContext.Vacancies.Include(vacancy => vacancy.Order).FirstOrDefaultAsync(
             vacancy => vacancy.Id == vacancyId && vacancy.DeletedAtUtc == null,
             cancellationToken);
     }
@@ -28,6 +29,39 @@ public sealed class SelectVacancyCandidatePersistence(AppDbContext dbContext) : 
 
     public async Task<SelectVacancyCandidatePersistenceResult> SaveChangesAsync(CancellationToken cancellationToken)
     {
+        foreach (var entry in dbContext.ChangeTracker.Entries<Vacancy>()
+                     .Where(entry => entry.State == EntityState.Modified &&
+                                     entry.Property(vacancy => vacancy.SelectedCandidateId).IsModified))
+        {
+            var vacancy = entry.Entity;
+            var now = DateTime.UtcNow;
+            dbContext.ProjectActivities.Add(new ProjectActivity
+            {
+                Id = Guid.NewGuid(),
+                OrderId = vacancy.OrderId,
+                ActorUserId = vacancy.CustomerId,
+                Action = "CandidateSelected",
+                Description = "Заказчик выбрал кандидата.",
+                CreatedAtUtc = now
+            });
+        }
+
+        foreach (var entry in dbContext.ChangeTracker.Entries<Order>()
+                     .Where(entry => entry.State == EntityState.Modified &&
+                                     entry.Property(order => order.Status).IsModified &&
+                                     entry.Entity.Status == OrderStatus.Completed))
+        {
+            dbContext.ProjectActivities.Add(new ProjectActivity
+            {
+                Id = Guid.NewGuid(),
+                OrderId = entry.Entity.Id,
+                ActorUserId = entry.Entity.CustomerId,
+                Action = "ProjectCompleted",
+                Description = "Проект завершен после выбора кандидата заказчиком.",
+                CreatedAtUtc = entry.Entity.CompletedAtUtc ?? DateTime.UtcNow
+            });
+        }
+
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);

@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SelectProfi.backend.Application.Candidates.UploadCandidateResumeAttachment;
+using SelectProfi.backend.Application.Orders.ProjectWorkspace;
 using SelectProfi.backend.Infrastructure.Candidates.UploadCandidateResumeAttachment;
+using SelectProfi.backend.Infrastructure.Orders.ProjectWorkspace;
 using SelectProfi.backend.Infrastructure.Storage;
 
 namespace SelectProfi.backend.Infrastructure;
@@ -19,6 +21,7 @@ public static class StorageServiceCollectionExtensions
             options.SecretAccessKey = configuration["S3:SecretAccessKey"] ?? string.Empty;
         });
         services.AddSingleton<IResumeAttachmentStorage, SupabaseS3ResumeAttachmentStorage>();
+        services.AddSingleton<IProjectDocumentStorage, SupabaseS3ProjectDocumentStorage>();
         return services;
     }
 }

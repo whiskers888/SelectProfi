@@ -15,6 +15,8 @@ export type MainFeedPanelProps = {
   applicantRespondedOrderIds?: string[]
   canManageOrderResponses?: boolean
   canPublishVacancyForCustomer?: boolean
+  canCreateVacancyFromOrder?: boolean
+  canCreateCandidateFromOrder?: boolean
   canRespondToOrder?: boolean
   hasRespondedToOrder?: boolean
   candidates: WorkspaceCandidate[]
@@ -28,6 +30,7 @@ export type MainFeedPanelProps = {
   isLoading: boolean
   isCandidateDataLoading?: boolean
   isCandidateDataError?: boolean
+  isSubmittingCandidateList?: boolean
   isOrdersError?: boolean
   isOrdersArchiving?: boolean
   isRejectingOrderExecutor?: boolean
@@ -36,12 +39,14 @@ export type MainFeedPanelProps = {
   onActivateOrders?: (orderIds: string[]) => void | Promise<void>
   onArchiveOrders?: (orderIds: string[]) => void | Promise<void>
   onCreateVacancyFromOrder?: (orderId: string) => void
+  onCreateCandidateFromOrder?: (orderId: string) => void
   onOpenChat?: () => void
   onSetCandidateStage?: (
     orderId: string,
     candidateId: string,
     stage: 'Pool' | 'Shortlist',
   ) => void | Promise<void>
+  onSubmitCandidateListForOrder?: (orderId: string) => boolean | Promise<boolean>
   onSelectVacancyCandidate?: (orderId: string, candidateId: string) => void | Promise<void>
   onPauseOrders?: (orderIds: string[]) => void | Promise<void>
   onOpenCandidate: (candidate: WorkspaceCandidate) => void
@@ -83,8 +88,8 @@ export type MainFeedPanelProps = {
   isSelectingVacancyCandidate?: boolean
 }
 
-export type DashboardSort = 'updated' | 'responses' | 'priority'
-export type DashboardState = 'active' | 'paused' | 'archive'
+export type DashboardSort = 'updated' | 'responses' | 'priority' | 'dueDate'
+export type DashboardState = 'all' | 'active' | 'completed' | 'paused' | 'archive'
 export type CandidateSourceFilter = 'all' | 'registered' | 'recruiter'
 export type CandidateStageFilter = 'all' | 'pool' | 'shortlist' | 'selected' | 'no_stage'
 

@@ -41,7 +41,9 @@ public sealed class GetMyOrdersQueryHandler(IGetMyOrdersPersistence persistence)
             Status = order.Status,
             CreatedAtUtc = order.CreatedAtUtc,
             UpdatedAtUtc = order.UpdatedAtUtc,
-            DeletedAtUtc = order.DeletedAtUtc
+            DeletedAtUtc = order.DeletedAtUtc,
+            DueDate = order.DueDate,
+            CompletedAtUtc = order.CompletedAtUtc
         }).ToArray();
 
         return new GetOrdersResult

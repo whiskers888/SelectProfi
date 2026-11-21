@@ -6,5 +6,6 @@ namespace SelectProfi.backend.Contracts.Orders;
 public enum OrderStatusContract
 {
     Active = 1,
-    Paused = 2
+    Paused = 2,
+    Completed = 3
 }

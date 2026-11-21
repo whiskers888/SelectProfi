@@ -55,6 +55,8 @@ public static class OrderResponseMapper
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
+            DueDate = result.DueDate,
+            CompletedAtUtc = result.CompletedAtUtc,
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc,
             DeletedAtUtc = null
@@ -82,6 +84,8 @@ public static class OrderResponseMapper
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
+            DueDate = result.DueDate,
+            CompletedAtUtc = result.CompletedAtUtc,
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc,
             DeletedAtUtc = null
@@ -109,6 +113,8 @@ public static class OrderResponseMapper
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
+            DueDate = result.DueDate,
+            CompletedAtUtc = result.CompletedAtUtc,
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc,
             DeletedAtUtc = null
@@ -138,6 +144,8 @@ public static class OrderResponseMapper
                 CustomerCompanyName = item.CustomerCompanyName,
                 RequestedCandidatesCount = item.RequestedCandidatesCount,
                 Status = MapStatus(item.Status),
+                DueDate = item.DueDate,
+                CompletedAtUtc = item.CompletedAtUtc,
                 CreatedAtUtc = item.CreatedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc,
                 DeletedAtUtc = item.DeletedAtUtc
@@ -170,6 +178,8 @@ public static class OrderResponseMapper
                 CustomerCompanyName = item.CustomerCompanyName,
                 RequestedCandidatesCount = item.RequestedCandidatesCount,
                 Status = MapStatus(item.Status),
+                DueDate = item.DueDate,
+                CompletedAtUtc = item.CompletedAtUtc,
                 CreatedAtUtc = item.CreatedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc,
                 DeletedAtUtc = item.DeletedAtUtc
@@ -204,6 +214,8 @@ public static class OrderResponseMapper
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
             Status = MapStatus(result.Status),
+            DueDate = result.DueDate,
+            CompletedAtUtc = result.CompletedAtUtc,
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc,
             DeletedAtUtc = null
@@ -347,6 +359,7 @@ public static class OrderResponseMapper
         {
             OrderStatus.Active => OrderStatusContract.Active,
             OrderStatus.Paused => OrderStatusContract.Paused,
+            OrderStatus.Completed => OrderStatusContract.Completed,
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported order status.")
         };
     }

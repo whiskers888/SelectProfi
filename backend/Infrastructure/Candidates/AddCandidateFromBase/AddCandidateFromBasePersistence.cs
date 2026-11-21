@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SelectProfi.backend.Application.Candidates.AddCandidateFromBase;
 using SelectProfi.backend.Domain.Candidates;
+using SelectProfi.backend.Domain.Orders;
 using SelectProfi.backend.Domain.Vacancies;
 using SelectProfi.backend.Infrastructure.Data;
 
@@ -29,6 +30,19 @@ public sealed class AddCandidateFromBasePersistence(AppDbContext dbContext) : IA
         CancellationToken cancellationToken)
     {
         dbContext.VacancyCandidates.Add(vacancyCandidate);
+        var orderId = await dbContext.Vacancies
+            .Where(vacancy => vacancy.Id == vacancyCandidate.VacancyId)
+            .Select(vacancy => vacancy.OrderId)
+            .FirstAsync(cancellationToken);
+        dbContext.ProjectActivities.Add(new ProjectActivity
+        {
+            Id = Guid.NewGuid(),
+            OrderId = orderId,
+            ActorUserId = vacancyCandidate.AddedByExecutorId,
+            Action = "CandidateAdded",
+            Description = "Кандидат добавлен в проект.",
+            CreatedAtUtc = vacancyCandidate.AddedAtUtc
+        });
 
         try
         {

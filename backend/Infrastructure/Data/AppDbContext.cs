@@ -15,6 +15,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     // @dvnull: Добавлен справочник специализаций заказов для централизованной админ-настройки.
     public DbSet<OrderSpecialization> OrderSpecializations => Set<OrderSpecialization>();
     public DbSet<OrderExecutorResponse> OrderExecutorResponses => Set<OrderExecutorResponse>();
+    public DbSet<ProjectActivity> ProjectActivities => Set<ProjectActivity>();
+    public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
 
     public DbSet<Candidate> Candidates => Set<Candidate>();
 
@@ -219,6 +221,33 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             builder.HasIndex(order => new { order.ExecutorId, order.DeletedAtUtc });
             builder.HasIndex(order => order.SpecializationId);
             builder.HasIndex(order => new { order.Status, order.DeletedAtUtc });
+            builder.HasIndex(order => order.DueDate);
+        });
+
+        modelBuilder.Entity<ProjectActivity>(builder =>
+        {
+            builder.HasKey(activity => activity.Id);
+            builder.Property(activity => activity.Action).HasMaxLength(80).IsRequired();
+            builder.Property(activity => activity.Description).HasMaxLength(500).IsRequired();
+            builder.HasOne<Order>()
+                .WithMany()
+                .HasForeignKey(activity => activity.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(activity => new { activity.OrderId, activity.CreatedAtUtc });
+        });
+
+        modelBuilder.Entity<ProjectDocument>(builder =>
+        {
+            builder.HasKey(document => document.Id);
+            builder.Property(document => document.FileName).HasMaxLength(255).IsRequired();
+            builder.Property(document => document.ContentType).HasMaxLength(128).IsRequired();
+            builder.Property(document => document.StorageKey).HasMaxLength(512).IsRequired();
+            builder.HasOne<Order>()
+                .WithMany()
+                .HasForeignKey(document => document.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(document => new { document.OrderId, document.CreatedAtUtc });
+            builder.HasIndex(document => document.StorageKey).IsUnique();
         });
 
         modelBuilder.Entity<OrderSpecialization>(builder =>

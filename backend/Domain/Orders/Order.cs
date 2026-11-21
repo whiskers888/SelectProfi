@@ -71,5 +71,9 @@ public sealed class Order
 
     public DateTime UpdatedAtUtc { get; set; }
 
+    public DateOnly? DueDate { get; set; }
+
+    public DateTime? CompletedAtUtc { get; set; }
+
     public DateTime? DeletedAtUtc { get; set; }
 }

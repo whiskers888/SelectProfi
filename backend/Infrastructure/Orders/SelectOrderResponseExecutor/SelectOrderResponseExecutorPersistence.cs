@@ -24,6 +24,25 @@ public sealed class SelectOrderResponseExecutorPersistence(AppDbContext dbContex
 
     public async Task<SelectOrderResponseExecutorPersistenceResult> SaveChangesAsync(CancellationToken cancellationToken)
     {
+        foreach (var entry in dbContext.ChangeTracker.Entries<Order>()
+                     .Where(entry => entry.State == EntityState.Modified &&
+                                     entry.Property(order => order.ExecutorId).IsModified))
+        {
+            if (entry.Property(order => order.ExecutorId).CurrentValue is not { } executorId ||
+                entry.Property(order => order.ExecutorId).OriginalValue == executorId)
+                continue;
+
+            dbContext.ProjectActivities.Add(new ProjectActivity
+            {
+                Id = Guid.NewGuid(),
+                OrderId = entry.Entity.Id,
+                ActorUserId = entry.Entity.CustomerId,
+                Action = "ExecutorAssigned",
+                Description = "Исполнитель назначен на проект.",
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
+
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);

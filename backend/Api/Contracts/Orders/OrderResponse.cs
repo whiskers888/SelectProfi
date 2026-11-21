@@ -54,6 +54,10 @@ public sealed class OrderResponse
 
     public OrderStatusContract Status { get; init; } = OrderStatusContract.Active;
 
+    public DateOnly? DueDate { get; init; }
+
+    public DateTime? CompletedAtUtc { get; init; }
+
     public DateTime CreatedAtUtc { get; init; }
 
     public DateTime UpdatedAtUtc { get; init; }

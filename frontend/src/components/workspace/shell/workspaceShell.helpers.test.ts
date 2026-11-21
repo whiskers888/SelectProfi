@@ -141,6 +141,17 @@ describe('toWorkspaceOrder', () => {
     expect(order.otherConditions).toBe(response.otherConditions)
     expect(order.grossAmount).toBe(500000)
     expect(order.executorNetAmount).toBe(425000)
+
+    const completedOrder = toWorkspaceOrder({
+      ...response,
+      executorId: 'executor-1',
+      status: 'Completed',
+      dueDate: '2026-12-01',
+      completedAtUtc: '2026-11-25T11:00:00Z',
+    })
+    expect(completedOrder.statusLabel).toBe('Выполнен')
+    expect(completedOrder.dueDate).toBe('2026-12-01')
+    expect(completedOrder.completedAtUtc).toBe('2026-11-25T11:00:00Z')
   })
 
   it('maps an assigned active order to the working status', () => {

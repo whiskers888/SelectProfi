@@ -44,4 +44,8 @@ public sealed class GetOrderByIdResult
     public DateTime CreatedAtUtc { get; init; }
 
     public DateTime UpdatedAtUtc { get; init; }
+
+    public DateOnly? DueDate { get; init; }
+
+    public DateTime? CompletedAtUtc { get; init; }
 }

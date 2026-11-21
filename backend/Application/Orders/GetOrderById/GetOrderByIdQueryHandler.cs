@@ -38,7 +38,9 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
             RequestedCandidatesCount = order.RequestedCandidatesCount,
             Status = order.Status,
             CreatedAtUtc = order.CreatedAtUtc,
-            UpdatedAtUtc = order.UpdatedAtUtc
+            UpdatedAtUtc = order.UpdatedAtUtc,
+            DueDate = order.DueDate,
+            CompletedAtUtc = order.CompletedAtUtc
         };
     }
 }

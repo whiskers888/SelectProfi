@@ -1,6 +1,6 @@
 import { api } from '../generated/openapi'
 
-export type OrderStatusContract = 'Active' | 'Paused'
+export type OrderStatusContract = 'Active' | 'Paused' | 'Completed'
 
 export type OrderResponse = {
   id: string
@@ -24,6 +24,8 @@ export type OrderResponse = {
   customerCompanyName?: string | null
   requestedCandidatesCount: number
   status: OrderStatusContract
+  dueDate?: string | null
+  completedAtUtc?: string | null
   createdAtUtc: string
   updatedAtUtc: string
   deletedAtUtc?: string | null
@@ -120,6 +122,31 @@ export type UpdateOrderRequest = {
   status?: OrderStatusContract
 }
 
+export type ProjectActivityResponse = {
+  id: string
+  action: string
+  description: string
+  createdAtUtc: string
+}
+
+export type ProjectActivityListResponse = { items: ProjectActivityResponse[] }
+
+export type ProjectDocumentResponse = {
+  id: string
+  fileName: string
+  contentType: string
+  length: number
+  createdAtUtc: string
+}
+
+export type ProjectDocumentListResponse = { items: ProjectDocumentResponse[] }
+
+export type ProjectDueDateResponse = {
+  orderId: string
+  dueDate?: string | null
+  updatedAtUtc: string
+}
+
 const ordersApi = api.injectEndpoints({
   endpoints: (build) => ({
     getOrders: build.query<OrderListResponse, GetOrdersRequest | void>({
@@ -128,6 +155,7 @@ const ordersApi = api.injectEndpoints({
         method: 'GET',
         params: params ?? undefined,
       }),
+      providesTags: ['Order'],
     }),
     getMyOrders: build.query<OrderListResponse, GetOrdersRequest | void>({
       query: (params) => ({
@@ -135,12 +163,22 @@ const ordersApi = api.injectEndpoints({
         method: 'GET',
         params: params ?? undefined,
       }),
+      providesTags: ['Order'],
     }),
     getOrderById: build.query<OrderResponse, string>({
       query: (orderId) => ({
         url: `/api/orders/${orderId}`,
         method: 'GET',
       }),
+      providesTags: (_result, _error, orderId) => [{ type: 'Order', id: orderId }],
+    }),
+    getProjectHistory: build.query<ProjectActivityListResponse, string>({
+      query: (orderId) => ({ url: `/api/orders/${orderId}/history`, method: 'GET' }),
+      providesTags: (_result, _error, orderId) => [{ type: 'Order', id: orderId }],
+    }),
+    getProjectDocuments: build.query<ProjectDocumentListResponse, string>({
+      query: (orderId) => ({ url: `/api/orders/${orderId}/documents`, method: 'GET' }),
+      providesTags: (_result, _error, orderId) => [{ type: 'Order', id: orderId }],
     }),
     getOrderExecutors: build.query<OrderExecutorListResponse, void>({
       query: () => ({
@@ -179,6 +217,7 @@ const ordersApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
+      invalidatesTags: ['Order'],
     }),
     deleteOrder: build.mutation<void, string>({
       query: (orderId) => ({
@@ -213,6 +252,33 @@ const ordersApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Order'],
     }),
+    setProjectDueDate: build.mutation<ProjectDueDateResponse, { orderId: string; dueDate: string }>({
+      query: ({ orderId, dueDate }) => ({
+        url: `/api/orders/${orderId}/deadline`,
+        method: 'PUT',
+        body: { dueDate },
+      }),
+      invalidatesTags: ['Order'],
+    }),
+    clearProjectDueDate: build.mutation<ProjectDueDateResponse, string>({
+      query: (orderId) => ({ url: `/api/orders/${orderId}/deadline`, method: 'DELETE' }),
+      invalidatesTags: ['Order'],
+    }),
+    uploadProjectDocument: build.mutation<ProjectDocumentResponse, { orderId: string; file: File }>({
+      query: ({ orderId, file }) => {
+        const body = new FormData()
+        body.append('file', file)
+        return { url: `/api/orders/${orderId}/documents`, method: 'POST', body }
+      },
+      invalidatesTags: ['Order'],
+    }),
+    downloadProjectDocument: build.mutation<Blob, { orderId: string; documentId: string }>({
+      query: ({ orderId, documentId }) => ({
+        url: `/api/orders/${orderId}/documents/${documentId}`,
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -221,6 +287,8 @@ export const {
   useGetOrdersQuery,
   useGetMyOrdersQuery,
   useGetOrderByIdQuery,
+  useGetProjectHistoryQuery,
+  useGetProjectDocumentsQuery,
   useLazyGetOrderByIdQuery,
   useGetOrderExecutorsQuery,
   useGetOrderSpecializationsQuery,
@@ -228,6 +296,10 @@ export const {
   useGetOrderResponsesQuery,
   useCreateOrderMutation,
   useUpdateOrderMutation,
+  useSetProjectDueDateMutation,
+  useClearProjectDueDateMutation,
+  useUploadProjectDocumentMutation,
+  useDownloadProjectDocumentMutation,
   useDeleteOrderMutation,
   useRespondToOrderMutation,
   useSelectOrderResponseExecutorMutation,

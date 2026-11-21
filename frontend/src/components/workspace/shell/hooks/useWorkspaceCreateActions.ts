@@ -641,6 +641,7 @@ export function useWorkspaceCreateActions({
       setIsCreateCandidatePageOpen(false)
       if (candidateSourceOrderId) {
         openOrderDetails(candidateSourceOrderId)
+        setActiveView(role === 'Executor' ? 'dashboard' : 'candidates')
       } else {
         setActiveView('candidates')
       }

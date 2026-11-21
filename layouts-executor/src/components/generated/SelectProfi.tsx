@@ -1,0 +1,15 @@
+import { useEffect, useRef } from 'react';
+import { initializeLegacy } from './SelectProfiLegacy.js';
+import './SelectProfiLegacy.css';
+// Source-faithful UI: original user-supplied HTML with native interactivity.
+const originalMarkup = "\n<header class=\"topbar\"><div class=\"brand\"><div class=\"brand-badge\">КТ</div><div><div>КадрыТут</div><div style=\"font-size:10px;font-weight:400;color:#9db3ac\">Маркетплейс подбора персонала</div></div></div><div class=\"search-box\"><span class=\"badge-icon\">search</span><input id=\"search\" placeholder=\"Поиск по заказам, кандидатам, вакансиям (Ctrl + K)\" oninput=\"renderList()\"></div><div class=\"top-right\"><div class=\"role-switch\"><button id=\"role-customer\" onclick=\"setRole('customer')\">Заказчик</button><button id=\"role-executor\" onclick=\"setRole('executor')\">Исполнитель</button></div><div class=\"bell\" onclick=\"showNotifications()\"><span class=\"badge-icon\">notifications</span><span class=\"badge\" id=\"bell-count\">2</span></div><div class=\"user-profile\"><div><strong id=\"user-name\">Анна Ершова</strong><small id=\"user-role\">Исполнитель · Рекрутер</small></div><div class=\"ava\" id=\"user-ava\">АЕ</div></div></div></header>\n<div class=\"panes\" id=\"panes\"><aside class=\"nav-pane\"><button class=\"btn-create\" id=\"create-btn\" onclick=\"primaryCreate()\"><span class=\"badge-icon\">person_add</span><span class=\"create-label\">+ Добавить кандидата</span></button><div class=\"nav-menu\" id=\"nav\"></div><div class=\"wallet-card\" style=\"margin-top:auto\"><div class=\"wallet-title\">ДЕМО-ПРОТОТИП</div><div class=\"small muted\">Макет на основе Stitch HTML. Данные тестовые, серверные операции не выполняются.</div><div class=\"dividerline\"></div><button class=\"btn\" style=\"width:100%\" onclick=\"resetDemo()\">↺ Сбросить демо</button></div></aside><section class=\"list-pane\"><div class=\"list-header\"><div class=\"list-title-row\"><h1 id=\"list-title\">Мои проекты</h1><select class=\"sort-select\" onchange=\"s.sort=this.value;renderList()\"><option value=\"deadline\">По сроку сдачи</option><option value=\"title\">По названию</option></select></div><div class=\"filter-chips\" id=\"filters\"></div></div><div class=\"list-scroll\" id=\"project-list\"></div></section><main class=\"detail-pane\" id=\"main\"></main></div>\n<div class=\"modal-back\" id=\"modal-back\" role=\"presentation\" onclick=\"if(event.target===this)closeModal()\"><div class=\"modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"modal-title\"><div class=\"modal-head\"><strong id=\"modal-title\"></strong><button class=\"btn ghost\" onclick=\"closeModal()\">✕</button></div><div class=\"modal-content\" id=\"modal-body\"></div><div class=\"modal-foot\" id=\"modal-foot\"></div></div></div><div class=\"toast\" id=\"toast\" role=\"status\" aria-live=\"polite\"></div>\n";
+export const SelectProfi = () => {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!root.current) return;
+    return initializeLegacy();
+  }, []);
+  return <div ref={root} className="sp-original-app" dangerouslySetInnerHTML={{
+    __html: originalMarkup
+  }} />;
+};

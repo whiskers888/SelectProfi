@@ -145,6 +145,7 @@ const candidatesApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, { vacancyId }) => [
         { type: 'VacancyCandidate', id: vacancyId },
         'VacancyCandidate',
+        'Order',
       ],
     }),
     uploadCandidateResumeAttachment: build.mutation<
@@ -182,6 +183,7 @@ const candidatesApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, { vacancyId }) => [
         { type: 'VacancyCandidate', id: vacancyId },
         'VacancyCandidate',
+        'Order',
       ],
     }),
     removeVacancyCandidate: build.mutation<void, { vacancyId: string; candidateId: string }>({
@@ -189,6 +191,7 @@ const candidatesApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, { vacancyId }) => [
         { type: 'VacancyCandidate', id: vacancyId },
         'VacancyCandidate',
+        'Order',
       ],
     }),
     respondToVacancy: build.mutation<VacancyCandidateResponse, { vacancyId: string }>({
@@ -214,6 +217,7 @@ const candidatesApi = api.injectEndpoints({
         { type: 'VacancyCandidate', id: vacancyId },
         'VacancyCandidate',
         { type: 'Vacancy', id: vacancyId },
+        'Order',
       ],
     }),
     getVacancyBaseCandidates: build.query<VacancyBaseCandidatesResponse, { vacancyId: string }>({
@@ -231,7 +235,7 @@ const candidatesApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: ['VacancyCandidate'],
+      invalidatesTags: ['VacancyCandidate', 'Order'],
     }),
     selectVacancyCandidate: build.mutation<
       SelectedVacancyCandidateResponse,
@@ -242,7 +246,7 @@ const candidatesApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: ['VacancyCandidate'],
+      invalidatesTags: ['VacancyCandidate', 'Order'],
     }),
     markVacancyCandidateViewedByCustomer: build.mutation<void, { vacancyId: string; candidateId: string }>({
       query: ({ vacancyId, candidateId }) => ({

@@ -563,7 +563,8 @@ export function useWorkspaceShellController() {
   const workspaceScreen = resolveWorkspaceScreen(primaryScreen, {
     activeView,
     hasSelectedCandidate: Boolean(selectedCandidate),
-    hasSelectedOrder: Boolean(selectedOrder),
+    // Executor project details are rendered inside the dashboard workspace.
+    hasSelectedOrder: Boolean(selectedOrder) && !(role === 'Executor' && activeView === 'dashboard'),
   })
   const { data: myOrderResponse, refetch: refetchMyOrderResponse } = useGetMyOrderResponseQuery(
     role === 'Executor' && selectedOrder ? selectedOrder.id : skipToken,
@@ -940,9 +941,12 @@ export function useWorkspaceShellController() {
       setPreferredOrderId(orderId)
       setCreateCandidateVacancyId(vacancy.id)
       setIsCreateCandidatePageOpen(true)
-      setActiveView('candidates')
+      if (activeView !== 'dashboard') {
+        setActiveView('candidates')
+      }
     },
     [
+      activeView,
       setActiveView,
       setBanner,
       setIsCreateCandidatePageOpen,
@@ -962,6 +966,7 @@ export function useWorkspaceShellController() {
       }
       try {
         await addCandidateFromBase({ vacancyId: vacancy.id, candidateId }).unwrap()
+        retryExecutorCandidates()
         setBanner({ variant: 'success', message: 'Кандидат добавлен к вакансии.' })
         return true
       } catch (error) {
@@ -969,7 +974,7 @@ export function useWorkspaceShellController() {
         return false
       }
     },
-    [addCandidateFromBase, setBanner, vacanciesResponse],
+    [addCandidateFromBase, retryExecutorCandidates, setBanner, vacanciesResponse],
   )
   const handleRemoveCandidateFromOrder = useCallback(
     async (orderId: string, candidateId: string) => {

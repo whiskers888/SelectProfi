@@ -42,6 +42,15 @@ public sealed class CreateOrderPersistence(AppDbContext dbContext) : ICreateOrde
     public async Task<CreateOrderPersistenceResult> CreateAsync(Order order, CancellationToken cancellationToken)
     {
         dbContext.Orders.Add(order);
+        dbContext.ProjectActivities.Add(new ProjectActivity
+        {
+            Id = Guid.NewGuid(),
+            OrderId = order.Id,
+            ActorUserId = order.CustomerId,
+            Action = "OrderCreated",
+            Description = "Заказ создан.",
+            CreatedAtUtc = order.CreatedAtUtc
+        });
 
         try
         {

@@ -297,6 +297,9 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -314,6 +317,9 @@ namespace SelectProfi.backend.Migrations
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("EmployeeCompensation")
                         .IsRequired()
@@ -380,6 +386,8 @@ namespace SelectProfi.backend.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DueDate");
 
                     b.HasIndex("SpecializationId");
 
@@ -462,6 +470,81 @@ namespace SelectProfi.backend.Migrations
                     b.HasIndex("IsActive", "SortOrder", "Name");
 
                     b.ToTable("OrderSpecializations");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.ProjectActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId", "CreatedAtUtc");
+
+                    b.ToTable("ProjectActivities");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.ProjectDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long>("Length")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StorageKey")
+                        .IsUnique();
+
+                    b.HasIndex("OrderId", "CreatedAtUtc");
+
+                    b.ToTable("ProjectDocuments");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.RefreshSession", b =>
@@ -974,6 +1057,24 @@ namespace SelectProfi.backend.Migrations
                     b.Navigation("Executor");
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.ProjectActivity", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Orders.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.ProjectDocument", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Orders.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Users.RefreshSession", b =>

@@ -102,6 +102,12 @@ public static class OrdersProblemMap
         "order_price_locked",
         "После назначения исполнителя стоимость может изменить только администратор.");
 
+    private static readonly ApiProblemDescriptor OrderStatusFinal = new(
+        StatusCodes.Status409Conflict,
+        "Проект завершен",
+        "order_status_final",
+        "Завершенный проект нельзя изменить или повторно открыть.");
+
     private static readonly ApiProblemDescriptor DeleteOrderConflict = new(
         StatusCodes.Status409Conflict,
         "Конфликт",
@@ -204,6 +210,7 @@ public static class OrdersProblemMap
             UpdateOrderErrorCode.SpecializationNotFound => SpecializationNotFound,
             UpdateOrderErrorCode.PriceRequired => OrderPriceRequired,
             UpdateOrderErrorCode.PriceLocked => OrderPriceLocked,
+            UpdateOrderErrorCode.InvalidStatus => OrderStatusFinal,
             UpdateOrderErrorCode.Forbidden => OrderAccessForbidden,
             _ => UpdateOrderConflict
         };
