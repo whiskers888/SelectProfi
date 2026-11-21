@@ -2,7 +2,7 @@
 
 ## Рекомендуемый вариант: GitHub
 
-Репозиторий подключён к `origin` (`https://github.com/whiskers888/SelectProfi.git`) и имеет публичную видимость. Текущая рабочая ветка — `feature/night-shift-refactor`. Перед этим сохранением локальная ветка опережала `origin` на 32 коммита; push опубликует их и новые коммиты всем.
+Репозиторий подключён к `origin` (`https://github.com/whiskers888/SelectProfi.git`) и имеет публичную видимость. Текущая рабочая ветка — `feature/night-shift-refactor`. Любой push в этот репозиторий делает новые коммиты доступными всем.
 
 После коммита на основном компьютере отправьте ветку:
 
@@ -26,11 +26,86 @@ git switch feature/night-shift-refactor
 git pull --ff-only
 ```
 
+## MCP-серверы Codex CLI
+
+Ниже команды для серверов, зарегистрированных на основном компьютере по `codex mcp list` (проверено 2026-11-21). `codex mcp add` регистрирует сервер в пользовательском профиле Codex; это не переносит его токены или само приложение. На ноутбуке заранее установите Codex CLI, Node.js/npm для `npx`-серверов и .NET SDK для `dotnetdevmcp`. После настройки проверьте список командой `codex mcp list`. Формат CLI описан в [официальной документации Codex MCP](https://developers.openai.com/learn/docs-mcp).
+
+### CodeXRay
+
+```powershell
+codex mcp add codexray -- npx -y codexray serve
+```
+
+Из корня проекта создайте локальный индекс. Папка `.codexray/` исключена из Git, поэтому её нужно пересоздать на ноутбуке:
+
+```powershell
+npx -y codexray init --index --no-hooks
+npx -y codexray index --force --quiet
+```
+
+### Playwright
+
+```powershell
+codex mcp add playwright -- npx -y @playwright/mcp@latest
+```
+
+### YouGile
+
+Ключ вводится через защищённый prompt, а не литералом в команде, чтобы не записать его в историю PowerShell. Codex сохранит его в локальной конфигурации пользователя; не добавляйте этот профиль в Git.
+
+```powershell
+$secureKey = Read-Host "YouGile API key" -AsSecureString
+try {
+    $credential = [System.Management.Automation.PSCredential]::new("yougile", $secureKey)
+    $apiKey = $credential.GetNetworkCredential().Password
+    codex mcp add yougile --env "YOUGILE_API_KEY=$apiKey" -- npx -y @nebelov/yougile-mcp
+}
+finally {
+    Remove-Variable apiKey, credential, secureKey -ErrorAction SilentlyContinue
+}
+```
+
+### DotNetDevMCP
+
+На основном компьютере установлена версия `0.3.4` как глобальный .NET tool:
+
+```powershell
+dotnet tool install --global dotnetdevmcp --version 0.3.4
+codex mcp add dotnetdevmcp -- dotnetdevmcp
+```
+
+### Tella и AI Memory
+
+Tella использует OAuth; после добавления сервера выполните вход. Текущая конфигурация AI Memory содержит только адрес локального сервиса и имя переменной токена: `codex mcp add` его не устанавливает. Сначала установите/запустите AI Memory отдельно, задайте `AI_MEMORY_AUTH_TOKEN` в пользовательской среде Windows через доверенное хранилище секретов, затем зарегистрируйте адрес ниже.
+
+```powershell
+codex mcp add tella --url https://api.tella.com/mcp
+codex mcp login tella
+
+codex mcp add ai-memory --url http://127.0.0.1:49374/mcp --bearer-token-env-var AI_MEMORY_AUTH_TOKEN
+```
+
+Адрес AI Memory указан для текущей конфигурации; если сервис на ноутбуке слушает другой порт, подставьте его адрес.
+
+### Caveman
+
+Caveman MCP запускается отдельным локально установленным файлом. Текущая конфигурация содержит путь к бинарному файлу, но не установщик. Сначала установите Caveman из доверенного источника, затем зарегистрируйте его путь:
+
+```powershell
+codex mcp add caveman -- "$env:USERPROFILE\.caveman\bin\caveman-mcp.exe"
+```
+
+Текущий Codex также показывает `cua_repl` и `node_repl` — это рантаймы приложения Codex; `codex_app` присутствует, но выключен. Для них отдельные команды установки не нужны.
+
+## Интеграции аккаунта
+
+В текущем сеансе доступны ChatGPT Space, Codex Document Control, Figma, GitHub, Google Drive, Hotline, MagicPath, Pets, Plugin Management, Safety Settings, Web Search и Sites. Это интеграции платформы, а не серверы из `codex mcp list`; команды `codex mcp add` для них нет. На ноутбуке подключите нужные приложения в интерфейсе Codex/ChatGPT и выполните вход в соответствующие аккаунты.
+
 ## Навыки, инструкции и подключения Codex
 
 - Проектный навык [`.agents/skills/astra-orchestrator/SKILL.md`](../.agents/skills/astra-orchestrator/SKILL.md) хранится в репозитории и будет доступен после clone.
 - Корневой `AGENTS.md` сейчас исключён правилом `/agents.md` в `.gitignore`, поэтому текущие проектные инструкции автоматически на ноутбук не попадут. Для одинакового поведения нужно отдельно перенести этот файл либо решить, что общие инструкции следует хранить в Git.
-- Остальные доступные навыки, Codex/MCP-инструменты, авторизации и локальные настройки привязаны к среде пользователя и не переносятся одним Git-коммитом. На ноутбуке установите Codex, войдите в нужные сервисы и отдельно подключите требуемые плагины/инструменты. Не копируйте в репозиторий пользовательский каталог Codex, OAuth-токены или ключи.
+- Глобальные навыки, авторизации и локальные настройки привязаны к среде пользователя и не переносятся одним Git-коммитом. На ноутбуке установите нужные плагины/инструменты и войдите в сервисы отдельно. Не копируйте в репозиторий пользовательский каталог Codex, OAuth-токены или ключи.
 
 ## Локальные секреты
 
