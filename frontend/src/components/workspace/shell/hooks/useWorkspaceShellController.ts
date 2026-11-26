@@ -2,6 +2,7 @@ import { skipToken } from '@reduxjs/toolkit/query'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { includeFetchedOrderForDetails } from './orderDetails'
 import { clearAuthSession } from '@/app/authSessionSlice'
 import { routePaths } from '@/app/routePaths'
 import type { AppDispatch } from '@/app/store'
@@ -40,6 +41,7 @@ import {
   useGetOrderResponsesQuery,
   useGetOrderSpecializationsQuery,
   useGetOrdersQuery,
+  useGetOrderByIdQuery,
   useRejectOrderResponseExecutorMutation,
   useRespondToOrderMutation,
   useSelectOrderResponseExecutorMutation,
@@ -252,6 +254,17 @@ export function useWorkspaceShellController() {
       : canLoadServerOrders && ordersResponse
         ? serverOrders
         : dataset.orders
+  const orderIdFromUrl = new URLSearchParams(location.search).get('orderId')
+  const { currentData: orderFromUrl } = useGetOrderByIdQuery(
+    canLoadServerOrders && orderIdFromUrl && !baseOrders.some((order) => order.id === orderIdFromUrl)
+      ? orderIdFromUrl
+      : skipToken,
+  )
+  const ordersForDetails = includeFetchedOrderForDetails(
+    baseOrders,
+    orderIdFromUrl,
+    orderFromUrl ? toWorkspaceOrder(orderFromUrl) : undefined,
+  )
   const preferredDashboardOrderId =
     activeView === 'dashboard'
       ? baseOrders.find((order) => order.id === preferredOrderId)?.id
@@ -488,7 +501,7 @@ export function useWorkspaceShellController() {
     activeView,
     baseOrders:
       role === 'Executor'
-        ? baseOrders.map((order) => {
+        ? ordersForDetails.map((order) => {
             const candidatesCount = executorGlobalCandidates.filter(
               (candidate) => candidate.orderId === order.id,
             ).length
@@ -498,7 +511,7 @@ export function useWorkspaceShellController() {
               responses: candidatesCount > 0 ? candidatesCount : order.responses,
             }
           })
-        : baseOrders,
+        : ordersForDetails,
     canLoadExecutorBaseCandidates,
     canLoadServerCandidates,
     canLoadServerOrders,
@@ -926,6 +939,13 @@ export function useWorkspaceShellController() {
       setPreferredOrderId,
       startViewTransition,
     })
+  const handleOpenOrderDetailsById = useCallback(
+    (orderId: string) => {
+      setDetailsInUrl({ orderId, candidateId: null })
+      setPreferredOrderId(orderId)
+    },
+    [setDetailsInUrl, setPreferredOrderId],
+  )
 
   const handleCreateCandidateFromOrder = useCallback(
     (orderId: string) => {
@@ -1316,6 +1336,7 @@ export function useWorkspaceShellController() {
     handleSendMessage,
     handleOpenCandidateDetails,
     handleOpenOrderDetails,
+    handleOpenOrderDetailsById,
     handlePauseOrders,
     handleRejectOrderExecutor,
     handleRespondToOrder,

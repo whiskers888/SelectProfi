@@ -4,17 +4,14 @@ import { CalendarPanel } from '../panels/CalendarPanel'
 import { CandidateCreatePagePanel } from '../panels/CandidateCreatePagePanel'
 import { CandidateDetailsPagePanel } from '../panels/CandidateDetailsPagePanel'
 import { MainFeedPanel } from '../panels/MainFeedPanel'
+import { MessagesPanel } from '../panels/MessagesPanel'
 import { OrderCreatePagePanel } from '../panels/OrderCreatePagePanel'
 import { OrderDetailsPagePanel } from '../panels/OrderDetailsPagePanel'
 import { presetCandidateStageFilter } from '../panels/hooks/useMainFeedPanelController'
 import { PipelinePanel } from '../panels/PipelinePanel'
 import { StatsGrid } from '../panels/StatsGrid'
 import { VacancyCreatePagePanel } from '../panels/VacancyCreatePagePanel'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { Header } from './Header'
 import { useWorkspaceShellController } from './hooks/useWorkspaceShellController'
@@ -24,7 +21,6 @@ import { createActionLabel, createHeaderTitle } from './workspaceShell.helpers'
 type WorkspaceShellViewProps = ReturnType<typeof useWorkspaceShellController>
 
 export function WorkspaceShellView({
-  activeThread,
   activeView,
   analyticsError,
   applicantDashboardStats,
@@ -65,7 +61,6 @@ export function WorkspaceShellView({
   filteredBaseCandidates,
   filteredCandidates,
   filteredOrders,
-  filteredThreads,
   handleActivateOrders,
   handleArchiveOrders,
   handleCreateApplicantResponseFormFieldChange,
@@ -89,6 +84,7 @@ export function WorkspaceShellView({
   handleRetryApplicantDashboardStats,
   handleOpenCandidateDetails,
   handleOpenOrderDetails,
+  handleOpenOrderDetailsById,
   handlePauseOrders,
   handleRetryOrders,
   onRetryDashboardVacancies,
@@ -103,7 +99,6 @@ export function WorkspaceShellView({
   handleSelectVacancyCandidate,
   handleRetryAnalytics,
   handleSelectOrderExecutor,
-  handleSendMessage,
   handleToggleRole,
   handleViewChange,
   hasRespondedToSelectedOrder,
@@ -162,7 +157,6 @@ export function WorkspaceShellView({
   selectedOrderCandidates,
   selectedOrderVacancyPreview,
   selectedOrderWithResponses,
-  setPreferredChatId,
   setPreferredOrderId,
   setSearchValue,
   toggleSidebar,
@@ -214,6 +208,7 @@ export function WorkspaceShellView({
     role === 'Executor' && activeView === 'dashboard' && workspaceScreen === 'feed'
   const isExecutorProjectExchange =
     role === 'Executor' && activeView === 'orders' && workspaceScreen === 'feed'
+  const panelOwnsPageTitle = activeView === 'candidates' || activeView === 'chats' || activeView === 'meetings'
 
   // Один renderer выбирает единственный полноэкранный surface.
   return (
@@ -261,7 +256,7 @@ export function WorkspaceShellView({
           <main
             className={`preview11-content flex-1${isExecutorDashboard ? ' preview11-content-executor-dashboard' : isExecutorProjectExchange ? ' preview11-content-exchange' : ' space-y-4'}`}
           >
-            {!isExecutorProjectExchange && activeView !== 'candidates' ? (
+            {!isExecutorProjectExchange && !panelOwnsPageTitle ? (
               <div className={`space-y-1${isExecutorDashboard ? ' sr-only' : ''}`}>
                 <h1 className="text-xl font-extrabold leading-tight text-foreground">
                   {workspaceTitle}
@@ -596,99 +591,9 @@ export function WorkspaceShellView({
                   </>
                 )}
 
-                {activeView === 'meetings' ? <CalendarPanel meetings={null} /> : null}
+                {activeView === 'meetings' ? <CalendarPanel role={role} /> : null}
 
-                {activeView === 'chats' ? (
-                  <Card className="rounded-xl border-border p-4 shadow-none">
-                    <h3 className="text-base font-semibold text-foreground">Чаты</h3>
-
-                    {isViewLoading ? (
-                      <div className="mt-4 flex items-center gap-3 text-sm text-muted-foreground">
-                        <span
-                          aria-hidden="true"
-                          className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-blue-600"
-                        />
-                          Открываем раздел...
-                      </div>
-                    ) : filteredThreads.length === 0 ? (
-                      <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground" role="status">
-                        Чаты пока не подключены. История и отправка сообщений недоступны.
-                      </div>
-                    ) : (
-                      <div className="mt-4 grid gap-3 lg:grid-cols-[320px_1fr]">
-                        <div className="space-y-2">
-                          {filteredThreads.map((thread) => (
-                            <button
-                              key={thread.id}
-                              className={cn(
-                                'w-full rounded-xl border p-3 text-left transition-colors',
-                                activeThread?.id === thread.id
-                                  ? 'border-primary/30 bg-primary/10'
-                                  : 'border-border bg-card hover:bg-muted',
-                              )}
-                              onClick={() => setPreferredChatId(thread.id)}
-                              type="button"
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm font-semibold text-foreground">
-                                  {thread.participant}
-                                </p>
-                                {thread.unread > 0 ? (
-                                  <Badge variant="default">{thread.unread}</Badge>
-                                ) : null}
-                              </div>
-                              <p className="mt-1 text-xs text-muted-foreground">{thread.preview}</p>
-                            </button>
-                          ))}
-                        </div>
-
-                        <div className="rounded-xl border border-border bg-card">
-                          <p className="border-b border-border px-4 py-3 text-sm text-muted-foreground" role="status">
-                            Отправка сообщений недоступна: чат не подключён.
-                          </p>
-                          <div className="border-b border-border px-4 py-3">
-                            <p className="text-sm font-semibold text-foreground">
-                              {activeThread?.participant}
-                            </p>
-                          </div>
-                          <div className="max-h-[420px] space-y-3 overflow-y-auto px-4 py-4">
-                            {activeThread?.messages.map((message) => (
-                              <article
-                                key={message.id}
-                                className={cn(
-                                  'max-w-[78%] rounded-xl px-3 py-2 text-sm leading-relaxed',
-                                  message.author === 'me'
-                                    ? 'ml-auto bg-primary/10 text-primary'
-                                    : 'bg-muted text-muted-foreground',
-                                )}
-                              >
-                                <p>{message.text}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">{message.time}</p>
-                              </article>
-                            ))}
-                          </div>
-                          <div className="flex items-center gap-2 border-t border-border px-4 py-3">
-                            <Input
-                              className="h-10 rounded-xl border-border text-foreground"
-                              aria-label="Сообщение"
-                              disabled
-                              placeholder="Чат не подключён"
-                              value=""
-                            />
-                            <Button
-                              className="h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                              onClick={handleSendMessage}
-                              disabled
-                              type="button"
-                            >
-                              Отправить
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </Card>
-                ) : null}
+                {activeView === 'chats' ? <MessagesPanel onOpenOrder={handleOpenOrderDetailsById} role={role} /> : null}
 
                 {activeView === 'analytics' ? (
                   <PipelinePanel

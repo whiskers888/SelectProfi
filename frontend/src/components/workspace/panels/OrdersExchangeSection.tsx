@@ -104,12 +104,12 @@ export function OrdersExchangeSection({
   const countSaved = useGetOrdersQuery(role === 'Executor' ? { limit: 1, includeArchived: true, favoritesOnly: true } : skipToken).data?.totalCount ?? 0
   const countResponses = useGetOrdersQuery(role === 'Executor' ? { limit: 1, includeArchived: true, responsesOnly: true } : skipToken).data?.totalCount ?? 0
   const { currentData: queriedSelectedOrder } = useGetOrderByIdQuery(localSelectedOrderId ?? skipToken)
-  useEffect(() => {
-    const totalCount = exchangeData?.totalCount
-    if (totalCount === undefined) return
-    const lastValidPage = Math.max(1, Math.ceil(totalCount / exchangePageSize))
-    if (exchangePage > lastValidPage) setExchangePage(lastValidPage)
-  }, [exchangeData?.totalCount, exchangePage, exchangePageSize])
+  const lastValidPage = exchangeData?.totalCount === undefined
+    ? null
+    : Math.max(1, Math.ceil(exchangeData.totalCount / exchangePageSize))
+  if (lastValidPage !== null && exchangePage > lastValidPage) {
+    setExchangePage(lastValidPage)
+  }
 
   const handleCloseSelectedOrder = () => {
     setLocalSelectedOrderId(null)
