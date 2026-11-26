@@ -212,6 +212,8 @@ export function WorkspaceShellView({
 
   const isExecutorDashboard =
     role === 'Executor' && activeView === 'dashboard' && workspaceScreen === 'feed'
+  const isExecutorProjectExchange =
+    role === 'Executor' && activeView === 'orders' && workspaceScreen === 'feed'
 
   // Один renderer выбирает единственный полноэкранный surface.
   return (
@@ -238,7 +240,7 @@ export function WorkspaceShellView({
         />
 
         <div
-          className={`flex min-h-0 flex-1${isExecutorDashboard ? ' preview11-workspace-row-executor-dashboard' : ''}`}
+          className={`flex min-h-0 flex-1${isExecutorDashboard ? ' preview11-workspace-row-executor-dashboard' : ''}${isExecutorProjectExchange ? ' preview11-workspace-row-exchange' : ''}`}
         >
           <Sidebar
             activeView={activeView}
@@ -257,16 +259,18 @@ export function WorkspaceShellView({
           <div className={`preview11-main${isExecutorDashboard ? ' preview11-main-executor-dashboard' : ''}`}>
 
           <main
-            className={`preview11-content flex-1${isExecutorDashboard ? ' preview11-content-executor-dashboard' : ' space-y-4'}`}
+            className={`preview11-content flex-1${isExecutorDashboard ? ' preview11-content-executor-dashboard' : isExecutorProjectExchange ? ' preview11-content-exchange' : ' space-y-4'}`}
           >
-            <div className={`space-y-1${isExecutorDashboard ? ' sr-only' : ''}`}>
-              <h1 className="text-xl font-extrabold leading-tight text-foreground">
-                {workspaceTitle}
-              </h1>
-              {workspaceScreen === 'profile' ? (
-                <p className="text-sm text-muted-foreground">Личные данные и настройки роли</p>
-              ) : null}
-            </div>
+            {!isExecutorProjectExchange ? (
+              <div className={`space-y-1${isExecutorDashboard ? ' sr-only' : ''}`}>
+                <h1 className="text-xl font-extrabold leading-tight text-foreground">
+                  {workspaceTitle}
+                </h1>
+                {workspaceScreen === 'profile' ? (
+                  <p className="text-sm text-muted-foreground">Личные данные и настройки роли</p>
+                ) : null}
+              </div>
+            ) : null}
             {workspaceScreen === 'order-details' && selectedOrder ? (
               <OrderDetailsPagePanel
                 key={`${selectedOrder.id}:${selectedOrder.executorId ?? 'none'}`}

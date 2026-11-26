@@ -58,7 +58,6 @@ export function OrdersExchangeSection({
 }: MainFeedPanelViewProps) {
   const [isApplicantVacancyFiltersOpen, setIsApplicantVacancyFiltersOpen] = useState(false)
   const [exchangeQuery, setExchangeQuery] = useState('')
-  const [exchangeLocation, setExchangeLocation] = useState('')
   const [exchangeSpecialization, setExchangeSpecialization] = useState('')
   const [exchangeMode, setExchangeMode] = useState('')
   const [exchangeWarranty, setExchangeWarranty] = useState('')
@@ -87,7 +86,6 @@ export function OrdersExchangeSection({
     includeArchived: exchangeTab !== 'all',
     exchangeOnly: exchangeTab === 'all',
     search: exchangeDebouncedQuery || undefined,
-    location: exchangeLocation || undefined,
     specializationId,
     workMode: (exchangeMode || undefined) as 'Remote' | 'Office' | 'Hybrid' | undefined,
     hasWarranty: exchangeWarranty ? exchangeWarranty === 'yes' : undefined,
@@ -175,7 +173,7 @@ export function OrdersExchangeSection({
 
       return (
         <div className="space-y-4 lg:flex lg:items-start lg:gap-4 lg:space-y-0">
-          <Card className={cn('min-w-0 rounded-xl border-border p-4 shadow-none', selectedOrderDetails ? 'max-lg:hidden lg:w-1/3' : 'w-full')}>
+          <Card className={cn('min-w-0 rounded-none border-0 bg-transparent p-0 shadow-none', selectedOrderDetails ? 'max-lg:hidden lg:w-1/3' : 'w-full')}>
             {exchangeError ? <p role="alert" className="mb-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{exchangeError}</p> : null}
             {isExchangeError ? (
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
@@ -185,7 +183,7 @@ export function OrdersExchangeSection({
             ) : null}
             <div className="mb-4">
               <p className="text-xs text-muted-foreground">Кабинет исполнителя / Биржа проектов</p>
-              <h1 className="mt-2 text-2xl font-semibold text-foreground">Биржа проектов</h1>
+              <h1 className="mt-6 text-3xl font-bold text-foreground">Биржа проектов</h1>
             </div>
             <div className="mb-4 flex gap-5 overflow-x-auto border-b border-border" role="tablist" aria-label="Проекты">
               {([
@@ -205,7 +203,7 @@ export function OrdersExchangeSection({
                 </button>
               ))}
             </div>
-            <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-3">
+            <div className="space-y-2.5 rounded-xl border border-border bg-card p-4">
               <label className="block">
                 <span className="sr-only">Поиск проектов</span>
                 <input
@@ -216,74 +214,63 @@ export function OrdersExchangeSection({
                   value={exchangeQuery}
                 />
               </label>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-3">
-                <label className="text-xs text-muted-foreground">
-                  Специализация
-                  <select aria-label="Специализация" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeSpecialization(event.target.value); setExchangePage(1) }} value={exchangeSpecialization}>
+              <div className="flex flex-wrap items-end gap-2">
+                <label className="w-[155px]">
+                  <span className="sr-only">Специализация</span>
+                  <select aria-label="Специализация" className="h-8 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeSpecialization(event.target.value); setExchangePage(1) }} value={exchangeSpecialization}>
                     <option value="">Все специализации</option>
                     {specializations.map((value) => <option key={value} value={value}>{value}</option>)}
                   </select>
                 </label>
-                <label className="text-xs text-muted-foreground">Локация
-                  <input aria-label="Локация" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeLocation(event.target.value); setExchangePage(1) }} placeholder="Любой город" value={exchangeLocation} />
-                </label>
-                <label className="text-xs text-muted-foreground">
-                  Формат работы
-                  <select aria-label="Формат работы" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeMode(event.target.value); setExchangePage(1) }} value={exchangeMode}>
+                <label className="w-[125px]">
+                  <span className="sr-only">Формат работы</span>
+                  <select aria-label="Формат работы" className="h-8 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeMode(event.target.value); setExchangePage(1) }} value={exchangeMode}>
                     <option value="">Любой формат</option>
                     <option value="Remote">Удалённо</option>
                     <option value="Office">В офисе</option>
                     <option value="Hybrid">Гибридный</option>
                   </select>
                 </label>
-                <label className="text-xs text-muted-foreground">
-                  Гарантия
-                  <select aria-label="Гарантия" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeWarranty(event.target.value); setExchangePage(1) }} value={exchangeWarranty}>
+                <label className="w-[133px]">
+                  <span className="sr-only">Гарантия</span>
+                  <select aria-label="Гарантия" className="h-8 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeWarranty(event.target.value); setExchangePage(1) }} value={exchangeWarranty}>
                     <option value="">Любая гарантия</option>
                     <option value="yes">С гарантией</option>
                     <option value="no">Без гарантии</option>
                   </select>
                 </label>
-                <label className="text-xs text-muted-foreground">
-                  Вознаграждение от
-                  <select aria-label="Минимальное вознаграждение" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeMinimumReward(event.target.value); setExchangePage(1) }} value={exchangeMinimumReward}>
+                <label className="w-[142px]">
+                  <span className="sr-only">Вознаграждение от</span>
+                  <select aria-label="Минимальное вознаграждение" className="h-8 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => { setExchangeMinimumReward(event.target.value); setExchangePage(1) }} value={exchangeMinimumReward}>
                     <option value="">Любое</option>
                     <option value="60000">60 000 ₽</option>
                     <option value="90000">90 000 ₽</option>
                     <option value="120000">120 000 ₽</option>
                   </select>
                 </label>
-                <label className="text-xs text-muted-foreground">
-                  Сортировка
-                  <select aria-label="Сортировка проектов" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => setExchangeSort(event.target.value as typeof exchangeSort)} value={exchangeSort}>
-                    <option value="new">Сначала новые</option>
-                    <option value="salary">По зарплате кандидата ↓</option>
-                    <option value="reward">По оплате за подбор ↓</option>
-                    <option value="bonus">По оплате за гарантию ↓</option>
-                  </select>
-                </label>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <button className="text-sm font-medium text-primary hover:underline" onClick={() => { setExchangeQuery(''); setExchangeLocation(''); setExchangeSpecialization(''); setExchangeMode(''); setExchangeWarranty(''); setExchangeMinimumReward(''); setExchangePage(1) }} type="button">Сбросить фильтры</button>
-                <div className="flex rounded-lg border border-border bg-background p-1" aria-label="Вид списка">
-                  <button aria-pressed={exchangeLayout === 'feed'} className={cn('rounded px-3 py-1.5 text-sm', exchangeLayout === 'feed' && 'bg-primary/10 text-primary')} onClick={() => setExchangeLayout('feed')} type="button">Лента</button>
-                  <button aria-pressed={exchangeLayout === 'table'} className={cn('rounded px-3 py-1.5 text-sm', exchangeLayout === 'table' && 'bg-primary/10 text-primary')} onClick={() => setExchangeLayout('table')} type="button">Таблица</button>
-                </div>
+                <button className="h-8 text-left text-sm font-medium text-primary hover:underline" onClick={() => { setExchangeQuery(''); setExchangeSpecialization(''); setExchangeMode(''); setExchangeWarranty(''); setExchangeMinimumReward(''); setExchangeSort('new'); setExchangePage(1) }} type="button">Сбросить</button>
               </div>
             </div>
-            <div className="mt-4 flex items-center justify-between gap-3 text-sm">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
               <strong>Найдено проектов: {totalCount}</strong>
-              <label className="text-xs text-muted-foreground">На странице: <select aria-label="Проектов на странице" className="rounded border border-border bg-background p-1" value={pageSize} onChange={(event) => { setExchangePageSize(Number(event.target.value)); setExchangePage(1) }}>{[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}</select></label>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex rounded-lg border border-border bg-background p-1" aria-label="Вид списка">
+                  <button aria-pressed={exchangeLayout === 'feed'} className={cn('rounded px-2 py-0.5 text-sm', exchangeLayout === 'feed' && 'bg-primary/10 text-primary')} onClick={() => setExchangeLayout('feed')} type="button">Лента</button>
+                  <button aria-pressed={exchangeLayout === 'table'} className={cn('rounded px-2 py-0.5 text-sm', exchangeLayout === 'table' && 'bg-primary/10 text-primary')} onClick={() => setExchangeLayout('table')} type="button">Таблица</button>
+                </div>
+                <label className="text-xs text-muted-foreground"><span className="sr-only">Сортировка:</span><select aria-label="Сортировка проектов" className="h-9 max-w-52 rounded-lg border border-border bg-background px-2 text-sm text-foreground" onChange={(event) => setExchangeSort(event.target.value as typeof exchangeSort)} value={exchangeSort}><option value="new">Сначала новые</option><option value="salary">По зарплате кандидата ↓</option><option value="reward">По оплате за подбор ↓</option><option value="bonus">По оплате за гарантию ↓</option></select></label>
+                <label className="text-xs text-muted-foreground">На странице: <select aria-label="Проектов на странице" className="h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground" value={pageSize} onChange={(event) => { setExchangePageSize(Number(event.target.value)); setExchangePage(1) }}>{[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}</select></label>
+              </div>
             </div>
             {isExchangeFetching && !exchangeData ? <p className="py-8 text-center text-sm text-muted-foreground" role="status">Загружаем проекты…</p> : null}
             {totalCount === 0 && !isExchangeFetching && !isExchangeError ? (
               <div className="mt-4 rounded-xl border border-dashed border-border p-8 text-center">
                 <p className="font-medium">{exchangeTab === 'saved' ? 'В избранном пока нет проектов' : exchangeTab === 'responses' ? 'Откликов пока нет' : 'Подходящих проектов не найдено'}</p>
                 <p className="mt-1 text-sm text-muted-foreground">Измените запрос или сбросьте фильтры, чтобы увидеть другие проекты.</p>
-                <button className="mt-3 text-sm font-medium text-primary hover:underline" onClick={() => { setExchangeTab('all'); setExchangeQuery(''); setExchangeLocation(''); setExchangeSpecialization(''); setExchangeMode(''); setExchangeWarranty(''); setExchangeMinimumReward(''); setExchangePage(1) }} type="button">Показать все проекты</button>
+                <button className="mt-3 text-sm font-medium text-primary hover:underline" onClick={() => { setExchangeTab('all'); setExchangeQuery(''); setExchangeSpecialization(''); setExchangeMode(''); setExchangeWarranty(''); setExchangeMinimumReward(''); setExchangeSort('new'); setExchangePage(1) }} type="button">Показать все проекты</button>
               </div>
             ) : exchangeLayout === 'feed' ? (
-              <div className="mt-3 space-y-3">
+              <div className="mt-2 space-y-3">
                 {pageOrders.map((order) => (
                   <article className="grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-[minmax(0,1fr)_auto]" key={order.id}>
                     <button className="min-w-0 text-left" onClick={() => openOrder(order)} type="button">
@@ -303,7 +290,7 @@ export function OrdersExchangeSection({
                 ))}
               </div>
             ) : (
-              <div className="mt-3 overflow-x-auto rounded-xl border border-border">
+              <div className="mt-2 overflow-x-auto rounded-xl border border-border">
                 <Table>
                   <TableHeader><TableRow><TableHead>Вакансия / заказчик</TableHead><TableHead>Место работы</TableHead><TableHead>Зарплата в месяц</TableHead><TableHead>За подбор</TableHead><TableHead>За гарантию</TableHead><TableHead>Избранное</TableHead></TableRow></TableHeader>
                   <TableBody>{pageOrders.map((order) => <TableRow key={order.id}>

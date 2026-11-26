@@ -61,6 +61,18 @@ function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
     return 'Биржа проектов'
   }
 
+  if (role === 'Executor' && view === 'candidates') {
+    return 'База кандидатов'
+  }
+
+  if (role === 'Executor' && view === 'chats') {
+    return 'Сообщения'
+  }
+
+  if (role === 'Executor' && view === 'meetings') {
+    return 'Календарь'
+  }
+
   if (role === 'Applicant' && view === 'dashboard') {
     return 'Мои отклики'
   }
@@ -107,7 +119,13 @@ export function Sidebar({
   const visibleViewOptions =
     role === 'Customer'
       ? workspaceViewOptions.filter((view) => view.value !== 'orders')
-      : workspaceViewOptions.filter((view) => view.value !== 'documents')
+      : workspaceViewOptions
+          .filter((view) => view.value !== 'documents')
+          .sort((left, right) => {
+            if (role !== 'Executor') return 0
+            const order: WorkspaceView[] = ['dashboard', 'orders', 'candidates', 'chats', 'meetings', 'analytics']
+            return order.indexOf(left.value) - order.indexOf(right.value)
+          })
 
   // Мобильный drawer: sidebar остаётся в DOM, на узких экранах едет из-за левого края по классу -mobile-open.
   return (
