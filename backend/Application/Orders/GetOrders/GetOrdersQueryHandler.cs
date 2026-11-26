@@ -16,19 +16,49 @@ public sealed class GetOrdersQueryHandler(IGetOrdersPersistence persistence)
             query.RequesterUserId,
             query.RequesterRole,
             query.IncludeArchived,
+            query.ExchangeOnly,
+            query.Search,
+            query.Location,
+            query.SpecializationId,
+            query.WorkMode,
+            query.HasWarranty,
+            query.MinimumReward,
+            query.DefaultServiceCommissionRate,
+            query.FavoritesOnly,
+            query.ResponsesOnly,
+            query.SortBy,
             query.Limit,
             query.Offset,
             cancellationToken);
+        var totalCount = await persistence.CountVisibleOrdersAsync(
+            query.RequesterUserId, query.RequesterRole, query.IncludeArchived, query.ExchangeOnly,
+            query.Search, query.Location, query.SpecializationId, query.WorkMode,
+            query.HasWarranty, query.MinimumReward, query.DefaultServiceCommissionRate,
+            query.FavoritesOnly, query.ResponsesOnly,
+            cancellationToken);
+
+        var exchangeStates = query.RequesterRole == UserRole.Executor
+            ? await persistence.FindExchangeStatesAsync(query.RequesterUserId, orders.Select(order => order.Id).ToArray(), cancellationToken)
+            : new Dictionary<Guid, OrderExchangeState>();
 
         var items = orders.Select(order => new GetOrdersItemResult
         {
             OrderId = order.Id,
+            IsFavorite = exchangeStates.TryGetValue(order.Id, out var state) && state.IsFavorite,
+            MyResponseStatus = exchangeStates.TryGetValue(order.Id, out state) ? state.MyResponseStatus : null,
+            MyResponseMessage = exchangeStates.TryGetValue(order.Id, out state) ? state.MyResponseMessage : null,
             CustomerId = order.CustomerId,
             ExecutorId = order.ExecutorId,
             Title = order.Title,
             Description = order.Description,
             Location = order.Location,
             EmployeeCompensation = order.EmployeeCompensation,
+            WorkMode = order.WorkMode,
+            SalaryMin = order.SalaryMin,
+            SalaryMax = order.SalaryMax,
+            FulfillmentDays = order.FulfillmentDays,
+            WarrantyMonths = order.WarrantyMonths,
+            GuaranteeReward = order.GuaranteeReward,
             Functional = order.Functional,
             Requirements = order.Requirements,
             OtherConditions = order.OtherConditions,
@@ -52,7 +82,8 @@ public sealed class GetOrdersQueryHandler(IGetOrdersPersistence persistence)
             ErrorCode = GetOrdersErrorCode.None,
             Items = items,
             Limit = query.Limit,
-            Offset = query.Offset
+            Offset = query.Offset,
+            TotalCount = totalCount
         };
     }
 }

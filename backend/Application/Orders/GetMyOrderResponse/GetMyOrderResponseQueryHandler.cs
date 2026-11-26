@@ -17,10 +17,15 @@ public sealed class GetMyOrderResponseQueryHandler(IGetMyOrderResponsePersistenc
         if (order is null || order.DeletedAtUtc is not null)
             return new GetMyOrderResponseResult { ErrorCode = GetMyOrderResponseErrorCode.NotFound };
 
-        if (!OrderAccessRules.CanReadOrder(query.RequesterRole, query.RequesterUserId, order.CustomerId, order.ExecutorId))
-            return new GetMyOrderResponseResult { ErrorCode = GetMyOrderResponseErrorCode.Forbidden };
-
         var response = await persistence.FindExecutorResponseAsync(query.OrderId, query.RequesterUserId, cancellationToken);
+
+        if (!OrderAccessRules.CanReadOrder(
+                query.RequesterRole,
+                query.RequesterUserId,
+                order.CustomerId,
+                order.ExecutorId,
+                hasOwnResponse: response is not null))
+            return new GetMyOrderResponseResult { ErrorCode = GetMyOrderResponseErrorCode.Forbidden };
 
         return new GetMyOrderResponseResult
         {
@@ -28,6 +33,7 @@ public sealed class GetMyOrderResponseQueryHandler(IGetMyOrderResponsePersistenc
             OrderId = query.OrderId,
             HasResponse = response is not null,
             Status = response?.Status,
+            Message = response?.Message,
             UpdatedAtUtc = response?.UpdatedAtUtc
         };
     }

@@ -329,10 +329,17 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid?>("ExecutorId")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("FulfillmentDays")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Functional")
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<decimal?>("GuaranteeReward")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -357,6 +364,14 @@ namespace SelectProfi.backend.Migrations
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<decimal?>("SalaryMax")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal?>("SalaryMin")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal?>("ServiceCommissionRate")
                         .HasPrecision(6, 5)
@@ -385,6 +400,13 @@ namespace SelectProfi.backend.Migrations
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("WarrantyMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("WorkMode")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DueDate");
@@ -411,6 +433,11 @@ namespace SelectProfi.backend.Migrations
                     b.Property<Guid>("ExecutorId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
@@ -434,6 +461,24 @@ namespace SelectProfi.backend.Migrations
                     b.HasIndex("OrderId", "Status");
 
                     b.ToTable("OrderExecutorResponses");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderFavorite", b =>
+                {
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExecutorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("OrderId", "ExecutorId");
+
+                    b.HasIndex("ExecutorId");
+
+                    b.ToTable("OrderFavorites");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderSpecialization", b =>
@@ -1052,6 +1097,25 @@ namespace SelectProfi.backend.Migrations
                         .WithMany()
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Executor");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderFavorite", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
+                        .WithMany()
+                        .HasForeignKey("ExecutorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SelectProfi.backend.Domain.Orders.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Executor");

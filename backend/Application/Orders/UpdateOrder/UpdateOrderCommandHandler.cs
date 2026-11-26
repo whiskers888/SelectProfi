@@ -41,6 +41,13 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
         if (command.EmployeeCompensation is not null)
             order.EmployeeCompensation = command.EmployeeCompensation.Trim();
 
+        if (command.WorkMode is not null) order.WorkMode = command.WorkMode;
+        if (command.SalaryMin.HasValue) order.SalaryMin = command.SalaryMin;
+        if (command.SalaryMax.HasValue) order.SalaryMax = command.SalaryMax;
+        if (command.FulfillmentDays.HasValue) order.FulfillmentDays = command.FulfillmentDays;
+        if (command.WarrantyMonths.HasValue) order.WarrantyMonths = command.WarrantyMonths;
+        if (command.GuaranteeReward.HasValue) order.GuaranteeReward = command.GuaranteeReward;
+
         if (command.Functional is not null)
             order.Functional = command.Functional.Trim();
 
@@ -70,7 +77,7 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             order.Specialization = command.Specialization.Trim();
         }
 
-        if (command.Price.HasValue && order.ExecutorId.HasValue && command.RequesterRole != UserRole.Admin)
+        if ((command.Price.HasValue || command.GuaranteeReward.HasValue) && order.ExecutorId.HasValue && command.RequesterRole != UserRole.Admin)
             return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.PriceLocked };
 
         if (command.Price.HasValue)
@@ -92,6 +99,9 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
         if (command.Status.HasValue)
             order.Status = command.Status.Value;
 
+        if (!OrderExchangeTerms.AreValid(order))
+            return new UpdateOrderResult { ErrorCode = UpdateOrderErrorCode.InvalidExchangeTerms };
+
         order.UpdatedAtUtc = DateTime.UtcNow;
 
         var saveResult = await persistence.SaveChangesAsync(cancellationToken);
@@ -108,6 +118,12 @@ public sealed class UpdateOrderCommandHandler(IUpdateOrderPersistence persistenc
             Description = order.Description,
             Location = order.Location,
             EmployeeCompensation = order.EmployeeCompensation,
+            WorkMode = order.WorkMode,
+            SalaryMin = order.SalaryMin,
+            SalaryMax = order.SalaryMax,
+            FulfillmentDays = order.FulfillmentDays,
+            WarrantyMonths = order.WarrantyMonths,
+            GuaranteeReward = order.GuaranteeReward,
             Functional = order.Functional,
             Requirements = order.Requirements,
             OtherConditions = order.OtherConditions,

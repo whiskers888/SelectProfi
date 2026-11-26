@@ -21,6 +21,8 @@ public sealed class OrderExecutorResponse
 
     public OrderResponseStatus Status { get; set; } = OrderResponseStatus.Pending;
 
+    public string Message { get; set; } = string.Empty;
+
     public DateTime CreatedAtUtc { get; set; }
 
     public DateTime UpdatedAtUtc { get; set; }

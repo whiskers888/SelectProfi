@@ -12,5 +12,7 @@ public sealed class GetMyOrderResponseResult
 
     public OrderResponseStatus? Status { get; init; }
 
+    public string? Message { get; init; }
+
     public DateTime? UpdatedAtUtc { get; init; }
 }

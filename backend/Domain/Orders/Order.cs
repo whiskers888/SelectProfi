@@ -32,6 +32,15 @@ public sealed class Order
     [MaxLength(255)]
     public string EmployeeCompensation { get; set; } = string.Empty;
 
+    [MaxLength(16)]
+    public string? WorkMode { get; set; }
+
+    public decimal? SalaryMin { get; set; }
+    public decimal? SalaryMax { get; set; }
+    public int? FulfillmentDays { get; set; }
+    public int? WarrantyMonths { get; set; }
+    public decimal? GuaranteeReward { get; set; }
+
     [MaxLength(4000)]
     public string Functional { get; set; } = string.Empty;
 

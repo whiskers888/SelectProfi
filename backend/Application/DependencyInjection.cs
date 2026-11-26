@@ -32,6 +32,7 @@ using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
 using SelectProfi.backend.Application.Orders.RespondToOrder;
+using SelectProfi.backend.Application.Orders.SetOrderFavorite;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
 using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
@@ -67,6 +68,7 @@ public static class
         services.AddScoped<ICommandHandler<CreateOrderSpecializationCommand, CreateOrderSpecializationResult>, CreateOrderSpecializationCommandHandler>();
         services.AddScoped<ICommandHandler<RejectOrderResponseCommand, RejectOrderResponseResult>, RejectOrderResponseCommandHandler>();
         services.AddScoped<ICommandHandler<RespondToOrderCommand, RespondToOrderResult>, RespondToOrderCommandHandler>();
+        services.AddScoped<ICommandHandler<SetOrderFavoriteCommand, SetOrderFavoriteResult>, SetOrderFavoriteCommandHandler>();
         services.AddScoped<ICommandHandler<WithdrawOrderResponseCommand, WithdrawOrderResponseResult>, WithdrawOrderResponseCommandHandler>();
         services.AddScoped<ICommandHandler<SelectOrderResponseExecutorCommand, SelectOrderResponseExecutorResult>, SelectOrderResponseExecutorCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateOrderCommand, UpdateOrderResult>, UpdateOrderCommandHandler>();

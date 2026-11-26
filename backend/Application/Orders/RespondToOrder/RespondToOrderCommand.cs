@@ -10,4 +10,6 @@ public sealed class RespondToOrderCommand : ICommand<RespondToOrderResult>
     public Guid RequesterUserId { get; init; }
 
     public UserRole RequesterRole { get; init; }
+
+    public string Message { get; init; } = string.Empty;
 }

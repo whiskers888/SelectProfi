@@ -43,6 +43,12 @@ public static class OrderResponseMapper
             Description = result.Description,
             Location = result.Location,
             EmployeeCompensation = result.EmployeeCompensation,
+            WorkMode = result.WorkMode,
+            SalaryMin = result.SalaryMin,
+            SalaryMax = result.SalaryMax,
+            FulfillmentDays = result.FulfillmentDays,
+            WarrantyMonths = result.WarrantyMonths,
+            GuaranteeReward = result.GuaranteeReward,
             Functional = result.Functional,
             Requirements = result.Requirements,
             OtherConditions = result.OtherConditions,
@@ -80,6 +86,12 @@ public static class OrderResponseMapper
             SpecializationId = result.SpecializationId,
             Specialization = result.Specialization,
             Price = result.Price,
+            WorkMode = result.WorkMode,
+            SalaryMin = result.SalaryMin,
+            SalaryMax = result.SalaryMax,
+            FulfillmentDays = result.FulfillmentDays,
+            WarrantyMonths = result.WarrantyMonths,
+            GuaranteeReward = result.GuaranteeReward,
             ServiceCommissionRate = ResolveCommissionRate(result.ServiceCommissionRate, new OrderPricingOptions()),
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
@@ -109,6 +121,12 @@ public static class OrderResponseMapper
             SpecializationId = result.SpecializationId,
             Specialization = result.Specialization,
             Price = result.Price,
+            WorkMode = result.WorkMode,
+            SalaryMin = result.SalaryMin,
+            SalaryMax = result.SalaryMax,
+            FulfillmentDays = result.FulfillmentDays,
+            WarrantyMonths = result.WarrantyMonths,
+            GuaranteeReward = result.GuaranteeReward,
             ServiceCommissionRate = ResolveCommissionRate(result.ServiceCommissionRate, pricingOptions),
             CustomerCompanyName = result.CustomerCompanyName,
             RequestedCandidatesCount = result.RequestedCandidatesCount,
@@ -128,12 +146,21 @@ public static class OrderResponseMapper
             Items = result.Items.Select(item => new OrderResponse
             {
                 Id = item.OrderId,
+                IsFavorite = item.IsFavorite,
+                MyResponseStatus = item.MyResponseStatus is null ? null : MapOrderResponseStatus(item.MyResponseStatus.Value),
+                MyResponseMessage = item.MyResponseMessage,
                 CustomerId = item.CustomerId,
                 ExecutorId = item.ExecutorId,
                 Title = item.Title,
                 Description = item.Description,
                 Location = item.Location,
                 EmployeeCompensation = item.EmployeeCompensation,
+                WorkMode = item.WorkMode,
+                SalaryMin = item.SalaryMin,
+                SalaryMax = item.SalaryMax,
+                FulfillmentDays = item.FulfillmentDays,
+                WarrantyMonths = item.WarrantyMonths,
+                GuaranteeReward = item.GuaranteeReward,
                 Functional = item.Functional,
                 Requirements = item.Requirements,
                 OtherConditions = item.OtherConditions,
@@ -151,7 +178,8 @@ public static class OrderResponseMapper
                 DeletedAtUtc = item.DeletedAtUtc
             }).ToArray(),
             Limit = result.Limit,
-            Offset = result.Offset
+            Offset = result.Offset,
+            TotalCount = result.TotalCount
         };
     }
 
@@ -162,6 +190,9 @@ public static class OrderResponseMapper
             Items = result.Items.Select(item => new OrderResponse
             {
                 Id = item.OrderId,
+                IsFavorite = item.IsFavorite,
+                MyResponseStatus = item.MyResponseStatus is null ? null : MapOrderResponseStatus(item.MyResponseStatus.Value),
+                MyResponseMessage = item.MyResponseMessage,
                 CustomerId = item.CustomerId,
                 ExecutorId = item.ExecutorId,
                 Title = item.Title,
@@ -174,6 +205,12 @@ public static class OrderResponseMapper
                 SpecializationId = item.SpecializationId,
                 Specialization = item.Specialization,
                 Price = item.Price,
+                WorkMode = item.WorkMode,
+                SalaryMin = item.SalaryMin,
+                SalaryMax = item.SalaryMax,
+                FulfillmentDays = item.FulfillmentDays,
+                WarrantyMonths = item.WarrantyMonths,
+                GuaranteeReward = item.GuaranteeReward,
                 ServiceCommissionRate = ResolveCommissionRate(item.ServiceCommissionRate, pricingOptions),
                 CustomerCompanyName = item.CustomerCompanyName,
                 RequestedCandidatesCount = item.RequestedCandidatesCount,
@@ -185,7 +222,8 @@ public static class OrderResponseMapper
                 DeletedAtUtc = item.DeletedAtUtc
             }).ToArray(),
             Limit = result.Limit,
-            Offset = result.Offset
+            Offset = result.Offset,
+            TotalCount = result.TotalCount
         };
     }
 
@@ -202,6 +240,12 @@ public static class OrderResponseMapper
             Description = result.Description,
             Location = result.Location,
             EmployeeCompensation = result.EmployeeCompensation,
+            WorkMode = result.WorkMode,
+            SalaryMin = result.SalaryMin,
+            SalaryMax = result.SalaryMax,
+            FulfillmentDays = result.FulfillmentDays,
+            WarrantyMonths = result.WarrantyMonths,
+            GuaranteeReward = result.GuaranteeReward,
             Functional = result.Functional,
             Requirements = result.Requirements,
             OtherConditions = result.OtherConditions,
@@ -229,6 +273,7 @@ public static class OrderResponseMapper
             ExecutorId = result.ExecutorId,
             ExecutorFullName = string.Empty,
             Status = MapOrderResponseStatus(result.Status),
+            Message = result.Message,
             CreatedAtUtc = result.CreatedAtUtc,
             UpdatedAtUtc = result.UpdatedAtUtc
         };
@@ -271,6 +316,7 @@ public static class OrderResponseMapper
                 ExecutorProjectCompanyName = item.ExecutorProjectCompanyName,
                 ExecutorExperienceSummary = item.ExecutorExperienceSummary,
                 Status = MapOrderResponseStatus(item.Status),
+                Message = item.Message,
                 CreatedAtUtc = item.CreatedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc
             }).ToArray()
@@ -284,6 +330,7 @@ public static class OrderResponseMapper
             OrderId = result.OrderId,
             HasResponse = result.HasResponse,
             Status = result.Status is null ? null : MapOrderResponseStatus(result.Status.Value),
+            Message = result.Message,
             UpdatedAtUtc = result.UpdatedAtUtc
         };
     }

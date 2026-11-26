@@ -6,6 +6,12 @@ public sealed class OrderResponse
 {
     public Guid Id { get; init; }
 
+    public bool IsFavorite { get; init; }
+
+    public OrderExecutorResponseStatusContract? MyResponseStatus { get; init; }
+
+    public string? MyResponseMessage { get; init; }
+
     public Guid CustomerId { get; init; }
 
     public Guid? ExecutorId { get; init; }
@@ -17,6 +23,13 @@ public sealed class OrderResponse
     public string Location { get; init; } = string.Empty;
 
     public string EmployeeCompensation { get; init; } = string.Empty;
+
+    public string? WorkMode { get; init; }
+    public decimal? SalaryMin { get; init; }
+    public decimal? SalaryMax { get; init; }
+    public int? FulfillmentDays { get; init; }
+    public int? WarrantyMonths { get; init; }
+    public decimal? GuaranteeReward { get; init; }
 
     public string Functional { get; init; } = string.Empty;
 

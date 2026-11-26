@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using SelectProfi.backend.Application.Orders.GetMyOrderResponse;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Configuration;
@@ -100,6 +101,53 @@ public sealed class OrderPricingRulesTests
         Assert.Equal(0, persistence.SaveCount);
     }
 
+    [Fact]
+    public async Task Executor_CanReadOwnResponseAfterOrderIsAssignedToAnotherExecutor()
+    {
+        var order = CreateOrder(price: 100000m);
+        order.ExecutorId = Guid.NewGuid();
+        var requesterId = Guid.NewGuid();
+        var response = new OrderExecutorResponse
+        {
+            Id = Guid.NewGuid(),
+            OrderId = order.Id,
+            ExecutorId = requesterId,
+            Status = OrderResponseStatus.Rejected,
+            Message = "Подберу кандидатов с опытом в отрасли.",
+            UpdatedAtUtc = DateTime.UtcNow
+        };
+        var handler = new GetMyOrderResponseQueryHandler(new GetMyOrderResponsePersistence(order, response));
+
+        var result = await handler.HandleAsync(new GetMyOrderResponseQuery
+        {
+            OrderId = order.Id,
+            RequesterUserId = requesterId,
+            RequesterRole = UserRole.Executor
+        }, CancellationToken.None);
+
+        Assert.Equal(GetMyOrderResponseErrorCode.None, result.ErrorCode);
+        Assert.True(result.HasResponse);
+        Assert.Equal(OrderResponseStatus.Rejected, result.Status);
+        Assert.Equal(response.Message, result.Message);
+    }
+
+    [Fact]
+    public async Task Executor_CannotReadAssignedOrderWithoutOwnResponse()
+    {
+        var order = CreateOrder(price: 100000m);
+        order.ExecutorId = Guid.NewGuid();
+        var handler = new GetMyOrderResponseQueryHandler(new GetMyOrderResponsePersistence(order, null));
+
+        var result = await handler.HandleAsync(new GetMyOrderResponseQuery
+        {
+            OrderId = order.Id,
+            RequesterUserId = Guid.NewGuid(),
+            RequesterRole = UserRole.Executor
+        }, CancellationToken.None);
+
+        Assert.Equal(GetMyOrderResponseErrorCode.Forbidden, result.ErrorCode);
+    }
+
     private static Order CreateOrder(decimal price)
     {
         return new Order
@@ -184,6 +232,23 @@ public sealed class OrderPricingRulesTests
         {
             SaveCount++;
             return Task.FromResult(UpdateOrderPersistenceResult.Saved);
+        }
+    }
+
+    private sealed class GetMyOrderResponsePersistence(Order order, OrderExecutorResponse? response)
+        : IGetMyOrderResponsePersistence
+    {
+        public Task<Order?> FindOrderByIdAsync(Guid orderId, CancellationToken cancellationToken)
+        {
+            return Task.FromResult<Order?>(order.Id == orderId ? order : null);
+        }
+
+        public Task<OrderExecutorResponse?> FindExecutorResponseAsync(
+            Guid orderId,
+            Guid executorId,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(response?.OrderId == orderId && response.ExecutorId == executorId ? response : null);
         }
     }
 }

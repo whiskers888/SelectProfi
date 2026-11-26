@@ -78,6 +78,12 @@ public static class OrdersProblemMap
         "order_requested_candidates_count_too_low",
         "Запрошенное количество кандидатов меньше минимально допустимого.");
 
+    private static readonly ApiProblemDescriptor InvalidExchangeTerms = new(
+        StatusCodes.Status400BadRequest,
+        "Ошибка валидации",
+        "invalid_exchange_terms",
+        "Проверьте формат работы, диапазон зарплаты, срок подбора и условия гарантии.");
+
     private static readonly ApiProblemDescriptor CustomerCompanyNameMissing = new(
         StatusCodes.Status400BadRequest,
         "Ошибка валидации",
@@ -170,6 +176,7 @@ public static class OrdersProblemMap
             CreateOrderErrorCode.RequestedCandidatesCountTooLow => RequestedCandidatesCountTooLow,
             CreateOrderErrorCode.CustomerCompanyNameMissing => CustomerCompanyNameMissing,
             CreateOrderErrorCode.SpecializationNotFound => SpecializationNotFound,
+            CreateOrderErrorCode.InvalidExchangeTerms => InvalidExchangeTerms,
             _ => CreateOrderConflict
         };
     }
@@ -211,6 +218,7 @@ public static class OrdersProblemMap
             UpdateOrderErrorCode.PriceRequired => OrderPriceRequired,
             UpdateOrderErrorCode.PriceLocked => OrderPriceLocked,
             UpdateOrderErrorCode.InvalidStatus => OrderStatusFinal,
+            UpdateOrderErrorCode.InvalidExchangeTerms => InvalidExchangeTerms,
             UpdateOrderErrorCode.Forbidden => OrderAccessForbidden,
             _ => UpdateOrderConflict
         };
@@ -231,6 +239,7 @@ public static class OrdersProblemMap
     {
         return errorCode switch
         {
+            RespondToOrderErrorCode.InvalidMessage => new ApiProblemDescriptor(StatusCodes.Status400BadRequest, "Ошибка валидации", "invalid_response_message", "Сообщение должно содержать не более 2000 символов."),
             RespondToOrderErrorCode.NotFound => OrderNotFound,
             RespondToOrderErrorCode.Forbidden => OrderAccessForbidden,
             RespondToOrderErrorCode.NotAvailable => OrderResponseNotAvailable,

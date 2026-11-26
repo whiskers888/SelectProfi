@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Options;
 using SelectProfi.backend.Authentication;
 using SelectProfi.backend.Application.Cqrs;
@@ -13,6 +14,7 @@ using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Application.Orders.GetOrderResponses;
 using SelectProfi.backend.Application.Orders.RejectOrderResponse;
 using SelectProfi.backend.Application.Orders.RespondToOrder;
+using SelectProfi.backend.Application.Orders.SetOrderFavorite;
 using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
@@ -78,7 +80,7 @@ public sealed class OrdersController(
         CancellationToken cancellationToken)
     {
         var result = await queryDispatcher.DispatchAsync<GetOrdersQuery, GetOrdersResult>(
-            request.ToQuery(RequesterUserId, RequesterRole),
+            request.ToQuery(RequesterUserId, RequesterRole, orderPricingOptions.Value.ServiceCommissionPercent),
             cancellationToken);
 
         return result.ToActionResult(this, RequesterRole, orderPricingOptions.Value);
@@ -154,13 +156,45 @@ public sealed class OrdersController(
     [ProducesResponseType(typeof(OrderExecutorResponseItemResponse), StatusCodes.Status201Created)]
     [ProducesForbiddenProblem]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Respond(Guid orderId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Respond(Guid orderId, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] RespondToOrderRequest? request, CancellationToken cancellationToken)
     {
         var result = await commandDispatcher.DispatchAsync<RespondToOrderCommand, RespondToOrderResult>(
-            orderId.ToRespondToOrderCommand(RequesterUserId, RequesterRole),
+            orderId.ToRespondToOrderCommand(RequesterUserId, RequesterRole, request?.Message ?? string.Empty),
             cancellationToken);
 
         return result.ToActionResult(this);
+    }
+
+    [HttpPut("{orderId:guid}/favorite")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    public async Task<IActionResult> SaveFavorite(Guid orderId, CancellationToken cancellationToken)
+    {
+        return await SetFavorite(orderId, true, cancellationToken);
+    }
+
+    [HttpDelete("{orderId:guid}/favorite")]
+    [Authorize(Policy = AuthorizationPolicies.ExecutorOnly)]
+    public async Task<IActionResult> RemoveFavorite(Guid orderId, CancellationToken cancellationToken)
+    {
+        return await SetFavorite(orderId, false, cancellationToken);
+    }
+
+    private async Task<IActionResult> SetFavorite(Guid orderId, bool isFavorite, CancellationToken cancellationToken)
+    {
+        var result = await commandDispatcher.DispatchAsync<SetOrderFavoriteCommand, SetOrderFavoriteResult>(
+            new SetOrderFavoriteCommand
+            {
+                OrderId = orderId,
+                RequesterUserId = RequesterUserId,
+                RequesterRole = RequesterRole,
+                IsFavorite = isFavorite
+            }, cancellationToken);
+        return result.ErrorCode switch
+        {
+            SetOrderFavoriteErrorCode.None => Ok(new { result.OrderId, result.IsFavorite }),
+            SetOrderFavoriteErrorCode.Forbidden => Forbid(),
+            _ => NotFound()
+        };
     }
 
     [HttpDelete("{orderId:guid}/respond")]

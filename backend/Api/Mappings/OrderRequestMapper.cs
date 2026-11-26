@@ -31,6 +31,12 @@ public static class OrderRequestMapper
             Description = request.Description,
             Location = request.Location ?? string.Empty,
             EmployeeCompensation = request.EmployeeCompensation ?? string.Empty,
+            WorkMode = request.WorkMode,
+            SalaryMin = request.SalaryMin,
+            SalaryMax = request.SalaryMax,
+            FulfillmentDays = request.FulfillmentDays,
+            WarrantyMonths = request.WarrantyMonths,
+            GuaranteeReward = request.GuaranteeReward,
             Functional = request.Functional ?? string.Empty,
             Requirements = request.Requirements ?? string.Empty,
             OtherConditions = request.OtherConditions ?? string.Empty,
@@ -55,7 +61,8 @@ public static class OrderRequestMapper
     public static GetOrdersQuery ToQuery(
         this GetOrdersRequest request,
         Guid requesterUserId,
-        UserRole requesterRole)
+        UserRole requesterRole,
+        decimal defaultServiceCommissionRate)
     {
         // @dvnull: Пробрасываем includeArchived, чтобы фронт мог запросить активные + архивные заказы одним вызовом.
         return new GetOrdersQuery
@@ -64,7 +71,18 @@ public static class OrderRequestMapper
             RequesterRole = requesterRole,
             Limit = request.Limit,
             Offset = request.Offset,
-            IncludeArchived = request.IncludeArchived
+            IncludeArchived = request.IncludeArchived,
+            ExchangeOnly = request.ExchangeOnly,
+            Search = request.Search,
+            Location = request.Location,
+            SpecializationId = request.SpecializationId,
+            WorkMode = request.WorkMode,
+            HasWarranty = request.HasWarranty,
+            MinimumReward = request.MinimumReward,
+            DefaultServiceCommissionRate = defaultServiceCommissionRate,
+            FavoritesOnly = request.FavoritesOnly,
+            ResponsesOnly = request.ResponsesOnly,
+            SortBy = request.SortBy
         };
     }
 
@@ -108,6 +126,12 @@ public static class OrderRequestMapper
             Description = request.Description,
             Location = request.Location,
             EmployeeCompensation = request.EmployeeCompensation,
+            WorkMode = request.WorkMode,
+            SalaryMin = request.SalaryMin,
+            SalaryMax = request.SalaryMax,
+            FulfillmentDays = request.FulfillmentDays,
+            WarrantyMonths = request.WarrantyMonths,
+            GuaranteeReward = request.GuaranteeReward,
             Functional = request.Functional,
             Requirements = request.Requirements,
             OtherConditions = request.OtherConditions,
@@ -134,13 +158,15 @@ public static class OrderRequestMapper
     public static RespondToOrderCommand ToRespondToOrderCommand(
         this Guid orderId,
         Guid requesterUserId,
-        UserRole requesterRole)
+        UserRole requesterRole,
+        string message = "")
     {
         return new RespondToOrderCommand
         {
             OrderId = orderId,
             RequesterUserId = requesterUserId,
-            RequesterRole = requesterRole
+            RequesterRole = requesterRole,
+            Message = message
         };
     }
 

@@ -32,6 +32,7 @@ public sealed class GetOrderResponsesPersistence(AppDbContext dbContext) : IGetO
                     ExecutorProjectCompanyName = user.ExecutorProjectCompanyName,
                     ExecutorExperienceSummary = user.ExecutorExperienceSummary,
                     Status = response.Status,
+                    Message = response.Message,
                     CreatedAtUtc = response.CreatedAtUtc,
                     UpdatedAtUtc = response.UpdatedAtUtc
                 })

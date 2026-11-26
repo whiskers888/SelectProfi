@@ -11,5 +11,6 @@ public enum UpdateOrderErrorCode
     SpecializationNotFound = 5,
     PriceRequired = 6,
     PriceLocked = 7,
-    InvalidStatus = 8
+    InvalidStatus = 8,
+    InvalidExchangeTerms = 9
 }

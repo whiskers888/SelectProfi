@@ -12,6 +12,10 @@ public sealed class RespondToOrderCommandHandler(IRespondToOrderPersistence pers
         if (!OrderAccessRules.CanRespondToOrder(command.RequesterRole))
             return new RespondToOrderResult { ErrorCode = RespondToOrderErrorCode.Forbidden };
 
+        var message = command.Message.Trim();
+        if (message.Length > 2000)
+            return new RespondToOrderResult { ErrorCode = RespondToOrderErrorCode.InvalidMessage };
+
         var order = await persistence.FindOrderByIdAsync(command.OrderId, cancellationToken);
         if (order is null || order.DeletedAtUtc is not null)
             return new RespondToOrderResult { ErrorCode = RespondToOrderErrorCode.NotFound };
@@ -33,6 +37,7 @@ public sealed class RespondToOrderCommandHandler(IRespondToOrderPersistence pers
             OrderId = order.Id,
             ExecutorId = command.RequesterUserId,
             Status = OrderResponseStatus.Pending,
+            Message = message,
             CreatedAtUtc = utcNow,
             UpdatedAtUtc = utcNow
         };
@@ -48,6 +53,7 @@ public sealed class RespondToOrderCommandHandler(IRespondToOrderPersistence pers
             OrderId = response.OrderId,
             ExecutorId = response.ExecutorId,
             Status = response.Status,
+            Message = response.Message,
             CreatedAtUtc = response.CreatedAtUtc,
             UpdatedAtUtc = response.UpdatedAtUtc
         };

@@ -9,13 +9,14 @@ public static class OrderAccessRules
         UserRole requesterRole,
         Guid requesterUserId,
         Guid orderCustomerId,
-        Guid? orderExecutorId)
+        Guid? orderExecutorId,
+        bool hasOwnResponse = false)
     {
         return requesterRole switch
         {
             UserRole.Admin => true,
             UserRole.Customer => requesterUserId == orderCustomerId,
-            UserRole.Executor => orderExecutorId == null || orderExecutorId == requesterUserId,
+            UserRole.Executor => orderExecutorId == null || orderExecutorId == requesterUserId || hasOwnResponse,
             _ => false
         };
     }

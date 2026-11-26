@@ -8,5 +8,7 @@ public sealed class MyOrderResponseResponse
 
     public OrderExecutorResponseStatusContract? Status { get; init; }
 
+    public string? Message { get; init; }
+
     public DateTime? UpdatedAtUtc { get; init; }
 }

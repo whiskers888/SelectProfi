@@ -20,6 +20,19 @@ public sealed class CreateOrderRequest
     [MaxLength(255)]
     public string? EmployeeCompensation { get; init; }
 
+    [RegularExpression("^(Remote|Office|Hybrid)$")]
+    public string? WorkMode { get; init; }
+    [Range(typeof(decimal), "0", "79228162514264337593543950335")]
+    public decimal? SalaryMin { get; init; }
+    [Range(typeof(decimal), "0", "79228162514264337593543950335")]
+    public decimal? SalaryMax { get; init; }
+    [Range(1, int.MaxValue)]
+    public int? FulfillmentDays { get; init; }
+    [Range(0, int.MaxValue)]
+    public int? WarrantyMonths { get; init; }
+    [Range(typeof(decimal), "0", "79228162514264337593543950335")]
+    public decimal? GuaranteeReward { get; init; }
+
     [MaxLength(4000)]
     public string? Functional { get; init; }
 

@@ -7,5 +7,6 @@ public enum RespondToOrderErrorCode
     Forbidden = 2,
     NotAvailable = 3,
     AlreadyResponded = 4,
-    Conflict = 5
+    Conflict = 5,
+    InvalidMessage = 6
 }

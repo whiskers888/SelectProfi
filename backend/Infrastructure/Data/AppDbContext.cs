@@ -15,6 +15,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     // @dvnull: Добавлен справочник специализаций заказов для централизованной админ-настройки.
     public DbSet<OrderSpecialization> OrderSpecializations => Set<OrderSpecialization>();
     public DbSet<OrderExecutorResponse> OrderExecutorResponses => Set<OrderExecutorResponse>();
+    public DbSet<OrderFavorite> OrderFavorites => Set<OrderFavorite>();
     public DbSet<ProjectActivity> ProjectActivities => Set<ProjectActivity>();
     public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
 
@@ -202,6 +203,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .HasDefaultValue(OrderStatus.Active)
                 .IsRequired();
 
+            builder.Property(order => order.SalaryMin).HasPrecision(18, 2);
+            builder.Property(order => order.SalaryMax).HasPrecision(18, 2);
+            builder.Property(order => order.GuaranteeReward).HasPrecision(18, 2);
+
             builder.HasOne(order => order.Customer)
                 .WithMany()
                 .HasForeignKey(order => order.CustomerId)
@@ -272,6 +277,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.Entity<OrderExecutorResponse>(builder =>
         {
             builder.HasKey(orderResponse => orderResponse.Id);
+            builder.Property(orderResponse => orderResponse.Message).HasMaxLength(2000).IsRequired();
 
             builder.Property(orderResponse => orderResponse.Status)
                 .HasConversion<string>()
@@ -293,6 +299,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .IsUnique();
             builder.HasIndex(orderResponse => new { orderResponse.OrderId, orderResponse.Status });
             builder.HasIndex(orderResponse => new { orderResponse.ExecutorId, orderResponse.Status });
+        });
+
+        modelBuilder.Entity<OrderFavorite>(builder =>
+        {
+            builder.HasKey(favorite => new { favorite.OrderId, favorite.ExecutorId });
+            builder.HasOne(favorite => favorite.Order).WithMany().HasForeignKey(favorite => favorite.OrderId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(favorite => favorite.Executor).WithMany().HasForeignKey(favorite => favorite.ExecutorId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(favorite => favorite.ExecutorId);
         });
 
         modelBuilder.Entity<Vacancy>(builder =>

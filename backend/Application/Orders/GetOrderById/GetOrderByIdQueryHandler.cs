@@ -13,7 +13,10 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
         if (order is null)
             return new GetOrderByIdResult { ErrorCode = GetOrderByIdErrorCode.NotFound };
 
-        if (!OrderAccessRules.CanReadOrder(query.RequesterRole, query.RequesterUserId, order.CustomerId, order.ExecutorId))
+        var hasOwnResponse = query.RequesterRole == UserRole.Executor &&
+            await persistence.HasExecutorRespondedAsync(order.Id, query.RequesterUserId, cancellationToken);
+        if (!OrderAccessRules.CanReadOrder(
+                query.RequesterRole, query.RequesterUserId, order.CustomerId, order.ExecutorId, hasOwnResponse))
             return new GetOrderByIdResult { ErrorCode = GetOrderByIdErrorCode.Forbidden };
 
         return new GetOrderByIdResult
@@ -26,6 +29,12 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
             Description = order.Description,
             Location = order.Location,
             EmployeeCompensation = order.EmployeeCompensation,
+            WorkMode = order.WorkMode,
+            SalaryMin = order.SalaryMin,
+            SalaryMax = order.SalaryMax,
+            FulfillmentDays = order.FulfillmentDays,
+            WarrantyMonths = order.WarrantyMonths,
+            GuaranteeReward = order.GuaranteeReward,
             Functional = order.Functional,
             Requirements = order.Requirements,
             OtherConditions = order.OtherConditions,

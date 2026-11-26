@@ -11,11 +11,19 @@ public sealed class GetOrdersResult
     public int Limit { get; init; }
 
     public int Offset { get; init; }
+
+    public int TotalCount { get; init; }
 }
 
 public sealed class GetOrdersItemResult
 {
     public Guid OrderId { get; init; }
+
+    public bool IsFavorite { get; init; }
+
+    public OrderResponseStatus? MyResponseStatus { get; init; }
+
+    public string? MyResponseMessage { get; init; }
 
     public Guid CustomerId { get; init; }
 
@@ -28,6 +36,12 @@ public sealed class GetOrdersItemResult
     public string Location { get; init; } = string.Empty;
 
     public string EmployeeCompensation { get; init; } = string.Empty;
+    public string? WorkMode { get; init; }
+    public decimal? SalaryMin { get; init; }
+    public decimal? SalaryMax { get; init; }
+    public int? FulfillmentDays { get; init; }
+    public int? WarrantyMonths { get; init; }
+    public decimal? GuaranteeReward { get; init; }
 
     public string Functional { get; init; } = string.Empty;
 

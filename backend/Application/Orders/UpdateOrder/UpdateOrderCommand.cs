@@ -19,6 +19,12 @@ public sealed class UpdateOrderCommand : ICommand<UpdateOrderResult>
     public string? Location { get; init; }
 
     public string? EmployeeCompensation { get; init; }
+    public string? WorkMode { get; init; }
+    public decimal? SalaryMin { get; init; }
+    public decimal? SalaryMax { get; init; }
+    public int? FulfillmentDays { get; init; }
+    public int? WarrantyMonths { get; init; }
+    public decimal? GuaranteeReward { get; init; }
 
     public string? Functional { get; init; }
 

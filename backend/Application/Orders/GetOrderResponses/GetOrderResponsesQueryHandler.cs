@@ -31,6 +31,7 @@ public sealed class GetOrderResponsesQueryHandler(IGetOrderResponsesPersistence 
                 ExecutorProjectCompanyName = item.ExecutorProjectCompanyName,
                 ExecutorExperienceSummary = item.ExecutorExperienceSummary,
                 Status = item.Status,
+                Message = item.Message,
                 CreatedAtUtc = item.CreatedAtUtc,
                 UpdatedAtUtc = item.UpdatedAtUtc
             }).ToArray()

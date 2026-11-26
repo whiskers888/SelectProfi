@@ -52,6 +52,12 @@ public sealed class CreateOrderCommandHandler(
             Description = command.Description.Trim(),
             Location = command.Location.Trim(),
             EmployeeCompensation = command.EmployeeCompensation.Trim(),
+            WorkMode = command.WorkMode,
+            SalaryMin = command.SalaryMin,
+            SalaryMax = command.SalaryMax,
+            FulfillmentDays = command.FulfillmentDays,
+            WarrantyMonths = command.WarrantyMonths,
+            GuaranteeReward = command.GuaranteeReward,
             Functional = command.Functional.Trim(),
             Requirements = command.Requirements.Trim(),
             OtherConditions = command.OtherConditions.Trim(),
@@ -65,6 +71,9 @@ public sealed class CreateOrderCommandHandler(
             CreatedAtUtc = utcNow,
             UpdatedAtUtc = utcNow
         };
+
+        if (!OrderExchangeTerms.AreValid(order))
+            return new CreateOrderResult { ErrorCode = CreateOrderErrorCode.InvalidExchangeTerms };
 
         var createResult = await persistence.CreateAsync(order, cancellationToken);
         if (createResult == CreateOrderPersistenceResult.Conflict)
@@ -80,6 +89,12 @@ public sealed class CreateOrderCommandHandler(
             Description = order.Description,
             Location = order.Location,
             EmployeeCompensation = order.EmployeeCompensation,
+            WorkMode = order.WorkMode,
+            SalaryMin = order.SalaryMin,
+            SalaryMax = order.SalaryMax,
+            FulfillmentDays = order.FulfillmentDays,
+            WarrantyMonths = order.WarrantyMonths,
+            GuaranteeReward = order.GuaranteeReward,
             Functional = order.Functional,
             Requirements = order.Requirements,
             OtherConditions = order.OtherConditions,

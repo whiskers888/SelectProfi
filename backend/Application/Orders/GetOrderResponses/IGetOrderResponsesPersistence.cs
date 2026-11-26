@@ -25,6 +25,8 @@ public sealed class GetOrderResponsesItemSnapshot
 
     public OrderResponseStatus Status { get; init; } = OrderResponseStatus.Pending;
 
+    public string Message { get; init; } = string.Empty;
+
     public DateTime CreatedAtUtc { get; init; }
 
     public DateTime UpdatedAtUtc { get; init; }
