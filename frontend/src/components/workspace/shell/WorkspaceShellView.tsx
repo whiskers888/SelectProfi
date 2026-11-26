@@ -107,6 +107,7 @@ export function WorkspaceShellView({
   handleToggleRole,
   handleViewChange,
   hasRespondedToSelectedOrder,
+  myResponseMessage,
   isCandidatesApiLoading,
   isCreatingOrder,
   isCreatingVacancy,
@@ -503,6 +504,7 @@ export function WorkspaceShellView({
                       candidates={role === 'Executor' ? executorMyCandidates : filteredCandidates}
                       executorDashboardCandidates={executorDashboardCandidates}
                       hasRespondedToOrder={hasRespondedToSelectedOrder}
+                      myResponseMessage={myResponseMessage}
                       isLoading={
                         isViewLoading ||
                         (activeView === 'dashboard' && (role === 'Customer' || role === 'Executor') && isOrdersApiLoading) ||
@@ -558,11 +560,11 @@ export function WorkspaceShellView({
                       }
                       onRejectOrderExecutor={handleRejectOrderExecutor}
                       onSelectVacancyCandidate={handleSelectVacancyCandidate}
-                      onRespondToOrder={(orderId) => {
+                      onRespondToOrder={(orderId, message) => {
                         if (role === 'Applicant') {
                           return handleRespondToSelectedVacancy(orderId)
                         }
-                        return handleRespondToOrder(orderId)
+                        return handleRespondToOrder(orderId, message)
                       }}
                       onSelectOrder={setPreferredOrderId}
                       onSelectOrderExecutor={handleSelectOrderExecutor}

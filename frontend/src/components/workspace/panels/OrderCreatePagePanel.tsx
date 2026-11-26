@@ -33,6 +33,23 @@ export function OrderCreatePagePanel({
 }: OrderCreatePagePanelProps) {
   const parsedRequestedCandidatesCount = Number.parseInt(formValues.requestedCandidatesCount.trim(), 10)
   const parsedPrice = Number.parseFloat(formValues.price.trim())
+  const isOptionalAmountValid = (value: string) => {
+    if (!value.trim()) return true
+    const amount = Number(value)
+    return Number.isFinite(amount) && amount >= 0
+  }
+  const isOptionalPositiveIntegerValid = (value: string) => {
+    if (!value.trim()) return true
+    const number = Number(value)
+    return Number.isInteger(number) && number > 0
+  }
+  const isOptionalNonnegativeIntegerValid = (value: string) => {
+    if (!value.trim()) return true
+    const number = Number(value)
+    return Number.isInteger(number) && number >= 0
+  }
+  const parsedSalaryMin = formValues.salaryMin.trim() ? Number(formValues.salaryMin) : null
+  const parsedSalaryMax = formValues.salaryMax.trim() ? Number(formValues.salaryMax) : null
   const hasDictionaryOptions = specializationOptions.length > 0
   const isFormInvalid =
     !formValues.title.trim() ||
@@ -41,7 +58,13 @@ export function OrderCreatePagePanel({
     !Number.isFinite(parsedPrice) ||
     parsedPrice <= 0 ||
     !Number.isFinite(parsedRequestedCandidatesCount) ||
-    parsedRequestedCandidatesCount < 1
+    parsedRequestedCandidatesCount < 1 ||
+    !isOptionalAmountValid(formValues.salaryMin) ||
+    !isOptionalAmountValid(formValues.salaryMax) ||
+    !isOptionalPositiveIntegerValid(formValues.fulfillmentDays) ||
+    !isOptionalNonnegativeIntegerValid(formValues.warrantyMonths) ||
+    !isOptionalAmountValid(formValues.guaranteeReward) ||
+    (parsedSalaryMin !== null && parsedSalaryMax !== null && parsedSalaryMin > parsedSalaryMax)
 
   return (
     <Card className="rounded-xl border-border p-4 shadow-none">
@@ -160,6 +183,100 @@ export function OrderCreatePagePanel({
             maxLength={255}
             className="h-11 rounded-xl border-border text-foreground"
           />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label className="text-muted-foreground" htmlFor="workspace-order-work-mode">Формат работы</Label>
+            <select
+              id="workspace-order-work-mode"
+              value={formValues.workMode}
+              onChange={(event) => onFieldChange('workMode', event.target.value)}
+              className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground"
+            >
+              <option value="">Не указан</option>
+              <option value="Remote">Удалённо</option>
+              <option value="Office">В офисе</option>
+              <option value="Hybrid">Гибридный</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground" htmlFor="workspace-order-fulfillment-days">Срок подбора, дней</Label>
+            <Input
+              id="workspace-order-fulfillment-days"
+              type="number"
+              min={1}
+              step={1}
+              value={formValues.fulfillmentDays}
+              onChange={(event) => onFieldChange('fulfillmentDays', event.target.value)}
+              placeholder="Например, 20"
+              className="h-11 rounded-xl border-border text-foreground"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Зарплата кандидата, ₽ в месяц</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground" htmlFor="workspace-order-salary-min">От</Label>
+              <Input
+                id="workspace-order-salary-min"
+                type="number"
+                min={0}
+                step={1000}
+                value={formValues.salaryMin}
+                onChange={(event) => onFieldChange('salaryMin', event.target.value)}
+                placeholder="Не указана"
+                className="h-11 rounded-xl border-border text-foreground"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground" htmlFor="workspace-order-salary-max">До</Label>
+              <Input
+                id="workspace-order-salary-max"
+                type="number"
+                min={0}
+                step={1000}
+                value={formValues.salaryMax}
+                onChange={(event) => onFieldChange('salaryMax', event.target.value)}
+                placeholder="Не указана"
+                className="h-11 rounded-xl border-border text-foreground"
+              />
+            </div>
+          </div>
+          {parsedSalaryMin !== null && parsedSalaryMax !== null && parsedSalaryMin > parsedSalaryMax ? (
+            <p className="text-xs text-destructive" role="alert">Минимальная зарплата не может быть выше максимальной.</p>
+          ) : null}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label className="text-muted-foreground" htmlFor="workspace-order-warranty-months">Гарантийный срок, месяцев</Label>
+            <Input
+              id="workspace-order-warranty-months"
+              type="number"
+              min={0}
+              step={1}
+              value={formValues.warrantyMonths}
+              onChange={(event) => onFieldChange('warrantyMonths', event.target.value)}
+              placeholder="Например, 3"
+              className="h-11 rounded-xl border-border text-foreground"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground" htmlFor="workspace-order-guarantee-reward">Вознаграждение за гарантию, ₽</Label>
+            <Input
+              id="workspace-order-guarantee-reward"
+              type="number"
+              min={0}
+              step={1000}
+              value={formValues.guaranteeReward}
+              onChange={(event) => onFieldChange('guaranteeReward', event.target.value)}
+              placeholder="Не указано"
+              className="h-11 rounded-xl border-border text-foreground"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">

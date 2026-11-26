@@ -10,6 +10,12 @@ export type OrderCreateFormValues = {
   requirements: string
   otherConditions: string
   requestedCandidatesCount: string
+  workMode: '' | 'Remote' | 'Office' | 'Hybrid'
+  salaryMin: string
+  salaryMax: string
+  fulfillmentDays: string
+  warrantyMonths: string
+  guaranteeReward: string
 }
 
 export type OrderCreateFormField = keyof OrderCreateFormValues
@@ -27,5 +33,11 @@ export function createEmptyOrderFormValues(): OrderCreateFormValues {
     requirements: '',
     otherConditions: '',
     requestedCandidatesCount: '1',
+    workMode: '',
+    salaryMin: '',
+    salaryMax: '',
+    fulfillmentDays: '',
+    warrantyMonths: '',
+    guaranteeReward: '',
   }
 }

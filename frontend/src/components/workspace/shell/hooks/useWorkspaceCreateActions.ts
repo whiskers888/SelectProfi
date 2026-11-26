@@ -54,6 +54,12 @@ type WorkspaceCreateActionsDependencies = {
       price?: number
       location?: string
       employeeCompensation?: string
+      workMode?: 'Remote' | 'Office' | 'Hybrid'
+      salaryMin?: number
+      salaryMax?: number
+      fulfillmentDays?: number
+      warrantyMonths?: number
+      guaranteeReward?: number
       functional?: string
       requirements?: string
       otherConditions?: string
@@ -255,6 +261,11 @@ export function useWorkspaceCreateActions({
       const requirements = createOrderFormValues.requirements.trim()
       const otherConditions = createOrderFormValues.otherConditions.trim()
       const requestedCandidatesCount = Number.parseInt(createOrderFormValues.requestedCandidatesCount.trim(), 10)
+      const salaryMin = createOrderFormValues.salaryMin.trim() ? Number(createOrderFormValues.salaryMin) : undefined
+      const salaryMax = createOrderFormValues.salaryMax.trim() ? Number(createOrderFormValues.salaryMax) : undefined
+      const fulfillmentDays = createOrderFormValues.fulfillmentDays.trim() ? Number(createOrderFormValues.fulfillmentDays) : undefined
+      const warrantyMonths = createOrderFormValues.warrantyMonths.trim() ? Number(createOrderFormValues.warrantyMonths) : undefined
+      const guaranteeReward = createOrderFormValues.guaranteeReward.trim() ? Number(createOrderFormValues.guaranteeReward) : undefined
 
       if (!title || !organization || !specialization) {
         setBanner({
@@ -277,6 +288,15 @@ export function useWorkspaceCreateActions({
         })
         return
       }
+      if ([salaryMin, salaryMax, fulfillmentDays, warrantyMonths, guaranteeReward].some((value) => value !== undefined && !Number.isFinite(value)) ||
+          (salaryMin !== undefined && salaryMin < 0) || (salaryMax !== undefined && salaryMax < 0) ||
+          (salaryMin !== undefined && salaryMax !== undefined && salaryMin > salaryMax) ||
+          (fulfillmentDays !== undefined && (!Number.isInteger(fulfillmentDays) || fulfillmentDays < 1)) ||
+          (warrantyMonths !== undefined && (!Number.isInteger(warrantyMonths) || warrantyMonths < 0)) ||
+          (guaranteeReward !== undefined && (guaranteeReward < 0 || (guaranteeReward > 0 && !warrantyMonths)))) {
+        setBanner({ variant: 'destructive', message: 'Проверьте зарплату, срок подбора и условия гарантии.' })
+        return
+      }
 
       const description = otherConditions || requirements || functional || title
 
@@ -289,6 +309,12 @@ export function useWorkspaceCreateActions({
           price,
           location,
           employeeCompensation,
+          workMode: createOrderFormValues.workMode || undefined,
+          salaryMin,
+          salaryMax,
+          fulfillmentDays,
+          warrantyMonths,
+          guaranteeReward,
           functional,
           requirements,
           otherConditions,
@@ -312,17 +338,7 @@ export function useWorkspaceCreateActions({
     },
     [
       createOrder,
-      createOrderFormValues.employeeCompensation,
-      createOrderFormValues.functional,
-      createOrderFormValues.location,
-      createOrderFormValues.organization,
-      createOrderFormValues.otherConditions,
-      createOrderFormValues.price,
-      createOrderFormValues.requestedCandidatesCount,
-      createOrderFormValues.requirements,
-      createOrderFormValues.specialization,
-      createOrderFormValues.specializationId,
-      createOrderFormValues.title,
+      createOrderFormValues,
       getRequestErrorMessage,
       orderSpecializationOptions,
       refetchOrders,

@@ -27,6 +27,7 @@ interface OrderDetailsPagePanelProps {
   isCustomerViewer?: boolean
   isApplicantViewer?: boolean
   hasRespondedToOrder?: boolean
+  myResponseMessage?: string | null
   canRespondToOrder?: boolean
   isOrderResponsesLoading?: boolean
   isPublishingVacancyForCustomer?: boolean
@@ -86,6 +87,15 @@ function toExecutorPaymentLabel(amount: number | null | undefined): string {
   return `${amount.toLocaleString('ru-RU')} ₽`
 }
 
+function formatSalaryRange(minimum?: number | null, maximum?: number | null): string {
+  const min = typeof minimum === 'number' ? minimum : null
+  const max = typeof maximum === 'number' ? maximum : null
+  if (min !== null && max !== null) return `${min.toLocaleString('ru-RU')}–${max.toLocaleString('ru-RU')} ₽ / мес.`
+  if (min !== null) return `от ${min.toLocaleString('ru-RU')} ₽ / мес.`
+  if (max !== null) return `до ${max.toLocaleString('ru-RU')} ₽ / мес.`
+  return ''
+}
+
 export function OrderDetailsPagePanel({
   applicantResponders = [],
   projectCandidates = [],
@@ -100,6 +110,7 @@ export function OrderDetailsPagePanel({
   isCustomerViewer = false,
   isApplicantViewer = false,
   hasRespondedToOrder = false,
+  myResponseMessage = null,
   canRespondToOrder = false,
   isOrderResponsesLoading = false,
   isPublishingVacancyForCustomer = false,
@@ -202,13 +213,17 @@ export function OrderDetailsPagePanel({
         <OrderDetailRow label="Компания" value={order.company} />
         <OrderDetailRow label="Вакансия" value={order.title} />
         <OrderDetailRow label="Локация" value={order.location} />
+        {order.workMode ? <OrderDetailRow label="Формат работы" value={order.workMode === 'Remote' ? 'Удалённо' : order.workMode === 'Office' ? 'В офисе' : 'Гибридный'} /> : null}
         <OrderDetailRow label="Оплата" value={order.employeeCompensation} />
+        {formatSalaryRange(order.salaryMin, order.salaryMax) ? <OrderDetailRow label="Зарплата кандидата" value={formatSalaryRange(order.salaryMin, order.salaryMax)} /> : null}
+        {order.fulfillmentDays ? <OrderDetailRow label="Срок подбора" value={`${order.fulfillmentDays} дней`} /> : null}
         <OrderDetailRow label="Функционал" value={order.functional} />
         <OrderDetailRow label="Требования" value={order.requirements} />
         <OrderDetailRow label="Другие условия" value={order.otherConditions} />
         {isExecutorViewer ? (
           <OrderDetailRow label="К получению" value={toExecutorPaymentLabel(order.executorNetAmount)} />
         ) : null}
+        {isExecutorViewer && order.warrantyMonths ? <OrderDetailRow label="Гарантия" value={`${order.warrantyMonths} мес., дополнительное вознаграждение ${toExecutorPaymentLabel(order.guaranteeReward)}`} /> : null}
         {!isApplicantViewer ? (
           <div>
             <dt className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">Отклики</dt>
@@ -340,6 +355,12 @@ export function OrderDetailsPagePanel({
                   ? 'Откликнуться на вакансию'
                   : 'Откликнуться на заказ'}
           </Button>
+        ) : null}
+        {isExecutorViewer && hasRespondedToOrder ? (
+          <div className="mt-3 rounded-lg border border-border bg-muted p-3 text-sm">
+            <strong>Отклик отправлен</strong>
+            {myResponseMessage ? <p className="mt-2 whitespace-pre-wrap break-words">{myResponseMessage}</p> : null}
+          </div>
         ) : null}
         {canCreateVacancyFromOrder ? (
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -504,6 +525,7 @@ export function OrderDetailsPagePanel({
                       <p><span className="font-semibold">Текущий проект:</span> {response.executorProjectTitle || '—'}</p>
                       <p><span className="font-semibold">Компания:</span> {response.executorProjectCompanyName || '—'}</p>
                       <p><span className="font-semibold">Опыт:</span> {response.executorExperienceSummary || '—'}</p>
+                      {response.message ? <p className="mt-2 whitespace-pre-wrap break-words"><span className="font-semibold">Сообщение:</span> {response.message}</p> : null}
                     </div>
                   ) : null}
                 </div>

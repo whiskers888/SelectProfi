@@ -19,7 +19,7 @@ type WorkspaceOrderActionsDependencies = {
   refetchOrders: () => Promise<unknown>
   refetchMyOrderResponse: () => Promise<unknown>
   rejectOrderResponseExecutor: MutationTrigger<{ executorId: string; orderId: string }, unknown>
-  respondToOrder: MutationTrigger<string, unknown>
+  respondToOrder: MutationTrigger<{ orderId: string; message: string }, unknown>
   selectedOrderId: string | null
   selectOrderResponseExecutor: MutationTrigger<{ executorId: string; orderId: string }, unknown>
   setBanner: (banner: { message: string; variant: BannerVariant }) => void
@@ -46,9 +46,9 @@ export function useWorkspaceOrderActions({
   updateOrder,
 }: WorkspaceOrderActionsDependencies) {
   const handleRespondToOrder = useCallback(
-    async (orderId: string) => {
+    async (orderId: string, message = '') => {
       try {
-        await respondToOrder(orderId).unwrap()
+        await respondToOrder({ orderId, message }).unwrap()
         setBanner({
           variant: 'success',
           message: 'Отклик на заказ отправлен.',
@@ -57,11 +57,13 @@ export function useWorkspaceOrderActions({
         if (selectedOrderId === orderId) {
           await refetchMyOrderResponse()
         }
+        return true
       } catch (error) {
         setBanner({
           variant: 'destructive',
           message: getRequestErrorMessage(error),
         })
+        return false
       }
     },
     [getRequestErrorMessage, refetchMyOrderResponse, refetchOrders, respondToOrder, selectedOrderId, setBanner],

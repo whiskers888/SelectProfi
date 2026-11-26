@@ -916,12 +916,52 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.queryByText('Приоритет')).toBeNull()
   })
 
-  it('shows only available projects on the executor exchange', () => {
+  it('shows only available projects on the executor exchange', async () => {
+    const availableOrder = {
+      id: 'exchange-order',
+      customerId: 'customer-1',
+      executorId: null,
+      title: 'Вакантный проект',
+      description: '',
+      location: 'Москва',
+      employeeCompensation: '250 000 ₽',
+      functional: 'Разработка',
+      requirements: 'Опыт',
+      otherConditions: '',
+      specialization: 'Разработка',
+      price: 100000,
+      grossAmount: 100000,
+      serviceCommissionPercent: 15,
+      serviceCommissionAmount: 15000,
+      executorNetAmount: 85000,
+      isPricingLocked: false,
+      requestedCandidatesCount: 1,
+      status: 'Active',
+      createdAtUtc: '2026-11-01T10:00:00Z',
+      updatedAtUtc: '2026-11-01T10:00:00Z',
+    }
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const requestUrl = input instanceof Request ? input.url : String(input)
+      const { pathname } = new URL(requestUrl, 'http://localhost')
+      const payload = pathname === '/api/orders/specializations' || pathname === '/api/order-specializations'
+        ? { items: [] }
+        : pathname === '/api/orders'
+          ? { items: [availableOrder], limit: 100, offset: 0, totalCount: 1 }
+          : { items: [] }
+
+      return Promise.resolve(new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
     renderExecutorExchange()
 
     expect(screen.getByRole('heading', { name: 'Биржа проектов' })).toBeTruthy()
-    expect(screen.getByText('Вакантный проект')).toBeTruthy()
+    expect(await screen.findByText('Вакантный проект')).toBeTruthy()
     expect(screen.queryByText('Senior разработчик')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Мои проекты' })).toBeNull()
+    expect(fetchMock).toHaveBeenCalled()
   })
 })

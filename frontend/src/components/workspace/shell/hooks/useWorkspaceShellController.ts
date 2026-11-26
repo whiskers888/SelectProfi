@@ -563,8 +563,8 @@ export function useWorkspaceShellController() {
   const workspaceScreen = resolveWorkspaceScreen(primaryScreen, {
     activeView,
     hasSelectedCandidate: Boolean(selectedCandidate),
-    // Executor project details are rendered inside the dashboard workspace.
-    hasSelectedOrder: Boolean(selectedOrder) && !(role === 'Executor' && activeView === 'dashboard'),
+    // Executor project details stay inside the dashboard or exchange panel so list state survives navigation.
+    hasSelectedOrder: Boolean(selectedOrder) && !(role === 'Executor' && (activeView === 'dashboard' || activeView === 'orders')),
   })
   const { data: myOrderResponse, refetch: refetchMyOrderResponse } = useGetMyOrderResponseQuery(
     role === 'Executor' && selectedOrder ? selectedOrder.id : skipToken,
@@ -1334,6 +1334,7 @@ export function useWorkspaceShellController() {
     handleToggleRole,
     handleViewChange,
     hasRespondedToSelectedOrder,
+    myResponseMessage: myOrderResponse?.message ?? null,
     isCandidatesApiLoading,
     isAddingCandidateFromBase,
     isRemovingVacancyCandidate,

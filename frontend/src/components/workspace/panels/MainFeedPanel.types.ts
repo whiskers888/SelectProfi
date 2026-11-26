@@ -19,6 +19,7 @@ export type MainFeedPanelProps = {
   canCreateCandidateFromOrder?: boolean
   canRespondToOrder?: boolean
   hasRespondedToOrder?: boolean
+  myResponseMessage?: string | null
   candidates: WorkspaceCandidate[]
   canManageOrders?: boolean
   canViewBaseCandidates?: boolean
@@ -58,7 +59,7 @@ export type MainFeedPanelProps = {
   onMoveApplicantResponderToShortlist?: (orderId: string, candidateId: string) => void | Promise<void>
   onRejectApplicantResponder?: (orderId: string, candidateId: string) => void | Promise<void>
   onRejectOrderExecutor?: (orderId: string, executorId: string) => void | Promise<void>
-  onRespondToOrder?: (orderId: string) => void | Promise<void>
+  onRespondToOrder?: (orderId: string, message?: string) => void | Promise<boolean | void>
   onSelectOrderExecutor?: (orderId: string, executorId: string) => void | Promise<void>
   onSelectOrder: (orderId: string) => void
   orderResponses?: OrderExecutorResponseItemResponse[]

@@ -4,12 +4,21 @@ export type OrderStatusContract = 'Active' | 'Paused' | 'Completed'
 
 export type OrderResponse = {
   id: string
+  isFavorite?: boolean
+  myResponseStatus?: OrderExecutorResponseStatusContract | null
+  myResponseMessage?: string | null
   customerId: string
   executorId?: string | null
   title: string
   description: string
   location: string
   employeeCompensation: string
+  workMode?: 'Remote' | 'Office' | 'Hybrid' | null
+  salaryMin?: number | null
+  salaryMax?: number | null
+  fulfillmentDays?: number | null
+  warrantyMonths?: number | null
+  guaranteeReward?: number | null
   functional: string
   requirements: string
   otherConditions: string
@@ -35,12 +44,23 @@ export type OrderListResponse = {
   items: OrderResponse[]
   limit: number
   offset: number
+  totalCount: number
 }
 
 export type GetOrdersRequest = {
   limit?: number
   offset?: number
   includeArchived?: boolean
+  exchangeOnly?: boolean
+  search?: string
+  location?: string
+  specializationId?: string
+  workMode?: 'Remote' | 'Office' | 'Hybrid'
+  hasWarranty?: boolean
+  minimumReward?: number
+  favoritesOnly?: boolean
+  responsesOnly?: boolean
+  sortBy?: 'new' | 'salary' | 'reward' | 'bonus'
 }
 
 export type OrderExecutorResponse = {
@@ -75,6 +95,7 @@ export type OrderExecutorResponseItemResponse = {
   executorProjectCompanyName?: string | null
   executorExperienceSummary?: string | null
   status: OrderExecutorResponseStatusContract
+  message?: string
   createdAtUtc: string
   updatedAtUtc: string
 }
@@ -93,6 +114,7 @@ export type MyOrderResponseResponse = {
   orderId: string
   hasResponse: boolean
   status?: OrderExecutorResponseStatusContract | null
+  message?: string | null
   updatedAtUtc?: string | null
 }
 
@@ -104,6 +126,12 @@ export type CreateOrderRequest = {
   price?: number
   location?: string
   employeeCompensation?: string
+  workMode?: 'Remote' | 'Office' | 'Hybrid'
+  salaryMin?: number
+  salaryMax?: number
+  fulfillmentDays?: number
+  warrantyMonths?: number
+  guaranteeReward?: number
   functional?: string
   requirements?: string
   otherConditions?: string
@@ -115,6 +143,12 @@ export type UpdateOrderRequest = {
   description?: string
   location?: string
   employeeCompensation?: string
+  workMode?: 'Remote' | 'Office' | 'Hybrid'
+  salaryMin?: number
+  salaryMax?: number
+  fulfillmentDays?: number
+  warrantyMonths?: number
+  guaranteeReward?: number
   functional?: string
   requirements?: string
   otherConditions?: string
@@ -225,10 +259,18 @@ const ordersApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
-    respondToOrder: build.mutation<OrderExecutorResponseItemResponse, string>({
-      query: (orderId) => ({
+    respondToOrder: build.mutation<OrderExecutorResponseItemResponse, { orderId: string; message: string }>({
+      query: ({ orderId, message }) => ({
         url: `/api/orders/${orderId}/respond`,
         method: 'POST',
+        body: { message },
+      }),
+      invalidatesTags: ['Order'],
+    }),
+    setOrderFavorite: build.mutation<{ orderId: string; isFavorite: boolean }, { orderId: string; isFavorite: boolean }>({
+      query: ({ orderId, isFavorite }) => ({
+        url: `/api/orders/${orderId}/favorite`,
+        method: isFavorite ? 'PUT' : 'DELETE',
       }),
       invalidatesTags: ['Order'],
     }),
@@ -285,6 +327,7 @@ const ordersApi = api.injectEndpoints({
 
 export const {
   useGetOrdersQuery,
+  useSetOrderFavoriteMutation,
   useGetMyOrdersQuery,
   useGetOrderByIdQuery,
   useGetProjectHistoryQuery,

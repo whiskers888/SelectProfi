@@ -17,6 +17,11 @@ export type WorkspaceStat = {
 
 export type WorkspaceOrder = {
   id: string
+  isFavorite?: boolean
+  myResponseStatus?: 'Pending' | 'Withdrawn' | 'Accepted' | 'Rejected' | null
+  myResponseMessage?: string | null
+  specialization?: string
+  createdAtUtc?: string
   customerId?: string
   executorId?: string | null
   price?: number | null
@@ -30,6 +35,12 @@ export type WorkspaceOrder = {
   company: string
   location: string
   employeeCompensation: string
+  workMode?: 'Remote' | 'Office' | 'Hybrid' | null
+  salaryMin?: number | null
+  salaryMax?: number | null
+  fulfillmentDays?: number | null
+  warrantyMonths?: number | null
+  guaranteeReward?: number | null
   functional: string
   requirements: string
   otherConditions: string
