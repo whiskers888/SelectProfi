@@ -422,6 +422,81 @@ namespace SelectProfi.backend.Migrations
                     b.ToTable("Orders");
                 });
 
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AttachmentContentType")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("AttachmentFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long?>("AttachmentLength")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AttachmentStorageKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc");
+
+                    b.ToTable("OrderChatMessages");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderConversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExecutorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ExecutorId");
+
+                    b.HasIndex("OrderId", "ExecutorId")
+                        .IsUnique();
+
+                    b.ToTable("OrderConversations");
+                });
+
             modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderExecutorResponse", b =>
                 {
                     b.Property<Guid>("Id")
@@ -479,6 +554,57 @@ namespace SelectProfi.backend.Migrations
                     b.HasIndex("ExecutorId");
 
                     b.ToTable("OrderFavorites");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderMeeting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExecutorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartsAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("CustomerId", "StartsAtUtc");
+
+                    b.HasIndex("ExecutorId", "StartsAtUtc");
+
+                    b.ToTable("OrderMeetings");
                 });
 
             modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderSpecialization", b =>
@@ -1085,6 +1211,52 @@ namespace SelectProfi.backend.Migrations
                     b.Navigation("SpecializationDictionaryItem");
                 });
 
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderChatMessage", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Orders.OrderConversation", "Conversation")
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderConversation", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
+                        .WithMany()
+                        .HasForeignKey("ExecutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SelectProfi.backend.Domain.Orders.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Executor");
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderExecutorResponse", b =>
                 {
                     b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
@@ -1117,6 +1289,41 @@ namespace SelectProfi.backend.Migrations
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Executor");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("SelectProfi.backend.Domain.Orders.OrderMeeting", b =>
+                {
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SelectProfi.backend.Domain.Users.User", "Executor")
+                        .WithMany()
+                        .HasForeignKey("ExecutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SelectProfi.backend.Domain.Orders.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Customer");
 
                     b.Navigation("Executor");
 

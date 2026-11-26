@@ -36,6 +36,8 @@ using SelectProfi.backend.Application.Orders.SelectOrderResponseExecutor;
 using SelectProfi.backend.Application.Orders.CreateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.UpdateOrder;
 using SelectProfi.backend.Application.Orders.ProjectWorkspace;
+using SelectProfi.backend.Application.Orders.Messages;
+using SelectProfi.backend.Infrastructure.Orders.Messages;
 using SelectProfi.backend.Application.Orders.UpdateOrderSpecialization;
 using SelectProfi.backend.Application.Orders.WithdrawOrderResponse;
 using SelectProfi.backend.Application.Profile.GetMyProfile;
@@ -143,6 +145,7 @@ public static class DependencyInjection
         services.AddScoped<IGetApplicantDashboardStatsPersistence, GetApplicantDashboardStatsPersistence>();
         services.AddScoped<IUpdateOrderPersistence, UpdateOrderPersistence>();
         services.AddScoped<IProjectWorkspacePersistence, ProjectWorkspacePersistence>();
+        services.AddScoped<IOrderConversationPersistence, OrderConversationPersistence>();
         // @dvnull: Ранее update specialization шёл напрямую через контроллер; добавлена persistence-реализация под CQRS-command.
         services.AddScoped<IUpdateOrderSpecializationPersistence, UpdateOrderSpecializationPersistence>();
         services.AddScoped<IDeleteOrderPersistence, DeleteOrderPersistence>();

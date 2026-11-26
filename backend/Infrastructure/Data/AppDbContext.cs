@@ -16,6 +16,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<OrderSpecialization> OrderSpecializations => Set<OrderSpecialization>();
     public DbSet<OrderExecutorResponse> OrderExecutorResponses => Set<OrderExecutorResponse>();
     public DbSet<OrderFavorite> OrderFavorites => Set<OrderFavorite>();
+    public DbSet<OrderConversation> OrderConversations => Set<OrderConversation>();
+    public DbSet<OrderChatMessage> OrderChatMessages => Set<OrderChatMessage>();
+    public DbSet<OrderMeeting> OrderMeetings => Set<OrderMeeting>();
     public DbSet<ProjectActivity> ProjectActivities => Set<ProjectActivity>();
     public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
 
@@ -239,6 +242,48 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .HasForeignKey(activity => activity.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasIndex(activity => new { activity.OrderId, activity.CreatedAtUtc });
+        });
+
+        // Conversation membership is a snapshot of the customer/executor pair for this
+        // assignment. A later executor cannot inherit the previous executor's messages.
+        modelBuilder.Entity<OrderConversation>(builder =>
+        {
+            builder.HasKey(conversation => conversation.Id);
+            builder.Property(conversation => conversation.Id).ValueGeneratedNever();
+            builder.HasOne(conversation => conversation.Order).WithMany().HasForeignKey(conversation => conversation.OrderId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(conversation => conversation.Customer).WithMany().HasForeignKey(conversation => conversation.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(conversation => conversation.Executor).WithMany().HasForeignKey(conversation => conversation.ExecutorId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(conversation => new { conversation.OrderId, conversation.ExecutorId }).IsUnique();
+            builder.HasIndex(conversation => conversation.CustomerId);
+            builder.HasIndex(conversation => conversation.ExecutorId);
+        });
+
+        modelBuilder.Entity<OrderChatMessage>(builder =>
+        {
+            builder.HasKey(message => message.Id);
+            builder.Property(message => message.Id).ValueGeneratedNever();
+            builder.Property(message => message.Text).HasMaxLength(4000).IsRequired();
+            builder.Property(message => message.AttachmentFileName).HasMaxLength(255);
+            builder.Property(message => message.AttachmentContentType).HasMaxLength(128);
+            builder.Property(message => message.AttachmentStorageKey).HasMaxLength(512);
+            builder.HasOne(message => message.Conversation).WithMany().HasForeignKey(message => message.ConversationId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(message => message.Sender).WithMany().HasForeignKey(message => message.SenderUserId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(message => new { message.ConversationId, message.CreatedAtUtc });
+        });
+
+        modelBuilder.Entity<OrderMeeting>(builder =>
+        {
+            builder.HasKey(meeting => meeting.Id);
+            builder.Property(meeting => meeting.Id).ValueGeneratedNever();
+            builder.Property(meeting => meeting.Title).HasMaxLength(200).IsRequired();
+            builder.Property(meeting => meeting.Format).HasConversion<string>().HasMaxLength(24).IsRequired();
+            builder.Property(meeting => meeting.Note).HasMaxLength(1000).IsRequired();
+            builder.HasOne(meeting => meeting.Order).WithMany().HasForeignKey(meeting => meeting.OrderId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(meeting => meeting.Customer).WithMany().HasForeignKey(meeting => meeting.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(meeting => meeting.Executor).WithMany().HasForeignKey(meeting => meeting.ExecutorId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(meeting => meeting.CreatedBy).WithMany().HasForeignKey(meeting => meeting.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(meeting => new { meeting.CustomerId, meeting.StartsAtUtc });
+            builder.HasIndex(meeting => new { meeting.ExecutorId, meeting.StartsAtUtc });
         });
 
         modelBuilder.Entity<ProjectDocument>(builder =>
