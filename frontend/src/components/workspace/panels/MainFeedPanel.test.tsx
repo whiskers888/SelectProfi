@@ -252,6 +252,74 @@ describe('MainFeedPanel projects in work', () => {
     expect(screen.queryByRole('button', { name: 'В архив' })).toBeNull()
   })
 
+  it('searches and filters candidates in the base directory and opens a profile', () => {
+    const baseCandidates: WorkspaceCandidate[] = [
+      {
+        ...poolCandidate,
+        id: 'base-candidate-anna',
+        name: 'Анна Аналитик',
+        source: 'Партнерская база',
+        experienceYears: 4,
+        comment: 'Обновлено недавно',
+      },
+      {
+        ...poolCandidate,
+        id: 'base-candidate-ivan',
+        name: 'Иван Инженер',
+        source: 'База резюме',
+        experienceYears: 1,
+        comment: 'Обновлено вчера',
+      },
+    ]
+    const onOpenCandidate = vi.fn()
+
+    renderWithApiProvider(
+      <MainFeedPanel
+        baseCandidates={baseCandidates}
+        candidates={[]}
+        canViewBaseCandidates
+        isLoading={false}
+        onOpenCandidate={onOpenCandidate}
+        onOpenOrder={vi.fn()}
+        onSelectOrder={vi.fn()}
+        orders={[]}
+        requesterUserId={executorId}
+        role="Executor"
+        selectedOrderId={null}
+        view="candidates"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'База кандидатов' }))
+
+    expect(screen.getByRole('heading', { name: 'База кандидатов' })).toBeTruthy()
+    expect(screen.getByText('Найдено профилей · 2')).toBeTruthy()
+    const search = screen.getByRole('searchbox', { name: 'Поиск по базе кандидатов' })
+    const experienceFilter = screen.getByRole('combobox', { name: 'Фильтр по опыту работы' })
+    expect(screen.getByRole('button', { name: `Открыть профиль ${baseCandidates[0].name}` })).toBeTruthy()
+
+    fireEvent.change(search, { target: { value: 'Анна' } })
+    expect(screen.getByText('Найдено профилей · 1')).toBeTruthy()
+    expect(screen.getByRole('button', { name: `Открыть профиль ${baseCandidates[0].name}` })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: `Открыть профиль ${baseCandidates[1].name}` })).toBeNull()
+
+    fireEvent.change(search, { target: { value: '' } })
+    fireEvent.change(experienceFilter, { target: { value: '0-2' } })
+    expect(screen.getByRole('button', { name: `Открыть профиль ${baseCandidates[1].name}` })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: `Открыть профиль ${baseCandidates[0].name}` })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: `Открыть профиль ${baseCandidates[1].name}` }))
+    expect(onOpenCandidate).toHaveBeenCalledWith(baseCandidates[1])
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Фильтр по этапу кандидата' }), {
+      target: { value: 'selected' },
+    })
+    expect(screen.getByText('По выбранным условиям кандидаты не найдены.')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Сбросить' }))
+    expect(screen.getByRole('button', { name: `Открыть профиль ${baseCandidates[0].name}` })).toBeTruthy()
+    expect(screen.getByRole('button', { name: `Открыть профиль ${baseCandidates[1].name}` })).toBeTruthy()
+  })
+
   it('moves a selected-project candidate from Pool into Shortlist', () => {
     const onSetCandidateStage = vi.fn()
     const onOpenCandidate = vi.fn()

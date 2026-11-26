@@ -261,7 +261,7 @@ export function WorkspaceShellView({
           <main
             className={`preview11-content flex-1${isExecutorDashboard ? ' preview11-content-executor-dashboard' : isExecutorProjectExchange ? ' preview11-content-exchange' : ' space-y-4'}`}
           >
-            {!isExecutorProjectExchange ? (
+            {!isExecutorProjectExchange && activeView !== 'candidates' ? (
               <div className={`space-y-1${isExecutorDashboard ? ' sr-only' : ''}`}>
                 <h1 className="text-xl font-extrabold leading-tight text-foreground">
                   {workspaceTitle}

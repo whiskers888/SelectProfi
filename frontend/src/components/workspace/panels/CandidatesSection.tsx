@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -38,24 +39,59 @@ export function CandidatesSection({
   hasSelectedFinalist = false,
   onSelectVacancyCandidate,
   role,
+  view,
 }: CandidatesSectionProps) {
+  const [baseSearch, setBaseSearch] = useState('')
+  const [baseExperienceFilter, setBaseExperienceFilter] = useState<'all' | '0-2' | '3-5' | '6+'>('all')
   const isCustomerDashboardSummary = dashboardSummary && role === 'Customer'
   const isExecutorDashboardSummary = dashboardSummary && role === 'Executor'
-  const visibleCandidateRows = dashboardSummary ? filteredCandidateRows.slice(0, 5) : filteredCandidateRows
+  const sectionTitle = isCustomerDashboardSummary
+    ? 'Список кандидатов'
+    : isExecutorDashboardSummary
+      ? 'Рабочий список и список кандидатов'
+      : isBaseScope
+        ? 'База кандидатов'
+        : isApplicantView
+          ? 'Мои резюме'
+          : 'Мои кандидаты'
+  const matchingBaseCandidates = isBaseScope
+    ? filteredCandidateRows.filter((candidate) => {
+        const search = baseSearch.trim().toLocaleLowerCase('ru-RU')
+        const matchesSearch = !search ||
+          `${candidate.name} ${candidate.source} ${formatExperienceYears(candidate.experienceYears)}`
+            .toLocaleLowerCase('ru-RU')
+            .includes(search)
+        const experience = candidate.experienceYears
+        const matchesExperience = baseExperienceFilter === 'all' || (
+          typeof experience === 'number' && (
+            baseExperienceFilter === '0-2'
+              ? experience >= 0 && experience <= 2
+              : baseExperienceFilter === '3-5'
+                ? experience >= 3 && experience <= 5
+                : experience >= 6
+          )
+        )
+        return matchesSearch && matchesExperience
+      })
+    : filteredCandidateRows
+  const visibleCandidateRows = dashboardSummary
+    ? filteredCandidateRows.slice(0, 5)
+    : matchingBaseCandidates
 
   return (
     <Card className="rounded-xl border-border p-4 shadow-none">
+      {isBaseScope ? (
+        <p className="mb-2 text-xs text-muted-foreground">
+          Кабинет исполнителя <span aria-hidden="true" className="mx-1">›</span> Моя база
+        </p>
+      ) : null}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-foreground">
-            {isCustomerDashboardSummary
-              ? 'Список кандидатов'
-              : isExecutorDashboardSummary
-                ? 'Рабочий список и список кандидатов'
-              : isApplicantView
-                ? 'Мои резюме'
-                : 'Мои кандидаты'}
-          </h3>
+          {view === 'candidates' ? (
+            <h1 className="text-xl font-extrabold leading-tight text-foreground">{sectionTitle}</h1>
+          ) : (
+            <h3 className="text-base font-semibold text-foreground">{sectionTitle}</h3>
+          )}
           {dashboardSummary ? (
             <p className="mt-1 text-xs text-muted-foreground">
               {isCustomerDashboardSummary
@@ -92,7 +128,7 @@ export function CandidatesSection({
               ) : null}
             </div>
           ) : null}
-          {shouldShowCandidateFilters ? (
+          {shouldShowCandidateFilters && !isBaseScope ? (
             <>
               <button
                 className={cn(
@@ -167,7 +203,141 @@ export function CandidatesSection({
           </div>
         ) : null}
       </div>
-      {isCandidateDataError ? (
+      {isBaseScope ? (
+        <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
+          <aside aria-label="Фильтры базы кандидатов" className="h-fit rounded-xl border border-border bg-muted/30 p-4">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-foreground">Фильтры</h2>
+              <button
+                className="text-xs font-medium text-primary hover:underline"
+                onClick={() => {
+                  setCandidateSourceFilter('all')
+                  setCandidateStageFilter('all')
+                  setBaseExperienceFilter('all')
+                  setBaseSearch('')
+                }}
+                type="button"
+              >
+                Сбросить
+              </button>
+            </div>
+            <div className="space-y-4">
+              <label className="block text-xs font-medium text-muted-foreground">
+                Источник
+                <select
+                  aria-label="Фильтр по источнику кандидата"
+                  className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                  onChange={(event) => handleCandidateSourceFilterChange(event.target.value)}
+                  value={candidateSourceFilter}
+                >
+                  <option value="all">Все источники</option>
+                  <option value="registered">Зарегистрированные</option>
+                  <option value="recruiter">Добавленные исполнителем</option>
+                </select>
+              </label>
+              <label className="block text-xs font-medium text-muted-foreground">
+                Этап
+                <select
+                  aria-label="Фильтр по этапу кандидата"
+                  className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                  onChange={(event) => handleCandidateStageFilterChange(event.target.value)}
+                  value={candidateStageFilter}
+                >
+                  <option value="all">Все этапы</option>
+                  <option value="pool">Рабочий список</option>
+                  <option value="shortlist">Список кандидатов</option>
+                  <option value="selected">Выбран</option>
+                  <option value="no_stage">Без этапа</option>
+                </select>
+              </label>
+              <label className="block text-xs font-medium text-muted-foreground">
+                Опыт работы
+                <select
+                  aria-label="Фильтр по опыту работы"
+                  className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                  onChange={(event) => {
+                    const value = event.target.value
+                    if (value === 'all' || value === '0-2' || value === '3-5' || value === '6+') {
+                      setBaseExperienceFilter(value)
+                    }
+                  }}
+                  value={baseExperienceFilter}
+                >
+                  <option value="all">Любой опыт</option>
+                  <option value="0-2">До 2 лет</option>
+                  <option value="3-5">3–5 лет</option>
+                  <option value="6+">6 лет и больше</option>
+                </select>
+              </label>
+            </div>
+          </aside>
+
+          <section aria-label="Результаты поиска по базе кандидатов" className="min-w-0">
+            <label className="block text-xs font-medium text-muted-foreground">
+              Поиск по имени или источнику
+              <input
+                aria-label="Поиск по базе кандидатов"
+                className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                onChange={(event) => setBaseSearch(event.target.value)}
+                placeholder="Введите имя или источник"
+                type="search"
+                value={baseSearch}
+              />
+            </label>
+            <p aria-live="polite" className="my-4 text-sm font-medium text-foreground">
+              Найдено профилей · {visibleCandidateRows.length}
+            </p>
+            {isCandidateDataError ? (
+              <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
+                <p>Не удалось загрузить список кандидатов.</p>
+                {onRetryCandidateData ? (
+                  <button className="mt-2 rounded-md border border-current px-3 py-1 text-sm font-medium" onClick={onRetryCandidateData} type="button">
+                    Повторить
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            {isCandidateDataLoading && filteredCandidateRows.length === 0 ? (
+              <div className="preview11-loading" role="status">
+                <span aria-hidden="true" className="preview11-loading-spin" />
+                <span>Загружаем список кандидатов...</span>
+              </div>
+            ) : visibleCandidateRows.length === 0 ? (
+              isCandidateDataError ? null : (
+                <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
+                  {filteredCandidateRows.length === 0 && !hasActiveCandidateFilters
+                    ? 'В базе пока нет доступных кандидатов.'
+                    : 'По выбранным условиям кандидаты не найдены.'}
+                </div>
+              )
+            ) : (
+              <div className="space-y-3">
+                {visibleCandidateRows.map((candidate) => (
+                  <button
+                    aria-label={`Открыть профиль ${candidate.name}`}
+                    className="flex w-full min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:flex-row sm:items-start sm:justify-between sm:p-5"
+                    key={candidate.id}
+                    onClick={() => onOpenCandidate(candidate)}
+                    type="button"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-lg font-semibold text-foreground">{candidate.name}</span>
+                      <span className="mt-2 block text-sm text-muted-foreground">Источник: {candidate.source || 'Не указан'}</span>
+                      {candidate.comment.trim() ? (
+                        <span className="mt-3 block text-sm leading-5 text-muted-foreground">{candidate.comment}</span>
+                      ) : null}
+                    </span>
+                    <span className="shrink-0 rounded-lg bg-muted px-3 py-2 text-sm text-foreground">
+                      Опыт: {formatExperienceYears(candidate.experienceYears)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      ) : null}
+      {!isBaseScope && isCandidateDataError ? (
         <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
           <p>
             {isExecutorDashboardSummary
@@ -185,7 +355,7 @@ export function CandidatesSection({
           ) : null}
         </div>
       ) : null}
-      {isCandidateDataLoading && filteredCandidateRows.length === 0 ? (
+      {!isBaseScope && isCandidateDataLoading && filteredCandidateRows.length === 0 ? (
         <div className="preview11-loading" role="status">
           <span aria-hidden="true" className="preview11-loading-spin" />
           <span>
@@ -194,7 +364,7 @@ export function CandidatesSection({
               : 'Загружаем список кандидатов...'}
           </span>
         </div>
-      ) : filteredCandidateRows.length === 0 ? (
+      ) : !isBaseScope && visibleCandidateRows.length === 0 ? (
         isCandidateDataError ? null : (
         <div className="rounded-xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
           {isCustomerDashboardSummary
@@ -206,7 +376,7 @@ export function CandidatesSection({
               : 'Кандидаты по текущим фильтрам не найдены.'}
         </div>
         )
-      ) : (
+      ) : !isBaseScope ? (
         <Table stackOnMobile>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -299,7 +469,7 @@ export function CandidatesSection({
             ))}
           </TableBody>
         </Table>
-      )}
+      ) : null}
     </Card>
   )
 }
