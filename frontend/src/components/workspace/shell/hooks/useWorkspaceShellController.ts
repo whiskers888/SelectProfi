@@ -579,7 +579,7 @@ export function useWorkspaceShellController() {
     // Executor project details stay inside the dashboard or exchange panel so list state survives navigation.
     hasSelectedOrder: Boolean(selectedOrder) && !(role === 'Executor' && (activeView === 'dashboard' || activeView === 'orders')),
   })
-  const { data: myOrderResponse, refetch: refetchMyOrderResponse } = useGetMyOrderResponseQuery(
+  const { currentData: myOrderResponse, refetch: refetchMyOrderResponse } = useGetMyOrderResponseQuery(
     role === 'Executor' && selectedOrder ? selectedOrder.id : skipToken,
   )
   const canManageOrderResponses = authMe?.role === 'Customer' || authMe?.role === 'Admin'
@@ -1407,6 +1407,7 @@ export function useWorkspaceShellController() {
     selectedOrder,
     selectedOrderExecutorName,
     selectedOrderId,
+    requestedOrderDetailsId: orderIdFromUrl,
     selectedOrderApplicantResponders,
     selectedOrderCandidateIds,
     selectedOrderCandidates,

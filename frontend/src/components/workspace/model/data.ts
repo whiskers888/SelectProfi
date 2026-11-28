@@ -33,6 +33,7 @@ export type WorkspaceOrder = {
   requestedCandidatesCount?: number
   title: string
   company: string
+  description?: string
   location: string
   employeeCompensation: string
   workMode?: 'Remote' | 'Office' | 'Hybrid' | null
@@ -182,4 +183,40 @@ export function workspaceToneToBadgeVariant(
   if (tone === 'danger') return 'destructive'
   if (tone === 'neutral') return 'neutral'
   return 'default'
+}
+
+export function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
+  if (role === 'Executor' && view === 'dashboard') {
+    return 'Мои проекты'
+  }
+
+  if (role === 'Executor' && view === 'orders') {
+    return 'Биржа проектов'
+  }
+
+  if (role === 'Executor' && view === 'candidates') {
+    return 'База кандидатов'
+  }
+
+  if (role === 'Executor' && view === 'chats') {
+    return 'Сообщения'
+  }
+
+  if (role === 'Executor' && view === 'meetings') {
+    return 'Календарь'
+  }
+
+  if (role === 'Applicant' && view === 'dashboard') {
+    return 'Мои отклики'
+  }
+
+  if (role === 'Applicant' && view === 'orders') {
+    return 'Вакансии'
+  }
+
+  if (role === 'Applicant' && view === 'candidates') {
+    return 'Мои резюме'
+  }
+
+  return workspaceViewOptions.find((option) => option.value === view)?.label ?? view
 }

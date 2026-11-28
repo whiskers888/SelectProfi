@@ -9,6 +9,7 @@ type HeaderMenuAction = 'profile' | 'settings' | 'logout'
 
 interface HeaderProps {
   activeView: WorkspaceView
+  isExecutor?: boolean
   canSwitchRole: boolean
   isSwitchingRole: boolean
   meetingsCount: number
@@ -44,6 +45,7 @@ function profileInitials(displayName: string): string {
 
 export function Header({
   activeView,
+  isExecutor = false,
   canSwitchRole,
   isSwitchingRole,
   meetingsCount,
@@ -97,6 +99,13 @@ export function Header({
           />
         </div>
 
+        {isExecutor && canSwitchRole ? (
+          <div aria-label="Режим кабинета" className="workspace-executor-role-switch" role="group">
+            <button aria-pressed="true" type="button">Исполнитель</button>
+            <button aria-pressed="false" disabled={isSwitchingRole} onClick={onSwitchRole} type="button">Соискатель</button>
+          </div>
+        ) : null}
+
         <div className="preview11-context-tabs">
           <button
             aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
@@ -109,7 +118,7 @@ export function Header({
               {theme === 'dark' ? <Sun size={15} strokeWidth={2} /> : <Moon size={15} strokeWidth={2} />}
             </span>
           </button>
-          <button
+          {!isExecutor ? <button
             className={`preview11-context-tab${activeView === 'meetings' ? ' preview11-context-tab-active' : ''}`}
             aria-label={`Встречи: ${meetingsCount}`}
             onClick={onOpenMeetings}
@@ -119,7 +128,7 @@ export function Header({
               <CalendarDays size={15} strokeWidth={2} />
             </span>{' '}
             <span className="preview11-badge">{meetingsCount}</span>
-          </button>
+          </button> : null}
           <button
             className={`preview11-context-tab${activeView === 'chats' ? ' preview11-context-tab-active' : ''}`}
             aria-label={`Уведомления: ${notificationsCount}`}
@@ -152,19 +161,19 @@ export function Header({
               <span className="preview11-profile-chip">
                 <span className="preview11-profile-meta">
                   <span className="preview11-profile-name">{profileDisplayName}</span>
-                  <span className="preview11-profile-role-row">
+                  {!isExecutor ? <span className="preview11-profile-role-row">
                     <span className="preview11-profile-role-spacer" aria-hidden="true" />
                     <span className="preview11-profile-role-text">{profileRoleLabel}</span>
                     <span className="preview11-profile-role-spacer" aria-hidden="true" />
-                  </span>
-                  <span className="preview11-profile-email">{profileEmail}</span>
+                  </span> : null}
+                  {isExecutor ? <span className="preview11-profile-role-text">{profileRoleLabel}</span> : <span className="preview11-profile-email">{profileEmail}</span>}
                 </span>
                 <span className="preview11-avatar">{profileInitials(profileDisplayName)}</span>
               </span>
             }
           />
           {/* Кнопка переключения роли вынесена отдельно, чтобы избежать вложенности <button> в <button> */}
-          {canSwitchRole && (
+          {canSwitchRole && !isExecutor && (
             <button
               className="preview11-profile-role-pill"
               disabled={isSwitchingRole}

@@ -13,9 +13,4 @@ public sealed class GetOrderByIdPersistence(AppDbContext dbContext) : IGetOrderB
             .AsNoTracking()
             .FirstOrDefaultAsync(order => order.Id == orderId && order.DeletedAtUtc == null, cancellationToken);
     }
-
-    public Task<bool> HasExecutorRespondedAsync(
-        Guid orderId, Guid executorId, CancellationToken cancellationToken) =>
-        dbContext.OrderExecutorResponses.AsNoTracking()
-            .AnyAsync(response => response.OrderId == orderId && response.ExecutorId == executorId, cancellationToken);
 }

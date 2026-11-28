@@ -163,6 +163,7 @@ export function toWorkspaceOrder(order: OrderResponse): WorkspaceOrder {
     requestedCandidatesCount: order.requestedCandidatesCount,
     title: order.title,
     company: order.customerCompanyName?.trim() || 'Компания не указана',
+    description: order.description,
     location: order.location,
     employeeCompensation: order.employeeCompensation,
     workMode: order.workMode,
@@ -749,4 +750,24 @@ export function deriveWorkspaceViewState({
     selectedOrder,
     selectedOrderId,
   };
+}
+
+export function formatExchangeSalary(order: WorkspaceOrder): string {
+  const { salaryMin, salaryMax } = order
+  if (salaryMin != null && salaryMax != null) {
+    return `${salaryMin.toLocaleString('ru-RU')}–${formatExchangeMoney(salaryMax)} / мес.`
+  }
+  if (salaryMin != null) return `от ${formatExchangeMoney(salaryMin)} / мес.`
+  if (salaryMax != null) return `до ${formatExchangeMoney(salaryMax)} / мес.`
+  return order.employeeCompensation
+}
+
+export function formatExchangeMoney(amount: number): string {
+  return `${amount.toLocaleString('ru-RU')} ₽`
+}
+
+const workModeLabels = { Remote: 'Удалённо', Office: 'В офисе', Hybrid: 'Гибридный' }
+
+export function exchangeProjectLocation(order: WorkspaceOrder): string {
+  return [order.location, order.workMode && workModeLabels[order.workMode]].filter(Boolean).join(' · ')
 }

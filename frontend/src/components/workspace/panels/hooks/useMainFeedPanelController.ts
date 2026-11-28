@@ -89,7 +89,9 @@ export function useMainFeedPanelController({
     role === 'Executor' && view === 'dashboard' ? 'all' : 'active',
   )
   const [checkedOrderIds, setCheckedOrderIds] = useState<string[]>([])
-  const [candidateDataScope, setCandidateDataScope] = useState<'mine' | 'base'>('mine')
+  const [candidateDataScope, setCandidateDataScope] = useState<'mine' | 'base'>(
+    role === 'Executor' && view === 'candidates' && canViewBaseCandidates ? 'base' : 'mine',
+  )
   const [candidateSourceFilter, setCandidateSourceFilter] = useState<CandidateSourceFilter>(
     readInitialCandidateSourceFilter,
   )

@@ -16,6 +16,7 @@ import { ProfilePage } from '@/pages/ProfilePage'
 import { Header } from './Header'
 import { useWorkspaceShellController } from './hooks/useWorkspaceShellController'
 import { Sidebar } from './Sidebar'
+import { toViewLabel } from '../model/data'
 import { createActionLabel, createHeaderTitle } from './workspaceShell.helpers'
 
 type WorkspaceShellViewProps = ReturnType<typeof useWorkspaceShellController>
@@ -152,6 +153,7 @@ export function WorkspaceShellView({
   selectedOrder,
   selectedOrderExecutorName,
   selectedOrderId,
+  requestedOrderDetailsId,
   selectedOrderApplicantResponders,
   selectedOrderCandidateIds,
   selectedOrderCandidates,
@@ -209,15 +211,22 @@ export function WorkspaceShellView({
   const isExecutorProjectExchange =
     role === 'Executor' && activeView === 'orders' && workspaceScreen === 'feed'
   const panelOwnsPageTitle = activeView === 'candidates' || activeView === 'chats' || activeView === 'meetings'
+  const executorTab = toViewLabel(activeView, role)
+  const executorDetailTitle =
+    workspaceScreen === 'order-details' || activeView === 'orders' || activeView === 'dashboard'
+      ? selectedOrder?.title
+      : workspaceScreen === 'candidate-details' ? selectedCandidate?.name : undefined
+  const executorBreadcrumb = executorDetailTitle ?? (workspaceScreen === 'feed' ? undefined : workspaceTitle)
 
   // Один renderer выбирает единственный полноэкранный surface.
   return (
     <div className="preview11-html">
       <div
-        className={`preview11-app flex min-h-screen flex-col${isExecutorDashboard ? ' preview11-app-executor-dashboard' : ''}`}
+        className={`preview11-app flex min-h-screen flex-col${role === 'Executor' ? ' workspace-executor' : ''}${isExecutorDashboard ? ' preview11-app-executor-dashboard' : ''}`}
       >
         <Header
           activeView={activeView}
+          isExecutor={role === 'Executor'}
           meetingsCount={counters.meetings ?? 0}
           notificationsCount={counters.chats ?? 0}
           onOpenMeetings={() => handleViewChange('meetings')}
@@ -235,7 +244,7 @@ export function WorkspaceShellView({
         />
 
         <div
-          className={`flex min-h-0 flex-1${isExecutorDashboard ? ' preview11-workspace-row-executor-dashboard' : ''}${isExecutorProjectExchange ? ' preview11-workspace-row-exchange' : ''}`}
+          className={`flex min-h-0 flex-1${isExecutorDashboard ? ' preview11-workspace-row-executor-dashboard' : ''}`}
         >
           <Sidebar
             activeView={activeView}
@@ -256,6 +265,21 @@ export function WorkspaceShellView({
           <main
             className={`preview11-content flex-1${isExecutorDashboard ? ' preview11-content-executor-dashboard' : isExecutorProjectExchange ? ' preview11-content-exchange' : ' space-y-4'}`}
           >
+            {role === 'Executor' ? (
+              <nav aria-label="Хлебные крошки" className="workspace-executor-breadcrumb">
+                <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <li>Кабинет исполнителя</li>
+                  <li aria-hidden="true">›</li>
+                  {executorBreadcrumb ? (
+                    <>
+                      <li><button className="hover:underline" onClick={() => handleViewChange(activeView)} type="button">{executorTab}</button></li>
+                      <li aria-hidden="true">›</li>
+                      <li aria-current="page" className="break-words">{executorBreadcrumb}</li>
+                    </>
+                  ) : <li aria-current="page">{executorTab}</li>}
+                </ol>
+              </nav>
+            ) : null}
             {!isExecutorProjectExchange && !panelOwnsPageTitle ? (
               <div className={`space-y-1${isExecutorDashboard ? ' sr-only' : ''}`}>
                 <h1 className="text-xl font-extrabold leading-tight text-foreground">
@@ -575,6 +599,7 @@ export function WorkspaceShellView({
                       orderResponses={orderResponses}
                       orders={activeView === 'candidates' ? candidateViewOrders : filteredOrders}
                       requesterUserId={authMe?.userId}
+                      requestedOrderDetailsId={requestedOrderDetailsId}
                       role={role}
                       selectedOrderDetails={selectedOrderWithResponses ?? selectedOrder}
                       selectedOrderApplicantResponders={selectedOrderApplicantResponders}

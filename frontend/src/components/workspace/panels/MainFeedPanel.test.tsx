@@ -290,8 +290,6 @@ describe('MainFeedPanel projects in work', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'База кандидатов' }))
-
     expect(screen.getByRole('heading', { name: 'База кандидатов' })).toBeTruthy()
     expect(screen.getByText('Найдено профилей · 2')).toBeTruthy()
     const search = screen.getByRole('searchbox', { name: 'Поиск по базе кандидатов' })

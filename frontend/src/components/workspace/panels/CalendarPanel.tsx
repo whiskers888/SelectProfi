@@ -69,7 +69,11 @@ export function CalendarPanel({ role }: CalendarPanelProps) {
   return (
     <section className="mx-auto flex min-h-full w-full max-w-[1680px] flex-col gap-6 py-3">
       <header className="mx-4 flex flex-wrap items-start justify-between gap-4 sm:mx-8 sm:items-end">
-        <div className="min-w-0"><p className="text-sm text-muted-foreground">Кабинет менеджера</p><h1 className="mt-1 text-2xl font-semibold capitalize leading-tight text-foreground sm:text-3xl">Календарь встреч</h1><p className="mt-1 text-sm text-muted-foreground">Встречи с заказчиками и кандидатами</p></div>
+        <div className="min-w-0">
+          {role === 'Customer' ? <p className="text-sm text-muted-foreground">Кабинет менеджера</p> : null}
+          <h1 className="mt-1 text-2xl font-semibold leading-tight text-foreground sm:text-3xl">Календарь встреч</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{role === 'Executor' ? 'Встречи по вашим проектам' : 'Встречи с заказчиками и кандидатами'}</p>
+        </div>
         <Button className="rounded-xl" onClick={() => setIsScheduleOpen(true)} type="button">+ Запланировать встречу</Button>
       </header>
 

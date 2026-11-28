@@ -74,6 +74,9 @@ public static class OrderResponseMapper
         return new OrderResponse
         {
             Id = result.OrderId,
+            IsFavorite = result.IsFavorite,
+            MyResponseStatus = result.MyResponseStatus is { } responseStatus ? MapOrderResponseStatus(responseStatus) : null,
+            MyResponseMessage = result.MyResponseMessage,
             CustomerId = result.CustomerId,
             ExecutorId = result.ExecutorId,
             Title = result.Title,
@@ -109,6 +112,9 @@ public static class OrderResponseMapper
         return new OrderResponse
         {
             Id = result.OrderId,
+            IsFavorite = result.IsFavorite,
+            MyResponseStatus = result.MyResponseStatus is { } responseStatus ? MapOrderResponseStatus(responseStatus) : null,
+            MyResponseMessage = result.MyResponseMessage,
             CustomerId = result.CustomerId,
             ExecutorId = result.ExecutorId,
             Title = result.Title,

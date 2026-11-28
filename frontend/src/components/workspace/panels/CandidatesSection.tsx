@@ -58,7 +58,7 @@ export function CandidatesSection({
     ? filteredCandidateRows.filter((candidate) => {
         const search = baseSearch.trim().toLocaleLowerCase('ru-RU')
         const matchesSearch = !search ||
-          `${candidate.name} ${candidate.source} ${formatExperienceYears(candidate.experienceYears)}`
+          `${candidate.name} ${candidate.position ?? ''} ${candidate.experienceSummary ?? ''} ${candidate.source} ${formatExperienceYears(candidate.experienceYears)}`
             .toLocaleLowerCase('ru-RU')
             .includes(search)
         const experience = candidate.experienceYears
@@ -79,16 +79,11 @@ export function CandidatesSection({
     : matchingBaseCandidates
 
   return (
-    <Card className="rounded-xl border-border p-4 shadow-none">
-      {isBaseScope ? (
-        <p className="mb-2 text-xs text-muted-foreground">
-          Кабинет исполнителя <span aria-hidden="true" className="mx-1">›</span> Моя база
-        </p>
-      ) : null}
+    <Card className={cn('rounded-xl border-border p-4 shadow-none', isBaseScope && role === 'Executor' && 'border-0 bg-transparent p-0')}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           {view === 'candidates' ? (
-            <h1 className="text-xl font-extrabold leading-tight text-foreground">{sectionTitle}</h1>
+            <h1 className={cn('text-xl font-extrabold leading-tight text-foreground', isBaseScope && role === 'Executor' && 'text-3xl font-semibold tracking-tight')}>{sectionTitle}</h1>
           ) : (
             <h3 className="text-base font-semibold text-foreground">{sectionTitle}</h3>
           )}

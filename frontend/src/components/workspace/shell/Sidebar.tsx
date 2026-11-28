@@ -10,6 +10,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 import {
+  toViewLabel,
   workspaceViewOptions,
   type WorkspaceRole,
   type WorkspaceStat,
@@ -50,42 +51,6 @@ const navIconMap: Record<WorkspaceView, LucideIcon> = {
   chats: MessageCircle,
   analytics: BarChart3,
   documents: FileStack,
-}
-
-function toViewLabel(view: WorkspaceView, role: WorkspaceRole): string {
-  if (role === 'Executor' && view === 'dashboard') {
-    return 'Мои проекты'
-  }
-
-  if (role === 'Executor' && view === 'orders') {
-    return 'Биржа проектов'
-  }
-
-  if (role === 'Executor' && view === 'candidates') {
-    return 'База кандидатов'
-  }
-
-  if (role === 'Executor' && view === 'chats') {
-    return 'Сообщения'
-  }
-
-  if (role === 'Executor' && view === 'meetings') {
-    return 'Календарь'
-  }
-
-  if (role === 'Applicant' && view === 'dashboard') {
-    return 'Мои отклики'
-  }
-
-  if (role === 'Applicant' && view === 'orders') {
-    return 'Вакансии'
-  }
-
-  if (role === 'Applicant' && view === 'candidates') {
-    return 'Мои резюме'
-  }
-
-  return workspaceViewOptions.find((option) => option.value === view)?.label ?? view
 }
 
 function toViewIcon(view: WorkspaceView, role: WorkspaceRole): LucideIcon {
@@ -144,12 +109,12 @@ export function Sidebar({
         <div className="mb-1 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <span
-              className={showExpandedLabels ? 'text-[11px] font-semibold uppercase tracking-wide text-muted-foreground' : 'sr-only'}
+              className={showExpandedLabels && role !== 'Executor' ? 'text-[11px] font-semibold uppercase tracking-wide text-muted-foreground' : 'sr-only'}
             >
               Роль аккаунта
             </span>
             <span
-              className={`shrink-0 rounded bg-primary/10 py-0.5 text-[11px] font-semibold uppercase text-primary ${showExpandedLabels ? 'px-2' : 'px-1'}`}
+              className={`shrink-0 rounded bg-primary/10 py-0.5 text-[11px] font-semibold uppercase text-primary ${role === 'Executor' ? 'sr-only' : showExpandedLabels ? 'px-2' : 'px-1'}`}
               title={roleLabel}
             >
               {showExpandedLabels ? roleLabel : roleLabel.slice(0, 1)}

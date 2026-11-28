@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using SelectProfi.backend.Domain.Orders;
 
 namespace SelectProfi.backend.Contracts.Meetings;
@@ -13,7 +14,7 @@ public sealed record OrderMeetingResponse(
     string ParticipantName,
     Guid CreatedByUserId,
     string Title,
-    OrderMeetingFormat Format,
+    [property: JsonConverter(typeof(JsonStringEnumConverter<OrderMeetingFormat>))] OrderMeetingFormat Format,
     DateTime StartsAtUtc,
     string Note,
     DateTime CreatedAtUtc);
@@ -26,6 +27,7 @@ public sealed class CreateOrderMeetingRequest
     public DateTimeOffset StartsAt { get; set; }
 
     [EnumDataType(typeof(OrderMeetingFormat))]
+    [JsonConverter(typeof(JsonStringEnumConverter<OrderMeetingFormat>))]
     public OrderMeetingFormat Format { get; set; }
 
     [StringLength(1000)]

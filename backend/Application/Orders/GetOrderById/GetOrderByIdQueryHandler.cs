@@ -1,10 +1,11 @@
 using SelectProfi.backend.Application.Cqrs;
 using SelectProfi.backend.Application.Access;
+using SelectProfi.backend.Application.Orders.GetOrders;
 using SelectProfi.backend.Domain.Users;
 
 namespace SelectProfi.backend.Application.Orders.GetOrderById;
 
-public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistence)
+public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistence, IGetOrdersPersistence ordersPersistence)
     : IQueryHandler<GetOrderByIdQuery, GetOrderByIdResult>
 {
     public async Task<GetOrderByIdResult> HandleAsync(GetOrderByIdQuery query, CancellationToken cancellationToken)
@@ -13,16 +14,22 @@ public sealed class GetOrderByIdQueryHandler(IGetOrderByIdPersistence persistenc
         if (order is null)
             return new GetOrderByIdResult { ErrorCode = GetOrderByIdErrorCode.NotFound };
 
-        var hasOwnResponse = query.RequesterRole == UserRole.Executor &&
-            await persistence.HasExecutorRespondedAsync(order.Id, query.RequesterUserId, cancellationToken);
+        var exchangeState = query.RequesterRole == UserRole.Executor
+            ? (await ordersPersistence.FindExchangeStatesAsync(query.RequesterUserId, [order.Id], cancellationToken))
+                .GetValueOrDefault(order.Id)
+            : null;
         if (!OrderAccessRules.CanReadOrder(
-                query.RequesterRole, query.RequesterUserId, order.CustomerId, order.ExecutorId, hasOwnResponse))
+                query.RequesterRole, query.RequesterUserId, order.CustomerId, order.ExecutorId,
+                exchangeState?.MyResponseStatus is not null))
             return new GetOrderByIdResult { ErrorCode = GetOrderByIdErrorCode.Forbidden };
 
         return new GetOrderByIdResult
         {
             ErrorCode = GetOrderByIdErrorCode.None,
             OrderId = order.Id,
+            IsFavorite = exchangeState?.IsFavorite ?? false,
+            MyResponseStatus = exchangeState?.MyResponseStatus,
+            MyResponseMessage = exchangeState?.MyResponseMessage,
             CustomerId = order.CustomerId,
             ExecutorId = order.ExecutorId,
             Title = order.Title,

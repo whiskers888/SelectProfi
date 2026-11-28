@@ -70,6 +70,7 @@ export type MainFeedPanelProps = {
   selectedOrderApplicantResponders?: WorkspaceCandidate[]
   selectedOrderExecutorName?: string | null
   selectedOrderId: string | null
+  requestedOrderDetailsId?: string | null
   selectedOrderVacancyPreview?: {
     title: string
     description: string

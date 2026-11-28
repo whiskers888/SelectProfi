@@ -8,6 +8,10 @@ public sealed class GetOrderByIdResult
 
     public Guid OrderId { get; init; }
 
+    public bool IsFavorite { get; init; }
+    public OrderResponseStatus? MyResponseStatus { get; init; }
+    public string? MyResponseMessage { get; init; }
+
     public Guid CustomerId { get; init; }
 
     public Guid? ExecutorId { get; init; }
